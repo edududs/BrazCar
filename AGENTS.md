@@ -1,7 +1,7 @@
 # BrazCar
 
 Plataforma de caronas entre Brazlândia e o centro de Brasília: registrar ofertas de carona e
-encontrá-las num mural. Monorepo com `src/` (Django 6 + django-ninja) e `web/` (React 19 + TS).
+encontrá-las num mural. Monorepo com `backend/` (Django 6 + django-ninja) e `web/` (React 19 + TS).
 
 Este arquivo é o único sempre carregado. Todo o resto é sob demanda: comece por
 [docs/INDEX.md](docs/INDEX.md) e, no início de uma sessão de trabalho, leia [docs/STATE.md](docs/STATE.md).
@@ -20,7 +20,7 @@ Este arquivo é o único sempre carregado. Todo o resto é sob demanda: comece p
 6. **Privacidade.** Telefone e placa nunca entram em payload de lista. Só saem pela rota de contato.
 7. **Repo do extrator é somente leitura.** Integração se resolve aqui, por adaptador.
 8. **Sem tipos frouxos.** Nunca `Any` nem `any`. Pipeline antes de declarar pronto:
-   `uv run poe fix` no backend, `yarn fix` no front.
+   `uv run poe fix` em `backend/`, `yarn fix` em `web/`.
 9. **Commits.** Conventional Commits, sem trailers (nada de `Co-Authored-By`) e sem citar
    ferramentas usadas na autoria. Push é só do Eduardo.
 10. **Documentação no mesmo commit.** Decisão nova vira linha em

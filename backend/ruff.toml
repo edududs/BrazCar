@@ -1,0 +1,21 @@
+line-length = 110
+target-version = "py314"
+
+[lint]
+select = ["ALL"]
+ignore = [
+    "D",       # docstrings are optional here; names and types carry the intent
+    "CPY",     # no copyright header: private project, authorship lives in git
+    "COM812",  # trailing comma: the formatter owns it
+    "ISC001",  # implicit string concatenation: the formatter owns it
+    "TC001",   # pydantic and ninja resolve annotations at runtime, imports cannot move to TYPE_CHECKING
+    "TC002",   # same, for third-party imports
+    "TC003",   # same, for stdlib imports
+    "FIX002",  # explicit TODOs are intentional breadcrumbs
+]
+
+[lint.per-file-ignores]
+# pytest idiom: bare asserts and literal expected values
+"tests/**" = ["S101", "PLR2004"]
+# ninja hands `request` to every route, used or not
+"src/brazcar/*/adapters/**" = ["ARG001"]

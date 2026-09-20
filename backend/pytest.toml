@@ -1,0 +1,10 @@
+[pytest]
+minversion = "9.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = ["--strict-markers", "--strict-config"]
+asyncio_mode = "auto"
+DJANGO_SETTINGS_MODULE = "tests.settings"
+markers = [
+    "heavy: slow or needs external services; runs on pre-push, never on the fast gate",
+]

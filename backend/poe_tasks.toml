@@ -1,0 +1,47 @@
+[tasks.format]
+help = "Format the code"
+cmd = "ruff format"
+
+[tasks.lint]
+help = "Lint and apply safe fixes"
+cmd = "ruff check --fix"
+
+[tasks.types]
+help = "Type check"
+cmd = "pyright"
+
+[tasks.test]
+help = "Fast tests: domain, architecture, contract drift"
+cmd = "pytest -m 'not heavy'"
+
+[tasks.test-heavy]
+help = "Every test, including the ones that need external services"
+cmd = "pytest"
+
+[tasks.fix]
+help = "Pipeline to run before calling work done"
+sequence = ["format", "lint", "types"]
+
+[tasks.check]
+help = "Fast gate, changes nothing: format, lint, types, fast tests"
+sequence = [
+    { cmd = "ruff format --check" },
+    { cmd = "ruff check" },
+    { ref = "types" },
+    { ref = "test" },
+]
+
+[tasks.openapi]
+help = "Regenerate the API contract consumed by web/"
+cmd = "python manage.py export_openapi_schema --api brazcar.config.api.api --output ../contract/openapi.json --indent 2 --sorted"
+env = { DJANGO_DEBUG.default = "1" }
+
+[tasks.serve]
+help = "Run the API locally with reload"
+cmd = "uvicorn brazcar.config.asgi:application --reload"
+envfile = "../.env"
+env = { DJANGO_DEBUG.default = "1" }
+
+[tasks.hooks]
+help = "Point git at the versioned hooks"
+cmd = "git config core.hooksPath .githooks"

@@ -1,14 +1,14 @@
 ---
 paths:
-  - "src/**/*.py"
-  - "tests/**/*.py"
+  - "backend/src/**/*.py"
+  - "backend/tests/**/*.py"
 ---
 
 # Backend
 
 - Toolchain: uv, ruff (`select = ["ALL"]` em `ruff.toml`, cada ignore justificado), pyright strict
   em `pyrightconfig.json`, tasks em `poe_tasks.toml`. Config nunca dentro do `pyproject.toml`.
-- Cada contexto é um pacote `src/brazcar/<context>/` com `domain/`, `application/` e `adapters/`.
+- Cada contexto é um pacote `backend/src/brazcar/<context>/` com `domain/`, `application/` e `adapters/`.
   O app Django do contexto, com models e migrations, mora dentro de `adapters/`.
 - Domínio em Pydantic: value objects e entidades `frozen`; mudar estado devolve cópia nova.
   Portas são `Protocol` em `application/ports.py`. Caso de uso é `async`.

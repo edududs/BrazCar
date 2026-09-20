@@ -1,7 +1,7 @@
 ---
 paths:
-  - "src/**/domain/**"
-  - "src/**/application/**"
+  - "backend/src/**/domain/**"
+  - "backend/src/**/application/**"
 ---
 
 # Domínio e aplicação

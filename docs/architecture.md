@@ -25,7 +25,7 @@ flowchart TB
     subgraph web [web/ React]
         F[features: rides, accounts, places<br/>domain / app / ui / adapters]
     end
-    subgraph src [src/brazcar Django]
+    subgraph src [backend/src/brazcar Django]
         R[rides]
         AC[accounts]
         PL[places]
@@ -70,7 +70,7 @@ placa (ADR-0006).
   repositório roda nos dois bancos para provar isso (ADR-0007).
 - **Sessão entre origens irmãs.** Front e API são subdomínios de `elj-labs.org`. Cookie de
   sessão httpOnly com `SameSite=Lax`, CORS com credenciais e checagem de `Origin` (ADR-0012).
-- **Contrato da API.** O `api/openapi.json` é gerado do ninja e versionado. O front gera os
+- **Contrato da API.** O `contract/openapi.json` é gerado do ninja e versionado. O front gera os
   tipos dele. O CI falha se o arquivo divergir do código.
 - **Regras só no backend.** A API devolve a situação calculada e as ações permitidas (ADR-0011).
 - **Observabilidade.** Logs estruturados em JSON na saída padrão e um endpoint de saúde. Nada de terceiros.

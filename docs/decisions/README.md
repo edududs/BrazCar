@@ -12,13 +12,15 @@ Origem de todas as linhas abaixo: entrevista de design de 18 a 20/09/2026.
 | ID | Decisão | Status | Registro |
 |---|---|---|---|
 | D-001 | A plataforma é o núcleo e funciona sem o extrator de WhatsApp | decidido | |
-| D-002 | Repo novo, monorepo com `src/` (Django) e `web/` (React), deploys separados | decidido | |
+| D-002 | Repo novo, monorepo com `src/` (Django) e `web/` (React), deploys separados | substituída por D-069 | |
 | D-003 | Backend em Django 6 ASGI com django-ninja | decidido | |
 | D-004 | Front em React 19, TypeScript, Vite, Tailwind v4 e yarn 4 | decidido | |
 | D-005 | Hexagonal com DDD: domínio em Pydantic, Django só nos adaptadores | decidido | [0001](0001-hexagonal-ddd-django-in-adapters.md) |
 | D-006 | Contextos `rides`, `accounts` e `places`, cada um com seu app Django dentro de `adapters/` | decidido | [0002](0002-bounded-contexts-own-django-app.md) |
 | D-007 | Código, identificadores e nomes de arquivo em inglês; documentação e interface em pt-BR | decidido | |
 | D-008 | Mínimo de serviços de terceiros. Aceitos: Vercel, Resend e Cloudflare | decidido | |
+| D-069 | Monorepo com `backend/` e `web/` como pastas irmãs, cada uma dona do seu tooling; contrato em `contract/openapi.json`; a raiz guarda só o que é do repo inteiro | decidido | |
+| D-070 | Python 3.14. Descer para 3.13 só se aparecer incompatibilidade real, em especial ao embutir o extrator | decidido | |
 
 ## Caronas
 

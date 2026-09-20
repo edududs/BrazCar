@@ -14,7 +14,7 @@ paths:
   - `app`: hooks headless, estado e comportamento, zero markup e zero CSS.
   - `ui`: visual. Consome hooks, não reimplementa lógica. Views compõem primitivos, quase sem tag crua.
   - `adapters`: único lugar que conhece fetch, SSE, service worker e tipos gerados.
-- Tipos da API são gerados do `api/openapi.json` com `openapi-typescript` e ficam em `adapters`.
+- Tipos da API são gerados do `contract/openapi.json` com `openapi-typescript` e ficam em `adapters`.
   Não escrever tipo de contrato à mão.
 - O front não recalcula regra de negócio. A API devolve a situação da carona e as ações
   permitidas; a tela só desenha (ADR-0011).

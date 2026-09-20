@@ -3,7 +3,7 @@
 Plataforma de caronas entre Brazlândia e o centro de Brasília. O motorista registra a carona,
 o passageiro a encontra num mural com filtros, e a conversa continua no WhatsApp.
 
-Monorepo: `src/` com Django 6 e django-ninja, `web/` com React 19 e TypeScript, instalável como PWA.
+Monorepo: `backend/` com Django 6 e django-ninja, `web/` com React 19 e TypeScript, instalável como PWA.
 
 O projeto está na fase de desenho fechado, ainda sem código. Comece por:
 
