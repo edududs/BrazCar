@@ -3,9 +3,9 @@ name: backend
 on:
   push:
     branches: [main]
-    paths: ["backend/**", "contract/**", ".github/workflows/backend.yml"]
+    paths: ["backend/**", "contract/**", "docs/**", "**.md", ".github/workflows/backend.yml"]
   pull_request:
-    paths: ["backend/**", "contract/**", ".github/workflows/backend.yml"]
+    paths: ["backend/**", "contract/**", "docs/**", "**.md", ".github/workflows/backend.yml"]
 
 jobs:
   fast-gate:

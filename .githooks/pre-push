@@ -15,7 +15,7 @@ while read -r _local_ref local_sha _remote_ref remote_sha; do
 $(git diff --name-only "$base" "$local_sha")"
 done
 
-if echo "$changed" | grep -qE '^(backend|contract)/'; then
+if echo "$changed" | grep -qE '^(backend|contract|docs)/|\.md$'; then
   (cd "$root/backend" && uv run poe check && uv run poe test-heavy)
 fi
 

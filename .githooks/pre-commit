@@ -6,7 +6,7 @@ set -e
 root=$(git rev-parse --show-toplevel)
 staged=$(git diff --cached --name-only --diff-filter=ACMR)
 
-if echo "$staged" | grep -qE '^(backend|contract)/'; then
+if echo "$staged" | grep -qE '^(backend|contract|docs)/|\.md$'; then
   (cd "$root/backend" && uv run poe check)
 fi
 

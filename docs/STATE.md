@@ -20,6 +20,12 @@ negócio, model, autenticação nem SSE.
 - Hooks em `.githooks/` (`pre-commit` rápido, `pre-push` pesado), GitHub Actions com o portão
   rápido por caminho, `.env.example` e `compose.yml` de desenvolvimento com Postgres opcional.
 
+Conferido em execução, além dos portões: Postgres 18 do `compose.yml` saudável, com o volume em
+`/var/lib/postgresql`, e o Django conectando nele por `DATABASE_URL` (checagem, consulta e a suíte
+inteira); a tela de status num navegador, com a API no ar e fora do ar. A checagem de links da
+documentação entrou no portão rápido, e mudança em `docs/` ou em qualquer `.md` dispara o portão
+do backend. Nesta máquina a porta 5432 já é de outro projeto: use `POSTGRES_PORT`.
+
 ## Próximo passo
 
 1. **Teste de risco antes do domínio:** uma rota SSE mínima publicada pelo túnel do Cloudflare
@@ -30,17 +36,11 @@ negócio, model, autenticação nem SSE.
 
 ## Pendências abertas
 
-- O Postgres do `compose.yml` só foi validado por `docker compose config`; o Docker estava
-  desligado. Subir uma vez com `docker compose --profile postgres up -d` e conferir o volume
-  (a imagem 18 usa `/var/lib/postgresql`) antes de escrever o contrato de repositório.
-- A tela de status foi validada por build, tipos e chamada a `/api/health` pelo proxy do Vite,
-  não olhada num navegador.
 - CORS com credenciais (D-059) ainda não existe: em desenvolvimento o Vite faz proxy (D-073).
   Entra junto com a sessão, no contexto `accounts`.
 - Falta provar o extrator rodando em Python 3.14 quando ele for embutido; se falhar, o recuo é
   para 3.13 (D-070).
-- A checagem de links da documentação, prevista no portão rápido em `architecture.md`, ainda
-  não foi escrita. Os fluxos do GitHub nunca rodaram, porque não houve push.
+- Os fluxos do GitHub ainda não rodaram nenhuma vez.
 - O front ainda não tem teste; o vitest está instalado e roda com `--passWithNoTests`.
 - D-040 está como proposto: falta testar se um usuário de banco com `search_path` fixo isola as
   tabelas `whatsmeow_*` sem tocar na URL nem no código Go. Só importa quando o extrator entrar.
