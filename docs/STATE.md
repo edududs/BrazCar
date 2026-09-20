@@ -26,6 +26,9 @@ inteira); a tela de status num navegador, com a API no ar e fora do ar. A checag
 documentação entrou no portão rápido, e mudança em `docs/` ou em qualquer `.md` dispara o portão
 do backend. Nesta máquina a porta 5432 já é de outro projeto: use `POSTGRES_PORT`.
 
+Publicado em `github.com/edududs/BrazCar` (o `main` antigo, de 2025, foi sobrescrito). Os fluxos
+`backend` e `web` do GitHub passaram num clone limpo em Linux e aceitam disparo manual.
+
 ## Próximo passo
 
 1. **Teste de risco antes do domínio:** uma rota SSE mínima publicada pelo túnel do Cloudflare
@@ -40,7 +43,6 @@ do backend. Nesta máquina a porta 5432 já é de outro projeto: use `POSTGRES_P
   Entra junto com a sessão, no contexto `accounts`.
 - Falta provar o extrator rodando em Python 3.14 quando ele for embutido; se falhar, o recuo é
   para 3.13 (D-070).
-- Os fluxos do GitHub ainda não rodaram nenhuma vez.
 - O front ainda não tem teste; o vitest está instalado e roda com `--passWithNoTests`.
 - D-040 está como proposto: falta testar se um usuário de banco com `search_path` fixo isola as
   tabelas `whatsmeow_*` sem tocar na URL nem no código Go. Só importa quando o extrator entrar.
