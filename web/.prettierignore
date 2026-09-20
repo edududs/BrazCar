@@ -1,0 +1,4 @@
+.yarn
+dist
+src/routeTree.gen.ts
+src/shared/adapters/api/schema.d.ts

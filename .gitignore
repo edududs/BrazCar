@@ -11,9 +11,9 @@ __pycache__/
 # Node
 node_modules/
 web/dist/
-.yarn/*
-!.yarn/releases
-!.yarn/patches
+web/.yarn/*
+!web/.yarn/releases
+!web/.yarn/patches
 
 # Ambiente e segredos: nunca versionar
 .env

@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* Design tokens as CSS variables (D-057). Components use the token names, never raw colors. */
+@theme {
+  --color-surface: #fafaf9;
+  --color-content: #1c1917;
+  --color-neutral-soft: #e7e5e4;
+  --color-positive: #166534;
+  --color-positive-soft: #dcfce7;
+  --color-critical: #991b1b;
+  --color-critical-soft: #fee2e2;
+}

@@ -105,6 +105,9 @@ Origem de todas as linhas abaixo: entrevista de design de 18 a 20/09/2026.
 | D-055 | Tipos gerados do OpenAPI do ninja, confinados aos adaptadores | decidido | |
 | D-056 | TanStack Router e TanStack Query | decidido | |
 | D-057 | Primitivos sobre biblioteca headless, com Tailwind v4 e tokens em variáveis CSS | decidido | |
+| D-071 | TypeScript fica na 6.0.x: a 7 (porta nativa) não expõe a API de compilador que o typescript-eslint e o openapi-typescript usam. Subir quando os dois suportarem | decidido | |
+| D-072 | Rotas do TanStack Router por arquivo em `web/src/routes/`, finas, só compondo; `routeTree.gen.ts` é gerado e versionado | decidido | |
+| D-073 | Em desenvolvimento o Vite faz proxy de `/api` para a API local; em produção o front usa `VITE_API_BASE_URL` | decidido | |
 
 ## Deploy e operação
 
