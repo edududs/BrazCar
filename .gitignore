@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+*.sqlite3
+*.sqlite3-*
+
+# Node
+node_modules/
+web/dist/
+.yarn/*
+!.yarn/releases
+!.yarn/patches
+
+# Ambiente e segredos: nunca versionar
+.env
+.env.*
+!.env.example
+
+# Local, fora do versionamento
+.local/
+.claude/settings.local.json
+.whatsapp_scrapping_wip/
