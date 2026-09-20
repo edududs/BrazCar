@@ -4,21 +4,44 @@ Atualizado em 2026-09-20.
 
 ## Onde estamos
 
-Desenho fechado, nenhum código escrito. A entrevista de design de 18 a 20/09/2026 produziu as
-decisões em [decisions/README.md](decisions/README.md). O repo contém só documentação.
+Passo 1 concluído: o esqueleto do repo existe e os dois portões passam. Ainda não há regra de
+negócio, model, autenticação nem SSE.
+
+- `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, pacotes `rides`, `accounts`,
+  `places` e `shared` vazios com as três camadas, `config/` como raiz de composição, endpoint
+  `GET /api/health`, logs JSON na saída padrão (inclusive os do uvicorn) e banco por `DATABASE_URL`.
+  ruff `ALL`, pyright strict e poe em arquivos próprios. Teste de arquitetura por AST.
+- `contract/openapi.json`: exportado pelo comando `export_openapi_schema` do próprio ninja
+  (`uv run poe openapi`). Um teste falha se o arquivo divergir do código, e `yarn gen:api --check`
+  falha se os tipos do front divergirem do arquivo.
+- `web/`: yarn 4, Vite, React 19, TypeScript strict, Tailwind v4, eslint `strictTypeChecked`,
+  prettier, TanStack Router e Query, pastas por funcionalidade com as quatro camadas e uma tela
+  que mostra se a API está no ar. O eslint proíbe tipos gerados e cliente HTTP fora de `adapters/`.
+- Hooks em `.githooks/` (`pre-commit` rápido, `pre-push` pesado), GitHub Actions com o portão
+  rápido por caminho, `.env.example` e `compose.yml` de desenvolvimento com Postgres opcional.
 
 ## Próximo passo
 
-1. Esqueleto do repo: `src/` com uv, ruff, pyright, poe e o teste de arquitetura por AST;
-   `web/` com yarn 4, Vite, eslint e prettier; hooks de `pre-commit` e `pre-push`.
-2. **Teste de risco antes do domínio:** uma rota SSE mínima publicada pelo túnel do Cloudflare
+1. **Teste de risco antes do domínio:** uma rota SSE mínima publicada pelo túnel do Cloudflare
    em `api-brazcar.elj-labs.org`, medida num iPhone com o app em primeiro e segundo plano.
    Se o túnel fizer buffer, entra o adaptador de consulta condicional atrás da mesma porta (D-049).
-3. Contextos, nesta ordem: `places`, `accounts`, `rides`.
-4. Front e PWA.
+2. Contextos, nesta ordem: `places`, `accounts`, `rides`.
+3. Front e PWA.
 
 ## Pendências abertas
 
+- O Postgres do `compose.yml` só foi validado por `docker compose config`; o Docker estava
+  desligado. Subir uma vez com `docker compose --profile postgres up -d` e conferir o volume
+  (a imagem 18 usa `/var/lib/postgresql`) antes de escrever o contrato de repositório.
+- A tela de status foi validada por build, tipos e chamada a `/api/health` pelo proxy do Vite,
+  não olhada num navegador.
+- CORS com credenciais (D-059) ainda não existe: em desenvolvimento o Vite faz proxy (D-073).
+  Entra junto com a sessão, no contexto `accounts`.
+- Falta provar o extrator rodando em Python 3.14 quando ele for embutido; se falhar, o recuo é
+  para 3.13 (D-070).
+- A checagem de links da documentação, prevista no portão rápido em `architecture.md`, ainda
+  não foi escrita. Os fluxos do GitHub nunca rodaram, porque não houve push.
+- O front ainda não tem teste; o vitest está instalado e roda com `--passWithNoTests`.
 - D-040 está como proposto: falta testar se um usuário de banco com `search_path` fixo isola as
   tabelas `whatsmeow_*` sem tocar na URL nem no código Go. Só importa quando o extrator entrar.
 - Sobrou uma pasta `.whatsapp_scrapping_wip/proj1/.pytest_cache` com permissão negada no

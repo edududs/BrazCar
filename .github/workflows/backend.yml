@@ -1,0 +1,23 @@
+name: backend
+
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**", "contract/**", ".github/workflows/backend.yml"]
+  pull_request:
+    paths: ["backend/**", "contract/**", ".github/workflows/backend.yml"]
+
+jobs:
+  fast-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          working-directory: backend
+      - run: uv sync --locked
+      - run: uv run poe check

@@ -1,0 +1,25 @@
+# Development only. The API and the front run on the host; this file offers the optional
+# Postgres used to prove the repository contract on both databases (D-039).
+#   docker compose --profile postgres up -d
+name: brazcar-dev
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    profiles: [postgres]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-brazcar}
+      POSTGRES_USER: ${POSTGRES_USER:-brazcar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-brazcar}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:

@@ -1,0 +1,15 @@
+#!/bin/sh
+# Fast gate (D-066), filtered by path: format, lint, types, fast tests, contract drift.
+# Enable once per clone with `uv run poe hooks` from backend/.
+set -e
+
+root=$(git rev-parse --show-toplevel)
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+
+if echo "$staged" | grep -qE '^(backend|contract)/'; then
+  (cd "$root/backend" && uv run poe check)
+fi
+
+if echo "$staged" | grep -qE '^(web|contract)/'; then
+  (cd "$root/web" && yarn run check)
+fi

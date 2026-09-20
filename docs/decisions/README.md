@@ -124,6 +124,8 @@ Origem de todas as linhas abaixo: entrevista de design de 18 a 20/09/2026.
 | D-066 | GitHub roda só o portão rápido; testes pesados rodam localmente em `pre-push` | decidido | |
 | D-067 | Imagens no GHCR, publicadas ao criar tag | decidido | |
 | D-068 | Ordem de construção: esqueleto, teste do SSE, `places`, `accounts`, `rides`, front | decidido | |
+| D-074 | Hooks são scripts versionados em `.githooks/`, ligados por `core.hooksPath` (`uv run poe hooks`), sem o framework pre-commit; cada portão só roda se o caminho dele mudou | decidido | |
+| D-075 | `domain/` e `application/` de um contexto podem importar as mesmas camadas de `shared`, nunca as de outro contexto; o teste de arquitetura cobre isso | decidido | |
 
 ## Por que algumas linhas não têm registro
 

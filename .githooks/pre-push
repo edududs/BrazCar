@@ -1,0 +1,24 @@
+#!/bin/sh
+# Heavy gate (D-066), local only and filtered by path: every backend test, production build of the front.
+set -e
+
+root=$(git rev-parse --show-toplevel)
+empty_tree=$(git hash-object -t tree /dev/null)
+zero=0000000000000000000000000000000000000000
+changed=""
+
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue
+  base=$remote_sha
+  [ "$base" = "$zero" ] && base=$empty_tree
+  changed="$changed
+$(git diff --name-only "$base" "$local_sha")"
+done
+
+if echo "$changed" | grep -qE '^(backend|contract)/'; then
+  (cd "$root/backend" && uv run poe check && uv run poe test-heavy)
+fi
+
+if echo "$changed" | grep -qE '^(web|contract)/'; then
+  (cd "$root/web" && yarn run check && yarn build)
+fi

@@ -1,0 +1,23 @@
+name: web
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", "contract/**", ".github/workflows/web.yml"]
+  pull_request:
+    paths: ["web/**", "contract/**", ".github/workflows/web.yml"]
+
+jobs:
+  fast-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn run check
