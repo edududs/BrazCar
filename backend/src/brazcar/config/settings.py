@@ -76,7 +76,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-LOGGING = {
+LOGGING: dict[str, object] = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
