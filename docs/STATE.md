@@ -4,7 +4,7 @@ Atualizado em 2026-09-20.
 
 ## Onde estamos
 
-Passo 1 concluído: o esqueleto do repo existe e os dois portões passam. Ainda não há regra de
+Passo 1 concluído e marcado com a tag `v0.1.0`: o esqueleto do repo existe e os dois portões passam. Ainda não há regra de
 negócio, model, autenticação nem SSE.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, pacotes `rides`, `accounts`,
