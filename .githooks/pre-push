@@ -10,7 +10,8 @@ changed=""
 while read -r _local_ref local_sha _remote_ref remote_sha; do
   [ "$local_sha" = "$zero" ] && continue
   base=$remote_sha
-  [ "$base" = "$zero" ] && base=$empty_tree
+  # New branch, or a remote commit this clone never fetched (force push): compare with nothing.
+  git cat-file -e "$base^{commit}" 2>/dev/null || base=$empty_tree
   changed="$changed
 $(git diff --name-only "$base" "$local_sha")"
 done
