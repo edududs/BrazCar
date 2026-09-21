@@ -5,7 +5,7 @@
 Plataforma que funciona sozinha, sem extrator.
 
 - Esqueleto, tooling e teste de arquitetura. **Feito, tag `v0.1.0`.**
-- Teste do SSE pelo túnel do Cloudflare.
+- Teste do SSE pelo túnel do Cloudflare. **Feito: SSE confirmado (D-076).**
 - `places`: catálogo com nome canônico, apelidos, tipo e lugar pai.
 - `accounts`: cadastro por telefone, login, carros, recuperação de senha, exclusão de conta.
 - `rides`: publicar, editar, fechar, reabrir, cancelar, repetir, mural com filtros, contato.

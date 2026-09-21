@@ -5,7 +5,7 @@ a coluna **Registro** aponta para um arquivo com contexto, decisão e alternativ
 
 **Status:** `decidido`, `proposto` (falta validar) ou `adiado` (fora do MVP, com intenção registrada).
 Decisão não se edita: cria-se outra e marca-se a antiga como `substituída por D-NNN`.
-Origem de todas as linhas abaixo: entrevista de design de 18 a 20/09/2026.
+Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguintes nasceram na construção.
 
 ## Direção
 
@@ -95,6 +95,8 @@ Origem de todas as linhas abaixo: entrevista de design de 18 a 20/09/2026.
 | D-050 | `LISTEN/NOTIFY` como segundo adaptador da mesma porta | adiado | |
 | D-051 | PWA online-only: sem rede, tela de aviso | decidido | |
 | D-052 | Atualização do app em modo `prompt` e piso de versão informado pela API | decidido | |
+| D-076 | SSE confirmado pelo túnel: eventos um a um (atraso médio 35 ms), HTTP/2 na borda, 100 conexões por ~10 MiB; no iPhone a conexão morre em segundo plano e volta em ~1s. Consulta condicional não é necessária | decidido | [0013](0013-sse-through-tunnel-verdict.md) |
+| D-077 | Batimento SSE é evento `ping` a cada 15s, não comentário; reconectar é caminho feliz; ao voltar ao foco a conexão tem 3s para provar que vive; rajada ao acordar vale um sinal só | decidido | [0013](0013-sse-through-tunnel-verdict.md) |
 
 ## Front
 
@@ -126,10 +128,13 @@ Origem de todas as linhas abaixo: entrevista de design de 18 a 20/09/2026.
 | D-068 | Ordem de construção: esqueleto, teste do SSE, `places`, `accounts`, `rides`, front | decidido | |
 | D-074 | Hooks são scripts versionados em `.githooks/`, ligados por `core.hooksPath` (`uv run poe hooks`), sem o framework pre-commit; cada portão só roda se o caminho dele mudou | decidido | |
 | D-075 | `domain/` e `application/` de um contexto podem importar as mesmas camadas de `shared`, nunca as de outro contexto; o teste de arquitetura cobre isso | decidido | |
+| D-078 | API em uvicorn, um processo por container (o sinal do mural é uma tarefa por processo web); a imagem traz o próprio healthcheck, que se apresenta com o primeiro host permitido | decidido | |
+| D-079 | CORS por `django-cors-headers`, com origens explícitas vindas do ambiente; é a parte de D-059 que já existe | decidido | |
 
 ## Por que algumas linhas não têm registro
 
-D-061: o passo de migração separado protegeria contra falha antes da troca, mas num ambiente de
+D-078: o granian foi considerado; conexões SSE ociosas são tarefas asyncio paradas, a 0,1 MiB cada,
+e o uvicorn já era o servidor de desenvolvimento e o dos logs JSON. D-061: o passo de migração separado protegeria contra falha antes da troca, mas num ambiente de
 teste com uma API só o entrypoint é mais simples. D-058: `api.brazcar` seria de segundo nível e
 fora do certificado grátis. D-032: o envio de e-mail do Cloudflare exige plano pago; o Resend é
 gratuito nesse volume e fala SMTP. D-066: o Postgres no GitHub alongaria cada execução.
