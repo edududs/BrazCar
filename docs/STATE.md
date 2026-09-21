@@ -53,6 +53,9 @@ Publicado em `github.com/edududs/BrazCar` (o `main` antigo, de 2025, foi sobresc
 ## Em voo
 
 Passo 2, teste de risco do SSE: [specs/sse-tunnel-test/plan.md](specs/sse-tunnel-test/plan.md).
-Rota de diagnóstico, página `/diagnostics`, imagem, compose de deploy e fluxo do GHCR prontos e
-conferidos localmente. Falta tudo o que é fora do repo e depende do ok do Eduardo: push, imagem no
-GHCR, subida na máquina de teste, entrada no túnel, DNS, front no Vercel e a medição no iPhone.
+API publicada em `api-brazcar.elj-labs.org` e front em `brazcar.elj-labs.org`
+([runbooks/deploy.md](runbooks/deploy.md)). Medido pelo caminho real: o túnel **não faz buffer**
+(eventos um a um, atraso médio 35 ms), HTTP/2 na borda, conexão muda cortada aos 126s, batimento
+resolve, 100 conexões custam ~10 MiB. Números em
+[specs/sse-tunnel-test/results.md](specs/sse-tunnel-test/results.md). Falta o iPhone (roteiro no
+plano), que é o que fecha o veredito de D-046, e o resultado do teste longo de 40 min.
