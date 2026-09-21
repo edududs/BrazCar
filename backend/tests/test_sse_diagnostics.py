@@ -50,6 +50,14 @@ async def test_heartbeat_alone_sends_no_tick() -> None:
     assert await take(frames, 3) == ["retry: 3000\n\n", ": ping\n\n", ": ping\n\n"]
 
 
+async def test_heartbeat_can_be_an_event_the_browser_sees() -> None:
+    frames = diagnostic_frames(tick_seconds=0, heartbeat_seconds=0.01, heartbeat_kind="event")
+
+    _, heartbeat = await take(frames, 2)
+
+    assert heartbeat.startswith("event: ping\ndata: ")
+
+
 @pytest.mark.parametrize("configured", ["", TOKEN])
 async def test_route_hides_itself_without_the_right_token(settings: Settings, configured: str) -> None:
     settings.SSE_DIAGNOSTICS_TOKEN = configured

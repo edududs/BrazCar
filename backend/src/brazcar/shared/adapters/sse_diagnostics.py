@@ -14,6 +14,7 @@ import time
 from collections.abc import AsyncIterator
 from hmac import compare_digest
 from http import HTTPStatus
+from typing import Literal
 
 from django.conf import settings
 from django.http import HttpRequest, StreamingHttpResponse
@@ -33,10 +34,19 @@ class StreamOptions(Schema):
     # 0 turns the corresponding frame off. Both off gives a silent connection, to watch a proxy cut it.
     tick_seconds: float = Field(default=1.0, ge=0, le=60)
     heartbeat_seconds: float = Field(default=15.0, ge=0, le=300)
+    # EventSource hides comments from JavaScript, so a client watchdog only sees a heartbeat that is an
+    # event. Comment is the default; `event` lets the test compare both.
+    heartbeat_kind: Literal["comment", "event"] = "comment"
 
 
-async def diagnostic_frames(*, tick_seconds: float, heartbeat_seconds: float) -> AsyncIterator[str]:
-    """Ticks carry a sequence number and the server clock; heartbeats are comments. 0 disables either."""
+def _server_clock() -> str:
+    return json.dumps({"server_time_ms": time.time_ns() // 1_000_000})
+
+
+async def diagnostic_frames(
+    *, tick_seconds: float, heartbeat_seconds: float, heartbeat_kind: Literal["comment", "event"] = "comment"
+) -> AsyncIterator[str]:
+    """Ticks carry a sequence number and the server clock; heartbeats are comments or events. 0 disables."""
     yield retry_frame(_BROWSER_RETRY_MS)
     loop = asyncio.get_running_loop()
     next_tick = loop.time() if tick_seconds else math.inf
@@ -53,7 +63,8 @@ async def diagnostic_frames(*, tick_seconds: float, heartbeat_seconds: float) ->
             yield event_frame(event="tick", data=payload, event_id=str(sequence))
             next_tick += tick_seconds
         else:
-            yield comment_frame("ping")
+            is_event = heartbeat_kind == "event"
+            yield event_frame(event="ping", data=_server_clock()) if is_event else comment_frame("ping")
             next_heartbeat += heartbeat_seconds
 
 
@@ -75,5 +86,6 @@ async def stream_diagnostics(request: HttpRequest, options: Query[StreamOptions]
         diagnostic_frames(
             tick_seconds=_at_least_minimum(options.tick_seconds),
             heartbeat_seconds=_at_least_minimum(options.heartbeat_seconds),
+            heartbeat_kind=options.heartbeat_kind,
         )
     )
