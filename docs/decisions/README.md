@@ -129,11 +129,13 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-074 | Hooks são scripts versionados em `.githooks/`, ligados por `core.hooksPath` (`uv run poe hooks`), sem o framework pre-commit; cada portão só roda se o caminho dele mudou | decidido | |
 | D-075 | `domain/` e `application/` de um contexto podem importar as mesmas camadas de `shared`, nunca as de outro contexto; o teste de arquitetura cobre isso | decidido | |
 | D-078 | API em uvicorn, um processo por container (o sinal do mural é uma tarefa por processo web); a imagem traz o próprio healthcheck, que se apresenta com o primeiro host permitido | decidido | |
+| D-080 | Encerramento de passo segue `docs/runbooks/close-step.md`: Conventional Commits, SemVer com a versão calculada dos commits, `CHANGELOG.md` gerado pelo git-cliff no formato Keep a Changelog, tag anotada com as notas e GitHub Release criada a partir da tag. A tag é a fonte da verdade da versão | decidido | |
+| D-081 | A imagem da API é pública e a máquina de teste a puxa como anônimo, com um `DOCKER_CONFIG` próprio e vazio em `~/.brazcar/docker`; sem token de GHCR para o BrazCar | decidido | |
 | D-079 | CORS por `django-cors-headers`, com origens explícitas vindas do ambiente; é a parte de D-059 que já existe | decidido | |
 
 ## Por que algumas linhas não têm registro
 
-D-078: o granian foi considerado; conexões SSE ociosas são tarefas asyncio paradas, a 0,1 MiB cada,
+D-080: release-please e semantic-release automatizam o mesmo, mas decidem no GitHub; aqui a versão é cortada localmente, o push continua sendo do dono, e o GitHub só transforma a tag em release. D-081: o login de `ghcr.io` guardado no usuário da máquina é de outro projeto e faz o registro responder `denied` até para imagem pública; um token novo resolveria, mas seria um segredo a mais para guardar e renovar sem necessidade. Se a imagem virar privada, o caminho é o do JayceFinance: token clássico só com `read:packages`, `docker login` por stdin nesse mesmo diretório. D-078: o granian foi considerado; conexões SSE ociosas são tarefas asyncio paradas, a 0,1 MiB cada,
 e o uvicorn já era o servidor de desenvolvimento e o dos logs JSON. D-061: o passo de migração separado protegeria contra falha antes da troca, mas num ambiente de
 teste com uma API só o entrypoint é mais simples. D-058: `api.brazcar` seria de segundo nível e
 fora do certificado grátis. D-032: o envio de e-mail do Cloudflare exige plano pago; o Resend é

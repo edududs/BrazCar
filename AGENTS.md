@@ -37,6 +37,7 @@ Este arquivo é o único sempre carregado. Todo o resto é sob demanda: comece p
 | Por que algo foi decidido | `docs/decisions/README.md` |
 | Vocabulário e invariantes de um contexto | `docs/domain/<context>.md` |
 | O que vem depois | `docs/ROADMAP.md` |
+| Fechar um passo: versão, changelog, release | `docs/runbooks/close-step.md` |
 | Como publicar e o que já deu errado no deploy | `docs/runbooks/deploy.md` |
 
 Regras por área carregam sozinhas ao tocar os arquivos: `.claude/rules/`.

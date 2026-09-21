@@ -19,7 +19,8 @@ O que foi feito de verdade no primeiro deploy (2026-09-21). API na máquina de t
 ```bash
 # publicar: criar tag vX.Y.Z, ou `gh workflow run image --ref main` para a tag edge
 ssh trovva@trovva-internal
-d=$(mktemp -d); DOCKER_CONFIG=$d docker pull ghcr.io/edududs/brazcar-api:edge; rm -rf $d
+export DOCKER_CONFIG=~/.brazcar/docker && mkdir -p "$DOCKER_CONFIG"   # vazio de propósito: pull anônimo (D-081)
+docker pull ghcr.io/edududs/brazcar-api:edge
 cd ~/brazcar && BRAZCAR_IMAGE_TAG=edge docker compose up -d
 docker compose ps          # esperar (healthy)
 curl -s -H "Host: api-brazcar.elj-labs.org" http://127.0.0.1/api/health
@@ -29,9 +30,11 @@ A migração roda no entrypoint da API (`RUN_MIGRATIONS=1`, D-061).
 
 ## Armadilhas já pagas
 
-- **Pull negado.** O login do `ghcr.io` guardado na máquina não cobre este pacote e o registro
-  responde `denied` mesmo com a imagem pública. O `DOCKER_CONFIG` vazio acima puxa como anônimo sem
-  tocar no login dos outros projetos. Conserto de verdade: token da máquina com acesso ao pacote.
+- **Pull negado.** O `~/.docker/config.json` do usuário tem um login de `ghcr.io` de outro projeto, e o
+  registro responde `denied` mesmo com a imagem pública. Por isso o BrazCar usa um `DOCKER_CONFIG`
+  próprio e vazio em `~/.brazcar/docker`, que puxa como anônimo sem tocar no login dos outros (D-081).
+  Não é preciso token. Só se a imagem virar privada: token clássico com `read:packages` e
+  `docker login ghcr.io --password-stdin` nesse mesmo diretório.
 - **Container que nunca fica saudável não é roteado.** O Traefik ignora container `unhealthy`, e o
   sintoma é 404 do Traefik, não erro da API. O healthcheck da imagem se apresenta com o primeiro
   host de `DJANGO_ALLOWED_HOSTS`, porque o Django recusa `127.0.0.1` com debug desligado.

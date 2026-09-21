@@ -45,13 +45,11 @@ Publicado em `github.com/edududs/BrazCar` (o `main` antigo, de 2025, foi sobresc
 - Rota `/api/diagnostics/sse` e página `/diagnostics` seguem ligadas de propósito: falta repetir
   a medição com o app instalado na tela de início (`standalone`), o que só faz sentido quando o
   PWA existir. Depois disso, remover rota, página e `SSE_DIAGNOSTICS_TOKEN`.
-- O login do `ghcr.io` na máquina de teste não cobre o pacote `brazcar-api`; o deploy puxa como
-  anônimo (runbook). Resolver com um token que cubra o pacote.
 - Teto de descritores do container da API não foi conferido; é o primeiro limite real para
   centenas de conexões SSE simultâneas.
 - Falta provar o extrator rodando em Python 3.14 quando ele for embutido; se falhar, o recuo é
   para 3.13 (D-070).
-- O front ainda não tem teste; o vitest está instalado e roda com `--passWithNoTests`.
+- O front tem poucos testes: só a lógica de tempo do stream (`stream-timing`) está coberta.
 - D-040 está como proposto: falta testar se um usuário de banco com `search_path` fixo isola as
   tabelas `whatsmeow_*` sem tocar na URL nem no código Go. Só importa quando o extrator entrar.
 - Sobrou uma pasta `.whatsapp_scrapping_wip/proj1/.pytest_cache` com permissão negada no

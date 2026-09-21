@@ -15,6 +15,7 @@ Uma linha por documento. Abra só o que a tarefa pede.
 | [domain/places.md](domain/places.md) | Glossário e invariantes de lugares. | Idem |
 
 | [runbooks/deploy.md](runbooks/deploy.md) | Como a API e o front são publicados, e as armadilhas já pagas. | O procedimento de deploy muda |
+| [runbooks/close-step.md](runbooks/close-step.md) | Ritual para fechar um passo: verificação, documentos, versão, changelog, release, memória. | O ritual muda |
 
 `specs/<feature>/` é efêmero: spec, design e tarefas da feature em andamento, apagado após o merge.
 
