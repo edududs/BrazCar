@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado em 2026-09-20.
+Atualizado em 2026-09-21.
 
 ## Onde estamos
 
@@ -52,4 +52,7 @@ Publicado em `github.com/edududs/BrazCar` (o `main` antigo, de 2025, foi sobresc
 
 ## Em voo
 
-Nada.
+Passo 2, teste de risco do SSE: [specs/sse-tunnel-test/plan.md](specs/sse-tunnel-test/plan.md).
+Rota de diagnóstico, página `/diagnostics`, imagem, compose de deploy e fluxo do GHCR prontos e
+conferidos localmente. Falta tudo o que é fora do repo e depende do ok do Eduardo: push, imagem no
+GHCR, subida na máquina de teste, entrada no túnel, DNS, front no Vercel e a medição no iPhone.

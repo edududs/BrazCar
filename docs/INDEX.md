@@ -14,8 +14,10 @@ Uma linha por documento. Abra só o que a tarefa pede.
 | [domain/accounts.md](domain/accounts.md) | Glossário e invariantes de contas. | Idem |
 | [domain/places.md](domain/places.md) | Glossário e invariantes de lugares. | Idem |
 
-Ainda não existem, de propósito: `runbooks/deploy.md` (nasce com o primeiro deploy) e
-`specs/<feature>/` (efêmero: spec, design e tarefas da feature em andamento, apagado após o merge).
+| [specs/sse-tunnel-test/plan.md](specs/sse-tunnel-test/plan.md) | Plano e resultados do teste de risco do SSE (passo 2). | Efêmero: apagado ao fechar o passo |
+
+Ainda não existe, de propósito: `runbooks/deploy.md` (nasce com o primeiro deploy).
+`specs/<feature>/` é efêmero: spec, design e tarefas da feature em andamento, apagado após o merge.
 
 Não se documenta o que uma busca no código responde: estrutura de pastas, assinaturas, lista de
 endpoints, campos de model, comandos do `poe_tasks.toml`.
