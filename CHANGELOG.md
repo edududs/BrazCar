@@ -6,6 +6,17 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.2.1] - 2026-09-21
+
+### Corrigido
+
+- Run the heavy gate through named tasks the closing ritual can call
+- **release:** Keep one version across the package, the API and the contract
+
+### Documentação
+
+- Bring STATE up to v0.2.1 before the release
+
 ## [0.2.0] - 2026-09-21
 
 ### Adicionado
