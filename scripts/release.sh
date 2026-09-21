@@ -34,15 +34,19 @@ if ((dry_run)); then
     exit 0
 fi
 
-# The version lives in the tag; the backend package follows it so the image reports the same number.
-(cd backend && uv version "${next#v}" >/dev/null)
+# The version lives in the tag. The backend package follows it, the API reads it from the package,
+# and the contract and the generated front types are rebuilt so they carry the same number (D-082).
+(cd backend && uv version "${next#v}" >/dev/null && uv run poe openapi >/dev/null)
+(cd web && yarn gen:api >/dev/null)
 git cliff --tag "$next" --output CHANGELOG.md 2>/dev/null
 
-git add CHANGELOG.md backend/pyproject.toml backend/uv.lock
+git add CHANGELOG.md backend/pyproject.toml backend/uv.lock contract/openapi.json web/src/shared/adapters/api/schema.d.ts
 git commit --quiet -m "chore(release): $next"
 
-# --cleanup=verbatim keeps the markdown headings, which git would otherwise drop as comments.
-printf '%s\n\n%s\n' "$next" "$notes" | git tag --annotate "$next" --file - --cleanup=verbatim
+# The tag message is the notes alone: the release workflow publishes it as the release body, and a
+# subject line repeating the version would show up there. --cleanup=verbatim keeps the markdown
+# headings, which git would otherwise drop as comments.
+printf '%s\n' "$notes" | sed '/./,$!d' | git tag --annotate "$next" --file - --cleanup=verbatim
 
 echo "release: $next committed and tagged locally."
 echo "release: to publish, the owner runs: git push --follow-tags"

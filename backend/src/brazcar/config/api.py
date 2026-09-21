@@ -1,5 +1,7 @@
 """The single NinjaAPI instance. Each context plugs its router in here."""
 
+from importlib.metadata import version
+
 from django.conf import settings
 from ninja import NinjaAPI
 
@@ -8,7 +10,7 @@ from brazcar.shared.adapters.sse_diagnostics import router as sse_diagnostics_ro
 
 api = NinjaAPI(
     title="BrazCar API",
-    version="0.1.0",
+    version=version("brazcar"),  # one version for the whole release; the tag is the source (D-082)
     docs_url="/docs" if settings.DEBUG else None,
 )
 api.add_router("", health_router)

@@ -130,6 +130,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-075 | `domain/` e `application/` de um contexto podem importar as mesmas camadas de `shared`, nunca as de outro contexto; o teste de arquitetura cobre isso | decidido | |
 | D-078 | API em uvicorn, um processo por container (o sinal do mural é uma tarefa por processo web); a imagem traz o próprio healthcheck, que se apresenta com o primeiro host permitido | decidido | |
 | D-080 | Encerramento de passo segue `docs/runbooks/close-step.md`: Conventional Commits, SemVer com a versão calculada dos commits, `CHANGELOG.md` gerado pelo git-cliff no formato Keep a Changelog, tag anotada com as notas e GitHub Release criada a partir da tag. A tag é a fonte da verdade da versão | decidido | |
+| D-082 | Uma versão só para a release inteira: a tag é a fonte, o pacote do backend a acompanha, a API lê a versão do pacote instalado, e o contrato e os tipos do front são regerados no corte da release. Versão de contrato independente só quando existir cliente externo da API | decidido | |
 | D-081 | A imagem da API é pública e a máquina de teste a puxa como anônimo, com um `DOCKER_CONFIG` próprio e vazio em `~/.brazcar/docker`; sem token de GHCR para o BrazCar | decidido | |
 | D-079 | CORS por `django-cors-headers`, com origens explícitas vindas do ambiente; é a parte de D-059 que já existe | decidido | |
 
