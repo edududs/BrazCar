@@ -20,6 +20,8 @@ paths:
   permitidas; a tela só desenha (ADR-0011).
 - Dados: TanStack Query. O sinal SSE de revisão do mural invalida a consulta; nunca carrega dados.
   Refazer a busca ao focar a aba e ao voltar a rede é obrigatório, por causa do iOS.
+- SSE só por `shared/adapters/resilient-event-source.ts`, nunca `EventSource` cru. Reconectar é
+  caminho feliz, não erro; eventos que chegam em rajada ao acordar valem um sinal só (ADR-0013).
 - Rotas: TanStack Router. Filtros do mural vivem na URL.
 - Primitivos sobre biblioteca headless (React Aria ou Base UI) com Tailwind v4 e tokens em
   variáveis CSS. Acessibilidade de diálogo, menu e sheet não se faz à mão.

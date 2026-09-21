@@ -15,6 +15,9 @@ paths:
 - Persistência: o adaptador grava o agregado inteiro numa função síncrona com `transaction.atomic`,
   exposta como `async` por `sync_to_async`. Django 6 não tem transação em modo async (ADR-0008).
 - Toda escrita que muda o mural incrementa a revisão do mural na mesma transação (ADR-0010).
+- SSE sai por `shared/adapters/sse.py` (quadros e cabeçalhos anti-buffer). Batimento é evento
+  `ping` a cada 15s, nunca comentário: o navegador esconde comentários do JavaScript (ADR-0013).
+  Rota SSE não segura conexão do ORM.
 - ninja é adaptador de entrada: traduz HTTP para DTO, chama o caso de uso, traduz erro de
   domínio em resposta. Sem regra de negócio em rota.
 - O admin do Django só escreve no catálogo de `places`. No resto é somente leitura, e moderação

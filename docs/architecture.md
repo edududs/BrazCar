@@ -59,6 +59,9 @@ grava o estado, acrescenta os eventos ao histórico e incrementa a revisão do m
 segundo. Quando o número muda, escreve "mudou, revisão N" em todas as conexões SSE abertas. Cada
 celular espera até dois segundos aleatórios e busca a lista, que fica em cache por revisão
 (ADR-0010). Ao focar a aba ou voltar a rede, o app busca de novo de qualquer forma.
+A conexão cai por rotina, porque o túnel a derruba em rajadas e o iOS a mata em segundo plano:
+o servidor manda um evento `ping` a cada 15s, e o cliente reconecta sozinho por silêncio, ao
+voltar ao foco e ao voltar a rede. Medido pelo caminho real e num iPhone (ADR-0013).
 
 **Contato.** A lista nunca traz telefone nem placa. O botão chama uma rota própria, que exige
 login, aplica limite por conta, registra o pedido e devolve o link `wa.me` com mensagem pronta e a
