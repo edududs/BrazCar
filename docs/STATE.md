@@ -4,7 +4,8 @@ Atualizado em 2026-09-21.
 
 ## Onde estamos
 
-Versão `v0.2.0`: passos 1 e 2 concluídos. O esqueleto existe (tag `v0.1.0`), os dois portões
+Versão `v0.2.1`: passos 1 e 2 concluídos, mais a correção do ritual de encerramento (portão pesado
+como task nomeada, versão única entre pacote, API e contrato). O esqueleto existe (tag `v0.1.0`), os dois portões
 passam, e o teste de risco (tag `v0.2.0`) deu **SSE confirmado** pelo túnel e num iPhone (D-076, números em
 [decisions/0013](decisions/0013-sse-through-tunnel-verdict.md)). API publicada em
 `api-brazcar.elj-labs.org` e front em `brazcar.elj-labs.org`
@@ -23,7 +24,7 @@ passam, e o teste de risco (tag `v0.2.0`) deu **SSE confirmado** pelo túnel e n
   prettier, TanStack Router e Query, pastas por funcionalidade com as quatro camadas, uma tela
   que mostra se a API está no ar, o adaptador `resilient-event-source` (embrião do sinal do mural)
   e a página `/diagnostics`. O eslint proíbe tipos gerados e cliente HTTP fora de `adapters/`.
-- Hooks em `.githooks/` (`pre-commit` rápido, `pre-push` pesado), GitHub Actions com o portão
+- Hooks em `.githooks/` (`pre-commit` rápido, `pre-push` pesado, que chama `poe check-heavy` e `yarn run check:heavy`), GitHub Actions com o portão
   rápido por caminho e os fluxos `image` e `release` disparados por tag, `.env.example`,
   `compose.yml` de desenvolvimento com Postgres opcional e `infra/compose.yml` de deploy.
 
