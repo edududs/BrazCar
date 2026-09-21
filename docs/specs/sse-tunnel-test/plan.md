@@ -87,18 +87,31 @@ middleware de compressão, cloudflared 2026.5.0 ativo, login no `ghcr.io` presen
 
 ## Roteiro do iPhone (Eduardo)
 
-Abrir `https://brazcar.elj-labs.org/diagnostics?token=<token>&heartbeatKind=event`. Antes de cada
-passo, tocar em **Marcar momento**; a marca numerada é o que liga o log ao passo. Wi-Fi ligado.
+**Objetivo:** descobrir se o iPhone mantém a conexão viva quando a tela bloqueia, o app troca ou a
+rede muda. Você só faz as ações no aparelho e manda o registro; a análise é de quem lê o log.
 
-1. Safari em primeiro plano, 2 min parado. (marca 1)
-2. Marcar, bloquear a tela 30s, desbloquear, esperar 10s. (marca 2)
-3. Marcar, bloquear 2 min, desbloquear, esperar 10s. (marca 3)
-4. Marcar, bloquear 10 min, desbloquear, esperar 10s. (marca 4)
-5. Marcar, trocar para outro app por 1 min, voltar, esperar 10s. (marca 5)
-6. Marcar, desligar o Wi-Fi (cai no 4G), esperar 30s, religar o Wi-Fi, esperar 30s. (marca 6)
-7. **Compartilhar log** e mandar para si mesmo (AirDrop, Notas, e-mail). Colar na sessão.
-8. Compartilhar → **Adicionar à Tela de Início**, abrir pelo ícone (o campo "modo" deve mostrar
-   `standalone`) e repetir os passos 1 a 7.
+**"Marcar momento"** é um botão da própria página. Ela grava uma linha por segundo; ao tocar no
+botão, entra uma linha destacada e numerada (`=== MARCA 1 ===`). Serve só para achar, no meio de
+centenas de linhas, o ponto em que cada ação aconteceu. Esquecer não estraga o teste.
 
-Se sobrar tempo: repetir o passo 3 com `&heartbeatKind=comment&tickSeconds=0` (o caso do mural
-parado com batimento invisível).
+1. No PC, ler o token: `ssh trovva@trovva-internal "grep SSE_DIAGNOSTICS_TOKEN ~/.brazcar/api.env"`.
+2. No iPhone, com Wi-Fi, abrir no Safari
+   `https://brazcar.elj-labs.org/diagnostics?token=<token>&heartbeatKind=event`.
+   Tem que aparecer `readyState: open` e uma linha nova por segundo. Se não, parar aqui.
+3. Tocar em **Marcar momento** logo antes de cada ação:
+
+   | Marca | Ação |
+   |---|---|
+   | 1 | Safari aberto na tela por 2 min, sem mexer |
+   | 2 | Bloquear a tela 30 s, desbloquear, esperar 10 s |
+   | 3 | Bloquear 2 min, desbloquear, esperar 10 s |
+   | 4 | Bloquear 10 min, desbloquear, esperar 10 s |
+   | 5 | Ir para outro app por 1 min, voltar, esperar 10 s |
+   | 6 | Desligar o Wi-Fi (cai no 4G), esperar 30 s, religar, esperar 30 s |
+
+4. Tocar em **Compartilhar log**, mandar o texto para si mesmo e colar na sessão de trabalho.
+5. Opcional: no Safari, Compartilhar → **Adicionar à Tela de Início**, abrir pelo ícone (o campo
+   "modo" deve mostrar `standalone`), repetir os passos 3 e 4 e mandar o segundo log.
+
+Se sobrar tempo: repetir a marca 3 com `&heartbeatKind=comment&tickSeconds=0` no lugar de
+`&heartbeatKind=event` (o caso do mural parado com batimento invisível ao navegador).
