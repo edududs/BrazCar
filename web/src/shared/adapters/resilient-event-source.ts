@@ -87,6 +87,11 @@ export function openResilientEventSource(
     };
     next.onerror = () => {
       onLifecycle({ kind: "error", readyState: readyState() });
+      if (pendingResume !== null) {
+        // Seen on iOS: after a lock the socket is dead but still reads "open" until this error.
+        connect("dead-on-resume");
+        return;
+      }
       // CONNECTING means the browser is retrying by itself; CLOSED means it gave up.
       if (next.readyState === EventSource.CLOSED) {
         window.clearTimeout(retryTimer);
@@ -124,7 +129,9 @@ export function openResilientEventSource(
 
   const doubt = (trigger: ResumeTrigger) => {
     report(trigger);
-    if (pendingResume !== null) return;
+    // Only an open connection can lie. Anything else is already being replaced, by the watchdog
+    // (timers frozen in the background fire first on resume) or by the browser's own retry.
+    if (pendingResume !== null || readyState() !== "open") return;
     if (resumeGraceMs === 0) {
       connect("resume-grace-expired");
       return;

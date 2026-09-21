@@ -9,6 +9,8 @@ export type ConnectReason =
   | "silence"
   /** The page came back, or the network changed, and nothing arrived within the grace period. */
   | "resume-grace-expired"
+  /** A resumed connection reported an error: it was dead all along, no point in waiting the grace out. */
+  | "dead-on-resume"
   /** The browser gave up on its own retries. */
   | "closed-by-error";
 

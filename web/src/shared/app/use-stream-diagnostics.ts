@@ -24,6 +24,8 @@ const LOG_LIMIT = 3000;
 interface State {
   readonly readyState: ConnectionReadyState;
   readonly connections: number;
+  /** Bumped on every `open`, so the browser's own reconnects also start a new numbered stream. */
+  readonly stream: number;
   readonly connectingAtMs: number | null;
   readonly timeToFirstEventMs: number | null;
   readonly summary: TimingSummary;
@@ -42,6 +44,7 @@ type Action =
 const initialState: State = {
   readyState: "closed",
   connections: 0,
+  stream: 0,
   connectingAtMs: null,
   timeToFirstEventMs: null,
   summary: emptyTimingSummary,
@@ -90,7 +93,7 @@ function reduceLifecycle(state: State, atMs: number, event: ConnectionLifecycleE
         connectingAtMs: atMs,
       };
     case "open":
-      return { ...logged, readyState: "open" };
+      return { ...logged, readyState: "open", stream: state.stream + 1 };
     case "error":
     case "environment":
       return { ...logged, readyState: event.readyState };
@@ -121,13 +124,13 @@ function reduceMessage(
   }
   const previous = timed.summary.last;
   const interval =
-    previous !== null && previous.connection === timed.connections
+    previous !== null && previous.connection === timed.stream
       ? `${String(atMs - previous.receivedAtMs)}ms`
       : "—";
   const summary = addReception(
     timed.summary,
     {
-      connection: timed.connections,
+      connection: timed.stream,
       seq: message.seq,
       serverTimeMs: message.serverTimeMs,
       receivedAtMs: atMs,
@@ -185,6 +188,7 @@ export function useStreamDiagnostics(settings: StreamDiagnosticsSettings): Strea
           ...initialState,
           readyState: current.readyState,
           connections: current.connections,
+          stream: current.stream,
         };
     }
   }, initialState);
