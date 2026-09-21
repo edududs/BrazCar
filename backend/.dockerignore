@@ -4,4 +4,5 @@
 !src
 !manage.py
 !docker-entrypoint.sh
+!scripts/container_healthcheck.py
 **/__pycache__
