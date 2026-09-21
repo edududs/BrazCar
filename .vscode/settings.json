@@ -1,0 +1,11 @@
+{
+  // The editor opens at the repo root, but each side owns its tooling (D-069).
+  // Without these the Ruff extension falls back to its defaults (88 columns).
+  "ruff.configuration": "${workspaceFolder}/backend/ruff.toml",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.rulers": [110]
+  },
+  "python.analysis.extraPaths": ["backend/src"],
+  "prettier.configPath": "web/.prettierrc.json"
+}
