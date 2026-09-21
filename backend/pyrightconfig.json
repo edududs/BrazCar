@@ -1,5 +1,5 @@
 {
-  "include": ["src", "tests", "manage.py"],
+  "include": ["src", "tests", "scripts", "manage.py"],
   "typeCheckingMode": "strict",
   "pythonVersion": "3.14",
   "venvPath": ".",

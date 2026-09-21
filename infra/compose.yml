@@ -1,0 +1,67 @@
+# Deploy on the test machine (D-060): API and its own Postgres behind the Traefik the machine already
+# runs. The box is this file, the env file and the volume. Nothing is built here: the image comes from
+# GHCR (D-067). Development uses the compose.yml at the repo root, not this one.
+# How to use it: docs/runbooks/deploy.md
+name: brazcar
+
+services:
+  api:
+    image: ghcr.io/edududs/brazcar-api:${BRAZCAR_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    # The env file lives outside the repo, on the host. BRAZCAR_ENV_FILE lets the same compose serve
+    # another machine without editing this file.
+    env_file:
+      - ${BRAZCAR_ENV_FILE:-~/.brazcar/api.env}
+    environment:
+      # Only the API migrates; a future worker must not set this (D-061).
+      RUN_MIGRATIONS: "1"
+      # uvicorn honours X-Forwarded-* only from this list. Traefik arrives through the `web` network
+      # with an address that changes on every recreate, hence `*`. Topology, not application config.
+      FORWARDED_ALLOW_IPS: "*"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - web
+      - internal
+    labels:
+      traefik.enable: "true"
+      # Required because the container sits on two networks; otherwise Traefik may pick the wrong one.
+      traefik.docker.network: web
+      traefik.http.routers.brazcar-api.rule: Host(`api-brazcar.elj-labs.org`)
+      # `web` is Traefik's plain HTTP entrypoint, bound to 127.0.0.1:80. TLS ends at the Cloudflare tunnel.
+      traefik.http.routers.brazcar-api.entrypoints: web
+      traefik.http.services.brazcar-api.loadbalancer.server.port: "8000"
+      # The public scheme is https, but Traefik's HTTP entrypoint would report http to the API.
+      traefik.http.middlewares.brazcar-public-scheme.headers.customrequestheaders.X-Forwarded-Proto: https
+      traefik.http.routers.brazcar-api.middlewares: brazcar-public-scheme
+    # No healthcheck here: the image brings its own (/api/health).
+
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    # Same env file: Postgres reads POSTGRES_* and ignores the rest.
+    env_file:
+      - ${BRAZCAR_ENV_FILE:-~/.brazcar/api.env}
+    networks:
+      # No `web` and no `ports`: only the API reaches the database.
+      - internal
+    volumes:
+      # Since 18 the official image keeps data under a versioned subdirectory; mount the root.
+      - brazcar-postgres-data:/var/lib/postgresql
+    healthcheck:
+      # `$$` defers expansion to the container shell, where the env file values exist.
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+networks:
+  # Traefik's. Used, never created here.
+  web:
+    external: true
+  internal:
+
+volumes:
+  brazcar-postgres-data:
+    name: brazcar-postgres-data

@@ -19,3 +19,5 @@ ignore = [
 "tests/**" = ["S101", "PLR2004"]
 # ninja hands `request` to every route, used or not
 "src/brazcar/*/adapters/**" = ["ARG001"]
+# standalone command-line tools, run by path, never imported
+"scripts/**" = ["INP001"]
