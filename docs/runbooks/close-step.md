@@ -10,7 +10,9 @@ Padrões usados: [Conventional Commits](https://www.conventionalcommits.org/pt-b
 ## 1. Verificar
 
 - `uv run poe check` em `backend/` e `yarn run check` em `web/`, os dois verdes. Mostre a saída real.
-- O portão pesado uma vez, sem esperar o push: `.githooks/pre-push` cobre o que o GitHub não roda.
+- O portão pesado uma vez, sem esperar o push: `uv run poe check-heavy` em `backend/` e
+  `yarn run check:heavy` em `web/`. São as mesmas tasks que o hook de `pre-push` chama. Não rode o
+  arquivo do hook à mão: ele lê as refs pela entrada padrão e, sem elas, sai verde sem testar nada.
 - `git status` limpo. Nada pela metade vira versão.
 
 ## 2. Higiene

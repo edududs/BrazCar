@@ -1,5 +1,6 @@
 #!/bin/sh
-# Heavy gate (D-066), local only and filtered by path: every backend test, production build of the front.
+# Heavy gate (D-066), local only and filtered by path. It reads the pushed refs from stdin, so running
+# this file by hand does nothing: call the tasks below directly instead.
 set -e
 
 root=$(git rev-parse --show-toplevel)
@@ -17,9 +18,9 @@ $(git diff --name-only "$base" "$local_sha")"
 done
 
 if echo "$changed" | grep -qE '^(backend|contract|docs)/|\.md$'; then
-  (cd "$root/backend" && uv run poe check && uv run poe test-heavy)
+  (cd "$root/backend" && uv run poe check-heavy)
 fi
 
 if echo "$changed" | grep -qE '^(web|contract)/'; then
-  (cd "$root/web" && yarn run check && yarn build)
+  (cd "$root/web" && yarn run check:heavy)
 fi

@@ -13,7 +13,8 @@
     "test": "vitest run --passWithNoTests",
     "gen:api": "openapi-typescript ../contract/openapi.json -o src/shared/adapters/api/schema.d.ts",
     "fix": "prettier --write . && eslint --fix . && tsc --noEmit",
-    "check": "prettier --check . && eslint . && tsc --noEmit && yarn gen:api --check && yarn test"
+    "check": "prettier --check . && eslint . && tsc --noEmit && yarn gen:api --check && yarn test",
+    "check:heavy": "yarn run check && yarn build"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.103.1",

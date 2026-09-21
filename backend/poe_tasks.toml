@@ -31,6 +31,10 @@ sequence = [
     { ref = "test" },
 ]
 
+[tasks.check-heavy]
+help = "Heavy gate, local only (D-066): the fast gate plus every test"
+sequence = ["check", "test-heavy"]
+
 [tasks.openapi]
 help = "Regenerate the API contract consumed by web/"
 cmd = "python manage.py export_openapi_schema --api brazcar.config.api.api --output ../contract/openapi.json --indent 2 --sorted"
