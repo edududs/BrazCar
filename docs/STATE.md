@@ -4,30 +4,42 @@ Atualizado em 2026-09-21.
 
 ## Onde estamos
 
-Passos 1 e 2 concluídos. O esqueleto existe (tag `v0.1.0`), os dois portões passam, e o teste de
-risco deu **SSE confirmado** pelo túnel e num iPhone (D-076, números em
+Versão `v0.2.0`: passos 1 e 2 concluídos. O esqueleto existe (tag `v0.1.0`), os dois portões
+passam, e o teste de risco (tag `v0.2.0`) deu **SSE confirmado** pelo túnel e num iPhone (D-076, números em
 [decisions/0013](decisions/0013-sse-through-tunnel-verdict.md)). API publicada em
 `api-brazcar.elj-labs.org` e front em `brazcar.elj-labs.org`
 ([runbooks/deploy.md](runbooks/deploy.md)). Ainda não há regra de negócio, model nem autenticação.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, pacotes `rides`, `accounts`,
-  `places` e `shared` vazios com as três camadas, `config/` como raiz de composição, endpoint
+  `places` vazios com as três camadas, `config/` como raiz de composição, endpoint
   `GET /api/health`, logs JSON na saída padrão (inclusive os do uvicorn) e banco por `DATABASE_URL`.
+  Em `shared/adapters`: quadros e resposta SSE (`sse.py`), a rota de diagnóstico protegida por
+  token e CORS por ambiente. Imagem da API (`backend/Dockerfile`) com migração no entrypoint.
   ruff `ALL`, pyright strict e poe em arquivos próprios. Teste de arquitetura por AST.
 - `contract/openapi.json`: exportado pelo comando `export_openapi_schema` do próprio ninja
   (`uv run poe openapi`). Um teste falha se o arquivo divergir do código, e `yarn gen:api --check`
   falha se os tipos do front divergirem do arquivo.
 - `web/`: yarn 4, Vite, React 19, TypeScript strict, Tailwind v4, eslint `strictTypeChecked`,
-  prettier, TanStack Router e Query, pastas por funcionalidade com as quatro camadas e uma tela
-  que mostra se a API está no ar. O eslint proíbe tipos gerados e cliente HTTP fora de `adapters/`.
+  prettier, TanStack Router e Query, pastas por funcionalidade com as quatro camadas, uma tela
+  que mostra se a API está no ar, o adaptador `resilient-event-source` (embrião do sinal do mural)
+  e a página `/diagnostics`. O eslint proíbe tipos gerados e cliente HTTP fora de `adapters/`.
 - Hooks em `.githooks/` (`pre-commit` rápido, `pre-push` pesado), GitHub Actions com o portão
-  rápido por caminho, `.env.example` e `compose.yml` de desenvolvimento com Postgres opcional.
+  rápido por caminho e os fluxos `image` e `release` disparados por tag, `.env.example`,
+  `compose.yml` de desenvolvimento com Postgres opcional e `infra/compose.yml` de deploy.
 
 Conferido em execução, além dos portões: Postgres 18 do `compose.yml` saudável, com o volume em
 `/var/lib/postgresql`, e o Django conectando nele por `DATABASE_URL` (checagem, consulta e a suíte
 inteira); a tela de status num navegador, com a API no ar e fora do ar. A checagem de links da
 documentação entrou no portão rápido, e mudança em `docs/` ou em qualquer `.md` dispara o portão
 do backend. Nesta máquina a porta 5432 já é de outro projeto: use `POSTGRES_PORT`.
+
+Do passo 2, conferido de verdade: entrega, atraso, corte de conexão ociosa, 40 min com batimento
+e custo de 100 conexões pelo caminho real (Cloudflare, túnel, Traefik, API); HTTP/2 na borda por
+ALPN; CORS pela origem real; o roteiro num iPhone em Safari, Wi-Fi e 4G; a imagem com migração,
+healthcheck e parada em 1s; a página `/diagnostics` no Chrome contra a API local. **Não
+conferido:** o app instalado na tela de início (`standalone`); HTTP/2 visto de dentro do Safari;
+a correção de reconexão imediata (`dead-on-resume`) num iPhone, que só passou pelos portões; o teto
+de descritores do container.
 
 Publicado em `github.com/edududs/BrazCar` (o `main` antigo, de 2025, foi sobrescrito). Os fluxos
 `backend` e `web` do GitHub passaram num clone limpo em Linux e aceitam disparo manual.
