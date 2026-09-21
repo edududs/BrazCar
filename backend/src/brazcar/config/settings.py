@@ -39,6 +39,7 @@ ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", default=["localhost", "127.0.0
 # No auth, sessions or admin yet: the custom user must exist before their first migration (D-028).
 INSTALLED_APPS = [
     "django.contrib.staticfiles",
+    "corsheaders",
     "ninja",
     "brazcar.places.adapters",
     "brazcar.accounts.adapters",
@@ -47,8 +48,16 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
+
+# The front lives on a sibling origin (D-058). Explicit origins only, with credentials (D-059).
+CORS_ALLOWED_ORIGINS = _env_list("DJANGO_CORS_ALLOWED_ORIGINS", default=[])
+CORS_ALLOW_CREDENTIALS = True
+
+# Diagnostic SSE route of the tunnel risk test (D-049). Empty keeps the route off.
+SSE_DIAGNOSTICS_TOKEN = os.environ.get("SSE_DIAGNOSTICS_TOKEN", "")
 
 ROOT_URLCONF = "brazcar.config.urls"
 ASGI_APPLICATION = "brazcar.config.asgi.application"
