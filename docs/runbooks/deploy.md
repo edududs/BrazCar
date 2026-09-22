@@ -7,7 +7,7 @@ O que foi feito de verdade no primeiro deploy (2026-09-21). API na máquina de t
 
 | Peça | Onde |
 |---|---|
-| Imagem da API | `ghcr.io/edududs/brazcar-api`, pública. Tag `vX.Y.Z` publica a versão e `latest`; disparo manual do fluxo `image` publica `edge` |
+| Imagem da API | `ghcr.io/edududs/brazcar-api`, pública. A tag git `vX.Y.Z` publica a imagem `X.Y.Z` (**sem o `v`**) e `latest`; disparo manual do fluxo `image` publica `edge` |
 | Compose | `infra/compose.yml` do repo, copiado para `~/brazcar/compose.yml` na máquina |
 | Ambiente | `~/.brazcar/api.env` na máquina, modo 600, fora do repo. Modelo: `infra/api.env.example`. Os segredos foram gerados lá com `openssl rand` e nunca saíram da máquina |
 | Dados | volume `brazcar-postgres-data` |
@@ -17,16 +17,19 @@ O que foi feito de verdade no primeiro deploy (2026-09-21). API na máquina de t
 ## Atualizar a API
 
 ```bash
-# publicar: criar tag vX.Y.Z, ou `gh workflow run image --ref main` para a tag edge
+# publicar: push da tag vX.Y.Z (fluxo `image`), ou `gh workflow run image --ref main` para a tag edge
 ssh trovva@trovva-internal
 export DOCKER_CONFIG=~/.brazcar/docker && mkdir -p "$DOCKER_CONFIG"   # vazio de propósito: pull anônimo (D-081)
-docker pull ghcr.io/edududs/brazcar-api:edge
-cd ~/brazcar && BRAZCAR_IMAGE_TAG=edge docker compose up -d
-docker compose ps          # esperar (healthy)
+docker pull ghcr.io/edududs/brazcar-api:0.4.0                          # a imagem não tem o `v`
+cd ~/brazcar && BRAZCAR_IMAGE_TAG=0.4.0 docker compose up -d --wait
+docker compose logs api --since 3m | grep -E "Applying|places:"       # migrações e catálogo
 curl -s -H "Host: api-brazcar.elj-labs.org" http://127.0.0.1/api/health
 ```
 
 A migração e o `sync_places` do catálogo de lugares rodam no entrypoint da API (`RUN_MIGRATIONS=1`, D-061 e D-087).
+Variável nova no `api.env` entra antes do `up -d`; o modelo é `infra/api.env.example`. Em
+2026-09-22 (v0.4.0) entrou `PASSWORD_RESET_LINK`; `EMAIL_*` ficou de fora até haver a chave do
+Resend, então o e-mail de recuperação vai para o log do container.
 
 ## Armadilhas já pagas
 

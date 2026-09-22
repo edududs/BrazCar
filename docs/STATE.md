@@ -7,8 +7,8 @@ Atualizado em 2026-09-22.
 Versão `v0.4.0`: passos 3 (`places`) e 4 (`accounts`) concluídos. Antes deles: esqueleto
 (`v0.1.0`), SSE confirmado pelo túnel e num iPhone (`v0.2.0`, D-076) e o ritual de encerramento
 corrigido (`v0.2.1`). API publicada em `api-brazcar.elj-labs.org` e front em
-`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), **ainda na `v0.2.1`: a máquina
-de teste estava desligada quando `v0.3.0` e `v0.4.0` foram cortadas**. Falta `rides`.
+`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.4.0` desde
+2026-09-22. Falta `rides`.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -45,18 +45,22 @@ recuperação no `locmem` com link que funciona uma vez, exclusão que libera o 
 contra a API local: cadastro → `/conta` com o telefone em E.164 → carro adicionado com placa
 normalizada → sair → senha errada com o aviso da API → entrar → carro persistido.
 
-**Não verificado:** e-mail de verdade pelo Resend (só o backend em memória e o console); as
-páginas `/esqueci-senha` e `/redefinir-senha` no navegador (só passaram pelos portões); o fluxo
-num iPhone, em especial o cookie entre `brazcar.` e `api-brazcar.elj-labs.org` (ADR-0012), que
-só se prova publicado; a imagem da API com `sync_places` e as migrations de auth no entrypoint.
+Publicado e conferido: a imagem `0.4.0` na máquina de teste aplicou as migrations de auth,
+`accounts` e `places` e sincronizou 18 lugares no entrypoint; pelo túnel, `/api/places` responde,
+`/me` dá 401 sem cookie e `Origin` estranho dá 403; no Chrome, cadastro pelo front do Vercel
+criou a conta na API e **a sessão sobreviveu ao recarregar `/conta`**: o cookie entre as origens
+irmãs funciona pelo Cloudflare (ADR-0012). A conta de teste foi apagada pela própria API.
+
+**Não verificado:** e-mail de verdade pelo Resend (sem chave no `api.env`, vai para o log); as
+páginas `/esqueci-senha` e `/redefinir-senha` no navegador (só passaram pelos portões); o cookie
+num **iPhone** (Safari), que é onde ADR-0012 pode falhar de verdade.
 No Vite em desenvolvimento, a primeira visita a uma rota nova recarregou a página no meio do
 formulário (otimização de dependências); não acontece no build.
 
 ## Próximo passo
 
-1. **Publicar `v0.4.0` na máquina de teste** ([runbooks/deploy.md](runbooks/deploy.md)):
-   `EMAIL_*` e `PASSWORD_RESET_LINK` novos no `api.env` (modelo em `infra/api.env.example`), e
-   conferir cadastro e login pelo túnel num iPhone.
+1. Conferir cadastro e login num iPhone em `brazcar.elj-labs.org`, e pôr a chave do Resend
+   (`EMAIL_*`) no `api.env` da máquina.
 2. `rides`: carona com paradas por `PlaceId`, situação calculada (ADR-0003), histórico
    (ADR-0005), contato com limite (ADR-0006, D-064), revisão do mural (ADR-0010). Copiar o
    molde: agregado, porta, contrato em `tests/contracts/`, schema de saída próprio.
@@ -65,8 +69,6 @@ formulário (otimização de dependências); não acontece no build.
 
 ## Pendências abertas
 
-- Deploy da `v0.4.0` (acima). A máquina `trovva-internal` estava offline no Tailscale em
-  2026-09-22.
 - Texto dos termos de uso e de privacidade ainda não foi escrito (D-033); o cadastro já grava o
   aceite e a tela já mostra a frase, sem link.
 - Limite de requisições (D-064) ainda não existe; entra com a rota de contato de `rides`, e
