@@ -1,5 +1,6 @@
 from .ports import (
     BoardRevision,
+    BoardSignal,
     ContactRequests,
     Driver,
     DriverCar,
@@ -19,12 +20,14 @@ from .use_cases import (
     RepeatRide,
     RequestContact,
     RideRules,
+    ShowRide,
 )
 
 __all__ = [
     "BoardFilter",
     "BoardRevision",
     "BoardRide",
+    "BoardSignal",
     "CancelRide",
     "ChangeSeats",
     "Contact",
@@ -41,6 +44,7 @@ __all__ = [
     "RequestContact",
     "RideRepository",
     "RideRules",
+    "ShowRide",
     "StopView",
     "to_board_ride",
 ]

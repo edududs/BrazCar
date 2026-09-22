@@ -43,6 +43,17 @@ class NoCarError(RideError):
         super().__init__("publishing needs a registered car")
 
 
+class UnknownPlaceError(RideError):
+    def __init__(self, place_id: str) -> None:
+        super().__init__(f"no place {place_id} in the catalog")
+        self.place_id = place_id
+
+
+class RideNotOpenError(RideError):
+    def __init__(self) -> None:
+        super().__init__("this ride is not taking passengers now")
+
+
 class ContactLimitError(RideError):
     def __init__(self) -> None:
         super().__init__("contact limit reached for now; try again later")

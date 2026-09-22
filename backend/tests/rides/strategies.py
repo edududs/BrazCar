@@ -11,6 +11,7 @@ from brazcar.rides.domain import (
     FreeTextStop,
     PaymentMethod,
     RideOffer,
+    RidePublished,
     Stop,
 )
 
@@ -58,3 +59,8 @@ def rides(draw: st.DrawFn) -> RideOffer:
 
 def utc(moment: datetime) -> datetime:
     return moment.astimezone(UTC)
+
+
+def published(ride: RideOffer) -> RidePublished:
+    """The event a stored ride would have been born with."""
+    return RidePublished(ride_id=ride.id, at=ride.published_at)

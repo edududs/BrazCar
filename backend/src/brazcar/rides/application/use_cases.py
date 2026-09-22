@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from urllib.parse import quote
+from uuid import UUID
 
 from brazcar.rides.domain import (
     DEFAULT_PRICE,
@@ -14,11 +15,13 @@ from brazcar.rides.domain import (
     PaymentMethod,
     RideId,
     RideNotFoundError,
+    RideNotOpenError,
     RideOffer,
     RideStatus,
     Route,
+    UnknownPlaceError,
 )
-from brazcar.shared.application.ports import Clock
+from brazcar.shared.application.ports import Clock, RateLimiter
 from brazcar.shared.domain.model import FrozenModel
 
 from .ports import (
@@ -44,13 +47,14 @@ class RideRules:
 class PublishRide:
     rides: RideRepository
     drivers: DriverDirectory
+    places: PlaceDirectory
     clock: Clock
 
     async def __call__(  # noqa: PLR0913 - the whole ride comes in at once
         self,
         driver_id: AccountId,
         *,
-        car_id: object,
+        car_id: UUID,
         route: Route,
         departure_at: datetime,
         seats_available: int,
@@ -59,6 +63,7 @@ class PublishRide:
     ) -> RideOffer:
         driver = await _require_driver(self.drivers, driver_id)
         car = _snapshot(driver, car_id)
+        await _require_known_places(self.places, route)
         change = RideOffer.publish(
             driver_id=driver_id,
             car=car,
@@ -76,6 +81,7 @@ class PublishRide:
 @dataclass(frozen=True, slots=True)
 class EditRide:
     rides: RideRepository
+    places: PlaceDirectory
     clock: Clock
 
     async def __call__(  # noqa: PLR0913 - one call edits every editable field at once
@@ -89,6 +95,8 @@ class EditRide:
         payment_methods: frozenset[PaymentMethod] | None = None,
     ) -> RideOffer:
         ride = await _own_ride(self.rides, driver_id, ride_id)
+        if route is not None:
+            await _require_known_places(self.places, route)
         change = ride.edit(
             route=route,
             departure_at=departure_at,
@@ -170,6 +178,24 @@ class MyRides:
         return await _project(self, list(mine), driver_id, self.clock.now())
 
 
+@dataclass(frozen=True, slots=True)
+class ShowRide:
+    """One ride as the board would show it, whatever its status: the detail page and the owner's edit."""
+
+    rides: RideRepository
+    drivers: DriverDirectory
+    places: PlaceDirectory
+    clock: Clock
+    rules: RideRules
+
+    async def __call__(self, ride_id: RideId, viewer: AccountId | None) -> BoardRide:
+        ride = await self.rides.get(ride_id)
+        if ride is None:
+            raise RideNotFoundError(ride_id)
+        (shown,) = await _project(self, [ride], viewer, self.clock.now())
+        return shown
+
+
 class Contact(FrozenModel):
     """What the contact route hands back: the only way the phone and the plate leave (ADR-0006)."""
 
@@ -182,6 +208,7 @@ class RequestContact:
     rides: RideRepository
     drivers: DriverDirectory
     contacts: ContactRequests
+    limiter: RateLimiter
     clock: Clock
     rules: RideRules
 
@@ -191,11 +218,13 @@ class RequestContact:
             raise RideNotFoundError(ride_id)
         now = self.clock.now()
         if ride.status(now, self.rules.departure_tolerance) not in (RideStatus.OPEN, RideStatus.REOPENED):
-            raise RideNotFoundError(ride_id)
-        recent = await self.contacts.count_since(requester_id, now - self.rules.contact_window)
-        if recent >= self.rules.contact_limit:
-            raise ContactLimitError
+            raise RideNotOpenError
         driver = await _require_driver(self.drivers, ride.driver_id)
+        allowed = await self.limiter.acquire(
+            f"contact:{requester_id}", limit=self.rules.contact_limit, window=self.rules.contact_window
+        )
+        if not allowed:
+            raise ContactLimitError
         await self.contacts.record(requester_id=requester_id, ride_id=ride.id, at=now)
         return Contact(whatsapp_url=_whatsapp_link(driver, ride), plate=ride.car.plate)
 
@@ -219,7 +248,15 @@ async def _own_ride(rides: RideRepository, driver_id: AccountId, ride_id: RideId
     return ride
 
 
-def _snapshot(driver: Driver, car_id: object, *, fallback: bool = False) -> CarSnapshot:
+async def _require_known_places(places: PlaceDirectory, route: Route) -> None:
+    """A catalog stop points at a place that exists (D-013); free text is checked by nobody."""
+    known = await places.labels()
+    for stop in route:
+        if isinstance(stop, CatalogStop) and stop.place_id not in known:
+            raise UnknownPlaceError(stop.place_id)
+
+
+def _snapshot(driver: Driver, car_id: UUID, *, fallback: bool = False) -> CarSnapshot:
     """The driver's car as it is now (D-023). With `fallback`, any car of theirs will do."""
     cars = [car for car in driver.cars if car.car_id == car_id] or (list(driver.cars) if fallback else [])
     if not cars:
@@ -229,10 +266,8 @@ def _snapshot(driver: Driver, car_id: object, *, fallback: bool = False) -> CarS
 
 
 def _matches(ride: RideOffer, filters: BoardFilter, wanted_places: frozenset[str] | None) -> bool:
-    if (
-        filters.day is not None
-        and ride.departure_at.astimezone(ride.departure_at.tzinfo).date() != filters.day
-    ):
+    # The day is the ride's own local day: the repository hands datetimes back in the board's zone.
+    if filters.day is not None and ride.departure_at.date() != filters.day:
         return False
     if filters.with_seats and ride.seats_available == 0:
         return False
@@ -246,7 +281,10 @@ def _matches(ride: RideOffer, filters: BoardFilter, wanted_places: frozenset[str
 
 
 async def _project(
-    lister: ListBoard | MyRides, rides: list[RideOffer], viewer: AccountId | None, now: datetime
+    lister: ListBoard | MyRides | ShowRide,
+    rides: list[RideOffer],
+    viewer: AccountId | None,
+    now: datetime,
 ) -> tuple[BoardRide, ...]:
     labels = await lister.places.labels()
     names: dict[AccountId, str] = {}

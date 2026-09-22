@@ -8,6 +8,8 @@ from .errors import (
     RideError,
     RideLockedError,
     RideNotFoundError,
+    RideNotOpenError,
+    UnknownPlaceError,
 )
 from .events import RideCancelled, RideEdited, RideEvent, RidePublished, RideReopened, SeatsChanged
 from .ride import (
@@ -46,6 +48,7 @@ __all__ = [
     "RideId",
     "RideLockedError",
     "RideNotFoundError",
+    "RideNotOpenError",
     "RideOffer",
     "RidePublished",
     "RideReopened",
@@ -53,5 +56,6 @@ __all__ = [
     "Route",
     "SeatsChanged",
     "Stop",
+    "UnknownPlaceError",
     "allowed_actions",
 ]

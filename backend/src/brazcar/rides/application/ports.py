@@ -3,14 +3,29 @@ from typing import Protocol
 from uuid import UUID
 
 from brazcar.rides.domain import AccountId, PlaceId, RideEvent, RideId, RideOffer
+from brazcar.shared.application.ports import BoardRevision, BoardSignal
 from brazcar.shared.domain.model import FrozenModel
+
+__all__ = [
+    "BoardRevision",
+    "BoardSignal",
+    "ContactRequests",
+    "Driver",
+    "DriverCar",
+    "DriverDirectory",
+    "PlaceDirectory",
+    "RideRepository",
+]
 
 
 class RideRepository(Protocol):
     async def get(self, ride_id: RideId) -> RideOffer | None: ...
 
     async def save(self, ride: RideOffer, events: tuple[RideEvent, ...]) -> None:
-        """Insert or replace the ride, append its events and bump the board revision: one transaction."""
+        """Insert or replace the ride, append its events and bump the board revision: one transaction.
+
+        No events means nothing changed: the ride is written as is and the revision stays.
+        """
         ...
 
     async def upcoming(self, since: datetime) -> tuple[RideOffer, ...]:
@@ -23,12 +38,6 @@ class RideRepository(Protocol):
 
     async def history(self, ride_id: RideId) -> tuple[RideEvent, ...]:
         """What happened, in order. For charts and "edited" badges, never for a rule (ADR-0005)."""
-        ...
-
-
-class BoardRevision(Protocol):
-    async def current(self) -> int:
-        """Bumped by every `RideRepository.save`; the SSE signal reads it (ADR-0010)."""
         ...
 
 
@@ -58,11 +67,11 @@ class PlaceDirectory(Protocol):
         ...
 
     async def labels(self) -> dict[PlaceId, str]:
-        """Canonical name by identifier, for the read model."""
+        """Canonical name by identifier: the whole catalog, for the read model and for validating stops."""
         ...
 
 
 class ContactRequests(Protocol):
-    async def count_since(self, requester_id: AccountId, since: datetime) -> int: ...
-
-    async def record(self, *, requester_id: AccountId, ride_id: RideId, at: datetime) -> None: ...
+    async def record(self, *, requester_id: AccountId, ride_id: RideId, at: datetime) -> None:
+        """One row per request, in a table of its own (D-022). The limit is the `RateLimiter`'s."""
+        ...

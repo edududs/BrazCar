@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -10,88 +10,36 @@ from brazcar.rides.application import (
     ChangeSeats,
     Driver,
     DriverCar,
+    EditRide,
     ListBoard,
+    MyRides,
     PublishRide,
     RequestContact,
     RideRules,
+    ShowRide,
 )
 from brazcar.rides.domain import (
-    AccountId,
     CatalogStop,
     ContactLimitError,
     FreeTextStop,
     NoCarError,
     PaymentMethod,
-    RideEvent,
-    RideId,
+    RideNotFoundError,
+    RideNotOpenError,
     RideOffer,
     RideStatus,
+    UnknownPlaceError,
 )
 
+from .fakes import (
+    FixedClock,
+    InMemoryDrivers,
+    InMemoryPlaces,
+    InMemoryRateLimiter,
+    InMemoryRideRepository,
+    RecordingContacts,
+)
 from .strategies import BRASILIA, EPOCH
-
-
-class InMemoryRides:
-    def __init__(self) -> None:
-        self.rides: dict[RideId, RideOffer] = {}
-        self.events: dict[RideId, list[RideEvent]] = {}
-        self.revision = 0
-
-    async def get(self, ride_id: RideId) -> RideOffer | None:
-        return self.rides.get(ride_id)
-
-    async def save(self, ride: RideOffer, events: tuple[RideEvent, ...]) -> None:
-        self.rides[ride.id] = ride
-        self.events.setdefault(ride.id, []).extend(events)
-        self.revision += 1
-
-    async def upcoming(self, since: datetime) -> tuple[RideOffer, ...]:
-        rides = [r for r in self.rides.values() if r.cancelled_at is None and r.departure_at >= since]
-        return tuple(sorted(rides, key=lambda r: r.departure_at))
-
-    async def by_driver(self, driver_id: AccountId) -> tuple[RideOffer, ...]:
-        return tuple(r for r in self.rides.values() if r.driver_id == driver_id)
-
-    async def history(self, ride_id: RideId) -> tuple[RideEvent, ...]:
-        return tuple(self.events.get(ride_id, []))
-
-
-class Drivers:
-    def __init__(self, *drivers: Driver) -> None:
-        self.by_id = {d.id: d for d in drivers}
-
-    async def get(self, account_id: AccountId) -> Driver | None:
-        return self.by_id.get(account_id)
-
-
-class Places:
-    async def with_descendants(self, place_id: str) -> frozenset[str]:
-        return (
-            frozenset({"plano-piloto", "esplanada"}) if place_id == "plano-piloto" else frozenset({place_id})
-        )
-
-    async def labels(self) -> dict[str, str]:
-        return {"esplanada": "Esplanada", "brazlandia": "Brazlândia"}
-
-
-class Contacts:
-    def __init__(self) -> None:
-        self.recorded: list[tuple[AccountId, RideId]] = []
-
-    async def count_since(self, requester_id: AccountId, since: datetime) -> int:  # noqa: ARG002 - no clock here
-        return sum(1 for r, _ in self.recorded if r == requester_id)
-
-    async def record(self, *, requester_id: AccountId, ride_id: RideId, at: datetime) -> None:  # noqa: ARG002
-        self.recorded.append((requester_id, ride_id))
-
-
-class Clock:
-    def __init__(self) -> None:
-        self.at = EPOCH
-
-    def now(self) -> datetime:
-        return self.at
-
 
 ANA = Driver(
     id=uuid4(),
@@ -101,19 +49,25 @@ ANA = Driver(
 )
 BIA = Driver(id=uuid4(), display_name="Bia", phone="+5561999990002", cars=())
 ROUTE = (CatalogStop(place_id="esplanada"), FreeTextStop(text="Incra 8"), CatalogStop(place_id="brazlandia"))
-RULES = RideRules(contact_limit=2)
+RULES = RideRules(contact_limit=2, contact_window=timedelta(hours=1))
 
 
 class Context:
     def __init__(self) -> None:
-        self.rides = InMemoryRides()
-        self.drivers = Drivers(ANA, BIA)
-        self.places = Places()
-        self.contacts = Contacts()
-        self.clock = Clock()
-        self.publish = PublishRide(self.rides, self.drivers, self.clock)
+        self.rides = InMemoryRideRepository()
+        self.drivers = InMemoryDrivers(ANA, BIA)
+        self.places = InMemoryPlaces()
+        self.contacts = RecordingContacts()
+        self.clock = FixedClock()
+        self.limiter = InMemoryRateLimiter(self.clock)
+        self.publish = PublishRide(self.rides, self.drivers, self.places, self.clock)
+        self.edit = EditRide(self.rides, self.places, self.clock)
         self.board = ListBoard(self.rides, self.drivers, self.places, self.clock, RULES)
-        self.contact = RequestContact(self.rides, self.drivers, self.contacts, self.clock, RULES)
+        self.mine = MyRides(self.rides, self.drivers, self.places, self.clock, RULES)
+        self.show = ShowRide(self.rides, self.drivers, self.places, self.clock, RULES)
+        self.contact = RequestContact(
+            self.rides, self.drivers, self.contacts, self.limiter, self.clock, RULES
+        )
 
     async def published(self, driver: Driver = ANA, hours: int = 13, seats: int = 3) -> RideOffer:
         return await self.publish(
@@ -139,6 +93,24 @@ async def test_publishing_needs_a_car_and_bumps_the_board(ctx: Context) -> None:
     assert [type(e).__name__ for e in await ctx.rides.history(ride.id)] == ["RidePublished"]
     with pytest.raises(NoCarError):
         await ctx.published(driver=BIA)
+
+
+async def test_a_stop_must_point_at_a_place_the_catalog_knows(ctx: Context) -> None:
+    ride = await ctx.published()
+    elsewhere = (CatalogStop(place_id="nowhere"), FreeTextStop(text="Incra 8"))
+
+    with pytest.raises(UnknownPlaceError, match="nowhere"):
+        await ctx.publish(
+            ANA.id,
+            car_id=ANA.cars[0].car_id,
+            route=elsewhere,
+            departure_at=EPOCH + timedelta(hours=13),
+            seats_available=3,
+            payment_methods=frozenset({PaymentMethod.PIX}),
+        )
+    with pytest.raises(UnknownPlaceError):
+        await ctx.edit(ANA.id, ride.id, route=elsewhere)
+    assert ctx.rides.revision == 1
 
 
 async def test_the_board_hides_phone_and_plate_and_resolves_place_names(ctx: Context) -> None:
@@ -171,7 +143,7 @@ async def test_board_filters_by_day_place_with_descendants_seats_and_price(ctx: 
     assert cheap == ()
 
 
-async def test_departed_and_cancelled_rides_leave_the_board(ctx: Context) -> None:
+async def test_departed_and_cancelled_rides_leave_the_board_but_not_my_rides(ctx: Context) -> None:
     ride = await ctx.published(hours=1)
     cancelled = await ctx.published(hours=5)
     await CancelRide(ctx.rides, ctx.clock)(ANA.id, cancelled.id)
@@ -179,10 +151,13 @@ async def test_departed_and_cancelled_rides_leave_the_board(ctx: Context) -> Non
     ctx.clock.at = EPOCH + timedelta(hours=1, minutes=30)
 
     assert await ctx.board(BoardFilter(), viewer=None) == ()
-    assert ride.id in ctx.rides.rides
+    assert [r.id for r in await ctx.mine(ANA.id)] == [cancelled.id, ride.id]
+    assert (await ctx.show(ride.id, viewer=ANA.id)).status is RideStatus.DEPARTED
+    with pytest.raises(RideNotFoundError):
+        await ctx.show(uuid4(), viewer=None)
 
 
-async def test_contact_needs_an_open_ride_records_and_is_limited(ctx: Context) -> None:
+async def test_contact_needs_an_open_ride_records_and_is_limited_per_window(ctx: Context) -> None:
     ride = await ctx.published()
     passenger = uuid4()
 
@@ -194,14 +169,21 @@ async def test_contact_needs_an_open_ride_records_and_is_limited(ctx: Context) -
     assert len(ctx.contacts.recorded) == 2
     with pytest.raises(ContactLimitError):
         await ctx.contact(passenger, ride.id)
+    assert len(ctx.contacts.recorded) == 2
+
+    ctx.clock.at = EPOCH + timedelta(hours=1, seconds=1)
+    await ctx.contact(passenger, ride.id)
+    assert len(ctx.contacts.recorded) == 3
 
 
-async def test_contact_is_refused_for_a_full_ride(ctx: Context) -> None:
+async def test_contact_is_refused_for_a_full_ride_without_spending_the_limit(ctx: Context) -> None:
     ride = await ctx.published()
     await ChangeSeats(ctx.rides, ctx.clock)(ANA.id, ride.id, 0)
 
-    with pytest.raises(LookupError):
+    with pytest.raises(RideNotOpenError):
         await ctx.contact(uuid4(), ride.id)
+    assert ctx.contacts.recorded == []
+    assert ctx.limiter.hits == {}
 
 
 def test_fixtures_are_in_brasilia_time() -> None:

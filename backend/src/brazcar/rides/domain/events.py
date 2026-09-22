@@ -1,8 +1,10 @@
 """What happened to a ride. Stored append-only by the repository; never read by a rule (ADR-0005)."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
+
+from pydantic import Field
 
 from brazcar.shared.domain.model import FrozenModel
 
@@ -41,4 +43,7 @@ class RideCancelled(FrozenModel):
     at: datetime
 
 
-type RideEvent = RidePublished | SeatsChanged | RideEdited | RideReopened | RideCancelled
+# Discriminated by `kind`, so a stored event validates back into the right class.
+type RideEvent = Annotated[
+    RidePublished | SeatsChanged | RideEdited | RideReopened | RideCancelled, Field(discriminator="kind")
+]
