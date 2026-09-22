@@ -65,6 +65,10 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-032 | Recuperação de senha por e-mail via Resend (SMTP), atrás de porta; manual como último recurso | decidido | |
 | D-033 | Termos no cadastro e exclusão de conta com anonimização já no MVP | decidido | |
 | D-034 | Verificação de telefone por OTP reverso via WhatsApp | adiado | |
+| D-089 | Telefone é celular brasileiro com DDD, aceito como a pessoa digita e guardado em E.164 (`+5561999990001`); placa aceita o formato antigo e o Mercosul e guarda maiúsculas sem hífen. Os dois são value objects do domínio; a senha nunca entra no domínio, é credencial do adaptador | decidido | |
+| D-090 | Identificador de conta é UUID gerado no domínio, e a linha do usuário do Django usa o mesmo UUID como chave: `rides` referencia a conta sem esperar o banco, e a exclusão apaga no lugar (telefone, nome, e-mail, carros e senha somem; a linha e o identificador ficam para o histórico) | decidido | |
+| D-091 | A checagem de `Origin` de D-059 é um middleware em `shared/adapters`: método que altera estado exige `Origin` igual à própria origem ou a uma de `CORS_ALLOWED_ORIGINS`; requisição sem `Origin` só passa sem cookie (ferramenta de linha de comando, healthcheck). Não há token de CSRF, porque ele não atravessa origens | decidido | |
+| D-092 | Recuperação de senha: pedido sempre responde `ok`, e só envia e-mail se a conta tem e-mail; o token é o gerador do Django (`<uid>.<token>`, morre ao ser usado, vence em uma hora) e o link aponta para a página do front em `PASSWORD_RESET_LINK`. Sem e-mail configurado, o backend de e-mail é o console | decidido | |
 
 ## Persistência
 

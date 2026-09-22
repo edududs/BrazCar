@@ -10,7 +10,7 @@ from brazcar.shared.adapters.sse import comment_frame, event_frame
 from brazcar.shared.adapters.sse_diagnostics import diagnostic_frames
 
 URL = "/api/diagnostics/sse"
-TOKEN = "test-token"  # noqa: S105 - test value, not a credential
+TOKEN = "test-token"
 
 
 async def take(frames: AsyncIterator[str], count: int) -> list[str]:
