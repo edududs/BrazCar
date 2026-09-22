@@ -6,7 +6,7 @@ import { formatTime } from "@/features/rides/ui/format";
 import { RideForm } from "@/features/rides/ui/ride-form";
 import { PageShell } from "@/shared/ui/page-shell";
 
-export const Route = createFileRoute("/caronas/$rideId/editar")({ component: EditRidePage });
+export const Route = createFileRoute("/caronas/$rideId_/editar")({ component: EditRidePage });
 
 function EditRidePage() {
   const { rideId } = Route.useParams();

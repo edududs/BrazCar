@@ -24,3 +24,6 @@ web/.yarn/*
 .local/
 .claude/settings.local.json
 .whatsapp_scrapping_wip/
+
+# TanStack Router plugin scratch
+web/.tanstack/

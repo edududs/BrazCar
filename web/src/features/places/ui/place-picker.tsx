@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 import { Combobox } from "@/shared/ui/combobox";
 
 import { usePlaceSearch } from "../app/use-place-search";
@@ -19,6 +21,16 @@ function notice(status: PlaceSearchStatus, found: number, query: string): string
 
 export function PlacePicker({ label, value, onChange }: PlacePickerProps) {
   const search = usePlaceSearch();
+  // A value that arrives from outside (a URL, a stored ride) must show its name in the input:
+  // Base UI only writes the input for choices made in the list.
+  const shown = useRef<string | null>(null);
+  useEffect(() => {
+    const name = value?.name ?? null;
+    if (name !== null && name !== shown.current) {
+      shown.current = name;
+      search.setQuery(name);
+    }
+  }, [value, search]);
   return (
     <Combobox
       label={label}

@@ -106,18 +106,20 @@ export function RideForm({
         required
       />
       <div className="grid grid-cols-2 gap-3">
-        <TextField
-          label="Vagas"
-          type="number"
-          inputMode="numeric"
-          min={cars === undefined ? 0 : 1}
-          max={8}
-          value={String(draft.seatsAvailable)}
-          onChange={(seats) => {
-            set("seatsAvailable", Number(seats));
-          }}
-          required
-        />
+        {cars === undefined ? null : ( // seats change from the ride itself once published (ADR-0003)
+          <TextField
+            label="Vagas"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={8}
+            value={String(draft.seatsAvailable)}
+            onChange={(seats) => {
+              set("seatsAvailable", Number(seats));
+            }}
+            required
+          />
+        )}
         <TextField
           label="Preço"
           type="number"

@@ -19,7 +19,7 @@ import { Route as MinhasCaronasRouteImport } from './routes/minhas-caronas'
 import { Route as PublicarRouteImport } from './routes/publicar'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as CaronasRideIdRouteImport } from './routes/caronas.$rideId'
-import { Route as CaronasRideIdEditarRouteImport } from './routes/caronas.$rideId.editar'
+import { Route as CaronasRideIdEditarRouteImport } from './routes/caronas.$rideId_.editar'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -72,9 +72,9 @@ const CaronasRideIdRoute = CaronasRideIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const CaronasRideIdEditarRoute = CaronasRideIdEditarRouteImport.update({
-  id: '/editar',
-  path: '/editar',
-  getParentRoute: () => CaronasRideIdRoute,
+  id: '/caronas/$rideId_/editar',
+  path: '/caronas/$rideId/editar',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -87,7 +87,7 @@ export interface FileRoutesByFullPath {
   '/minhas-caronas': typeof MinhasCaronasRoute
   '/publicar': typeof PublicarRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
-  '/caronas/$rideId': typeof CaronasRideIdRouteWithChildren
+  '/caronas/$rideId': typeof CaronasRideIdRoute
   '/caronas/$rideId/editar': typeof CaronasRideIdEditarRoute
 }
 export interface FileRoutesByTo {
@@ -100,7 +100,7 @@ export interface FileRoutesByTo {
   '/minhas-caronas': typeof MinhasCaronasRoute
   '/publicar': typeof PublicarRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
-  '/caronas/$rideId': typeof CaronasRideIdRouteWithChildren
+  '/caronas/$rideId': typeof CaronasRideIdRoute
   '/caronas/$rideId/editar': typeof CaronasRideIdEditarRoute
 }
 export interface FileRoutesById {
@@ -114,8 +114,8 @@ export interface FileRoutesById {
   '/minhas-caronas': typeof MinhasCaronasRoute
   '/publicar': typeof PublicarRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
-  '/caronas/$rideId': typeof CaronasRideIdRouteWithChildren
-  '/caronas/$rideId/editar': typeof CaronasRideIdEditarRoute
+  '/caronas/$rideId': typeof CaronasRideIdRoute
+  '/caronas/$rideId_/editar': typeof CaronasRideIdEditarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -156,7 +156,7 @@ export interface FileRouteTypes {
     | '/publicar'
     | '/redefinir-senha'
     | '/caronas/$rideId'
-    | '/caronas/$rideId/editar'
+    | '/caronas/$rideId_/editar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -169,7 +169,8 @@ export interface RootRouteChildren {
   MinhasCaronasRoute: typeof MinhasCaronasRoute
   PublicarRoute: typeof PublicarRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
-  CaronasRideIdRoute: typeof CaronasRideIdRouteWithChildren
+  CaronasRideIdRoute: typeof CaronasRideIdRoute
+  CaronasRideIdEditarRoute: typeof CaronasRideIdEditarRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -244,27 +245,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CaronasRideIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/caronas/$rideId/editar': {
-      id: '/caronas/$rideId/editar'
-      path: '/editar'
+    '/caronas/$rideId_/editar': {
+      id: '/caronas/$rideId_/editar'
+      path: '/caronas/$rideId/editar'
       fullPath: '/caronas/$rideId/editar'
       preLoaderRoute: typeof CaronasRideIdEditarRouteImport
-      parentRoute: typeof CaronasRideIdRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface CaronasRideIdRouteChildren {
-  CaronasRideIdEditarRoute: typeof CaronasRideIdEditarRoute
-}
-
-const CaronasRideIdRouteChildren: CaronasRideIdRouteChildren = {
-  CaronasRideIdEditarRoute: CaronasRideIdEditarRoute,
-}
-
-const CaronasRideIdRouteWithChildren = CaronasRideIdRoute._addFileChildren(
-  CaronasRideIdRouteChildren,
-)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -276,7 +265,8 @@ const rootRouteChildren: RootRouteChildren = {
   MinhasCaronasRoute: MinhasCaronasRoute,
   PublicarRoute: PublicarRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
-  CaronasRideIdRoute: CaronasRideIdRouteWithChildren,
+  CaronasRideIdRoute: CaronasRideIdRoute,
+  CaronasRideIdEditarRoute: CaronasRideIdEditarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
