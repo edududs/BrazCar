@@ -44,7 +44,7 @@ Cada contexto é um pacote com três camadas.
 |---|---|---|
 | `domain/` | entidades, value objects e eventos, em Pydantic congelado | stdlib, Pydantic, o próprio domínio |
 | `application/` | casos de uso `async` e portas (`Protocol`) | o anterior e a própria camada |
-| `adapters/` | app Django (models, migrations, admin), rotas ninja, repositórios | tudo |
+| `adapters/` | app Django (models, migrations, comandos), rotas ninja, repositórios | tudo |
 
 Referência entre contextos é por identificador. `shared` guarda infraestrutura que não é de
 nenhum contexto.
@@ -75,6 +75,9 @@ placa (ADR-0006).
   sessão httpOnly com `SameSite=Lax`, CORS com credenciais e checagem de `Origin` (ADR-0012).
 - **Contrato da API.** O `contract/openapi.json` é gerado do ninja e versionado. O front gera os
   tipos dele. O CI falha se o arquivo divergir do código.
+- **Catálogo de lugares como dado versionado.** `catalog.toml` é a fonte; `sync_places` deixa o
+  banco igual a ele no entrypoint, passando pelo agregado (D-087). Busca sem acento, apelidos e
+  descendentes são resolvidos em memória, em Python, iguais em qualquer banco (D-083).
 - **Regras só no backend.** A API devolve a situação calculada e as ações permitidas (ADR-0011).
 - **Observabilidade.** Logs estruturados em JSON na saída padrão e um endpoint de saúde. Nada de terceiros.
 - **Limite de requisições.** Na aplicação, atrás de uma porta, por conta ou por IP.
