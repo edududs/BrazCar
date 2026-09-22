@@ -74,6 +74,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-037 | Supabase, se usado, é só host de Postgres, com a Data API desligada | decidido | |
 | D-038 | O adaptador grava cada agregado numa função síncrona com `atomic` | decidido | [0008](0008-sync-atomic-per-aggregate.md) |
 | D-039 | Contrato de repositório roda em SQLite e em Postgres | decidido | [0007](0007-pluggable-database-dual-contract.md) |
+| D-085 | Contrato de porta é uma classe em `backend/tests/contracts/`, herdada uma vez por implementação (o fake em memória e o adaptador Django, este marcado `contract`). O banco é escolhido como em produção, por `DATABASE_URL`: `poe test` roda em SQLite e `poe test-postgres`, parte do portão pesado, repete os `contract` no Postgres do compose, com `EXPECT_DB_VENDOR` para não passar no banco errado | decidido | |
 
 ## Extrator de WhatsApp
 

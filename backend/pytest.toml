@@ -7,4 +7,5 @@ asyncio_mode = "auto"
 DJANGO_SETTINGS_MODULE = "tests.settings"
 markers = [
     "heavy: slow or needs external services; runs on pre-push, never on the fast gate",
+    "contract: a port contract against the real database; the heavy gate repeats it on Postgres (D-039)",
 ]

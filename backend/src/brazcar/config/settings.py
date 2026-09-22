@@ -72,8 +72,7 @@ TEMPLATES = [
 DATABASES = {
     "default": dj_database_url.config(
         default=f"sqlite:///{(BACKEND_DIR / 'db.sqlite3').as_posix()}",
-        conn_max_age=60,
-        conn_health_checks=True,
+        conn_max_age=0,  # no persistent connections under ASGI, as Django advises (ADR-0008)
     ),
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

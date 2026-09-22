@@ -18,6 +18,11 @@ cmd = "pytest -m 'not heavy'"
 help = "Every test, including the ones that need external services"
 cmd = "pytest"
 
+[tasks.test-postgres]
+help = "Port contracts again, on the compose Postgres (D-039). Override with CONTRACT_POSTGRES_URL"
+cmd = "pytest -m contract"
+env = { CONTRACT_POSTGRES_URL.default = "postgres://brazcar:brazcar@127.0.0.1:5432/brazcar", DATABASE_URL = "${CONTRACT_POSTGRES_URL}", EXPECT_DB_VENDOR = "postgresql" }
+
 [tasks.fix]
 help = "Pipeline to run before calling work done"
 sequence = ["format", "lint", "types"]
@@ -32,8 +37,8 @@ sequence = [
 ]
 
 [tasks.check-heavy]
-help = "Heavy gate, local only (D-066): the fast gate plus every test"
-sequence = ["check", "test-heavy"]
+help = "Heavy gate, local only (D-066): the fast gate, every test, and the contracts on Postgres"
+sequence = ["check", "test-heavy", "test-postgres"]
 
 [tasks.openapi]
 help = "Regenerate the API contract consumed by web/"
