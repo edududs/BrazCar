@@ -72,7 +72,9 @@ placa (ADR-0006).
 - **Banco único e plugável.** O ORM escolhe SQLite ou Postgres pela URL. O contrato de
   repositório roda nos dois bancos para provar isso (ADR-0007).
 - **Sessão entre origens irmãs.** Front e API são subdomínios de `elj-labs.org`. Cookie de
-  sessão httpOnly com `SameSite=Lax`, CORS com credenciais e checagem de `Origin` (ADR-0012).
+  sessão httpOnly com `SameSite=Lax`, CORS com credenciais e checagem de `Origin` por middleware
+  em `shared/adapters` (ADR-0012, D-091). O usuário customizado do Django tem o mesmo UUID da
+  `Account` do domínio (D-090); a senha é credencial do adaptador, nunca estado do domínio.
 - **Contrato da API.** O `contract/openapi.json` é gerado do ninja e versionado. O front gera os
   tipos dele. O CI falha se o arquivo divergir do código.
 - **Catálogo de lugares como dado versionado.** `catalog.toml` é a fonte; `sync_places` deixa o
@@ -81,7 +83,8 @@ placa (ADR-0006).
 - **Regras só no backend.** A API devolve a situação calculada e as ações permitidas (ADR-0011).
 - **Observabilidade.** Logs estruturados em JSON na saída padrão e um endpoint de saúde. Nada de terceiros.
 - **Limite de requisições.** Na aplicação, atrás de uma porta, por conta ou por IP.
-- **E-mail.** Porta de envio com o backend SMTP do Django como adaptador; o fornecedor é variável de ambiente.
+- **E-mail.** Porta `Mailer` em `shared/application` com o backend de e-mail do Django como
+  adaptador; o fornecedor é variável de ambiente, e sem ele as mensagens vão para o console (D-092).
 - **Versão do app.** Service worker em modo `prompt`, e a API informa a versão mínima aceita.
 
 ## Execução

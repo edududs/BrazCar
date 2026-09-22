@@ -7,7 +7,7 @@ Plataforma que funciona sozinha, sem extrator.
 - Esqueleto, tooling e teste de arquitetura. **Feito, tag `v0.1.0`.**
 - Teste do SSE pelo túnel do Cloudflare. **Feito, tag `v0.2.0`: SSE confirmado (D-076).**
 - `places`: catálogo com nome canônico, apelidos, tipo e lugar pai. **Feito, tag `v0.3.0`.**
-- `accounts`: cadastro por telefone, login, carros, recuperação de senha, exclusão de conta.
+- `accounts`: cadastro por telefone, login, carros, recuperação de senha, exclusão de conta. **Feito, tag `v0.4.0`.**
 - `rides`: publicar, editar, fechar, reabrir, cancelar, repetir, mural com filtros, contato.
 - Tempo real por revisão do mural.
 - Front e PWA instalável, online-only.
