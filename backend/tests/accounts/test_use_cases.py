@@ -1,0 +1,128 @@
+import pytest
+
+from brazcar.accounts.application import (
+    AddCar,
+    DeleteAccount,
+    LogIn,
+    RegisterAccount,
+    RemoveCar,
+    RequestPasswordReset,
+    ResetPassword,
+)
+from brazcar.accounts.domain import (
+    AccountNotFoundError,
+    InvalidCredentialsError,
+    InvalidResetTokenError,
+    PhoneAlreadyRegisteredError,
+)
+
+from .fakes import (
+    FixedClock,
+    InMemoryAccountRepository,
+    InMemoryCredentials,
+    InMemoryResetTokens,
+    RecordingMailer,
+)
+
+PHONE, PASSWORD = "61 99999-0001", "correct horse"
+
+
+class Context:
+    def __init__(self) -> None:
+        self.accounts = InMemoryAccountRepository()
+        self.credentials = InMemoryCredentials(self.accounts)
+        self.tokens = InMemoryResetTokens()
+        self.mailer = RecordingMailer()
+        self.clock = FixedClock()
+        self.register = RegisterAccount(self.accounts, self.credentials, self.clock)
+        self.log_in = LogIn(self.accounts, self.credentials)
+        self.request_reset = RequestPasswordReset(
+            self.accounts, self.tokens, self.mailer, "https://app/redefinir?token={token}"
+        )
+        self.reset = ResetPassword(self.accounts, self.credentials, self.tokens)
+
+
+@pytest.fixture
+def ctx() -> Context:
+    return Context()
+
+
+async def test_register_stores_the_account_with_the_terms_time_and_the_password(ctx: Context) -> None:
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana", email="a@b.com")
+
+    assert await ctx.accounts.get(account.id) == account
+    assert account.terms_accepted_at == ctx.clock.at
+    assert ctx.credentials.passwords[account.id] == PASSWORD
+
+
+async def test_register_refuses_a_phone_that_already_has_an_account(ctx: Context) -> None:
+    await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
+
+    with pytest.raises(PhoneAlreadyRegisteredError):
+        await ctx.register(phone="+55 61 99999-0001", password="other one", display_name="Bia")
+
+
+async def test_log_in_accepts_the_phone_however_it_is_typed(ctx: Context) -> None:
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
+
+    assert await ctx.log_in(phone="(61) 9 9999-0001", password=PASSWORD) == account
+
+
+@pytest.mark.parametrize(
+    ("phone", "password"), [(PHONE, "wrong"), ("61 99999-0002", PASSWORD), ("abc", PASSWORD)]
+)
+async def test_log_in_fails_the_same_way_for_wrong_password_unknown_or_bad_phone(
+    ctx: Context, phone: str, password: str
+) -> None:
+    await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
+
+    with pytest.raises(InvalidCredentialsError):
+        await ctx.log_in(phone=phone, password=password)
+
+
+async def test_cars_are_added_and_removed_through_the_account(ctx: Context) -> None:
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
+
+    driving = await AddCar(ctx.accounts)(account.id, model="Gol", color="prata", plate="abc1234")
+    assert driving.can_drive
+    walking = await RemoveCar(ctx.accounts)(account.id, driving.cars[0].id)
+
+    assert await ctx.accounts.get(account.id) == walking
+    assert not walking.can_drive
+
+
+async def test_password_reset_mails_a_link_only_when_there_is_an_email(ctx: Context) -> None:
+    await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana", email="ana@b.com")
+    await ctx.register(phone="61 99999-0002", password=PASSWORD, display_name="Bia")
+
+    await ctx.request_reset(phone="61 99999-0002")
+    await ctx.request_reset(phone="61 99999-0003")
+    await ctx.request_reset(phone="not a phone")
+    assert ctx.mailer.sent == []
+
+    await ctx.request_reset(phone=PHONE)
+    (to, _, body), *_ = ctx.mailer.sent
+    (token,) = ctx.tokens.issued
+    assert to == "ana@b.com"
+    assert f"https://app/redefinir?token={token}" in body
+
+
+async def test_password_reset_changes_the_password_once_per_token(ctx: Context) -> None:
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana", email="a@b.com")
+    token = await ctx.tokens.issue(account.id)
+
+    await ctx.reset(token=token, password="new one")
+
+    assert await ctx.log_in(phone=PHONE, password="new one") == account
+    with pytest.raises(InvalidResetTokenError):
+        await ctx.reset(token=token, password="again")
+
+
+async def test_delete_erases_the_account(ctx: Context) -> None:
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
+
+    await DeleteAccount(ctx.accounts)(account.id)
+
+    assert await ctx.accounts.get(account.id) is None
+    with pytest.raises(AccountNotFoundError):
+        await DeleteAccount(ctx.accounts)(account.id)
