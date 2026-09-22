@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
 import type { Place } from "@/features/places/domain/place";
@@ -17,6 +17,9 @@ function StatusPage() {
       <AvailabilityBadge availability={availability} />
       <PlacePicker label="Lugar" value={place} onChange={setPlace} />
       {place === null ? null : <p className="text-sm">Escolhido: {place.name}</p>}
+      <Link to="/conta" className="text-sm underline">
+        Minha conta
+      </Link>
     </PageShell>
   );
 }
