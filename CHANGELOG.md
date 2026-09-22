@@ -6,6 +6,22 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.3.0] - 2026-09-22
+
+### Adicionado
+
+- **shared:** Add a frozen model base whose copies are validated
+- **places:** Model the catalog as the aggregate, with search and hierarchy rules
+- **places:** Persist the catalog behind a port proven on SQLite and Postgres
+- **places:** Expose the catalog through public read-only routes
+- **places:** Add the front gateway and a headless place search hook
+- **places:** Keep the catalog in a versioned file synced by an idempotent command
+- **places:** Add a place picker on a Base UI combobox primitive
+
+### Documentação
+
+- Bring STATE, ROADMAP and architecture up to v0.3.0 before the release
+
 ## [0.2.1] - 2026-09-21
 
 ### Corrigido
