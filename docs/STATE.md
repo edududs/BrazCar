@@ -4,78 +4,88 @@ Atualizado em 2026-09-22.
 
 ## Onde estamos
 
-Versão `v0.4.0`: passos 3 (`places`) e 4 (`accounts`) concluídos. Antes deles: esqueleto
-(`v0.1.0`), SSE confirmado pelo túnel e num iPhone (`v0.2.0`, D-076) e o ritual de encerramento
-corrigido (`v0.2.1`). API publicada em `api-brazcar.elj-labs.org` e front em
-`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.4.0` desde
-2026-09-22. Falta `rides`.
+Versão `v0.5.0`: passo 5 (`rides`) concluído. Antes dele: esqueleto (`v0.1.0`), SSE confirmado
+pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido (`v0.2.1`), `places`
+(`v0.3.0`) e `accounts` (`v0.4.0`). API publicada em `api-brazcar.elj-labs.org` e front em
+`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois ainda na `v0.4.0`:
+a `v0.5.0` está cortada localmente e **não foi publicada**.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
-  arquitetura por AST. Em `shared/domain`, `FrozenModel` (congelado, `evolve()` revalida). Em
-  `shared/application`, as portas `Clock` e `Mailer`. Em `shared/adapters`: SSE, rota de
-  diagnóstico, CORS, `OriginCheckMiddleware` (D-091), `session_auth` para o ninja, relógio e
-  e-mail sobre o backend do Django.
+  arquitetura por AST. Em `shared/domain`, `FrozenModel`. Em `shared/application`, as portas
+  `Clock`, `Mailer`, `RateLimiter` (D-097), `BoardRevision` e `BoardSignal` (D-098). Em
+  `shared/adapters`: app Django `shared` com a linha da revisão e a tabela de hits, o sinal por
+  leitura 1x/s, SSE, rota de diagnóstico, CORS, `OriginCheckMiddleware` (D-091), `session_auth`
+  e `optional_account_id`, relógio e e-mail.
 - `places` (v0.3.0): `Catalog` é o agregado (D-083), `Place` com `PlaceId` em slug (D-084);
-  busca sem acento, apelidos e descendentes em memória; rotas públicas `GET /api/places?q=` e
-  `/api/places/{id}` (D-086); catálogo em `catalog.toml` sincronizado por `manage.py sync_places`
-  no entrypoint (D-087).
-- `accounts` (v0.4.0): `Account` com seus carros é o agregado; `PhoneNumber` em E.164 e
-  `LicensePlate` como value objects (D-089); `AccountId` é UUID gerado no domínio e chave do
-  usuário customizado do Django (D-090), que existe antes da primeira migration de auth (D-028).
-  Portas `AccountRepository`, `Credentials` e `PasswordResetTokens`; casos de uso de cadastro,
-  login, carros, recuperação de senha (D-092) e exclusão por apagamento no lugar (D-033). Rotas em
-  `/api/accounts`: `register`, `login`, `logout`, `me`, `cars`, `password-reset`,
-  `password-reset/confirm`, `DELETE me`; sessão por cookie `brazcar_session` httpOnly `Lax`.
-- Contratos de porta em `backend/tests/contracts/` (D-085), um por repositório, herdados pelo
-  fake e pelo adaptador Django; `poe test-postgres` (parte de `poe check-heavy`) os repete no
-  Postgres do compose, lendo `POSTGRES_*` do `.env` da raiz.
-- `contract/openapi.json` e os tipos do front regerados com `places` e `accounts`.
+  rotas públicas `GET /api/places?q=` e `/api/places/{id}` (D-086); catálogo em `catalog.toml`
+  sincronizado por `manage.py sync_places` no entrypoint (D-087).
+- `accounts` (v0.4.0, limites na v0.5.0): `Account` com carros; `AccountId` é o UUID do usuário
+  do Django (D-090); rotas em `/api/accounts`; sessão por cookie `brazcar_session`. Login estourado
+  responde 429 e recuperação de senha estourada cai em silêncio (D-097).
+- `rides` (v0.5.0): `RideOffer` com situação calculada (ADR-0003), regras de edição e atraso
+  (ADR-0004), eventos gravados em tabela só de acréscimo na mesma transação (ADR-0005, ADR-0008),
+  revisão do mural incrementada junto (ADR-0010). Paradas do catálogo conferidas (D-093), datas
+  de volta no fuso do mural (D-094). Rotas em `/api/rides`: mural público com filtros por lugar
+  (com descendentes), dia, vagas e preço; `GET /mine`, `GET /{id}`; publicar, editar, vagas,
+  cancelar, repetir (só o dono); contato (ADR-0006, D-095); `GET /revision` e `GET /signal` (SSE).
+  Read model `RideOut` sem telefone nem placa, com situação e ações prontas (D-096).
+- Contratos de porta em `backend/tests/contracts/` (D-085): `CatalogRepository`,
+  `AccountRepository`, `RideRepository` e `RateLimiter`, cada um no fake, em SQLite e no Postgres
+  do compose (`poe test-postgres`).
 - `web/`: yarn 4, Vite, React 19, TypeScript strict, Tailwind v4, TanStack Router e Query, Base UI
-  (D-088). `features/places`: `usePlaceSearch` e `PlacePicker`. `features/accounts`: gateway,
-  `useSession` (headless, testado), telas `/entrar`, `/cadastro`, `/conta`, `/esqueci-senha` e
-  `/redefinir-senha`. Primitivos em `shared/ui`: `Combobox`, `TextField`, `CheckboxField`, `Form`,
-  `ActionButton` (com `submit` e `disabled`). O cliente HTTP manda o cookie (`credentials: include`).
+  (D-088). `features/rides` em quatro camadas: gateway e fonte do sinal (sobre
+  `resilient-event-source`) em `adapters`; hooks `useBoard`, `useBoardSignal`, `useRide`,
+  `usePublishRide`, `useContact`, `useMyRides` em `app` (três com teste); cards, filtros,
+  formulário, detalhe e botão de contato em `ui`. Rotas `/` (mural, filtros na URL),
+  `/caronas/$rideId`, `/caronas/$rideId/editar`, `/publicar`, `/minhas-caronas`. Primitivos novos
+  em `shared/ui`: `Badge`, `Card`, `SelectField`, `ConfirmDialog`; `PageShell` ganhou `actions`.
 
-**Verificado de verdade no passo 4:** `check-heavy` dos dois lados (172 testes backend, 13 no
-front, build); contratos de `CatalogRepository` e `AccountRepository` no fake, em SQLite e no
-Postgres 18 do compose; as rotas de `accounts` contra a composição real (sessão, cookie
-httpOnly/Lax, `Origin` estranho recusado com 403 mesmo com cookie, placa única, e-mail de
-recuperação no `locmem` com link que funciona uma vez, exclusão que libera o telefone); no Chrome
-contra a API local: cadastro → `/conta` com o telefone em E.164 → carro adicionado com placa
-normalizada → sair → senha errada com o aviso da API → entrar → carro persistido.
+**Verificado de verdade no passo 5:** portão rápido dos dois lados (228 testes no backend, 19 no
+front); contratos de `RideRepository` e `RateLimiter` no fake, em SQLite e no Postgres 18 do
+compose; rotas de `rides` contra a composição real (publicar exige sessão, carro e lugar do
+catálogo; card sem placa nem telefone; filtros por lugar-pai, dia, vagas e preço; vagas zero
+lota e voltar reabre; cancelada é definitiva e repetir cria outra; horário de outro dia recusado
+com 409; só o dono mexe; contato dá link `wa.me` e placa, 429 no 21º pedido, 409 em carona
+lotada; a revisão sobe uma vez por escrita; o stream do sinal abre com `retry` e a revisão atual);
+no Chrome contra a API local: cadastro → carro → publicar (parada do catálogo pelo combobox e
+parada "outro" em texto) → detalhe com ações do dono → vagas 3→0 ("lotada") → 1 ("reaberta") →
+editar preço → segunda conta pede contato e recebe placa e link `wa.me` com a mensagem pronta →
+mural filtrado por Plano Piloto lista a carona da Esplanada e **atualizou sozinho pelo sinal** ao
+publicar outra por curl → diálogo de cancelar (Base UI) → repetir cria a carona do dia seguinte →
+"minhas caronas" lista as quatro, da mais recente para a mais antiga. A carona das 16:00 virou
+"já saiu" sozinha depois da tolerância.
 
-Publicado e conferido: a imagem `0.4.0` na máquina de teste aplicou as migrations de auth,
-`accounts` e `places` e sincronizou 18 lugares no entrypoint; pelo túnel, `/api/places` responde,
-`/me` dá 401 sem cookie e `Origin` estranho dá 403; no Chrome, cadastro pelo front do Vercel
-criou a conta na API e **a sessão sobreviveu ao recarregar `/conta`**: o cookie entre as origens
-irmãs funciona pelo Cloudflare (ADR-0012). A conta de teste foi apagada pela própria API.
-
-**Não verificado:** e-mail de verdade pelo Resend (sem chave no `api.env`, vai para o log); as
-páginas `/esqueci-senha` e `/redefinir-senha` no navegador (só passaram pelos portões); o cookie
-num **iPhone** (Safari), que é onde ADR-0012 pode falhar de verdade.
-No Vite em desenvolvimento, a primeira visita a uma rota nova recarregou a página no meio do
-formulário (otimização de dependências); não acontece no build.
+**Não verificado:** a `v0.5.0` na máquina de teste (migrations `shared` e `rides` no Postgres de
+lá, sinal SSE pelo túnel com o front do Vercel); o sinal e a invalidação num iPhone; a página de
+edição com adiamento depois da partida (só o domínio e a rota cobrem); `login` e
+`password-reset` com limite estourado pelo navegador (só o caso de uso e a rota); e-mail de
+verdade pelo Resend.
+No Vite em desenvolvimento a otimização de dependências recarregou a página duas vezes no meio
+de um formulário e abortou a resposta de um login (o cookie não chegou); não acontece no build.
+Durante o teste havia outro Vite antigo na 5173; o novo subiu na 5175, e a API precisa das duas
+origens em `DJANGO_CORS_ALLOWED_ORIGINS` ou a checagem de `Origin` devolve 403.
 
 ## Próximo passo
 
-1. Conferir cadastro e login num iPhone em `brazcar.elj-labs.org`, e pôr a chave do Resend
-   (`EMAIL_*`) no `api.env` da máquina.
-2. `rides`: carona com paradas por `PlaceId`, situação calculada (ADR-0003), histórico
-   (ADR-0005), contato com limite (ADR-0006, D-064), revisão do mural (ADR-0010). Copiar o
-   molde: agregado, porta, contrato em `tests/contracts/`, schema de saída próprio.
-3. Tempo real: o adaptador SSE de verdade, seguindo D-077.
-4. Front e PWA.
+1. Publicar a `v0.5.0` ([runbooks/deploy.md](runbooks/deploy.md)) e conferir no túnel: migrations
+   `shared` e `rides`, `GET /api/rides`, `GET /api/rides/signal` pelo Cloudflare e o mural no
+   front do Vercel atualizando sem recarregar. Depois, num iPhone.
+2. Passo 6, tempo real de verdade: o que falta de ADR-0010 e D-077 no front (heartbeat vigiado,
+   reconexão ao voltar ao foco já vêm do adaptador; medir no app instalado), `LISTEN/NOTIFY` só se
+   o segundo de atraso incomodar (D-050).
+3. Front e PWA: manifesto, service worker em modo `prompt`, tela offline, safe-area.
 
 ## Pendências abertas
 
 - Texto dos termos de uso e de privacidade ainda não foi escrito (D-033); o cadastro já grava o
   aceite e a tela já mostra a frase, sem link.
-- Limite de requisições (D-064) ainda não existe; entra com a rota de contato de `rides`, e
-  vale também para `login` e `password-reset`.
 - Recuperação manual de senha para conta sem e-mail depende de admin, que só entra somente
-  leitura e depois de `rides` (D-087); até lá não há caminho.
-- O `Catalog` é carregado inteiro a cada requisição de `places`; cachear por revisão se pesar.
+  leitura (D-087); até lá não há caminho.
+- O `Catalog` é carregado inteiro a cada requisição de `places` e duas vezes por listagem do
+  mural (`labels` e `with_descendants`); cachear por revisão se pesar.
+- A tabela de hits do limite cresce com o uso e só é podada por chave; um comando de limpeza
+  entra se pesar.
 - Rota `/api/diagnostics/sse` e página `/diagnostics` seguem ligadas de propósito até a medição
   com o app instalado (`standalone`). Depois disso, remover rota, página e `SSE_DIAGNOSTICS_TOKEN`.
 - Teto de descritores do container da API não foi conferido.
@@ -83,12 +93,3 @@ formulário (otimização de dependências); não acontece no build.
 - D-040 está como proposto; só importa quando o extrator entrar.
 - Sobrou uma pasta `.whatsapp_scrapping_wip/proj1/.pytest_cache` com permissão negada no
   Windows. Remover manualmente como administrador. Está no `.gitignore`.
-
-## Em voo
-
-`rides` começou fora de hora, em 2026-09-22, e parou por ordem do Eduardo. O que existe está
-íntegro e passa nos portões, mas **não é um passo fechado**: domínio (`RideOffer`, situação
-calculada, regras de edição e atraso, eventos, ações permitidas; 19 testes com Hypothesis) e
-aplicação (portas, casos de uso, read model do mural; 7 testes com fakes). Faltam adaptadores
-(models, migrations, repositório, contrato nos dois bancos, rotas), o front e o encerramento.
-A spec está em `docs/specs/rides/`. Retomar por ali.

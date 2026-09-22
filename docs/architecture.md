@@ -63,7 +63,7 @@ A conexão cai por rotina, porque o túnel a derruba em rajadas e o iOS a mata e
 o servidor manda um evento `ping` a cada 15s, e o cliente reconecta sozinho por silêncio, ao
 voltar ao foco e ao voltar a rede. Medido pelo caminho real e num iPhone (ADR-0013).
 
-**Contato.** A lista nunca traz telefone nem placa. O botão chama uma rota própria, que exige
+**Contato.** A lista nunca traz telefone nem placa (schema `RideOut`, D-096). O botão chama uma rota própria, que exige
 login, aplica limite por conta, registra o pedido e devolve o link `wa.me` com mensagem pronta e a
 placa (ADR-0006).
 
@@ -82,7 +82,8 @@ placa (ADR-0006).
   descendentes são resolvidos em memória, em Python, iguais em qualquer banco (D-083).
 - **Regras só no backend.** A API devolve a situação calculada e as ações permitidas (ADR-0011).
 - **Observabilidade.** Logs estruturados em JSON na saída padrão e um endpoint de saúde. Nada de terceiros.
-- **Limite de requisições.** Na aplicação, atrás de uma porta, por conta ou por IP.
+- **Limite de requisições.** Porta `RateLimiter` em `shared/application`, com chave por conta ou por
+  telefone e uma tabela de hits como adaptador (D-097). Contato, login e recuperação de senha passam por ela.
 - **E-mail.** Porta `Mailer` em `shared/application` com o backend de e-mail do Django como
   adaptador; o fornecedor é variável de ambiente, e sem ele as mensagens vão para o console (D-092).
 - **Versão do app.** Service worker em modo `prompt`, e a API informa a versão mínima aceita.

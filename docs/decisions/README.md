@@ -41,6 +41,10 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-021 | Histórico em tabela só de acréscimo, alimentada por eventos de domínio | decidido | [0005](0005-append-only-ride-events.md) |
 | D-022 | Pedidos de contato ficam em tabela própria, fora do histórico da carona | decidido | |
 | D-023 | A carona guarda cópia dos dados do carro na publicação, além da referência | decidido | |
+| D-093 | Parada do catálogo só entra se o lugar existir: `PublishRide` e `EditRide` conferem os identificadores contra o `PlaceDirectory` e recusam com `UnknownPlaceError` (422); texto livre não é conferido por ninguém | decidido | |
+| D-094 | O repositório devolve as datas no fuso do mural (`TIME_ZONE`, `America/Sao_Paulo`), não em UTC: a regra do mesmo dia (ADR-0004) e o filtro por dia leem a data local, e o contrato de porta prova que o dia sobrevive ao banco. Não há coluna de fuso; a plataforma é de uma cidade só | decidido | |
+| D-095 | Pedido de contato só em carona aberta ou reaberta (409 nas outras); o motorista nunca recebe `can_contact` na própria carona. Uma carona publicada nasce com pelo menos uma vaga (regra da API) | decidido | |
+| D-096 | O card do mural e toda resposta de escrita são o mesmo schema `RideOut`, com situação e ações calculadas para quem pede (ADR-0011); a rota de escrita relê a carona pelo `ShowRide` em vez de serializar a entidade | decidido | |
 
 ## Lugares
 
@@ -143,6 +147,8 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-082 | Uma versão só para a release inteira: a tag é a fonte, o pacote do backend a acompanha, a API lê a versão do pacote instalado, e o contrato e os tipos do front são regerados no corte da release. Versão de contrato independente só quando existir cliente externo da API | decidido | |
 | D-081 | A imagem da API é pública e a máquina de teste a puxa como anônimo, com um `DOCKER_CONFIG` próprio e vazio em `~/.brazcar/docker`; sem token de GHCR para o BrazCar | decidido | |
 | D-079 | CORS por `django-cors-headers`, com origens explícitas vindas do ambiente; é a parte de D-059 que já existe | decidido | |
+| D-097 | Limite de requisições (D-064) é a porta `RateLimiter` em `shared/application`, com chave, limite e janela decididos pelo caso de uso (`contact:<conta>` 20 por 24h; `login:<telefone>` 10 por 15 min; `password-reset:<telefone>` 3 por hora). O adaptador é uma tabela de hits em `shared` (`shared_rate_limit_hit`), exata e igual em SQLite e Postgres; login estourado responde 429 e recuperação de senha estourada cai em silêncio, como telefone desconhecido | decidido | |
+| D-098 | A revisão do mural e o sinal (ADR-0010) são portas de `shared/application` (`BoardRevision`, `BoardSignal`), não de `rides`: `rides` incrementa a linha `shared_board_revision`, semeada pela migration, dentro da própria transação; o adaptador `PollingBoardSignal` só mantém a tarefa de leitura enquanto há assinante, e `publish` é o atalho para escritor do mesmo processo. A rota `GET /api/rides/signal` já serve `revision` e `ping` a cada 15s (D-077), e o front invalida o mural após espera aleatória de até 2s (D-047) | decidido | |
 
 ## Por que algumas linhas não têm registro
 
