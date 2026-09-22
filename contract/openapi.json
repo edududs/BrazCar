@@ -57,6 +57,104 @@
         "title": "AccountOut",
         "type": "object"
       },
+      "ActionsOut": {
+        "description": "What the viewer may do. The front only draws these (ADR-0011).",
+        "properties": {
+          "can_cancel": {
+            "title": "Can Cancel",
+            "type": "boolean"
+          },
+          "can_change_seats": {
+            "title": "Can Change Seats",
+            "type": "boolean"
+          },
+          "can_contact": {
+            "title": "Can Contact",
+            "type": "boolean"
+          },
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "can_repeat": {
+            "title": "Can Repeat",
+            "type": "boolean"
+          },
+          "delay_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Until"
+          }
+        },
+        "required": [
+          "can_edit",
+          "can_change_seats",
+          "can_cancel",
+          "can_repeat",
+          "can_contact",
+          "delay_until"
+        ],
+        "title": "ActionsOut",
+        "type": "object"
+      },
+      "BoardQuery": {
+        "description": "The board's filters, as the URL carries them.",
+        "properties": {
+          "day": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day"
+          },
+          "max_price": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Price"
+          },
+          "place_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Id"
+          },
+          "with_seats": {
+            "default": false,
+            "title": "With Seats",
+            "type": "boolean"
+          }
+        },
+        "title": "BoardQuery",
+        "type": "object"
+      },
       "CarIn": {
         "properties": {
           "color": {
@@ -109,6 +207,24 @@
         "title": "CarOut",
         "type": "object"
       },
+      "ContactOut": {
+        "properties": {
+          "plate": {
+            "title": "Plate",
+            "type": "string"
+          },
+          "whatsapp_url": {
+            "title": "Whatsapp Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "whatsapp_url",
+          "plate"
+        ],
+        "title": "ContactOut",
+        "type": "object"
+      },
       "Done": {
         "properties": {
           "ok": {
@@ -118,6 +234,71 @@
           }
         },
         "title": "Done",
+        "type": "object"
+      },
+      "EditIn": {
+        "description": "Absent means unchanged.",
+        "properties": {
+          "departure_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Departure At"
+          },
+          "payment_methods": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PaymentMethod"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Methods"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "stops": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/StopIn"
+                },
+                "minItems": 2,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stops"
+          }
+        },
+        "title": "EditIn",
         "type": "object"
       },
       "HealthStatus": {
@@ -183,6 +364,14 @@
         "title": "PasswordResetIn",
         "type": "object"
       },
+      "PaymentMethod": {
+        "enum": [
+          "cash",
+          "pix"
+        ],
+        "title": "PaymentMethod",
+        "type": "string"
+      },
       "PlaceKind": {
         "enum": [
           "area",
@@ -234,6 +423,65 @@
         "title": "PlaceOut",
         "type": "object"
       },
+      "PublishIn": {
+        "properties": {
+          "car_id": {
+            "format": "uuid",
+            "title": "Car Id",
+            "type": "string"
+          },
+          "departure_at": {
+            "format": "date-time",
+            "title": "Departure At",
+            "type": "string"
+          },
+          "payment_methods": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentMethod"
+            },
+            "minItems": 1,
+            "title": "Payment Methods",
+            "type": "array"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "7.00",
+            "title": "Price"
+          },
+          "seats_available": {
+            "maximum": 8,
+            "minimum": 1,
+            "title": "Seats Available",
+            "type": "integer"
+          },
+          "stops": {
+            "items": {
+              "$ref": "#/components/schemas/StopIn"
+            },
+            "minItems": 2,
+            "title": "Stops",
+            "type": "array"
+          }
+        },
+        "required": [
+          "car_id",
+          "stops",
+          "departure_at",
+          "seats_available",
+          "payment_methods"
+        ],
+        "title": "PublishIn",
+        "type": "object"
+      },
       "RegisterIn": {
         "properties": {
           "accepts_terms": {
@@ -273,6 +521,20 @@
         "title": "RegisterIn",
         "type": "object"
       },
+      "RepeatIn": {
+        "properties": {
+          "departure_at": {
+            "format": "date-time",
+            "title": "Departure At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "departure_at"
+        ],
+        "title": "RepeatIn",
+        "type": "object"
+      },
       "ResolvedPlaceOut": {
         "properties": {
           "descendants": {
@@ -291,6 +553,175 @@
           "descendants"
         ],
         "title": "ResolvedPlaceOut",
+        "type": "object"
+      },
+      "RevisionOut": {
+        "properties": {
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "RevisionOut",
+        "type": "object"
+      },
+      "RideOut": {
+        "description": "The card. Never the phone, never the plate (D-031).",
+        "properties": {
+          "actions": {
+            "$ref": "#/components/schemas/ActionsOut"
+          },
+          "car_color": {
+            "title": "Car Color",
+            "type": "string"
+          },
+          "car_model": {
+            "title": "Car Model",
+            "type": "string"
+          },
+          "departure_at": {
+            "format": "date-time",
+            "title": "Departure At",
+            "type": "string"
+          },
+          "driver_name": {
+            "title": "Driver Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_mine": {
+            "title": "Is Mine",
+            "type": "boolean"
+          },
+          "payment_methods": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentMethod"
+            },
+            "title": "Payment Methods",
+            "type": "array"
+          },
+          "price": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Price",
+            "type": "string"
+          },
+          "seats_available": {
+            "title": "Seats Available",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RideStatus"
+          },
+          "stops": {
+            "items": {
+              "$ref": "#/components/schemas/StopOut"
+            },
+            "title": "Stops",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "driver_name",
+          "car_model",
+          "car_color",
+          "stops",
+          "departure_at",
+          "seats_available",
+          "price",
+          "payment_methods",
+          "status",
+          "actions",
+          "is_mine"
+        ],
+        "title": "RideOut",
+        "type": "object"
+      },
+      "RideStatus": {
+        "enum": [
+          "open",
+          "reopened",
+          "full",
+          "departed",
+          "cancelled"
+        ],
+        "title": "RideStatus",
+        "type": "string"
+      },
+      "SeatsIn": {
+        "properties": {
+          "seats_available": {
+            "maximum": 8,
+            "minimum": 0,
+            "title": "Seats Available",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "seats_available"
+        ],
+        "title": "SeatsIn",
+        "type": "object"
+      },
+      "StopIn": {
+        "description": "A place of the catalog by identifier, or free text for \"other\" (D-013). One of the two.",
+        "properties": {
+          "place_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Id"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "title": "StopIn",
+        "type": "object"
+      },
+      "StopOut": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "place_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Id"
+          }
+        },
+        "required": [
+          "place_id",
+          "label"
+        ],
+        "title": "StopOut",
         "type": "object"
       }
     },
@@ -678,6 +1109,441 @@
         "summary": "Resolve",
         "tags": [
           "places"
+        ]
+      }
+    },
+    "/api/rides": {
+      "get": {
+        "description": "Rides still to depart, earliest first, filtered; a place filter includes what is beneath it.",
+        "operationId": "list_board",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "day",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Day"
+            }
+          },
+          {
+            "in": "query",
+            "name": "place_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Place Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "with_seats",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "With Seats",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_price",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Price"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RideOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "List Board",
+        "tags": [
+          "rides"
+        ]
+      },
+      "post": {
+        "operationId": "publish_ride",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RideOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Publish",
+        "tags": [
+          "rides"
+        ]
+      }
+    },
+    "/api/rides/mine": {
+      "get": {
+        "operationId": "list_my_rides",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RideOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "List Mine",
+        "tags": [
+          "rides"
+        ]
+      }
+    },
+    "/api/rides/revision": {
+      "get": {
+        "operationId": "get_board_revision",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevisionOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Get Revision",
+        "tags": [
+          "rides"
+        ]
+      }
+    },
+    "/api/rides/{ride_id}": {
+      "get": {
+        "operationId": "get_ride",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ride_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Ride Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RideOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Get Ride",
+        "tags": [
+          "rides"
+        ]
+      },
+      "patch": {
+        "operationId": "edit_ride",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ride_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Ride Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RideOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Edit",
+        "tags": [
+          "rides"
+        ]
+      }
+    },
+    "/api/rides/{ride_id}/cancel": {
+      "post": {
+        "description": "Final (D-019). To change one's mind, repeat.",
+        "operationId": "cancel_ride",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ride_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Ride Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RideOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Cancel",
+        "tags": [
+          "rides"
+        ]
+      }
+    },
+    "/api/rides/{ride_id}/contact": {
+      "post": {
+        "description": "Login, a limit per account and a record: then the `wa.me` link and the plate (ADR-0006).",
+        "operationId": "request_contact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ride_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Ride Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Request Contact",
+        "tags": [
+          "rides"
+        ]
+      }
+    },
+    "/api/rides/{ride_id}/repeat": {
+      "post": {
+        "description": "A new ride with this one's route, price and payment, on another departure (D-012).",
+        "operationId": "repeat_ride",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ride_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Ride Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepeatIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RideOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Repeat",
+        "tags": [
+          "rides"
+        ]
+      }
+    },
+    "/api/rides/{ride_id}/seats": {
+      "post": {
+        "description": "Zero closes the ride; back above zero reopens it (ADR-0003).",
+        "operationId": "change_seats",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ride_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Ride Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeatsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RideOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Change Seats",
+        "tags": [
+          "rides"
         ]
       }
     }
