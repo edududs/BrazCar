@@ -6,6 +6,25 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.4.0] - 2026-09-22
+
+### Adicionado
+
+- **accounts:** Model the account with phone and plate value objects and its cars
+- **accounts:** Add the ports and use cases for signup, login, cars, recovery and deletion
+- **accounts:** Persist accounts on a custom Django user, proven on SQLite and Postgres
+- **accounts:** Expose signup, session, cars and password recovery over HTTP
+- **accounts:** Add the session hook, gateway and the signup, login and account screens
+- **accounts:** Add the forgot-password and reset-password pages the e-mail link opens
+
+### Corrigido
+
+- **release:** Point the Postgres contract at the same .env the compose reads
+
+### Documentação
+
+- Bring STATE, ROADMAP and architecture up to v0.4.0 before the release
+
 ## [0.3.0] - 2026-09-22
 
 ### Adicionado
