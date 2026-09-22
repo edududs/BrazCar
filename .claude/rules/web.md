@@ -23,7 +23,7 @@ paths:
 - SSE só por `shared/adapters/resilient-event-source.ts`, nunca `EventSource` cru. Reconectar é
   caminho feliz, não erro; eventos que chegam em rajada ao acordar valem um sinal só (ADR-0013).
 - Rotas: TanStack Router. Filtros do mural vivem na URL.
-- Primitivos sobre biblioteca headless (React Aria ou Base UI) com Tailwind v4 e tokens em
+- Primitivos sobre o Base UI (D-088), embrulhados em `shared/ui/`, com Tailwind v4 e tokens em
   variáveis CSS. Acessibilidade de diálogo, menu e sheet não se faz à mão.
 - PWA online-only: o service worker só pré-carrega a casca. Sem rede, tela de aviso.
   Atualização em modo `prompt`. Respeitar safe-area e detectar modo standalone num adaptador só.
