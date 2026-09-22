@@ -49,6 +49,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-024 | `places` nasce como contexto próprio: nome canônico, apelidos, tipo, lugar pai, geometria vazia | decidido | [0002](0002-bounded-contexts-own-django-app.md) |
 | D-025 | Modelagem de lugar como área e mapa de paradas | adiado | |
 | D-083 | O agregado de `places` é o catálogo inteiro (`Catalog`), porque as invariantes atravessam lugares; a porta carrega e grava o catálogo todo, e busca, apelido e descendentes são resolvidos em memória, em Python, sem recurso de banco. Rever se o catálogo passar de centenas de lugares | decidido | |
+| D-087 | O catálogo de `places` é mantido por um arquivo versionado (`backend/src/brazcar/places/adapters/catalog.toml`) e pelo comando idempotente `manage.py sync_places`, que passa pelo caso de uso e roda no entrypoint junto com a migração. O admin do Django não escreve em lugar nenhum; se entrar, é somente leitura, e só depois de `accounts` (D-028) | decidido | |
 | D-084 | Identificador de lugar é um slug estável (`plano-piloto`): legível na semente e na URL do filtro do mural, e renomear o lugar não o muda | decidido | |
 
 ## Contas e privacidade
@@ -123,7 +124,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-059 | Cookie de sessão httpOnly `SameSite=Lax`, CORS com credenciais, checagem de `Origin` | decidido | [0012](0012-session-cookie-sibling-origins.md) |
 | D-060 | Front no Vercel; API na máquina de teste por compose, Traefik e túnel do Cloudflare | decidido | |
 | D-061 | Migração no entrypoint, ligada por `RUN_MIGRATIONS=1` só na API; worker espera a API saudável | decidido | |
-| D-062 | Admin do Django escreve só em `places`; resto somente leitura; moderação chama caso de uso | decidido | |
+| D-062 | Admin do Django escreve só em `places`; resto somente leitura; moderação chama caso de uso | substituída por D-087 | |
 | D-063 | Observabilidade: logs JSON e endpoint de saúde, sem terceiros | decidido | |
 | D-064 | Limite de requisições na aplicação, atrás de porta | decidido | |
 | D-065 | Testes: arquitetura por AST, domínio, Hypothesis, contrato nos dois bancos, Schemathesis, E2E, hooks do front | decidido | |
@@ -140,7 +141,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 
 ## Por que algumas linhas não têm registro
 
-D-080: release-please e semantic-release automatizam o mesmo, mas decidem no GitHub; aqui a versão é cortada localmente, o push continua sendo do dono, e o GitHub só transforma a tag em release. D-081: o login de `ghcr.io` guardado no usuário da máquina é de outro projeto e faz o registro responder `denied` até para imagem pública; um token novo resolveria, mas seria um segredo a mais para guardar e renovar sem necessidade. Se a imagem virar privada, o caminho é o do JayceFinance: token clássico só com `read:packages`, `docker login` por stdin nesse mesmo diretório. D-078: o granian foi considerado; conexões SSE ociosas são tarefas asyncio paradas, a 0,1 MiB cada,
+D-087: o admin exige `auth` e sessões, e o usuário customizado tem de existir antes da primeira migration deles (D-028); antecipar `accounts` quebraria a ordem de D-068, e o admin gravaria por fora do agregado, o que obrigaria a duplicar as invariantes do catálogo em `clean()`. Com o arquivo, o catálogo é revisável em commit e igual em todo ambiente. D-080: release-please e semantic-release automatizam o mesmo, mas decidem no GitHub; aqui a versão é cortada localmente, o push continua sendo do dono, e o GitHub só transforma a tag em release. D-081: o login de `ghcr.io` guardado no usuário da máquina é de outro projeto e faz o registro responder `denied` até para imagem pública; um token novo resolveria, mas seria um segredo a mais para guardar e renovar sem necessidade. Se a imagem virar privada, o caminho é o do JayceFinance: token clássico só com `read:packages`, `docker login` por stdin nesse mesmo diretório. D-078: o granian foi considerado; conexões SSE ociosas são tarefas asyncio paradas, a 0,1 MiB cada,
 e o uvicorn já era o servidor de desenvolvimento e o dos logs JSON. D-061: o passo de migração separado protegeria contra falha antes da troca, mas num ambiente de
 teste com uma API só o entrypoint é mais simples. D-058: `api.brazcar` seria de segundo nível e
 fora do certificado grátis. D-032: o envio de e-mail do Cloudflare exige plano pago; o Resend é

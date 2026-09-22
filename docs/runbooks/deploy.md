@@ -26,7 +26,7 @@ docker compose ps          # esperar (healthy)
 curl -s -H "Host: api-brazcar.elj-labs.org" http://127.0.0.1/api/health
 ```
 
-A migração roda no entrypoint da API (`RUN_MIGRATIONS=1`, D-061).
+A migração e o `sync_places` do catálogo de lugares rodam no entrypoint da API (`RUN_MIGRATIONS=1`, D-061 e D-087).
 
 ## Armadilhas já pagas
 

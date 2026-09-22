@@ -30,7 +30,9 @@ importação, que precisa mapear texto sujo do WhatsApp para os mesmos lugares c
 
 ## Manutenção
 
-Pelo admin do Django. É o único ponto do sistema onde o admin escreve.
+Pelo arquivo `backend/src/brazcar/places/adapters/catalog.toml`, que é a fonte, e pelo comando
+`manage.py sync_places`, que deixa o banco igual ao arquivo (D-087). Mudar o catálogo é editar o
+arquivo e fazer commit; o comando roda no entrypoint da API, depois da migração.
 
 ## Adiado
 

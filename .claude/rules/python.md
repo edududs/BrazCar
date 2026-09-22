@@ -20,7 +20,7 @@ paths:
   Rota SSE não segura conexão do ORM.
 - ninja é adaptador de entrada: traduz HTTP para DTO, chama o caso de uso, traduz erro de
   domínio em resposta. Sem regra de negócio em rota.
-- O admin do Django só escreve no catálogo de `places`. No resto é somente leitura, e moderação
-  é ação que chama o caso de uso.
+- O catálogo de `places` vem de `catalog.toml` pelo comando `sync_places` (D-087). O admin do
+  Django, se entrar, é somente leitura, e moderação é ação que chama o caso de uso.
 - Testes: domínio sem Django nem banco; Hypothesis para situação da carona e regra de atraso;
   contrato de repositório parametrizado por `DATABASE_URL` (SQLite e Postgres).

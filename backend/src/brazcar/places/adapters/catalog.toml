@@ -1,0 +1,99 @@
+# O catálogo de lugares. É a fonte: `manage.py sync_places` deixa o banco igual a este arquivo.
+# Nome como as pessoas falam; apelidos são as outras formas de escrever o mesmo lugar.
+# `parent` é o lugar que contém este: filtrar pelo pai encontra os filhos.
+
+[[places]]
+id = "brazlandia"
+name = "Brazlândia"
+aliases = ["Braz", "Brazlândia DF"]
+
+[[places]]
+id = "incra-8"
+name = "Incra 8"
+parent = "brazlandia"
+
+[[places]]
+id = "vendinha"
+name = "Vendinha"
+parent = "brazlandia"
+
+[[places]]
+id = "estrutural"
+name = "Estrutural"
+aliases = ["Via Estrutural", "EPCL", "DF-095"]
+
+[[places]]
+id = "ceilandia"
+name = "Ceilândia"
+aliases = ["Cei"]
+
+[[places]]
+id = "taguatinga"
+name = "Taguatinga"
+aliases = ["Tagua"]
+
+[[places]]
+id = "sia"
+name = "SIA"
+
+[[places]]
+id = "plano-piloto"
+name = "Plano Piloto"
+aliases = ["Plano"]
+
+[[places]]
+id = "eixo-monumental"
+name = "Eixo Monumental"
+aliases = ["Eixo"]
+parent = "plano-piloto"
+
+[[places]]
+id = "buriti"
+name = "Buriti"
+aliases = ["Palácio do Buriti"]
+parent = "eixo-monumental"
+
+[[places]]
+id = "rodoviaria-do-plano"
+name = "Rodoviária do Plano"
+aliases = ["Rodoviária", "Rodô"]
+parent = "eixo-monumental"
+
+[[places]]
+id = "esplanada"
+name = "Esplanada"
+aliases = ["Esplanada dos Ministérios"]
+parent = "eixo-monumental"
+
+[[places]]
+id = "asa-sul"
+name = "Asa Sul"
+parent = "plano-piloto"
+
+[[places]]
+id = "setor-comercial-sul"
+name = "Setor Comercial Sul"
+aliases = ["SCS"]
+parent = "asa-sul"
+
+[[places]]
+id = "setor-bancario-sul"
+name = "Setor Bancário Sul"
+aliases = ["SBS"]
+parent = "asa-sul"
+
+[[places]]
+id = "asa-norte"
+name = "Asa Norte"
+parent = "plano-piloto"
+
+[[places]]
+id = "setor-bancario-norte"
+name = "Setor Bancário Norte"
+aliases = ["SBN"]
+parent = "asa-norte"
+
+[[places]]
+id = "unb"
+name = "UnB"
+parent = "asa-norte"
