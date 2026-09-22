@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import timedelta
 
 from brazcar.accounts.domain import (
     Account,
@@ -7,11 +8,22 @@ from brazcar.accounts.domain import (
     CarId,
     InvalidCredentialsError,
     InvalidResetTokenError,
+    TooManyAttemptsError,
     normalize_phone_number,
 )
-from brazcar.shared.application.ports import Clock, Mailer
+from brazcar.shared.application.ports import Clock, Mailer, RateLimiter
 
 from .ports import AccountRepository, Credentials, PasswordResetTokens
+
+
+@dataclass(frozen=True, slots=True)
+class AccountLimits:
+    """How often one phone may try (D-064). Per phone, so a guess at one number cannot lock another."""
+
+    login_attempts: int = 10
+    login_window: timedelta = timedelta(minutes=15)
+    reset_requests: int = 3
+    reset_window: timedelta = timedelta(hours=1)
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,12 +47,19 @@ class RegisterAccount:
 class LogIn:
     accounts: AccountRepository
     credentials: Credentials
+    limiter: RateLimiter
+    limits: AccountLimits = AccountLimits()
 
     async def __call__(self, *, phone: str, password: str) -> Account:
         try:
             normalized = normalize_phone_number(phone)
         except ValueError as error:
             raise InvalidCredentialsError from error
+        allowed = await self.limiter.acquire(
+            f"login:{normalized}", limit=self.limits.login_attempts, window=self.limits.login_window
+        )
+        if not allowed:
+            raise TooManyAttemptsError
         account_id = await self.credentials.verify(normalized, password)
         account = await self.accounts.get(account_id) if account_id else None
         if account is None:
@@ -77,13 +96,20 @@ class RequestPasswordReset:
     accounts: AccountRepository
     tokens: PasswordResetTokens
     mailer: Mailer
+    limiter: RateLimiter
     reset_link: str  # the front's page, with `{token}` where the token goes
+    limits: AccountLimits = AccountLimits()
 
     async def __call__(self, *, phone: str) -> None:
         try:
             normalized = normalize_phone_number(phone)
         except ValueError:
             return
+        allowed = await self.limiter.acquire(
+            f"password-reset:{normalized}", limit=self.limits.reset_requests, window=self.limits.reset_window
+        )
+        if not allowed:
+            return  # silently, like an unknown phone: the answer never says why
         account = await self.accounts.by_phone(normalized)
         if account is None or account.email is None:
             return

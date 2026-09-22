@@ -37,3 +37,8 @@ class CarNotFoundError(AccountError, LookupError):
 class InvalidResetTokenError(AccountError):
     def __init__(self) -> None:
         super().__init__("the password reset link is invalid or expired")
+
+
+class TooManyAttemptsError(AccountError):
+    def __init__(self) -> None:
+        super().__init__("too many attempts for now; try again later")

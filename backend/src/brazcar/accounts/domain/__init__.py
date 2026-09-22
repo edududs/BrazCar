@@ -7,6 +7,7 @@ from .errors import (
     InvalidResetTokenError,
     PhoneAlreadyRegisteredError,
     PlateAlreadyOnAccountError,
+    TooManyAttemptsError,
 )
 from .license_plate import LicensePlate, normalize_license_plate
 from .phone_number import PhoneNumber, normalize_phone_number
@@ -25,6 +26,7 @@ __all__ = [
     "PhoneAlreadyRegisteredError",
     "PhoneNumber",
     "PlateAlreadyOnAccountError",
+    "TooManyAttemptsError",
     "normalize_license_plate",
     "normalize_phone_number",
 ]

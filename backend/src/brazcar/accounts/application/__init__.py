@@ -1,5 +1,6 @@
 from .ports import AccountRepository, Credentials, PasswordResetTokens
 from .use_cases import (
+    AccountLimits,
     AddCar,
     DeleteAccount,
     LogIn,
@@ -10,6 +11,7 @@ from .use_cases import (
 )
 
 __all__ = [
+    "AccountLimits",
     "AccountRepository",
     "AddCar",
     "Credentials",

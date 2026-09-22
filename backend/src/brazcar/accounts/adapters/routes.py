@@ -33,6 +33,7 @@ from brazcar.accounts.domain import (
     InvalidResetTokenError,
     PhoneAlreadyRegisteredError,
     PlateAlreadyOnAccountError,
+    TooManyAttemptsError,
 )
 from brazcar.shared.adapters.session_auth import session_auth
 
@@ -149,6 +150,8 @@ def _add_entry_routes(router: Router, use_cases: AccountUseCases) -> None:
             account = await use_cases.log_in(phone=data.phone, password=data.password)
         except InvalidCredentialsError as error:
             raise HttpError(HTTPStatus.UNAUTHORIZED, "telefone ou senha incorretos") from error
+        except TooManyAttemptsError as error:
+            raise HttpError(HTTPStatus.TOO_MANY_REQUESTS, "muitas tentativas; espere um pouco") from error
         await _start_session(request, account)
         return AccountOut.of(account)
 

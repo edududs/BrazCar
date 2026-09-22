@@ -14,6 +14,7 @@ from brazcar.accounts.application import (
 )
 from brazcar.shared.adapters.clock import SystemClock
 from brazcar.shared.adapters.mail import DjangoMailer
+from brazcar.shared.adapters.rate_limit import DjangoRateLimiter
 
 from .credentials import DjangoCredentials, DjangoPasswordResetTokens
 from .repository import DjangoAccountRepository
@@ -24,14 +25,15 @@ def accounts_router() -> Router:
     accounts = DjangoAccountRepository()
     credentials = DjangoCredentials()
     tokens = DjangoPasswordResetTokens()
+    limiter = DjangoRateLimiter()
     use_cases = AccountUseCases(
         accounts=accounts,
         register=RegisterAccount(accounts, credentials, SystemClock()),
-        log_in=LogIn(accounts, credentials),
+        log_in=LogIn(accounts, credentials, limiter),
         add_car=AddCar(accounts),
         remove_car=RemoveCar(accounts),
         request_password_reset=RequestPasswordReset(
-            accounts, tokens, DjangoMailer(), settings.PASSWORD_RESET_LINK
+            accounts, tokens, DjangoMailer(), limiter, settings.PASSWORD_RESET_LINK
         ),
         reset_password=ResetPassword(accounts, credentials, tokens),
         delete=DeleteAccount(accounts),

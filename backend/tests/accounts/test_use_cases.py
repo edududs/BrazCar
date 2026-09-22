@@ -1,6 +1,7 @@
 import pytest
 
 from brazcar.accounts.application import (
+    AccountLimits,
     AddCar,
     DeleteAccount,
     LogIn,
@@ -14,7 +15,9 @@ from brazcar.accounts.domain import (
     InvalidCredentialsError,
     InvalidResetTokenError,
     PhoneAlreadyRegisteredError,
+    TooManyAttemptsError,
 )
+from tests.shared.fakes import InMemoryRateLimiter
 
 from .fakes import (
     FixedClock,
@@ -34,10 +37,17 @@ class Context:
         self.tokens = InMemoryResetTokens()
         self.mailer = RecordingMailer()
         self.clock = FixedClock()
+        self.limiter = InMemoryRateLimiter(self.clock)
+        self.limits = AccountLimits(login_attempts=3, reset_requests=1)
         self.register = RegisterAccount(self.accounts, self.credentials, self.clock)
-        self.log_in = LogIn(self.accounts, self.credentials)
+        self.log_in = LogIn(self.accounts, self.credentials, self.limiter, self.limits)
         self.request_reset = RequestPasswordReset(
-            self.accounts, self.tokens, self.mailer, "https://app/redefinir?token={token}"
+            self.accounts,
+            self.tokens,
+            self.mailer,
+            self.limiter,
+            "https://app/redefinir?token={token}",
+            self.limits,
         )
         self.reset = ResetPassword(self.accounts, self.credentials, self.tokens)
 
@@ -126,3 +136,20 @@ async def test_delete_erases_the_account(ctx: Context) -> None:
     assert await ctx.accounts.get(account.id) is None
     with pytest.raises(AccountNotFoundError):
         await DeleteAccount(ctx.accounts)(account.id)
+
+
+async def test_login_attempts_and_reset_requests_are_limited_per_phone(ctx: Context) -> None:
+    await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana", email="a@b.com")
+
+    for _ in range(3):
+        with pytest.raises(InvalidCredentialsError):
+            await ctx.log_in(phone=PHONE, password="wrong")
+    with pytest.raises(TooManyAttemptsError):
+        await ctx.log_in(phone=PHONE, password=PASSWORD)
+    with pytest.raises(InvalidCredentialsError):  # another phone has its own count
+        await ctx.log_in(phone="61 99999-0009", password="wrong")
+
+    await ctx.request_reset(phone=PHONE)
+    await ctx.request_reset(phone=PHONE)
+
+    assert len(ctx.mailer.sent) == 1  # the second request went nowhere, silently
