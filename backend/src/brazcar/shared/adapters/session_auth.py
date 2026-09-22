@@ -32,4 +32,10 @@ class SessionAuth(APIKeyCookie):
         raise NotImplementedError(message)
 
 
-session_auth: AuthBase = SessionAuth()
+_session = SessionAuth()
+session_auth: AuthBase = _session
+
+
+async def optional_account_id(request: HttpRequest) -> UUID | None:
+    """For public routes that answer differently to a signed-in viewer (ADR-0011): no session, no error."""
+    return await _session(request)

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "ninja",
+    "brazcar.shared.adapters",
     "brazcar.places.adapters",
     "brazcar.accounts.adapters",
     "brazcar.rides.adapters",
@@ -93,6 +94,11 @@ PASSWORD_RESET_LINK = os.environ.get(
 # The front lives on a sibling origin (D-058). Explicit origins only, with credentials (D-059).
 CORS_ALLOWED_ORIGINS = _env_list("DJANGO_CORS_ALLOWED_ORIGINS", default=[])
 CORS_ALLOW_CREDENTIALS = True
+
+# The knobs of `rides` (D-017, D-031, D-064). Minutes and hours, whole numbers.
+RIDE_DEPARTURE_TOLERANCE_MINUTES = int(os.environ.get("RIDE_DEPARTURE_TOLERANCE_MINUTES", "20"))
+RIDE_CONTACT_LIMIT = int(os.environ.get("RIDE_CONTACT_LIMIT", "20"))
+RIDE_CONTACT_WINDOW_HOURS = int(os.environ.get("RIDE_CONTACT_WINDOW_HOURS", "24"))
 
 # Diagnostic SSE route of the tunnel risk test (D-049). Empty keeps the route off.
 SSE_DIAGNOSTICS_TOKEN = os.environ.get("SSE_DIAGNOSTICS_TOKEN", "")
