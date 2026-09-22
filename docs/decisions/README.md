@@ -48,6 +48,8 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 |---|---|---|---|
 | D-024 | `places` nasce como contexto próprio: nome canônico, apelidos, tipo, lugar pai, geometria vazia | decidido | [0002](0002-bounded-contexts-own-django-app.md) |
 | D-025 | Modelagem de lugar como área e mapa de paradas | adiado | |
+| D-083 | O agregado de `places` é o catálogo inteiro (`Catalog`), porque as invariantes atravessam lugares; a porta carrega e grava o catálogo todo, e busca, apelido e descendentes são resolvidos em memória, em Python, sem recurso de banco. Rever se o catálogo passar de centenas de lugares | decidido | |
+| D-084 | Identificador de lugar é um slug estável (`plano-piloto`): legível na semente e na URL do filtro do mural, e renomear o lugar não o muda | decidido | |
 
 ## Contas e privacidade
 
