@@ -7,8 +7,8 @@ Atualizado em 2026-09-22.
 Versão `v0.5.0`: passo 5 (`rides`) concluído. Antes dele: esqueleto (`v0.1.0`), SSE confirmado
 pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido (`v0.2.1`), `places`
 (`v0.3.0`) e `accounts` (`v0.4.0`). API publicada em `api-brazcar.elj-labs.org` e front em
-`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois ainda na `v0.4.0`:
-a `v0.5.0` está cortada localmente e **não foi publicada**.
+`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.5.0` desde
+2026-09-22.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -56,8 +56,14 @@ publicar outra por curl → diálogo de cancelar (Base UI) → repetir cria a ca
 "minhas caronas" lista as quatro, da mais recente para a mais antiga. A carona das 16:00 virou
 "já saiu" sozinha depois da tolerância.
 
-**Não verificado:** a `v0.5.0` na máquina de teste (migrations `shared` e `rides` no Postgres de
-lá, sinal SSE pelo túnel com o front do Vercel); o sinal e a invalidação num iPhone; a página de
+Publicado e conferido: a imagem `0.5.0` na máquina de teste aplicou as migrations `rides` e
+`shared` no Postgres de lá; pelo túnel, `/api/rides` responde, `/mine` dá 401 sem sessão,
+`Origin` estranho dá 403 e `/api/rides/signal` entrega o quadro de revisão na hora, sem buffer.
+No Chrome, com o mural do Vercel aberto, uma carona publicada pela API **apareceu sozinha** e,
+cancelada, **sumiu sozinha**: o sinal atravessa o Cloudflare e invalida a lista. A conta de
+teste foi apagada pela própria API e o mural de produção ficou vazio.
+
+**Não verificado:** o sinal e a invalidação num iPhone; a página de
 edição com adiamento depois da partida (só o domínio e a rota cobrem); `login` e
 `password-reset` com limite estourado pelo navegador (só o caso de uso e a rota); e-mail de
 verdade pelo Resend.
@@ -68,9 +74,8 @@ origens em `DJANGO_CORS_ALLOWED_ORIGINS` ou a checagem de `Origin` devolve 403.
 
 ## Próximo passo
 
-1. Publicar a `v0.5.0` ([runbooks/deploy.md](runbooks/deploy.md)) e conferir no túnel: migrations
-   `shared` e `rides`, `GET /api/rides`, `GET /api/rides/signal` pelo Cloudflare e o mural no
-   front do Vercel atualizando sem recarregar. Depois, num iPhone.
+1. Conferir num iPhone, em `brazcar.elj-labs.org`: cadastro, publicar, contato e o mural
+   atualizando sozinho, inclusive depois de voltar do segundo plano.
 2. Passo 6, tempo real de verdade: o que falta de ADR-0010 e D-077 no front (heartbeat vigiado,
    reconexão ao voltar ao foco já vêm do adaptador; medir no app instalado), `LISTEN/NOTIFY` só se
    o segundo de atraso incomodar (D-050).
