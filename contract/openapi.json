@@ -14,6 +14,77 @@
         ],
         "title": "HealthStatus",
         "type": "object"
+      },
+      "PlaceKind": {
+        "enum": [
+          "area",
+          "point"
+        ],
+        "title": "PlaceKind",
+        "type": "string"
+      },
+      "PlaceOut": {
+        "description": "What the API promises about a place, stated apart from the entity so it changes on purpose.",
+        "properties": {
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Aliases",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PlaceKind"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "aliases",
+          "parent_id"
+        ],
+        "title": "PlaceOut",
+        "type": "object"
+      },
+      "ResolvedPlaceOut": {
+        "properties": {
+          "descendants": {
+            "items": {
+              "$ref": "#/components/schemas/PlaceOut"
+            },
+            "title": "Descendants",
+            "type": "array"
+          },
+          "place": {
+            "$ref": "#/components/schemas/PlaceOut"
+          }
+        },
+        "required": [
+          "place",
+          "descendants"
+        ],
+        "title": "ResolvedPlaceOut",
+        "type": "object"
       }
     }
   },
@@ -43,6 +114,77 @@
         "summary": "Get Health",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/api/places": {
+      "get": {
+        "description": "Places whose name or alias contains `q`, accents and case ignored. Blank lists all.",
+        "operationId": "search_places",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Search",
+        "tags": [
+          "places"
+        ]
+      }
+    },
+    "/api/places/{place_id}": {
+      "get": {
+        "description": "One place and everything beneath it in the hierarchy.",
+        "operationId": "resolve_place",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "place_id",
+            "required": true,
+            "schema": {
+              "title": "Place Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolvedPlaceOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Resolve",
+        "tags": [
+          "places"
         ]
       }
     }

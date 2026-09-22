@@ -109,6 +109,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-054 | A API devolve a situação calculada e as ações permitidas; o front não recalcula regra | decidido | [0011](0011-server-computed-status-and-actions.md) |
 | D-055 | Tipos gerados do OpenAPI do ninja, confinados aos adaptadores | decidido | |
 | D-056 | TanStack Router e TanStack Query | decidido | |
+| D-086 | A saída da API é um schema explícito no adaptador (`PlaceOut`), não a entidade serializada: o contrato público só muda de propósito, e é o mesmo caminho que a regra de privacidade de `rides` e `accounts` vai exigir | decidido | |
 | D-057 | Primitivos sobre biblioteca headless, com Tailwind v4 e tokens em variáveis CSS | decidido | |
 | D-071 | TypeScript fica na 6.0.x: a 7 (porta nativa) não expõe a API de compilador que o typescript-eslint e o openapi-typescript usam. Subir quando os dois suportarem | decidido | |
 | D-072 | Rotas do TanStack Router por arquivo em `web/src/routes/`, finas, só compondo; `routeTree.gen.ts` é gerado e versionado | decidido | |

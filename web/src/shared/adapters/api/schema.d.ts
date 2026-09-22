@@ -21,6 +21,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/places": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search
+         * @description Places whose name or alias contains `q`, accents and case ignored. Blank lists all.
+         */
+        get: operations["search_places"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/places/{place_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resolve
+         * @description One place and everything beneath it in the hierarchy.
+         */
+        get: operations["resolve_place"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -32,6 +72,32 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /**
+         * PlaceKind
+         * @enum {string}
+         */
+        PlaceKind: "area" | "point";
+        /**
+         * PlaceOut
+         * @description What the API promises about a place, stated apart from the entity so it changes on purpose.
+         */
+        PlaceOut: {
+            /** Aliases */
+            aliases: string[];
+            /** Id */
+            id: string;
+            kind: components["schemas"]["PlaceKind"];
+            /** Name */
+            name: string;
+            /** Parent Id */
+            parent_id: string | null;
+        };
+        /** ResolvedPlaceOut */
+        ResolvedPlaceOut: {
+            /** Descendants */
+            descendants: components["schemas"]["PlaceOut"][];
+            place: components["schemas"]["PlaceOut"];
         };
     };
     responses: never;
@@ -58,6 +124,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthStatus"];
+                };
+            };
+        };
+    };
+    search_places: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaceOut"][];
+                };
+            };
+        };
+    };
+    resolve_place: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                place_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResolvedPlaceOut"];
                 };
             };
         };
