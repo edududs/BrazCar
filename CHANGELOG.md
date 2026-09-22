@@ -6,6 +6,27 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.5.0] - 2026-09-22
+
+### Adicionado
+
+- **rides:** Model the ride offer with computed status, edit rules and domain events
+- **rides:** Add the ports, use cases and board read model
+- **shared:** Add the board revision row, the polling board signal and a rate limiter behind ports
+- **rides:** Persist rides with their history and serve the board, the driver actions, the contact and the signal
+- **accounts:** Limit login and password-reset attempts per phone
+- **web:** Add the board with filters in the URL, the ride pages and the contact button
+
+### Corrigido
+
+- **rides:** Validate catalog stops, type the car id and put the contact limit behind the shared port
+- **web:** Show an external place in the picker, keep seats out of the edit form and unnest the edit route
+
+### Documentação
+
+- Record the v0.4.0 deploy and the image tag without the v
+- Close the rides step, record its decisions and bring STATE, ROADMAP and the glossary up to v0.5.0
+
 ## [0.4.0] - 2026-09-22
 
 ### Adicionado
