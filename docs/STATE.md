@@ -86,4 +86,9 @@ formulário (otimização de dependências); não acontece no build.
 
 ## Em voo
 
-Nada.
+`rides` começou fora de hora, em 2026-09-22, e parou por ordem do Eduardo. O que existe está
+íntegro e passa nos portões, mas **não é um passo fechado**: domínio (`RideOffer`, situação
+calculada, regras de edição e atraso, eventos, ações permitidas; 19 testes com Hypothesis) e
+aplicação (portas, casos de uso, read model do mural; 7 testes com fakes). Faltam adaptadores
+(models, migrations, repositório, contrato nos dois bancos, rotas), o front e o encerramento.
+A spec está em `docs/specs/rides/`. Retomar por ali.
