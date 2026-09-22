@@ -1,6 +1,125 @@
 {
   "components": {
     "schemas": {
+      "AccountOut": {
+        "description": "The owner's own view. Nobody else's account comes out of this API.",
+        "properties": {
+          "can_drive": {
+            "title": "Can Drive",
+            "type": "boolean"
+          },
+          "cars": {
+            "items": {
+              "$ref": "#/components/schemas/CarOut"
+            },
+            "title": "Cars",
+            "type": "array"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          },
+          "terms_accepted_at": {
+            "format": "date-time",
+            "title": "Terms Accepted At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "phone",
+          "display_name",
+          "email",
+          "terms_accepted_at",
+          "cars",
+          "can_drive"
+        ],
+        "title": "AccountOut",
+        "type": "object"
+      },
+      "CarIn": {
+        "properties": {
+          "color": {
+            "title": "Color",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "plate": {
+            "title": "Plate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "color",
+          "plate"
+        ],
+        "title": "CarIn",
+        "type": "object"
+      },
+      "CarOut": {
+        "properties": {
+          "color": {
+            "title": "Color",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "plate": {
+            "title": "Plate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "model",
+          "color",
+          "plate"
+        ],
+        "title": "CarOut",
+        "type": "object"
+      },
+      "Done": {
+        "properties": {
+          "ok": {
+            "default": true,
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "title": "Done",
+        "type": "object"
+      },
       "HealthStatus": {
         "properties": {
           "status": {
@@ -13,6 +132,55 @@
           "status"
         ],
         "title": "HealthStatus",
+        "type": "object"
+      },
+      "LoginIn": {
+        "properties": {
+          "password": {
+            "title": "Password",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone",
+          "password"
+        ],
+        "title": "LoginIn",
+        "type": "object"
+      },
+      "PasswordResetConfirmIn": {
+        "properties": {
+          "password": {
+            "title": "Password",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "PasswordResetConfirmIn",
+        "type": "object"
+      },
+      "PasswordResetIn": {
+        "properties": {
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone"
+        ],
+        "title": "PasswordResetIn",
         "type": "object"
       },
       "PlaceKind": {
@@ -66,6 +234,45 @@
         "title": "PlaceOut",
         "type": "object"
       },
+      "RegisterIn": {
+        "properties": {
+          "accepts_terms": {
+            "title": "Accepts Terms",
+            "type": "boolean"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone",
+          "password",
+          "display_name",
+          "accepts_terms"
+        ],
+        "title": "RegisterIn",
+        "type": "object"
+      },
       "ResolvedPlaceOut": {
         "properties": {
           "descendants": {
@@ -86,6 +293,13 @@
         "title": "ResolvedPlaceOut",
         "type": "object"
       }
+    },
+    "securitySchemes": {
+      "SessionAuth": {
+        "in": "cookie",
+        "name": "brazcar_session",
+        "type": "apiKey"
+      }
     }
   },
   "info": {
@@ -95,6 +309,285 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/accounts/cars": {
+      "post": {
+        "operationId": "add_car",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CarIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Add Car",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/cars/{car_id}": {
+      "delete": {
+        "operationId": "remove_car",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "car_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Car Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Remove Car",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/login": {
+      "post": {
+        "operationId": "log_in",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Log In",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/logout": {
+      "post": {
+        "operationId": "log_out",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Done"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Log Out",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/me": {
+      "delete": {
+        "operationId": "delete_account",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Done"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Delete Account",
+        "tags": [
+          "accounts"
+        ]
+      },
+      "get": {
+        "operationId": "get_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Me",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/password-reset": {
+      "post": {
+        "description": "Always `ok`: whether the phone has an account or an e-mail is not disclosed.",
+        "operationId": "request_password_reset",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Done"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Request Password Reset",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/password-reset/confirm": {
+      "post": {
+        "operationId": "confirm_password_reset",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetConfirmIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Done"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Confirm Password Reset",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/register": {
+      "post": {
+        "description": "Create the account and log it in. The terms must be accepted (D-033).",
+        "operationId": "register_account",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "summary": "Register",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
     "/api/health": {
       "get": {
         "operationId": "get_health",
