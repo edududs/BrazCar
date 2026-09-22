@@ -204,6 +204,159 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Board
+         * @description Rides still to depart, earliest first, filtered; a place filter includes what is beneath it.
+         */
+        get: operations["list_board"];
+        put?: never;
+        /** Publish */
+        post: operations["publish_ride"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rides/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Mine */
+        get: operations["list_my_rides"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rides/revision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Revision */
+        get: operations["get_board_revision"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rides/{ride_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Ride */
+        get: operations["get_ride"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit */
+        patch: operations["edit_ride"];
+        trace?: never;
+    };
+    "/api/rides/{ride_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel
+         * @description Final (D-019). To change one's mind, repeat.
+         */
+        post: operations["cancel_ride"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rides/{ride_id}/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Contact
+         * @description Login, a limit per account and a record: then the `wa.me` link and the plate (ADR-0006).
+         */
+        post: operations["request_contact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rides/{ride_id}/repeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Repeat
+         * @description A new ride with this one's route, price and payment, on another departure (D-012).
+         */
+        post: operations["repeat_ride"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rides/{ride_id}/seats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change Seats
+         * @description Zero closes the ride; back above zero reopens it (ADR-0003).
+         */
+        post: operations["change_seats"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -234,6 +387,41 @@ export interface components {
              */
             terms_accepted_at: string;
         };
+        /**
+         * ActionsOut
+         * @description What the viewer may do. The front only draws these (ADR-0011).
+         */
+        ActionsOut: {
+            /** Can Cancel */
+            can_cancel: boolean;
+            /** Can Change Seats */
+            can_change_seats: boolean;
+            /** Can Contact */
+            can_contact: boolean;
+            /** Can Edit */
+            can_edit: boolean;
+            /** Can Repeat */
+            can_repeat: boolean;
+            /** Delay Until */
+            delay_until: string | null;
+        };
+        /**
+         * BoardQuery
+         * @description The board's filters, as the URL carries them.
+         */
+        BoardQuery: {
+            /** Day */
+            day?: string | null;
+            /** Max Price */
+            max_price?: number | string | null;
+            /** Place Id */
+            place_id?: string | null;
+            /**
+             * With Seats
+             * @default false
+             */
+            with_seats: boolean;
+        };
         /** CarIn */
         CarIn: {
             /** Color */
@@ -257,6 +445,13 @@ export interface components {
             /** Plate */
             plate: string;
         };
+        /** ContactOut */
+        ContactOut: {
+            /** Plate */
+            plate: string;
+            /** Whatsapp Url */
+            whatsapp_url: string;
+        };
         /** Done */
         Done: {
             /**
@@ -264,6 +459,20 @@ export interface components {
              * @default true
              */
             ok: boolean;
+        };
+        /**
+         * EditIn
+         * @description Absent means unchanged.
+         */
+        EditIn: {
+            /** Departure At */
+            departure_at?: string | null;
+            /** Payment Methods */
+            payment_methods?: components["schemas"]["PaymentMethod"][] | null;
+            /** Price */
+            price?: number | string | null;
+            /** Stops */
+            stops?: components["schemas"]["StopIn"][] | null;
         };
         /** HealthStatus */
         HealthStatus: {
@@ -293,6 +502,11 @@ export interface components {
             phone: string;
         };
         /**
+         * PaymentMethod
+         * @enum {string}
+         */
+        PaymentMethod: "cash" | "pix";
+        /**
          * PlaceKind
          * @enum {string}
          */
@@ -312,6 +526,30 @@ export interface components {
             /** Parent Id */
             parent_id: string | null;
         };
+        /** PublishIn */
+        PublishIn: {
+            /**
+             * Car Id
+             * Format: uuid
+             */
+            car_id: string;
+            /**
+             * Departure At
+             * Format: date-time
+             */
+            departure_at: string;
+            /** Payment Methods */
+            payment_methods: components["schemas"]["PaymentMethod"][];
+            /**
+             * Price
+             * @default 7.00
+             */
+            price: number | string;
+            /** Seats Available */
+            seats_available: number;
+            /** Stops */
+            stops: components["schemas"]["StopIn"][];
+        };
         /** RegisterIn */
         RegisterIn: {
             /** Accepts Terms */
@@ -325,11 +563,85 @@ export interface components {
             /** Phone */
             phone: string;
         };
+        /** RepeatIn */
+        RepeatIn: {
+            /**
+             * Departure At
+             * Format: date-time
+             */
+            departure_at: string;
+        };
         /** ResolvedPlaceOut */
         ResolvedPlaceOut: {
             /** Descendants */
             descendants: components["schemas"]["PlaceOut"][];
             place: components["schemas"]["PlaceOut"];
+        };
+        /** RevisionOut */
+        RevisionOut: {
+            /** Revision */
+            revision: number;
+        };
+        /**
+         * RideOut
+         * @description The card. Never the phone, never the plate (D-031).
+         */
+        RideOut: {
+            actions: components["schemas"]["ActionsOut"];
+            /** Car Color */
+            car_color: string;
+            /** Car Model */
+            car_model: string;
+            /**
+             * Departure At
+             * Format: date-time
+             */
+            departure_at: string;
+            /** Driver Name */
+            driver_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Mine */
+            is_mine: boolean;
+            /** Payment Methods */
+            payment_methods: components["schemas"]["PaymentMethod"][];
+            /** Price */
+            price: string;
+            /** Seats Available */
+            seats_available: number;
+            status: components["schemas"]["RideStatus"];
+            /** Stops */
+            stops: components["schemas"]["StopOut"][];
+        };
+        /**
+         * RideStatus
+         * @enum {string}
+         */
+        RideStatus: "open" | "reopened" | "full" | "departed" | "cancelled";
+        /** SeatsIn */
+        SeatsIn: {
+            /** Seats Available */
+            seats_available: number;
+        };
+        /**
+         * StopIn
+         * @description A place of the catalog by identifier, or free text for "other" (D-013). One of the two.
+         */
+        StopIn: {
+            /** Place Id */
+            place_id?: string | null;
+            /** Text */
+            text?: string | null;
+        };
+        /** StopOut */
+        StopOut: {
+            /** Label */
+            label: string;
+            /** Place Id */
+            place_id: string | null;
         };
     };
     responses: never;
@@ -602,6 +914,239 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResolvedPlaceOut"];
+                };
+            };
+        };
+    };
+    list_board: {
+        parameters: {
+            query?: {
+                day?: string | null;
+                place_id?: string | null;
+                with_seats?: boolean;
+                max_price?: number | string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RideOut"][];
+                };
+            };
+        };
+    };
+    publish_ride: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RideOut"];
+                };
+            };
+        };
+    };
+    list_my_rides: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RideOut"][];
+                };
+            };
+        };
+    };
+    get_board_revision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevisionOut"];
+                };
+            };
+        };
+    };
+    get_ride: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ride_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RideOut"];
+                };
+            };
+        };
+    };
+    edit_ride: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ride_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RideOut"];
+                };
+            };
+        };
+    };
+    cancel_ride: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ride_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RideOut"];
+                };
+            };
+        };
+    };
+    request_contact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ride_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactOut"];
+                };
+            };
+        };
+    };
+    repeat_ride: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ride_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepeatIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RideOut"];
+                };
+            };
+        };
+    };
+    change_seats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ride_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeatsIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RideOut"];
                 };
             };
         };

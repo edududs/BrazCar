@@ -6,10 +6,14 @@ interface TextFieldProps {
   readonly onChange: (value: string) => void;
   readonly type?: HTMLInputTypeAttribute;
   readonly autoComplete?: HTMLInputAutoCompleteAttribute;
-  readonly inputMode?: "text" | "tel" | "email";
+  readonly inputMode?: "text" | "tel" | "email" | "numeric" | "decimal";
   readonly placeholder?: string;
   readonly required?: boolean;
-  readonly hint?: string;
+  readonly hint?: string | undefined;
+  /** For `number`, `date` and `datetime-local` inputs. */
+  readonly min?: string | number;
+  readonly max?: string | number;
+  readonly step?: string | number;
 }
 
 export function TextField({
@@ -22,6 +26,9 @@ export function TextField({
   placeholder,
   required = false,
   hint,
+  min,
+  max,
+  step,
 }: TextFieldProps) {
   return (
     <label className="flex flex-col gap-1 text-sm font-medium">
@@ -36,6 +43,9 @@ export function TextField({
         inputMode={inputMode}
         placeholder={placeholder}
         required={required}
+        min={min}
+        max={max}
+        step={step}
         className="min-h-11 rounded-lg border border-neutral-soft bg-surface px-3 text-base font-normal outline-none focus:border-accent"
       />
       {hint === undefined ? null : <span className="text-xs font-normal opacity-70">{hint}</span>}

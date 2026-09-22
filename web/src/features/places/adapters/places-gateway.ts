@@ -26,3 +26,14 @@ export async function searchPlaces(query: string, signal: AbortSignal): Promise<
   }
   return data.map(toPlace);
 }
+
+/** One place by identifier, without what is beneath it; `null` when the catalog does not know it. */
+export async function fetchPlace(placeId: string, signal: AbortSignal): Promise<Place | null> {
+  const { data, response } = await apiClient.GET("/api/places/{place_id}", {
+    params: { path: { place_id: placeId } },
+    signal,
+  });
+  if (data !== undefined) return toPlace(data.place);
+  if (response.status === 404) return null;
+  throw new Error(`Place lookup failed with status ${String(response.status)}`);
+}
