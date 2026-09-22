@@ -13,6 +13,11 @@ function LoginPage() {
     <PageShell title="Entrar">
       <LoginForm logIn={logIn} busy={busy} onDone={() => void navigate({ to: "/conta" })} />
       <p className="text-sm">
+        <Link to="/esqueci-senha" className="underline">
+          Esqueci a senha
+        </Link>
+      </p>
+      <p className="text-sm">
         Ainda não tem conta?{" "}
         <Link to="/cadastro" className="underline">
           Criar conta
