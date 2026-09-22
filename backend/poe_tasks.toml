@@ -19,9 +19,10 @@ help = "Every test, including the ones that need external services"
 cmd = "pytest"
 
 [tasks.test-postgres]
-help = "Port contracts again, on the compose Postgres (D-039). Override with CONTRACT_POSTGRES_URL"
+help = "Port contracts again, on the compose Postgres (D-039). Same POSTGRES_* as compose.yml, from ../.env"
 cmd = "pytest -m contract"
-env = { CONTRACT_POSTGRES_URL.default = "postgres://brazcar:brazcar@127.0.0.1:5432/brazcar", DATABASE_URL = "${CONTRACT_POSTGRES_URL}", EXPECT_DB_VENDOR = "postgresql" }
+envfile = "../.env"
+env = { POSTGRES_DB.default = "brazcar", POSTGRES_USER.default = "brazcar", POSTGRES_PASSWORD.default = "brazcar", POSTGRES_PORT.default = "5432", DATABASE_URL = "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:${POSTGRES_PORT}/${POSTGRES_DB}", EXPECT_DB_VENDOR = "postgresql" }
 
 [tasks.fix]
 help = "Pipeline to run before calling work done"

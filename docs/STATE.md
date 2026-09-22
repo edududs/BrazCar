@@ -33,15 +33,15 @@ teste**. Ainda não há autenticação.
   com Postgres opcional e `infra/compose.yml` de deploy.
 
 **Verificado de verdade neste passo:** portão rápido do backend (119 testes, com Hypothesis nas
-propriedades de hierarquia, apelido e busca) e do front (9 testes, build); o contrato de
-`CatalogRepository` no fake, em SQLite e no Postgres 18 do compose (na porta 5433; a 5432 é de
-outro projeto), duas vezes; o portão `EXPECT_DB_VENDOR` recusando SQLite quando se pede Postgres;
+propriedades de hierarquia, apelido e busca) e do front (9 testes, build), e o `check-heavy` dos dois
+lados de ponta a ponta (o do front deu um erro não tratado numa rodada em seis, não reproduzido); o contrato de
+`CatalogRepository` no fake, em SQLite e no Postgres 18 do compose (nesta máquina, `.env` da raiz
+com `POSTGRES_PORT=5433`; a 5432 é de outro projeto), três vezes; o portão `EXPECT_DB_VENDOR` recusando SQLite quando se pede Postgres;
 `sync_places` num banco local, duas vezes, a segunda "already up to date"; o seletor no Chrome
 contra a API local: lista completa com o campo vazio, "rodo" achando "Rodoviária do Plano",
 "nenhum lugar" para texto sem resultado, seleção por teclado subindo para a página.
 
-**Não verificado:** o `check-heavy` inteiro numa tacada só (o Docker Desktop estava pausado na
-última rodada; as partes passaram em separado); o seletor num iPhone ou em tela de toque; a
+**Não verificado:** o seletor num iPhone ou em tela de toque; a
 imagem da API com o `sync_places` no entrypoint; tamanho de bundle do Base UI.
 
 Do passo 2, continua valendo o que foi conferido e o que não foi: ver
