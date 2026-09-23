@@ -6,6 +6,26 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.7.0] - 2026-09-23
+
+### Adicionado
+
+- **api:** Serve the oldest front version still accepted (D-105)
+- **web:** Installable online-only PWA with update prompt, version floor and offline screen
+- **web:** Reach the SSE diagnostics from the footer version and type the token there
+
+### Corrigido
+
+- **web:** Count a wake-up burst as one board refresh and refetch on every focus
+- **web:** Shorten the board's silence watchdog to 35s and keep the diagnostics page off the footer
+
+### Documentação
+
+- Record the v0.6.0 deploy and the search index rebuilt by the entrypoint
+- Close step 5 with v0.6.0 in STATE and ROADMAP
+- Record that visual design is its own stage after the MVP pieces exist (D-103)
+- Close step 6 in STATE, ROADMAP, architecture and the deploy runbook
+
 ## [0.6.0] - 2026-09-23
 
 ### Adicionado
