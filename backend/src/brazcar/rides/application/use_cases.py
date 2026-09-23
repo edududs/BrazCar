@@ -30,6 +30,7 @@ from .ports import (
     DriverDirectory,
     PlaceDirectory,
     RideRepository,
+    RideSearch,
 )
 from .read_model import BoardFilter, BoardRide, to_board_ride
 
@@ -48,6 +49,7 @@ class PublishRide:
     rides: RideRepository
     drivers: DriverDirectory
     places: PlaceDirectory
+    search: RideSearch
     clock: Clock
 
     async def __call__(  # noqa: PLR0913 - the whole ride comes in at once
@@ -75,6 +77,7 @@ class PublishRide:
             now=self.clock.now(),
         )
         await self.rides.save(change.ride, change.events)
+        await self.search.index(change.ride)
         return change.ride
 
 
@@ -82,6 +85,7 @@ class PublishRide:
 class EditRide:
     rides: RideRepository
     places: PlaceDirectory
+    search: RideSearch
     clock: Clock
 
     async def __call__(  # noqa: PLR0913 - one call edits every editable field at once
@@ -105,6 +109,8 @@ class EditRide:
             now=self.clock.now(),
         )
         await self.rides.save(change.ride, change.events)
+        if route is not None:
+            await self.search.index(change.ride)
         return change.ride
 
 
@@ -136,6 +142,7 @@ class CancelRide:
 class RepeatRide:
     rides: RideRepository
     drivers: DriverDirectory
+    search: RideSearch
     clock: Clock
 
     async def __call__(self, driver_id: AccountId, ride_id: RideId, *, departure_at: datetime) -> RideOffer:
@@ -144,6 +151,7 @@ class RepeatRide:
         car = _snapshot(driver, ride.car.car_id, fallback=True)
         change = ride.repeat(departure_at=departure_at, car=car, now=self.clock.now())
         await self.rides.save(change.ride, change.events)
+        await self.search.index(change.ride)
         return change.ride
 
 
@@ -154,14 +162,17 @@ class ListBoard:
     rides: RideRepository
     drivers: DriverDirectory
     places: PlaceDirectory
+    search: RideSearch
     clock: Clock
     rules: RideRules
 
     async def __call__(self, filters: BoardFilter, viewer: AccountId | None) -> tuple[BoardRide, ...]:
         now = self.clock.now()
         candidates = await self.rides.upcoming(now - self.rules.departure_tolerance)
-        wanted_places = await self.places.with_descendants(filters.place_id) if filters.place_id else None
-        selected = [ride for ride in candidates if _matches(ride, filters, wanted_places)]
+        selected = [ride for ride in candidates if _matches(ride, filters)]
+        if filters.text and filters.text.strip():
+            found = await self.search.matching(filters.text, [ride.id for ride in selected])
+            selected = [ride for ride in selected if ride.id in found]
         return await _project(self, selected, viewer, now)
 
 
@@ -265,19 +276,13 @@ def _snapshot(driver: Driver, car_id: UUID, *, fallback: bool = False) -> CarSna
     return CarSnapshot(car_id=car.car_id, model=car.model, color=car.color, plate=car.plate)
 
 
-def _matches(ride: RideOffer, filters: BoardFilter, wanted_places: frozenset[str] | None) -> bool:
+def _matches(ride: RideOffer, filters: BoardFilter) -> bool:
     # The day is the ride's own local day: the repository hands datetimes back in the board's zone.
     if filters.day is not None and ride.departure_at.date() != filters.day:
         return False
     if filters.with_seats and ride.seats_available == 0:
         return False
-    if filters.max_price is not None and ride.price > filters.max_price:
-        return False
-    if wanted_places is not None:
-        stops = {stop.place_id for stop in ride.route if isinstance(stop, CatalogStop)}
-        if not stops & wanted_places:
-            return False
-    return True
+    return filters.max_price is None or ride.price <= filters.max_price
 
 
 async def _project(

@@ -40,7 +40,7 @@ class BoardFilter(FrozenModel):
     """What the passenger asks for. Everything optional; the URL of the board carries it."""
 
     day: date | None = None
-    place_id: str | None = None
+    text: str | None = None  # "passa por": any stop, catalog place or "other" (D-101)
     with_seats: bool = False
     max_price: Decimal | None = None
 

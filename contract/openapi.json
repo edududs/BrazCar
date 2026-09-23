@@ -135,16 +135,17 @@
             ],
             "title": "Max Price"
           },
-          "place_id": {
+          "q": {
             "anyOf": [
               {
+                "maxLength": 80,
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Place Id"
+            "title": "Q"
           },
           "with_seats": {
             "default": false,
@@ -1114,7 +1115,7 @@
     },
     "/api/rides": {
       "get": {
-        "description": "Rides still to depart, earliest first, filtered; a place filter includes what is beneath it.",
+        "description": "Rides still to depart, earliest first, filtered. `q` matches any stop, accents and case ignored.",
         "operationId": "list_board",
         "parameters": [
           {
@@ -1136,18 +1137,19 @@
           },
           {
             "in": "query",
-            "name": "place_id",
+            "name": "q",
             "required": false,
             "schema": {
               "anyOf": [
                 {
+                  "maxLength": 80,
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "title": "Place Id"
+              "title": "Q"
             }
           },
           {

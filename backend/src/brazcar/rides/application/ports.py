@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from datetime import datetime
 from typing import Protocol
 from uuid import UUID
@@ -15,6 +16,7 @@ __all__ = [
     "DriverDirectory",
     "PlaceDirectory",
     "RideRepository",
+    "RideSearch",
 ]
 
 
@@ -62,12 +64,22 @@ class DriverDirectory(Protocol):
 
 
 class PlaceDirectory(Protocol):
-    async def with_descendants(self, place_id: PlaceId) -> frozenset[PlaceId]:
-        """The place and everything beneath it; empty when unknown. "Plano Piloto" finds "Esplanada"."""
-        ...
-
     async def labels(self) -> dict[PlaceId, str]:
         """Canonical name by identifier: the whole catalog, for the read model and for validating stops."""
+        ...
+
+
+class RideSearch(Protocol):
+    """Finding rides by the text of their stops, catalog places and "other" alike (D-101).
+
+    Filled by the use cases after each write that changes the route; the index behind it is the
+    `search` context's (D-100), reached through the adapter.
+    """
+
+    async def index(self, ride: RideOffer) -> None: ...
+
+    async def matching(self, text: str, among: Collection[RideId]) -> frozenset[RideId]:
+        """The rides of `among` whose stops match `text`. A blank text matches all of them."""
         ...
 
 

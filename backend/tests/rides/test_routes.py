@@ -154,15 +154,16 @@ async def test_the_card_shows_the_driver_and_the_car_but_never_the_phone_or_the_
     assert body(revision)["revision"] >= 1
 
 
-async def test_the_board_filters_by_place_with_descendants_day_seats_and_price() -> None:
+async def test_the_board_filters_by_text_of_any_stop_day_seats_and_price() -> None:
     ana, car_id = await driver()
     cheap = await publish(ana, car_id)
     pricey = await publish(ana, car_id, price="12.50", departure_at=tomorrow(18), seats_available=1)
     await ana.post(f"/api/rides/{pricey['id']}/seats", {"seats_available": 0})
     board = Browser()
 
-    plano = body(await board.get("/api/rides", {"place_id": "plano-piloto"}))
-    unknown = body(await board.get("/api/rides", {"place_id": "nowhere"}))
+    plano = body(await board.get("/api/rides", {"q": "Plano Piloto"}))
+    other_stop = body(await board.get("/api/rides", {"q": "incra"}))
+    unknown = body(await board.get("/api/rides", {"q": "nowhere"}))
     with_seats = body(await board.get("/api/rides", {"with_seats": "true"}))
     today = body(
         await board.get("/api/rides", {"day": timezone.now().astimezone(BRASILIA).date().isoformat()})
@@ -171,6 +172,7 @@ async def test_the_board_filters_by_place_with_descendants_day_seats_and_price()
     under_ten = body(await board.get("/api/rides", {"max_price": "10"}))
 
     assert [r["id"] for r in plano] == [cheap["id"], pricey["id"]]  # earliest first
+    assert [r["id"] for r in other_stop] == [cheap["id"], pricey["id"]]
     assert unknown == []
     assert [r["id"] for r in with_seats] == [cheap["id"]]
     assert today == []

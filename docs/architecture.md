@@ -30,11 +30,13 @@ flowchart TB
         AC[accounts]
         PL[places]
         SH[shared: revisão do mural, SSE,<br/>limite de requisições, e-mail]
+        SE[search: índice de texto<br/>independente do projeto]
         IM[importing<br/>futuro]
     end
     F -->|OpenAPI gerado| R & AC & PL
     R -->|id de lugar| PL
     R -->|id de conta e carro| AC
+    R -->|texto das paradas| SE
     IM -.-> R
 ```
 
@@ -80,6 +82,8 @@ placa (ADR-0006).
 - **Catálogo de lugares como dado versionado.** `catalog.toml` é a fonte; `sync_places` deixa o
   banco igual a ele no entrypoint, passando pelo agregado (D-087). Busca sem acento, apelidos e
   descendentes são resolvidos em memória, em Python, iguais em qualquer banco (D-083).
+- **Busca.** Contexto `search` com a porta `SearchIndex`, sem nada do projeto no núcleo; hoje uma
+  tabela com texto normalizado e `contains`, trocável por Redis ou Elasticsearch (D-100).
 - **Regras só no backend.** A API devolve a situação calculada e as ações permitidas (ADR-0011).
 - **Observabilidade.** Logs estruturados em JSON na saída padrão e um endpoint de saúde. Nada de terceiros.
 - **Limite de requisições.** Porta `RateLimiter` em `shared/application`, com chave por conta ou por

@@ -7,6 +7,7 @@ from .ports import (
     DriverDirectory,
     PlaceDirectory,
     RideRepository,
+    RideSearch,
 )
 from .read_model import BoardFilter, BoardRide, StopView, to_board_ride
 from .use_cases import (
@@ -44,6 +45,7 @@ __all__ = [
     "RequestContact",
     "RideRepository",
     "RideRules",
+    "RideSearch",
     "ShowRide",
     "StopView",
     "to_board_ride",

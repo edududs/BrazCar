@@ -144,7 +144,7 @@ class BoardQuery(Schema):
     """The board's filters, as the URL carries them."""
 
     day: date | None = None
-    place_id: str | None = None
+    q: str | None = Field(default=None, max_length=80)  # "passa por": any stop, by text
     with_seats: bool = False
     max_price: Decimal | None = Field(default=None, gt=0)
 
@@ -210,11 +210,11 @@ def _add_board_routes(router: Router, use_cases: RideUseCases) -> None:
 
     @router.get("", response=list[RideOut], operation_id="list_board")
     async def list_board(request: HttpRequest, filters: Query[BoardQuery]) -> list[RideOut]:
-        """Rides still to depart, earliest first, filtered; a place filter includes what is beneath it."""
+        """Rides still to depart, earliest first, filtered. `q` matches any stop, accents and case ignored."""
         viewer = await optional_account_id(request)
         wanted = BoardFilter(
             day=filters.day,
-            place_id=filters.place_id or None,
+            text=filters.q or None,
             with_seats=filters.with_seats,
             max_price=filters.max_price,
         )

@@ -29,13 +29,6 @@ class CatalogPlaceDirectory:
     def __init__(self, catalog: CatalogRepository) -> None:
         self._catalog = catalog
 
-    async def with_descendants(self, place_id: PlaceId) -> frozenset[PlaceId]:
-        catalog = await self._catalog.load()
-        if catalog.get(place_id) is None:
-            return frozenset()
-        resolved = catalog.resolve(place_id)
-        return frozenset({resolved.place.id, *(place.id for place in resolved.descendants)})
-
     async def labels(self) -> dict[PlaceId, str]:
         catalog = await self._catalog.load()
         return {place.id: place.name for place in catalog.places}

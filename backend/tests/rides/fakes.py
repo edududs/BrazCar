@@ -2,19 +2,26 @@
 
 from datetime import datetime
 
+from brazcar.places.domain import Catalog, Place
+from brazcar.rides.adapters.directories import CatalogPlaceDirectory
+from brazcar.rides.adapters.search import IndexedRideSearch
 from brazcar.rides.application import Driver
 from brazcar.rides.domain import AccountId, RideEvent, RideId, RideOffer
+from tests.places.fakes import InMemoryCatalogRepository
+from tests.search.fakes import InMemorySearchIndex
 from tests.shared.fakes import InMemoryRateLimiter
 
 from .strategies import EPOCH
 
 __all__ = [
+    "CATALOG",
     "FixedClock",
     "InMemoryDrivers",
-    "InMemoryPlaces",
     "InMemoryRateLimiter",
     "InMemoryRideRepository",
     "RecordingContacts",
+    "catalog_places",
+    "indexed_search",
 ]
 
 
@@ -57,16 +64,21 @@ class InMemoryDrivers:
         return self.by_id.get(account_id)
 
 
-class InMemoryPlaces:
-    """A three-place catalog: Plano Piloto above Esplanada, and Brazlândia on its own."""
+CATALOG = Catalog(
+    places=(
+        Place(id="plano-piloto", name="Plano Piloto"),
+        Place(id="esplanada", name="Esplanada", parent_id="plano-piloto"),
+        Place(id="brazlandia", name="Brazlândia", aliases=("Braz",)),
+    )
+)
 
-    async def with_descendants(self, place_id: str) -> frozenset[str]:
-        if place_id == "plano-piloto":
-            return frozenset({"plano-piloto", "esplanada"})
-        return frozenset({place_id}) if place_id in await self.labels() else frozenset()
 
-    async def labels(self) -> dict[str, str]:
-        return {"plano-piloto": "Plano Piloto", "esplanada": "Esplanada", "brazlandia": "Brazlândia"}
+def catalog_places() -> CatalogPlaceDirectory:
+    return CatalogPlaceDirectory(InMemoryCatalogRepository(CATALOG))
+
+
+def indexed_search() -> IndexedRideSearch:
+    return IndexedRideSearch(InMemorySearchIndex(), InMemoryCatalogRepository(CATALOG))
 
 
 class RecordingContacts:

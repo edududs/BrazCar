@@ -18,7 +18,8 @@
 | repetir carona | `RepeatRide` | Caso de uso que cria uma carona nova a partir de outra. |
 | ações permitidas | `Actions` | O que quem vê pode fazer com a carona, calculado no servidor: editar, mudar vagas, cancelar, repetir, pedir contato e até quando pode adiar. |
 | card do mural | `BoardRide` | O que a lista mostra: nome social, modelo e cor do carro, paradas com nome, situação e ações. Nunca telefone nem placa. |
-| filtros do mural | `BoardFilter` | Dia, lugar (com descendentes), só com vaga, preço máximo. Vivem na URL do front. |
+| filtros do mural | `BoardFilter` | Dia, "passa por" em texto livre, só com vaga, preço máximo. Vivem na URL do front. |
+| busca de caronas | `RideSearch` | Acha caronas pelo texto das paradas: nome, apelidos e lugares acima de cada parada do catálogo, e o texto das paradas "outro" (D-101). |
 | pedido de contato | `ContactRequest` | Registro de quem pediu o contato de qual carona. Tabela própria. |
 | histórico | `RideEvent` | Tabela só de acréscimo com os eventos do agregado. |
 | revisão do mural | `BoardRevision` | Contador único, em `shared`, incrementado por toda escrita que muda o mural. |
@@ -42,7 +43,8 @@ Função pura de quatro dados, lida nesta ordem:
   fechada reabre e grava `reopened_at`. Fechar e "lotou" são o mesmo gesto.
 - Cancelada é definitiva. Quem muda de ideia usa repetir.
 - Publicar exige um carro cadastrado na conta, e a carona nova nasce com pelo menos uma vaga.
-- Rota tem pelo menos duas paradas, em ordem. Parada do catálogo aponta para um lugar que existe.
+- Rota tem pelo menos duas paradas, em ordem: a primeira é de onde sai, a última para onde vai, e
+  entre elas as paradas no caminho, opcionais. Parada do catálogo aponta para um lugar que existe.
 - Datas voltam do banco no fuso do mural (`America/Sao_Paulo`): "mesmo dia" e o filtro por dia
   leem a data local, nunca a UTC.
 

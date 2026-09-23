@@ -34,10 +34,11 @@ from brazcar.rides.domain import (
 from .fakes import (
     FixedClock,
     InMemoryDrivers,
-    InMemoryPlaces,
     InMemoryRateLimiter,
     InMemoryRideRepository,
     RecordingContacts,
+    catalog_places,
+    indexed_search,
 )
 from .strategies import BRASILIA, EPOCH
 
@@ -56,13 +57,14 @@ class Context:
     def __init__(self) -> None:
         self.rides = InMemoryRideRepository()
         self.drivers = InMemoryDrivers(ANA, BIA)
-        self.places = InMemoryPlaces()
+        self.places = catalog_places()
+        self.search = indexed_search()
         self.contacts = RecordingContacts()
         self.clock = FixedClock()
         self.limiter = InMemoryRateLimiter(self.clock)
-        self.publish = PublishRide(self.rides, self.drivers, self.places, self.clock)
-        self.edit = EditRide(self.rides, self.places, self.clock)
-        self.board = ListBoard(self.rides, self.drivers, self.places, self.clock, RULES)
+        self.publish = PublishRide(self.rides, self.drivers, self.places, self.search, self.clock)
+        self.edit = EditRide(self.rides, self.places, self.search, self.clock)
+        self.board = ListBoard(self.rides, self.drivers, self.places, self.search, self.clock, RULES)
         self.mine = MyRides(self.rides, self.drivers, self.places, self.clock, RULES)
         self.show = ShowRide(self.rides, self.drivers, self.places, self.clock, RULES)
         self.contact = RequestContact(
@@ -113,6 +115,17 @@ async def test_a_stop_must_point_at_a_place_the_catalog_knows(ctx: Context) -> N
     assert ctx.rides.revision == 1
 
 
+async def test_a_new_route_is_found_by_its_new_stops(ctx: Context) -> None:
+    ride = await ctx.published()
+
+    await ctx.edit(
+        ANA.id, ride.id, route=(FreeTextStop(text="Ceilândia Norte"), CatalogStop(place_id="esplanada"))
+    )
+
+    assert [r.id for r in await ctx.board(BoardFilter(text="ceilandia"), viewer=None)] == [ride.id]
+    assert await ctx.board(BoardFilter(text="incra"), viewer=None) == ()
+
+
 async def test_the_board_hides_phone_and_plate_and_resolves_place_names(ctx: Context) -> None:
     await ctx.published()
 
@@ -126,17 +139,20 @@ async def test_the_board_hides_phone_and_plate_and_resolves_place_names(ctx: Con
     assert not shown.actions.can_contact  # anonymous
 
 
-async def test_board_filters_by_day_place_with_descendants_seats_and_price(ctx: Context) -> None:
+async def test_board_filters_by_day_text_of_any_stop_seats_and_price(ctx: Context) -> None:
     ride = await ctx.published(seats=0)
     tomorrow = await ctx.published(hours=13 + 24)
 
-    by_place = await ctx.board(BoardFilter(place_id="plano-piloto"), viewer=None)
-    by_other_place = await ctx.board(BoardFilter(place_id="unb"), viewer=None)
+    by_place = await ctx.board(BoardFilter(text="plano piloto"), viewer=None)  # above Esplanada
+    by_alias = await ctx.board(BoardFilter(text="braz"), viewer=None)
+    by_other_stop = await ctx.board(BoardFilter(text="INCRA"), viewer=None)  # free text, any case
+    by_other_place = await ctx.board(BoardFilter(text="unb"), viewer=None)
     with_seats = await ctx.board(BoardFilter(with_seats=True), viewer=None)
     today = await ctx.board(BoardFilter(day=date(2026, 9, 22)), viewer=None)
     cheap = await ctx.board(BoardFilter(max_price=Decimal(5)), viewer=None)
 
     assert {r.id for r in by_place} == {ride.id, tomorrow.id}
+    assert {r.id for r in by_alias} == {r.id for r in by_other_stop} == {ride.id, tomorrow.id}
     assert by_other_place == ()
     assert [r.id for r in with_seats] == [tomorrow.id]
     assert [r.id for r in today] == [ride.id]

@@ -5,6 +5,7 @@ set -e
 if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
   python manage.py migrate --noinput
   python manage.py sync_places
+  python manage.py index_rides
 fi
 
 exec "$@"
