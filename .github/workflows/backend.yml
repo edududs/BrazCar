@@ -22,3 +22,6 @@ jobs:
           working-directory: backend
       - run: uv sync --locked
       - run: uv run poe check
+      # Coverage is measured here, not on the local gate, so committing stays fast. No third-party
+      # service reads it (D-008): the summary goes to the log and the floor is in poe_tasks.toml.
+      - run: uv run poe coverage

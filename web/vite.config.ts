@@ -3,8 +3,9 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+// vitest/config re-exports Vite's defineConfig with the `test` key typed, so there is one config.
+import { defineConfig } from "vitest/config";
 
 import packageJson from "./package.json" with { type: "json" };
 
@@ -61,5 +62,22 @@ export default defineConfig({
   server: {
     // In development the API is reached same-origin; production uses VITE_API_BASE_URL.
     proxy: { "/api": devApiOrigin },
+  },
+  test: {
+    coverage: {
+      provider: "v8",
+      // The gate measures where the logic lives: the headless layers (`domain` and `app`), which
+      // is also where every unit test is. `ui` is drawing and `adapters` talk to the network,
+      // browser or service worker; those are the heavy gate's job (build) and the planned E2E
+      // (D-065). No third-party service reads this (D-008): the summary goes to the log.
+      include: [
+        "src/features/*/domain/**",
+        "src/features/*/app/**",
+        "src/shared/domain/**",
+        "src/shared/app/**",
+      ],
+      reporter: ["text", "text-summary"],
+      thresholds: { statements: 52, lines: 52 },
+    },
   },
 });

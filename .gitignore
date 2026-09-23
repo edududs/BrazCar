@@ -8,6 +8,12 @@ __pycache__/
 *.sqlite3
 *.sqlite3-*
 
+# Cobertura: o relatório é do momento, o piso mora na configuração
+.coverage
+.coverage.*
+htmlcov/
+web/coverage/
+
 # Node
 node_modules/
 web/dist/
