@@ -8,9 +8,8 @@ Versão `v0.7.0`: passo 6 (tempo real de verdade e PWA) concluído. Antes dele: 
 SSE confirmado pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido
 (`v0.2.1`), `places` (`v0.3.0`), `accounts` (`v0.4.0`), `rides` (`v0.5.0`) e os ajustes do teste
 no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
-`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)). O front do passo 6 já está no
-Vercel desde 2026-09-23 (push intermediário, sem tag); a API segue na `0.6.0` até o deploy da
-imagem `0.7.0`.
+`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.7.0` desde
+2026-09-23.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -66,6 +65,10 @@ barras, notch e rodapé sem problema, e a medição do sinal em `standalone` (AD
 cobriu bloqueio de 40s, 2 e 10 min, troca de app e troca de rede sem mudança; a troca de rede pela
 Central de Controle só é notada pelo vigia, que caiu para 35s.
 
+Publicado e conferido: a imagem `0.7.0` subiu saudável na máquina de teste, sem migration nova;
+pelo túnel, `/api/web-version` responde `0.0.0` (sem piso) com o CORS do front, `/api/rides/signal`
+entrega o quadro de revisão na hora, `Origin` estranho dá 403 e o diagnóstico sem token dá 404.
+
 **Não verificado:** o mural atualizando sozinho ao voltar do segundo plano no app instalado (o
 diagnóstico mede o stream, não a busca); o aviso de build novo e a tela de piso num iPhone (só no
 Chrome); o vigia de 35s em produção; ícone maskable no Android. Ainda de passos anteriores: a página
@@ -80,10 +83,9 @@ pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisó
 
 ## Próximo passo
 
-1. Publicar a API `0.7.0` pelo runbook de deploy (a rota do piso) e conferir `GET /api/web-version`.
-2. Conferir no celular o que ficou sem cobrir: o mural atualizando sozinho ao voltar do segundo
+1. Conferir no celular o que ficou sem cobrir: o mural atualizando sozinho ao voltar do segundo
    plano no app instalado, e o aviso de build novo quando sair a próxima versão.
-3. Etapa de design do produto (D-103), só com ordem do Eduardo. Depois dela, o extrator.
+2. Etapa de design do produto (D-103), só com ordem do Eduardo. Depois dela, o extrator.
 
 ## Pendências abertas
 

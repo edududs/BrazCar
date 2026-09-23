@@ -20,8 +20,8 @@ O que foi feito de verdade no primeiro deploy (2026-09-21). API na máquina de t
 # publicar: push da tag vX.Y.Z (fluxo `image`), ou `gh workflow run image --ref main` para a tag edge
 ssh trovva@trovva-internal
 export DOCKER_CONFIG=~/.brazcar/docker && mkdir -p "$DOCKER_CONFIG"   # vazio de propósito: pull anônimo (D-081)
-docker pull ghcr.io/edududs/brazcar-api:0.6.0                          # a imagem não tem o `v`
-cd ~/brazcar && BRAZCAR_IMAGE_TAG=0.6.0 docker compose up -d --wait
+docker pull ghcr.io/edududs/brazcar-api:0.7.0                          # a imagem não tem o `v`
+cd ~/brazcar && BRAZCAR_IMAGE_TAG=0.7.0 docker compose up -d --wait
 docker compose logs api --since 3m | grep -E "Applying|places:|rides:" # migrações, catálogo e índice de busca
 curl -s -N --max-time 4 https://api-brazcar.elj-labs.org/api/rides/signal   # quadro `revision` na hora
 curl -s -H "Host: api-brazcar.elj-labs.org" http://127.0.0.1/api/health
@@ -31,7 +31,8 @@ A migração, o `sync_places` do catálogo e o `index_rides` da busca (D-100) ro
 Variável nova no `api.env` entra antes do `up -d`; o modelo é `infra/api.env.example`. Em
 2026-09-22 (v0.4.0) entrou `PASSWORD_RESET_LINK`; `EMAIL_*` ficou de fora até haver a chave do
 Resend, então o e-mail de recuperação vai para o log do container. Em 2026-09-22 (v0.5.0) nada entrou:
-os limites de `rides` (`RIDE_*`) têm padrão no código.
+os limites de `rides` (`RIDE_*`) têm padrão no código. Em 2026-09-23 (v0.7.0) também nada: sem
+`WEB_MINIMUM_VERSION` a API serve sem piso.
 
 ## Armadilhas já pagas
 
