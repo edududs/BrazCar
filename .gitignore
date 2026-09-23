@@ -23,6 +23,7 @@ web/.yarn/*
 # Local, fora do versionamento
 .local/
 .claude/settings.local.json
+.claude/worktrees/
 .whatsapp_scrapping_wip/
 
 # TanStack Router plugin scratch
