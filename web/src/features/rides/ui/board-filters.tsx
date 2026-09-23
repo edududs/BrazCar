@@ -1,5 +1,3 @@
-import { usePlace } from "@/features/places/app/use-place";
-import { PlacePicker } from "@/features/places/ui/place-picker";
 import { CheckboxField } from "@/shared/ui/checkbox-field";
 import { TextField } from "@/shared/ui/text-field";
 
@@ -12,15 +10,17 @@ interface BoardFiltersFormProps {
 
 /** The board's filters. Every change goes straight to the caller, which keeps them in the URL. */
 export function BoardFiltersForm({ filters, onChange }: BoardFiltersFormProps) {
-  const place = usePlace(filters.placeId);
   return (
     <section className="flex flex-col gap-3">
-      <PlacePicker
+      <TextField
         label="Passa por"
-        value={place}
-        onChange={(chosen) => {
-          onChange({ ...filters, placeId: chosen?.id ?? null });
+        type="search"
+        value={filters.text ?? ""}
+        onChange={(text) => {
+          onChange({ ...filters, text: text === "" ? null : text });
         }}
+        placeholder="Esplanada, Incra 8, Rodoviária…"
+        hint="Qualquer parada: lugar do catálogo ou ponto que o motorista escreveu."
       />
       <div className="grid grid-cols-2 gap-3">
         <TextField

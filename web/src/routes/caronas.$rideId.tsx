@@ -1,4 +1,4 @@
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { useSession } from "@/features/accounts/app/use-session";
 import { useRide } from "@/features/rides/app/use-ride";
@@ -13,14 +13,7 @@ function RidePage() {
   const actions = useRide(rideId);
   const navigate = useNavigate();
   return (
-    <PageShell
-      title="Carona"
-      actions={
-        <Link to="/" className="underline">
-          Mural
-        </Link>
-      }
-    >
+    <PageShell title="Carona">
       {actions.status === "loading" ? (
         <p className="text-sm opacity-70">Carregando…</p>
       ) : actions.status === "missing" ? (

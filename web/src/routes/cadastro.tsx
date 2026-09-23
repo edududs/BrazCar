@@ -11,7 +11,7 @@ function SignupPage() {
   const navigate = useNavigate();
   return (
     <PageShell title="Criar conta">
-      <SignupForm signUp={signUp} busy={busy} onDone={() => void navigate({ to: "/conta" })} />
+      <SignupForm signUp={signUp} busy={busy} onDone={() => void navigate({ to: "/" })} />
       <p className="text-sm">
         Já tem conta?{" "}
         <Link to="/entrar" className="underline">

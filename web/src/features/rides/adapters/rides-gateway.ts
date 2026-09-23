@@ -61,7 +61,7 @@ export async function fetchBoard(filters: BoardFilters, signal: AbortSignal): Pr
     params: {
       query: {
         day: filters.day,
-        place_id: filters.placeId,
+        q: filters.text,
         with_seats: filters.withSeats,
         max_price: filters.maxPrice,
       },

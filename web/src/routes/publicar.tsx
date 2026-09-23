@@ -30,14 +30,7 @@ function PublishPage() {
   const { publish, busy } = usePublishRide();
   const navigate = useNavigate();
   return (
-    <PageShell
-      title="Publicar carona"
-      actions={
-        <Link to="/" className="underline">
-          Mural
-        </Link>
-      }
-    >
+    <PageShell title="Publicar carona">
       {session.status === "checking" ? (
         <p className="text-sm opacity-70">Verificando…</p>
       ) : session.status === "anonymous" ? (

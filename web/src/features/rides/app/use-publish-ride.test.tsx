@@ -36,7 +36,7 @@ describe("usePublishRide", () => {
     mocked.publishRide.mockResolvedValue(mine);
     const client = new QueryClient();
     client.setQueryData(
-      rideKeys.board({ day: null, placeId: null, withSeats: false, maxPrice: null }),
+      rideKeys.board({ day: null, text: null, withSeats: false, maxPrice: null }),
       [],
     );
     const wrapper = ({ children }: { children: ReactNode }) => (

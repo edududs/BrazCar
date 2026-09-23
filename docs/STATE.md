@@ -72,6 +72,16 @@ de um formulário e abortou a resposta de um login (o cookie não chegou); não 
 Durante o teste havia outro Vite antigo na 5173; o novo subiu na 5175, e a API precisa das duas
 origens em `DJANGO_CORS_ALLOWED_ORIGINS` ou a checagem de `Origin` devolve 403.
 
+## Ajustes depois do teste no celular (a publicar)
+
+Pedidos do Eduardo em 2026-09-22, feitos e conferidos localmente, ainda **sem versão nem deploy**:
+rota como "Sai de", "Vai para" e paradas no caminho opcionais (D-099); busca como contexto próprio
+`search` (D-100) e filtro "passa por" em texto livre que acha também paradas "outro" (D-101);
+barra de navegação em todas as páginas e conta com carro opcional e fechado (D-102). Verificado:
+portão rápido dos dois lados, contrato do `SearchIndex` no fake e em SQLite, e no Chrome contra a
+API local: conta com a barra, carona A→B com destino em texto livre, parada no caminho entrando
+antes do destino, e o mural filtrado por "setor o ceilandia" achando só essa carona.
+
 ## Próximo passo
 
 1. Conferir num iPhone, em `brazcar.elj-labs.org`: cadastro, publicar, contato e o mural
@@ -87,8 +97,12 @@ origens em `DJANGO_CORS_ALLOWED_ORIGINS` ou a checagem de `Origin` devolve 403.
   aceite e a tela já mostra a frase, sem link.
 - Recuperação manual de senha para conta sem e-mail depende de admin, que só entra somente
   leitura (D-087); até lá não há caminho.
-- O `Catalog` é carregado inteiro a cada requisição de `places` e duas vezes por listagem do
-  mural (`labels` e `with_descendants`); cachear por revisão se pesar.
+- O `Catalog` é carregado inteiro a cada requisição de `places` e a cada listagem do mural
+  (`labels`); cachear por revisão se pesar.
+- A normalização de texto existe duas vezes: `places/domain/search_key.py` e `search/domain/text.py`.
+  A busca de lugares pode passar a usar o índice de `search` quando houver um terceiro uso.
+- O índice de busca é alimentado depois da gravação, fora da transação: se a indexação falhar, a
+  carona fica no mural mas não aparece na busca por texto até o próximo `index_rides`.
 - A tabela de hits do limite cresce com o uso e só é podada por chave; um comando de limpeza
   entra se pesar.
 - Rota `/api/diagnostics/sse` e página `/diagnostics` seguem ligadas de propósito até a medição

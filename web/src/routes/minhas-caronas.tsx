@@ -10,19 +10,7 @@ export const Route = createFileRoute("/minhas-caronas")({ component: MyRidesPage
 function MyRidesPage() {
   const { session } = useSession();
   return (
-    <PageShell
-      title="Minhas caronas"
-      actions={
-        <>
-          <Link to="/publicar" className="underline">
-            Publicar
-          </Link>
-          <Link to="/" className="underline">
-            Mural
-          </Link>
-        </>
-      }
-    >
+    <PageShell title="Minhas caronas">
       {session.status === "checking" ? (
         <p className="text-sm opacity-70">Verificando…</p>
       ) : session.status === "anonymous" ? (

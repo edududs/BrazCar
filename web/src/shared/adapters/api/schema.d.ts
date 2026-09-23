@@ -213,7 +213,7 @@ export interface paths {
         };
         /**
          * List Board
-         * @description Rides still to depart, earliest first, filtered; a place filter includes what is beneath it.
+         * @description Rides still to depart, earliest first, filtered. `q` matches any stop, accents and case ignored.
          */
         get: operations["list_board"];
         put?: never;
@@ -414,8 +414,8 @@ export interface components {
             day?: string | null;
             /** Max Price */
             max_price?: number | string | null;
-            /** Place Id */
-            place_id?: string | null;
+            /** Q */
+            q?: string | null;
             /**
              * With Seats
              * @default false
@@ -922,7 +922,7 @@ export interface operations {
         parameters: {
             query?: {
                 day?: string | null;
-                place_id?: string | null;
+                q?: string | null;
                 with_seats?: boolean;
                 max_price?: number | string | null;
             };

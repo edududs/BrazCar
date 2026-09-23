@@ -18,7 +18,7 @@ function renderBoard(initial: BoardFilters) {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
-  return renderHook((filters: BoardFilters) => useBoard(filters), {
+  return renderHook((filters: BoardFilters) => useBoard(filters, { typingPauseMs: 0 }), {
     wrapper,
     initialProps: initial,
   });
@@ -31,7 +31,7 @@ describe("useBoard", () => {
 
   it("asks the API with the filters and hands the rides back", async () => {
     mocked.fetchBoard.mockResolvedValue([openRide]);
-    const filters: BoardFilters = { ...noFilters, placeId: "plano-piloto", withSeats: true };
+    const filters: BoardFilters = { ...noFilters, text: "incra", withSeats: true };
 
     const { result } = renderBoard(filters);
 

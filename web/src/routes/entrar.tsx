@@ -11,7 +11,7 @@ function LoginPage() {
   const navigate = useNavigate();
   return (
     <PageShell title="Entrar">
-      <LoginForm logIn={logIn} busy={busy} onDone={() => void navigate({ to: "/conta" })} />
+      <LoginForm logIn={logIn} busy={busy} onDone={() => void navigate({ to: "/" })} />
       <p className="text-sm">
         <Link to="/esqueci-senha" className="underline">
           Esqueci a senha

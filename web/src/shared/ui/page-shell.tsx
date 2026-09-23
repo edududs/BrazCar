@@ -9,7 +9,7 @@ interface PageShellProps {
 
 export function PageShell({ title, actions, children }: PageShellProps) {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 bg-surface p-6 text-content">
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 p-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">{title}</h1>
         {actions === undefined ? null : <nav className="flex gap-3 text-sm">{actions}</nav>}

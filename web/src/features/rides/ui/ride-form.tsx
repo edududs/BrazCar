@@ -9,6 +9,7 @@ import { Form } from "@/shared/ui/form";
 import { SelectField } from "@/shared/ui/select-field";
 import { TextField } from "@/shared/ui/text-field";
 
+import { type StopRole, useRouteDraft } from "../app/use-route-draft";
 import type { PaymentMethod, RideDraft, StopDraft } from "../domain/ride";
 import { fromLocalInput, paymentLabel, toLocalInput } from "./format";
 import { reasonOf } from "./reason";
@@ -24,10 +25,9 @@ interface RideFormProps {
   readonly departureHint?: string;
 }
 
-const catalogStop: StopDraft = { placeId: null, text: "" };
 const METHODS: readonly PaymentMethod[] = ["pix", "cash"];
 
-/** Publish or edit: the same fields, the same rules on the API. The stop list is the route (D-013). */
+/** Publish or edit: the same fields, the same rules on the API. Origin, stops on the way, destination. */
 export function RideForm({
   initial,
   cars,
@@ -39,19 +39,15 @@ export function RideForm({
   const [draft, setDraft] = useState<RideDraft>(initial);
   const [departure, setDeparture] = useState(toLocalInput(initial.departureAt));
   const [error, setError] = useState<string | null>(null);
+  const route = useRouteDraft(initial.stops);
   const set = <K extends keyof RideDraft>(key: K, value: RideDraft[K]) => {
     setDraft((current) => ({ ...current, [key]: value }));
-  };
-  const setStop = (index: number, stop: StopDraft) => {
-    set(
-      "stops",
-      draft.stops.map((current, i) => (i === index ? stop : current)),
-    );
   };
 
   const submit = () => {
     setError(null);
-    onSubmit({ ...draft, departureAt: fromLocalInput(departure) }).catch((reason: unknown) => {
+    const ride = { ...draft, stops: route.value(), departureAt: fromLocalInput(departure) };
+    onSubmit(ride).catch((reason: unknown) => {
       setError(reasonOf(reason));
     });
   };
@@ -71,31 +67,21 @@ export function RideForm({
         />
       )}
       <fieldset className="flex flex-col gap-3">
-        <legend className="text-sm font-medium">Paradas, na ordem</legend>
-        {draft.stops.map((stop, index) => (
+        <legend className="text-sm font-medium">Trajeto</legend>
+        {route.stops.map(({ key, role, stop }) => (
           <StopField
-            key={index}
-            index={index}
+            key={key}
+            role={role}
             stop={stop}
-            removable={draft.stops.length > 2}
             onChange={(changed) => {
-              setStop(index, changed);
+              route.change(key, changed);
             }}
             onRemove={() => {
-              set(
-                "stops",
-                draft.stops.filter((_, i) => i !== index),
-              );
+              route.remove(key);
             }}
           />
         ))}
-        <ActionButton
-          onPress={() => {
-            set("stops", [...draft.stops, catalogStop]);
-          }}
-        >
-          Adicionar parada
-        </ActionButton>
+        <ActionButton onPress={route.addWaypoint}>Adicionar parada no caminho</ActionButton>
       </fieldset>
       <TextField
         label="Saída"
@@ -160,18 +146,23 @@ export function RideForm({
 }
 
 interface StopFieldProps {
-  readonly index: number;
+  readonly role: StopRole;
   readonly stop: StopDraft;
-  readonly removable: boolean;
   readonly onChange: (stop: StopDraft) => void;
   readonly onRemove: () => void;
 }
 
+const roleLabel = {
+  origin: "Sai de",
+  waypoint: "Parada no caminho",
+  destination: "Vai para",
+} as const satisfies Record<StopRole, string>;
+
 /** One stop: a place of the catalog, or "other" as text. The switch between the two is the checkbox. */
-function StopField({ index, stop, removable, onChange, onRemove }: StopFieldProps) {
+function StopField({ role, stop, onChange, onRemove }: StopFieldProps) {
   const [other, setOther] = useState(stop.placeId === null && stop.text !== "");
   const place = usePlace(stop.placeId);
-  const label = `Parada ${String(index + 1)}`;
+  const label = roleLabel[role];
   return (
     <div className="flex flex-col gap-1 rounded-lg border border-neutral-soft p-3">
       {other ? (
@@ -203,7 +194,7 @@ function StopField({ index, stop, removable, onChange, onRemove }: StopFieldProp
         >
           Outro lugar
         </CheckboxField>
-        {removable ? <ActionButton onPress={onRemove}>Remover</ActionButton> : null}
+        {role === "waypoint" ? <ActionButton onPress={onRemove}>Remover</ActionButton> : null}
       </div>
     </div>
   );
