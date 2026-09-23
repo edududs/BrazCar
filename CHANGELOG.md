@@ -6,6 +6,19 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.6.0] - 2026-09-23
+
+### Adicionado
+
+- **search:** Add a text search context that stands on its own
+- **rides:** Filter the board by the text of any stop, catalog or other
+- **web:** Name the route by origin and destination, search the board by text and put a nav bar on every page
+
+### Documentação
+
+- Record the v0.5.0 deploy and the board signal seen through the tunnel
+- Name v0.6.0 in STATE for the adjustments after the phone test
+
 ## [0.5.0] - 2026-09-22
 
 ### Adicionado
