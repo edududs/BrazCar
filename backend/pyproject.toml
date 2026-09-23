@@ -11,6 +11,7 @@ dependencies = [
     "psycopg[binary]>=3.3.6",
     "pydantic[email]>=2.13.5",
     "uvicorn>=0.53.0",
+    "whatsapp-extractor",
 ]
 
 [build-system]
@@ -28,3 +29,6 @@ dev = [
     "pytest-django>=4.14.0",
     "ruff>=0.16.8",
 ]
+
+[tool.uv.sources]
+whatsapp-extractor = { git = "https://github.com/edududs/whatsapp-extractor", rev = "v0.2.1" }

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "brazcar.places.adapters",
     "brazcar.accounts.adapters",
     "brazcar.rides.adapters",
+    "brazcar.importing.adapters",
 ]
 AUTH_USER_MODEL = "accounts.User"  # the custom user precedes auth's first migration (D-028)
 
