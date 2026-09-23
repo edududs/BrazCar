@@ -110,15 +110,26 @@ placa (ADR-0006).
 
 ## Execução
 
-Um `compose.yml` no molde do JayceFinance: serviços `api`, `worker` (`manage.py run_extractor`, mesma
-imagem) e `postgres` (imagem própria com `pg_cron`), todos com `restart: unless-stopped`; só a API
-na rede externa `web` do Traefik. Imagens vêm do GHCR. O entrypoint migra só quando
-`RUN_MIGRATIONS=1`, ligado apenas na API, e o worker espera a API ficar saudável. O Ollama roda
-nativo na máquina e o worker o alcança por `host.docker.internal`.
+O compose de produção é `infra/compose.yml`, no molde do JayceFinance: serviços `api`, `worker`
+(`manage.py run_extractor`, mesma imagem) e `postgres` (imagem própria com `pg_cron`), todos com
+`restart: unless-stopped`; só a API na rede externa `web` do Traefik. Imagens vêm do GHCR. O
+entrypoint migra só quando `RUN_MIGRATIONS=1`, ligado apenas na API, e o worker espera a API ficar
+saudável. O Ollama roda nativo na máquina e o worker o alcança por `host.docker.internal`.
+
+O `compose.yml` da raiz é outro: só oferece o Postgres de desenvolvimento usado pelo contrato de
+repositório, na mesma imagem do deploy.
 
 ## Qualidade
 
 Rápido e a cada commit, no hook de `pre-commit` e no GitHub: formatação, lint, tipos, testes de
-domínio, teste de arquitetura, divergência do OpenAPI, links da documentação. Pesado e local, no
-hook de `pre-push` e na task completa: contrato de repositório em SQLite e Postgres, Schemathesis
-sobre o OpenAPI, E2E com Playwright.
+domínio e de rota, teste de arquitetura, divergência do OpenAPI, links da documentação. Pesado e
+local, no hook de `pre-push` e na task completa (`poe check-heavy`, `yarn check:heavy`): tudo do
+rápido, mais o contrato de repositório repetido no Postgres do compose e o build do front.
+
+Cobertura é medida só nos fluxos do GitHub, depois do portão rápido: os mesmos testes rápidos com
+`pytest-cov` no backend e `@vitest/coverage-v8` no front, resumo impresso no log e falha abaixo do
+piso (92% sobre `src/brazcar`; 52% sobre as camadas `domain` e `app` do front, onde os testes
+moram). Nada sai para serviço de terceiros (D-008); o piso vive em `backend/poe_tasks.toml` e em
+`web/vite.config.ts`.
+
+De D-065 ainda não existem Schemathesis sobre o OpenAPI nem E2E com Playwright.

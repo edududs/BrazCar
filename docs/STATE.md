@@ -48,7 +48,8 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 - `web/`: yarn 4, Vite, React 19, TypeScript strict, Tailwind v4, TanStack Router e Query, Base UI
   (D-088). `features/rides` em quatro camadas: gateway e fonte do sinal (sobre
   `resilient-event-source`) em `adapters`; hooks `useBoard`, `useBoardSignal`, `useRide`,
-  `usePublishRide`, `useContact`, `useMyRides` em `app` (três com teste); cards, filtros,
+  `useMyRides`, `usePublishRide`, `useContact`, `useRouteDraft` e `useForgetBoardOffline` em `app`
+  (todos com teste, menos `useRide` e `useMyRides`); cards, filtros,
   formulário, detalhe e botão de contato em `ui`. Rotas `/` (mural, filtros na URL),
   `/caronas/$rideId`, `/caronas/$rideId/editar`, `/publicar`, `/minhas-caronas`. Primitivos novos
   em `shared/ui`: `Badge`, `Card`, `SelectField`, `ConfirmDialog`; `PageShell` ganhou `actions`.
@@ -62,6 +63,9 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 - Tempo real (D-104, D-107): rajada ao acordar vale uma busca, qualquer que seja o sorteio; busca
   ao focar e ao voltar a rede é explícita; ao reconectar o primeiro quadro do stream é a comparação
   de revisão; vigia de silêncio do mural em 35s.
+- Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com
+  `pytest-cov` (`poe coverage`, piso 92% sobre `src/brazcar`) e front com `@vitest/coverage-v8`
+  (`yarn coverage`, piso 52% sobre `domain` e `app`). Resumo no log, nada para fora (D-008).
 
 **Verificado de verdade no passo 7a:** portão rápido (276 testes) e o contrato no Postgres do
 compose (26), inclusive o da poda. Na máquina local: extrator e neonize importam e abrem sessão em
