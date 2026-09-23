@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as gateway from "../adapters/rides-gateway";
 import { type BoardFilters, noFilters } from "../domain/board";
+import type { Ride } from "../domain/ride";
 import { openRide } from "./ride.fixture";
 import { useBoard } from "./use-board";
 
@@ -62,6 +63,35 @@ describe("useBoard", () => {
     act(() => {
       result.current.refresh();
     });
+    await waitFor(() => {
+      expect(result.current.rides).toEqual([openRide]);
+    });
+    expect(mocked.fetchBoard).toHaveBeenCalledTimes(3);
+  });
+
+  it("drops a fetch in flight on refresh, so a newer revision is never answered by an older list", async () => {
+    mocked.fetchBoard.mockResolvedValueOnce([]);
+    const { result } = renderBoard(noFilters);
+    await waitFor(() => {
+      expect(result.current.status).toBe("ready");
+    });
+
+    let finishStale: (rides: Ride[]) => void = () => undefined;
+    mocked.fetchBoard.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishStale = resolve;
+        }),
+    );
+    act(() => {
+      result.current.refresh(); // the fetch for revision N starts
+    });
+    mocked.fetchBoard.mockResolvedValueOnce([openRide]);
+    act(() => {
+      result.current.refresh(); // revision N+1 arrives while it is in flight
+    });
+    finishStale([]);
+
     await waitFor(() => {
       expect(result.current.rides).toEqual([openRide]);
     });

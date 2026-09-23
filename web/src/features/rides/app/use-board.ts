@@ -21,8 +21,10 @@ interface BoardOptions {
 }
 
 /**
- * Headless board: the rides for `filters`, kept while the next filter loads. The list is fetched
- * again on focus and on reconnect (D-048) by TanStack Query's defaults; the signal invalidates it.
+ * Headless board: the rides for `filters`, kept while the next filter loads. The signal invalidates
+ * it, and it is fetched again on every focus and every return of the network, even with the signal
+ * alive (D-048): iOS kills the connection in the background without telling. Coming back after a
+ * change can cost two fetches, this one and the signal's; that is accepted (D-104).
  */
 export function useBoard(
   filters: BoardFilters,
@@ -36,6 +38,8 @@ export function useBoard(
     queryKey: rideKeys.board(settled),
     queryFn: ({ signal }) => fetchBoard(settled, signal),
     placeholderData: keepPreviousData,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
   });
 
   return {

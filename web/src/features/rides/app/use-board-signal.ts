@@ -12,9 +12,13 @@ interface BoardSignalOptions {
 }
 
 /**
- * Follows the board's revision (ADR-0010) and calls `onChange` once per new revision, after a random
- * delay. The first number after a connect is where the board is, not a change, unless it differs
- * from the last one seen: a reconnect after a change still refreshes.
+ * Follows the board's revision (ADR-0010) and calls `onChange` after a random delay when it moves.
+ *
+ * - The first number of a connection is where the board stands. It only counts as a change when it
+ *   differs from the last one seen, so a reconnect after missed writes refreshes and one after
+ *   nothing does not. The stream's opening frame is the revision check: no separate request (D-104).
+ * - While a fetch is waiting for its delay, newer numbers join it instead of scheduling another:
+ *   the burst iOS delivers on wake is one signal, whatever the random delay drew (D-077).
  */
 export function useBoardSignal({
   onChange,
@@ -32,10 +36,10 @@ export function useBoardSignal({
     const subscription = subscribeToBoardSignal((revision) => {
       const changed = known !== null && revision !== known;
       known = revision;
-      if (!changed) return;
-      window.clearTimeout(timer);
+      if (!changed || timer !== undefined) return;
       timer = window.setTimeout(
         () => {
+          timer = undefined;
           latest.current();
         },
         Math.floor(random() * maxSpreadMs),
