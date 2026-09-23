@@ -1,14 +1,16 @@
 # Estado do projeto
 
-Atualizado em 2026-09-22.
+Atualizado em 2026-09-23.
 
 ## Onde estamos
 
-Versão `v0.6.0`: passo 5 (`rides`) concluído e ajustado depois do teste no celular. Antes dele: esqueleto (`v0.1.0`), SSE confirmado
-pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido (`v0.2.1`), `places`
-(`v0.3.0`) e `accounts` (`v0.4.0`). API publicada em `api-brazcar.elj-labs.org` e front em
-`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.6.0` desde
-2026-09-22.
+Versão `v0.7.0`: passo 6 (tempo real de verdade e PWA) concluído. Antes dele: esqueleto (`v0.1.0`),
+SSE confirmado pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido
+(`v0.2.1`), `places` (`v0.3.0`), `accounts` (`v0.4.0`), `rides` (`v0.5.0`) e os ajustes do teste
+no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
+`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)). O front do passo 6 já está no
+Vercel desde 2026-09-23 (push intermediário, sem tag); a API segue na `0.6.0` até o deploy da
+imagem `0.7.0`.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -16,7 +18,8 @@ pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido (`v
   `Clock`, `Mailer`, `RateLimiter` (D-097), `BoardRevision` e `BoardSignal` (D-098). Em
   `shared/adapters`: app Django `shared` com a linha da revisão e a tabela de hits, o sinal por
   leitura 1x/s, SSE, rota de diagnóstico, CORS, `OriginCheckMiddleware` (D-091), `session_auth`
-  e `optional_account_id`, relógio e e-mail.
+  e `optional_account_id`, relógio, e-mail e `GET /api/web-version`, o piso de versão do front
+  lido de `WEB_MINIMUM_VERSION` (D-105).
 - `places` (v0.3.0): `Catalog` é o agregado (D-083), `Place` com `PlaceId` em slug (D-084);
   rotas públicas `GET /api/places?q=` e `/api/places/{id}` (D-086); catálogo em `catalog.toml`
   sincronizado por `manage.py sync_places` no entrypoint (D-087).
@@ -40,61 +43,47 @@ pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido (`v
   formulário, detalhe e botão de contato em `ui`. Rotas `/` (mural, filtros na URL),
   `/caronas/$rideId`, `/caronas/$rideId/editar`, `/publicar`, `/minhas-caronas`. Primitivos novos
   em `shared/ui`: `Badge`, `Card`, `SelectField`, `ConfirmDialog`; `PageShell` ganhou `actions`.
+- PWA (v0.7.0, D-106): `vite-plugin-pwa` em modo `prompt`, manifesto e ícones provisórios, precache
+  só da casca. Em `shared`: adaptadores de service worker, rede, modo de exibição, versão do build e
+  piso; hooks `useAppUpdate`, `useVersionFloor`, `useNetworkStatus`, `useInstallHint` e
+  `useUnsavedWork` (o formulário de carona se marca); primitivos `NoticeScreen`, `NoticeBar`,
+  `AppFooter`. A raiz mostra "Sem internet" por cima da página montada, a tela de atualização
+  obrigatória abaixo do piso, o aviso de build novo e a dica de "Adicionar à Tela de Início" no
+  iPhone. A versão do build fica no rodapé; o `scripts/release.sh` acompanha o `web/package.json`.
+- Tempo real (D-104, D-107): rajada ao acordar vale uma busca, qualquer que seja o sorteio; busca
+  ao focar e ao voltar a rede é explícita; ao reconectar o primeiro quadro do stream é a comparação
+  de revisão; vigia de silêncio do mural em 35s.
 
-**Verificado de verdade no passo 5:** portão rápido dos dois lados (228 testes no backend, 19 no
-front); contratos de `RideRepository` e `RateLimiter` no fake, em SQLite e no Postgres 18 do
-compose; rotas de `rides` contra a composição real (publicar exige sessão, carro e lugar do
-catálogo; card sem placa nem telefone; filtros por lugar-pai, dia, vagas e preço; vagas zero
-lota e voltar reabre; cancelada é definitiva e repetir cria outra; horário de outro dia recusado
-com 409; só o dono mexe; contato dá link `wa.me` e placa, 429 no 21º pedido, 409 em carona
-lotada; a revisão sobe uma vez por escrita; o stream do sinal abre com `retry` e a revisão atual);
-no Chrome contra a API local: cadastro → carro → publicar (parada do catálogo pelo combobox e
-parada "outro" em texto) → detalhe com ações do dono → vagas 3→0 ("lotada") → 1 ("reaberta") →
-editar preço → segunda conta pede contato e recebe placa e link `wa.me` com a mensagem pronta →
-mural filtrado por Plano Piloto lista a carona da Esplanada e **atualizou sozinho pelo sinal** ao
-publicar outra por curl → diálogo de cancelar (Base UI) → repetir cria a carona do dia seguinte →
-"minhas caronas" lista as quatro, da mais recente para a mais antiga. A carona das 16:00 virou
-"já saiu" sozinha depois da tolerância.
+**Verificado de verdade no passo 6:** portão rápido dos dois lados (248 testes no backend, 56 no
+front) e o pesado do front (build com 47 entradas de precache e nada de `/api`). No Chrome, contra a
+API local e o `vite preview`: service worker controlando a página e servindo deep link pela casca;
+"Sem internet" com a página montada e o mural rebuscado do zero ao voltar; build novo mostrou o
+aviso, "Atualizar" com o formulário de publicar aberto pediu confirmação e trocou de versão; com
+`WEB_MINIMUM_VERSION=0.7.0` a versão velha caiu na tela obrigatória e "Atualizar" achou o build
+novo, trocou e liberou. A API de produção `0.6.0`, sem a rota do piso, responde 404 com CORS e o
+front trata como sem piso. Num iPhone, com o app instalado pelo front publicado: dica de instalação,
+barras, notch e rodapé sem problema, e a medição do sinal em `standalone` (ADR-0014): o adaptador
+cobriu bloqueio de 40s, 2 e 10 min, troca de app e troca de rede sem mudança; a troca de rede pela
+Central de Controle só é notada pelo vigia, que caiu para 35s.
 
-Publicado e conferido: a imagem `0.5.0` na máquina de teste aplicou as migrations `rides` e
-`shared` no Postgres de lá; pelo túnel, `/api/rides` responde, `/mine` dá 401 sem sessão,
-`Origin` estranho dá 403 e `/api/rides/signal` entrega o quadro de revisão na hora, sem buffer.
-No Chrome, com o mural do Vercel aberto, uma carona publicada pela API **apareceu sozinha** e,
-cancelada, **sumiu sozinha**: o sinal atravessa o Cloudflare e invalida a lista. A conta de
-teste foi apagada pela própria API e o mural de produção ficou vazio.
+**Não verificado:** o mural atualizando sozinho ao voltar do segundo plano no app instalado (o
+diagnóstico mede o stream, não a busca); o aviso de build novo e a tela de piso num iPhone (só no
+Chrome); o vigia de 35s em produção; ícone maskable no Android. Ainda de passos anteriores: a página
+de edição com adiamento depois da partida, `login` e `password-reset` estourados pelo navegador,
+e-mail de verdade pelo Resend, e no celular a conta com carro opcional, a carona A→B e o "passa por"
+achando parada em texto livre (ajustes da `v0.6.0`).
 
-**Não verificado:** o sinal e a invalidação num iPhone; a página de
-edição com adiamento depois da partida (só o domínio e a rota cobrem); `login` e
-`password-reset` com limite estourado pelo navegador (só o caso de uso e a rota); e-mail de
-verdade pelo Resend.
-No Vite em desenvolvimento a otimização de dependências recarregou a página duas vezes no meio
-de um formulário e abortou a resposta de um login (o cookie não chegou); não acontece no build.
-Durante o teste havia outro Vite antigo na 5173; o novo subiu na 5175, e a API precisa das duas
-origens em `DJANGO_CORS_ALLOWED_ORIGINS` ou a checagem de `Origin` devolve 403.
-
-## Ajustes depois do teste no celular (`v0.6.0`)
-
-Pedidos do Eduardo em 2026-09-22, depois de testar a `v0.5.0` no celular:
-rota como "Sai de", "Vai para" e paradas no caminho opcionais (D-099); busca como contexto próprio
-`search` (D-100) e filtro "passa por" em texto livre que acha também paradas "outro" (D-101);
-barra de navegação em todas as páginas e conta com carro opcional e fechado (D-102). Verificado:
-portão rápido dos dois lados, contrato do `SearchIndex` no fake e em SQLite, e no Chrome contra a
-API local: conta com a barra, carona A→B com destino em texto livre, parada no caminho entrando
-antes do destino, e o mural filtrado por "setor o ceilandia" achando só essa carona. Publicado:
-a imagem `0.6.0` aplicou a migration de `search`, o `index_rides` do entrypoint indexou a carona
-que já estava lá, e pelo túnel a busca por um destino em texto livre a achou. O front do Vercel
-serve as telas novas. O Eduardo testou a `v0.5.0` no celular (foi dali que vieram estes
-ajustes) e encerrou o passo com a `v0.6.0` publicada.
+**Pendências de design (D-103), para a etapa de design:** ícones provisórios (quadrado azul com
+círculo branco); o aviso de build novo e a dica de instalação são uma faixa simples sob a barra; a
+tela "Sem internet" e a de atualização obrigatória são texto puro; o rodapé com a versão é texto
+pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisório.
 
 ## Próximo passo
 
-1. ~~Conferir no celular~~ Feito em 2026-09-23: a `v0.6.0` foi validada num iPhone. Ainda sem cobrir: barra de navegação, conta com
-   carro opcional, carona A→B e "passa por" achando parada em texto livre. E o mural atualizando
-   sozinho depois de voltar do segundo plano, que nenhum teste cobriu.
-2. Passo 6, tempo real de verdade: o que falta de ADR-0010 e D-077 no front (heartbeat vigiado,
-   reconexão ao voltar ao foco já vêm do adaptador; medir no app instalado), `LISTEN/NOTIFY` só se
-   o segundo de atraso incomodar (D-050).
-3. Front e PWA: manifesto, service worker em modo `prompt`, tela offline, safe-area.
+1. Publicar a API `0.7.0` pelo runbook de deploy (a rota do piso) e conferir `GET /api/web-version`.
+2. Conferir no celular o que ficou sem cobrir: o mural atualizando sozinho ao voltar do segundo
+   plano no app instalado, e o aviso de build novo quando sair a próxima versão.
+3. Etapa de design do produto (D-103), só com ordem do Eduardo. Depois dela, o extrator.
 
 ## Pendências abertas
 
@@ -110,8 +99,11 @@ ajustes) e encerrou o passo com a `v0.6.0` publicada.
   carona fica no mural mas não aparece na busca por texto até o próximo `index_rides`.
 - A tabela de hits do limite cresce com o uso e só é podada por chave; um comando de limpeza
   entra se pesar.
-- Rota `/api/diagnostics/sse` e página `/diagnostics` seguem ligadas de propósito até a medição
-  com o app instalado (`standalone`). Depois disso, remover rota, página e `SSE_DIAGNOSTICS_TOKEN`.
+- Rota `/api/diagnostics/sse`, página `/diagnostics` e `SSE_DIAGNOSTICS_TOKEN` ficam de propósito
+  (D-107), como semente de uma telemetria própria, também do aparelho; a página não tem link na
+  interface.
+- Ao voltar do segundo plano com mudança no meio, o mural pode buscar duas vezes (foco e sinal):
+  escolha registrada em D-104, não defeito.
 - Teto de descritores do container da API não foi conferido.
 - Falta provar o extrator rodando em Python 3.14 quando ele for embutido (D-070).
 - D-040 está como proposto; só importa quando o extrator entrar.

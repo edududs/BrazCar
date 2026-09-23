@@ -62,8 +62,9 @@ segundo. Quando o número muda, escreve "mudou, revisão N" em todas as conexõe
 celular espera até dois segundos aleatórios e busca a lista, que fica em cache por revisão
 (ADR-0010). Ao focar a aba ou voltar a rede, o app busca de novo de qualquer forma.
 A conexão cai por rotina, porque o túnel a derruba em rajadas e o iOS a mata em segundo plano:
-o servidor manda um evento `ping` a cada 15s, e o cliente reconecta sozinho por silêncio, ao
-voltar ao foco e ao voltar a rede. Medido pelo caminho real e num iPhone (ADR-0013).
+o servidor manda um evento `ping` a cada 15s, e o cliente reconecta sozinho por silêncio (35s), ao
+voltar ao foco e ao voltar a rede. Ao reconectar, o primeiro quadro do stream é a revisão atual:
+só busca se mudou. Medido pelo caminho real, numa aba e com o app instalado (ADR-0013, ADR-0014).
 
 **Contato.** A lista nunca traz telefone nem placa (schema `RideOut`, D-096). O botão chama uma rota própria, que exige
 login, aplica limite por conta, registra o pedido e devolve o link `wa.me` com mensagem pronta e a
@@ -90,7 +91,13 @@ placa (ADR-0006).
   telefone e uma tabela de hits como adaptador (D-097). Contato, login e recuperação de senha passam por ela.
 - **E-mail.** Porta `Mailer` em `shared/application` com o backend de e-mail do Django como
   adaptador; o fornecedor é variável de ambiente, e sem ele as mensagens vão para o console (D-092).
-- **Versão do app.** Service worker em modo `prompt`, e a API informa a versão mínima aceita.
+- **PWA online-only.** O service worker só guarda a casca, nunca a API; sem rede, uma tela de aviso
+  cobre a página, que continua montada (D-106). Tudo que conhece o service worker, a rede e o modo
+  instalado mora num adaptador de `web/src/shared/adapters`.
+- **Versão do app.** Service worker em modo `prompt`: build novo espera o "Atualizar" do usuário e
+  pergunta antes de descartar formulário aberto. A API informa o piso em `GET /api/web-version`
+  (`WEB_MINIMUM_VERSION`); a versão do front é a do `web/package.json`, que o release acompanha com
+  a tag, e abaixo do piso o app só oferece atualizar (D-105).
 
 ## Execução
 

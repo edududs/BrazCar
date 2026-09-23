@@ -9,8 +9,8 @@ Plataforma que funciona sozinha, sem extrator.
 - `places`: catálogo com nome canônico, apelidos, tipo e lugar pai. **Feito, tag `v0.3.0`.**
 - `accounts`: cadastro por telefone, login, carros, recuperação de senha, exclusão de conta. **Feito, tag `v0.4.0`.**
 - `rides`: publicar, editar, fechar, reabrir, cancelar, repetir, mural com filtros, contato. **Feito, tag `v0.5.0`; ajustes do teste no celular na `v0.6.0`** (rota A→B, busca por texto em contexto próprio, navegação).
-- Tempo real por revisão do mural. **Sinal SSE e invalidação no front feitos na `v0.5.0`; falta medir no app instalado.**
-- Front e PWA instalável, online-only.
+- Tempo real por revisão do mural. **Sinal e invalidação na `v0.5.0`; fechado e medido no app instalado na `v0.7.0`** (D-104, D-107).
+- Front e PWA instalável, online-only. **Feito, tag `v0.7.0`** (D-105, D-106).
 - **Etapa de design do produto**, depois de todas as peças acima existirem: identidade visual,
   layout e fluxo pensados de verdade. Até lá as telas são funcionais e sem polimento (D-103).
 - Deploy na máquina de teste e front no Vercel.

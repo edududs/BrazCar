@@ -54,5 +54,13 @@ os limites de `rides` (`RIDE_*`) têm padrão no código.
 
 ## Rota de diagnóstico de SSE
 
-Ligada enquanto `SSE_DIAGNOSTICS_TOKEN` existir no `api.env`. Para desligar: apagar a linha e
+Fica ligada de propósito (D-107). A página é `/diagnostics`, sem link na interface: digitar o
+endereço e colar o token no campo. Ligada enquanto `SSE_DIAGNOSTICS_TOKEN` existir no `api.env`. Para desligar: apagar a linha e
 `docker compose up -d`. Ler o token: `grep SSE_DIAGNOSTICS_TOKEN ~/.brazcar/api.env` na máquina.
+
+## Piso de versão do front
+
+`WEB_MINIMUM_VERSION` no `api.env` (`MAJOR.MINOR.PATCH`; ausente ou `0.0.0` é sem piso, D-105).
+Subir só quando uma versão da API quebrar o front antigo: quem estiver abaixo vê a tela de
+atualização obrigatória. Valor malformado impede a API de subir. Depois de mudar,
+`docker compose up -d` e conferir `curl https://api-brazcar.elj-labs.org/api/web-version`.
