@@ -6,6 +6,25 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.8.0] - 2026-09-23
+
+### Adicionado
+
+- **importing:** Embed the extractor behind a DjangoStore over a source message table
+- **importing:** Worker loop, environment settings and the pairing and group commands
+- **importing:** Purge by pg_cron or by the worker, the pg_cron Postgres image and the worker service
+
+### Documentação
+
+- Record the v0.7.0 deploy
+- Design step 7, the embedded extractor and the importing context
+- Close step 7a in STATE, ROADMAP, architecture and the deploy runbook
+
+### Infraestrutura
+
+- **api:** Git in the build stage and libmagic in the runtime image for the extractor
+- Ignore the worktrees the agent tooling creates under .claude
+
 ## [0.7.0] - 2026-09-23
 
 ### Adicionado
