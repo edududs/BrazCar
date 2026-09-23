@@ -1,6 +1,6 @@
-# Deploy on the test machine (D-060): API and its own Postgres behind the Traefik the machine already
-# runs. The box is this file, the env file and the volume. Nothing is built here: the image comes from
-# GHCR (D-067). Development uses the compose.yml at the repo root, not this one.
+# Deploy on the test machine (D-060): API, the WhatsApp worker and their own Postgres behind the
+# Traefik the machine already runs. The box is this file, the env file and the volume. Nothing is
+# built here: the images come from GHCR (D-067). Development uses the compose.yml at the repo root.
 # How to use it: docs/runbooks/deploy.md
 name: brazcar
 
@@ -13,7 +13,7 @@ services:
     env_file:
       - ${BRAZCAR_ENV_FILE:-~/.brazcar/api.env}
     environment:
-      # Only the API migrates; a future worker must not set this (D-061).
+      # Only the API migrates; the worker must not set this (D-061).
       RUN_MIGRATIONS: "1"
       # uvicorn honours X-Forwarded-* only from this list. Traefik arrives through the `web` network
       # with an address that changes on every recreate, hence `*`. Topology, not application config.
@@ -37,14 +37,35 @@ services:
       traefik.http.routers.brazcar-api.middlewares: brazcar-public-scheme
     # No healthcheck here: the image brings its own (/api/health).
 
+  # The WhatsApp extractor, one process for one paired account (D-108). Same image as the API,
+  # another command; it waits for the API so the migrations have run. Pairing, once:
+  #   docker compose run --rm worker python manage.py pair_whatsapp
+  worker:
+    image: ghcr.io/edududs/brazcar-api:${BRAZCAR_IMAGE_TAG:-latest}
+    command: ["python", "manage.py", "run_extractor"]
+    restart: unless-stopped
+    env_file:
+      - ${BRAZCAR_ENV_FILE:-~/.brazcar/api.env}
+    # Ollama runs natively on the host; the container reaches it by this name (D-108).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - internal
+    healthcheck:
+      disable: true  # the image's healthcheck is the API's; the worker serves no HTTP
+
   postgres:
-    image: postgres:18-alpine
+    # The official image plus pg_cron, built from infra/postgres and published with the API (D-119).
+    image: ghcr.io/edududs/brazcar-postgres:${BRAZCAR_IMAGE_TAG:-latest}
     restart: unless-stopped
     # Same env file: Postgres reads POSTGRES_* and ignores the rest.
     env_file:
       - ${BRAZCAR_ENV_FILE:-~/.brazcar/api.env}
     networks:
-      # No `web` and no `ports`: only the API reaches the database.
+      # No `web` and no `ports`: only the API and the worker reach the database.
       - internal
     volumes:
       # Since 18 the official image keeps data under a versioned subdirectory; mount the root.

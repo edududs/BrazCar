@@ -93,7 +93,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 
 | ID | Decisão | Status | Registro |
 |---|---|---|---|
-| D-040 | Tabelas `whatsmeow_*` isoladas por usuário de banco com `search_path` próprio | proposto | [0009](0009-extractor-via-django-store.md) |
+| D-040 | Tabelas `whatsmeow_*` isoladas por usuário de banco com `search_path` próprio (`infra/postgres/whatsapp-role.sql`; testado em 2026-09-23: as 17 tabelas nascem no schema `whatsapp`, nenhuma em `public`; a DSN precisa de `sslmode=disable` na rede interna) | decidido | [0009](0009-extractor-via-django-store.md) |
 | D-041 | O repo do extrator nunca é alterado a partir daqui; ele só extrai, nunca envia | decidido | [0009](0009-extractor-via-django-store.md) |
 | D-042 | `DjangoStore` implementa a porta de escrita do extrator, no lugar de SQLAlchemy e Alembic | decidido | [0009](0009-extractor-via-django-store.md) |
 | D-043 | O extrator roda como management command em serviço próprio, com reinício automático | decidido | [0009](0009-extractor-via-django-store.md) |
@@ -116,6 +116,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-117 | Carona importada aparece no mesmo mural com selo "via WhatsApp", sem carro e sem ação de dono; expira só pelo horário. O detalhe mostra o texto original, o rótulo do grupo e quando foi enviada. Contato exige login e limite como hoje e devolve `wa.me` do remetente, sem placa. Confiança não aparece na interface | decidido | |
 | D-118 | No passo 7 só há criação: "lotou", "só 1 vaga" e "cancelei" são classificadas como atualização e guardadas sem efeito. Aplicar atualização por mensagem posterior é o incremento seguinte | decidido | |
 | D-119 | Dado mínimo: só texto, nunca mídia. Carona importada, candidata e mensagens-fonte são apagadas juntas quando a carona vira "já saiu"; mensagem que não virou carona é apagada 24h depois do julgamento; nada fica em histórico. Remetente que pedir para sair entra numa lista de bloqueio e tudo dele é apagado. A poda é uma porta com dois adaptadores, `pg_cron` no Postgres da máquina e varredura no processo do worker em SQLite, com contrato provando que as duas regras são a mesma | decidido | |
+| D-124 | Inspeção das mensagens-fonte por comando (`manage.py source_messages`), não pelo admin do Django: o admin exigiria arquivos estáticos servidos pelo container, um superusuário e uma tela de login exposta no host da API, para uma leitura que cabe num comando pelo ssh. Candidatas seguem o mesmo caminho no 7b, no lugar do "admin somente leitura" que D-116 cita; o admin continua como em D-087, só se algum dia entrar | decidido | |
 | D-120 | Golden set: mensagens reais dos grupos, anonimizadas (remetente, telefone, e-mail, placa e nome trocados), versionadas em `backend/tests/importing/golden/` com o julgamento esperado. Roda no portão pesado contra o Ollama; é o que permite trocar de modelo | decidido | |
 
 ## Tempo real e PWA

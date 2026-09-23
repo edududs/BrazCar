@@ -1,11 +1,13 @@
 # Development only. The API and the front run on the host; this file offers the optional
-# Postgres used to prove the repository contract on both databases (D-039).
-#   docker compose --profile postgres up -d
+# Postgres used to prove the repository contract on both databases (D-039). It is the same image
+# the deploy uses, built here from infra/postgres so pg_cron exists locally too (D-119).
+#   docker compose --profile postgres up -d --build
 name: brazcar-dev
 
 services:
   postgres:
-    image: postgres:18-alpine
+    build: ./infra/postgres
+    image: brazcar-postgres:dev
     profiles: [postgres]
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-brazcar}
