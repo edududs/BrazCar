@@ -12,7 +12,8 @@ flowchart LR
     A --> DB[(Banco único<br/>SQLite ou Postgres)]
     A -->|SMTP| R[Resend]
     W -.wa.me.-> WA[WhatsApp]
-    X[Worker do extrator<br/>futuro] --> DB
+    X[Worker do extrator<br/>mesma imagem da API] --> DB
+    X -.lê.-> WA
 ```
 
 Tudo que é público passa pelo túnel do Cloudflare: a máquina não tem IP público, e o TLS e o
@@ -31,7 +32,7 @@ flowchart TB
         PL[places]
         SH[shared: revisão do mural, SSE,<br/>limite de requisições, e-mail]
         SE[search: índice de texto<br/>independente do projeto]
-        IM[importing<br/>futuro]
+        IM[importing: mensagens-fonte<br/>do extrator, poda]
     end
     F -->|OpenAPI gerado| R & AC & PL
     R -->|id de lugar| PL
@@ -65,6 +66,14 @@ A conexão cai por rotina, porque o túnel a derruba em rajadas e o iOS a mata e
 o servidor manda um evento `ping` a cada 15s, e o cliente reconecta sozinho por silêncio (35s), ao
 voltar ao foco e ao voltar a rede. Ao reconectar, o primeiro quadro do stream é a revisão atual:
 só busca se mudou. Medido pelo caminho real, numa aba e com o app instalado (ADR-0013, ADR-0014).
+
+**Ler os grupos de WhatsApp.** O worker roda o extrator (repo somente leitura, ADR-0009) com um
+`DjangoStore` como porta de escrita: só texto de grupo observado, de outra pessoa, com telefone,
+vira mensagem-fonte, única por conta e id (D-111). Os grupos são JIDs com rótulo no ambiente (D-109).
+O handler do extrator só acorda uma varredura no mesmo processo (D-112). A retenção (D-119) existe
+duas vezes de propósito: como caso de uso que a varredura aplica, e como job do `pg_cron` no Postgres
+da máquina; um contrato prova que apagam o mesmo. A sessão do WhatsApp fica num papel e schema
+próprios do mesmo Postgres (D-040).
 
 **Contato.** A lista nunca traz telefone nem placa (schema `RideOut`, D-096). O botão chama uma rota própria, que exige
 login, aplica limite por conta, registra o pedido e devolve o link `wa.me` com mensagem pronta e a
@@ -101,10 +110,11 @@ placa (ADR-0006).
 
 ## Execução
 
-Um `compose.yml` no molde do JayceFinance: serviço `api`, serviço `worker` (quando o extrator
-entrar) e `postgres`, todos com `restart: unless-stopped`, na rede externa `web` do Traefik.
-Imagens vêm do GHCR. O entrypoint migra só quando `RUN_MIGRATIONS=1`, ligado apenas na API, e o
-worker espera a API ficar saudável.
+Um `compose.yml` no molde do JayceFinance: serviços `api`, `worker` (`manage.py run_extractor`, mesma
+imagem) e `postgres` (imagem própria com `pg_cron`), todos com `restart: unless-stopped`; só a API
+na rede externa `web` do Traefik. Imagens vêm do GHCR. O entrypoint migra só quando
+`RUN_MIGRATIONS=1`, ligado apenas na API, e o worker espera a API ficar saudável. O Ollama roda
+nativo na máquina e o worker o alcança por `host.docker.internal`.
 
 ## Qualidade
 

@@ -1,15 +1,16 @@
 # Estado do projeto
 
-Atualizado em 2026-09-23.
+Atualizado em 2026-09-24.
 
 ## Onde estamos
 
-Versão `v0.7.0`: passo 6 (tempo real de verdade e PWA) concluído. Antes dele: esqueleto (`v0.1.0`),
+Versão `v0.8.0`: passo 7a (extrator embutido) concluído; o 7b (importação no mural) é o próximo. Antes:
+tempo real e PWA (`v0.7.0`), esqueleto (`v0.1.0`),
 SSE confirmado pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido
 (`v0.2.1`), `places` (`v0.3.0`), `accounts` (`v0.4.0`), `rides` (`v0.5.0`) e os ajustes do teste
 no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 `brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.7.0` desde
-2026-09-23.
+2026-09-23; a `v0.8.0` ainda não foi publicada na máquina.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -32,6 +33,15 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   (com descendentes), dia, vagas e preço; `GET /mine`, `GET /{id}`; publicar, editar, vagas,
   cancelar, repetir (só o dono); contato (ADR-0006, D-095); `GET /revision` e `GET /signal` (SSE).
   Read model `RideOut` sem telefone nem placa, com situação e ações prontas (D-096).
+- `importing` (v0.8.0, só a metade do extrator; desenho completo em D-108 a D-124, ADR-0015 e
+  ADR-0016, spec em `specs/importing/`): `SourceMessage` e `WatchedGroup` no domínio; porta
+  `SourceMessages` e caso de uso `PurgeSourceMessages`; `DjangoStore` como `MessageWriter` do extrator
+  (`whatsapp-extractor` v0.2.1 por git), gravando só texto de grupo observado, de outra pessoa, com
+  telefone (D-111); `run_extractor` com o laço de D-112, `pair_whatsapp`, `list_whatsapp_groups`,
+  `install_purge_schedule` (job do `pg_cron`) e `source_messages` (inspeção, D-124). Contratos em
+  `tests/contracts/source_messages.py` e o da poda (SQL do job = caso de uso) só no Postgres.
+  `infra/postgres`: imagem oficial mais `pg_cron`, publicada pelo fluxo `image`; `whatsapp-role.sql`
+  cria o papel e o schema de D-040. `infra/compose.yml` ganhou o serviço `worker`.
 - Contratos de porta em `backend/tests/contracts/` (D-085): `CatalogRepository`,
   `AccountRepository`, `RideRepository` e `RateLimiter`, cada um no fake, em SQLite e no Postgres
   do compose (`poe test-postgres`).
@@ -53,28 +63,22 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   ao focar e ao voltar a rede é explícita; ao reconectar o primeiro quadro do stream é a comparação
   de revisão; vigia de silêncio do mural em 35s.
 
-**Verificado de verdade no passo 6:** portão rápido dos dois lados (248 testes no backend, 56 no
-front) e o pesado do front (build com 47 entradas de precache e nada de `/api`). No Chrome, contra a
-API local e o `vite preview`: service worker controlando a página e servindo deep link pela casca;
-"Sem internet" com a página montada e o mural rebuscado do zero ao voltar; build novo mostrou o
-aviso, "Atualizar" com o formulário de publicar aberto pediu confirmação e trocou de versão; com
-`WEB_MINIMUM_VERSION=0.7.0` a versão velha caiu na tela obrigatória e "Atualizar" achou o build
-novo, trocou e liberou. A API de produção `0.6.0`, sem a rota do piso, responde 404 com CORS e o
-front trata como sem piso. Num iPhone, com o app instalado pelo front publicado: dica de instalação,
-barras, notch e rodapé sem problema, e a medição do sinal em `standalone` (ADR-0014): o adaptador
-cobriu bloqueio de 40s, 2 e 10 min, troca de app e troca de rede sem mudança; a troca de rede pela
-Central de Controle só é notada pelo vigia, que caiu para 35s.
+**Verificado de verdade no passo 7a:** portão rápido (276 testes) e o contrato no Postgres do
+compose (26), inclusive o da poda. Na máquina local: extrator e neonize importam e abrem sessão em
+Python 3.14 no Windows e, dentro da imagem da API, em Linux 3.14.7 (a imagem precisou de `git` no
+build e `libmagic1` no runtime); o CI do repo do extrator também passa em 3.13 e 3.14 (run
+35934801089 de lá). No Postgres de dev, reconstruído com a imagem de `infra/postgres`: o papel de
+D-040 fez o neonize criar as 17 tabelas `whatsmeow_*` no schema `whatsapp`, nenhuma em `public`;
+`install_purge_schedule` criou o job e o `pg_cron` o executou sozinho (`succeeded`, `DELETE 0`);
+os comandos do worker recusam com mensagem clara a falta de grupos, de conta e de pareamento.
 
-Publicado e conferido: a imagem `0.7.0` subiu saudável na máquina de teste, sem migration nova;
-pelo túnel, `/api/web-version` responde `0.0.0` (sem piso) com o CORS do front, `/api/rides/signal`
-entrega o quadro de revisão na hora, `Origin` estranho dá 403 e o diagnóstico sem token dá 404.
-
-**Não verificado:** o mural atualizando sozinho ao voltar do segundo plano no app instalado (o
-diagnóstico mede o stream, não a busca); o aviso de build novo e a tela de piso num iPhone (só no
-Chrome); o vigia de 35s em produção; ícone maskable no Android. Ainda de passos anteriores: a página
-de edição com adiamento depois da partida, `login` e `password-reset` estourados pelo navegador,
-e-mail de verdade pelo Resend, e no celular a conta com carro opcional, a carona A→B e o "passa por"
-achando parada em texto livre (ajustes da `v0.6.0`).
+**Não verificado:** tudo o que exige a máquina de teste e o telefone: pareamento real, mensagens
+reais chegando na tabela, restart do worker, o job do `pg_cron` em produção, o pull das duas
+imagens do GHCR. É o passo T8 da spec, depois do push da tag e com ok em cada passo. Ainda de
+passos anteriores: o mural atualizando sozinho ao voltar do segundo plano no app instalado, o
+aviso de build novo e a tela de piso num iPhone, o vigia de 35s em produção, ícone maskable no
+Android, a página de edição com adiamento depois da partida, `login` e `password-reset` estourados
+pelo navegador, e-mail de verdade pelo Resend.
 
 **Pendências de design (D-103), para a etapa de design:** ícones provisórios (quadrado azul com
 círculo branco); o aviso de build novo e a dica de instalação são uma faixa simples sob a barra; a
@@ -83,9 +87,12 @@ pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisó
 
 ## Próximo passo
 
-1. Conferir no celular o que ficou sem cobrir: o mural atualizando sozinho ao voltar do segundo
-   plano no app instalado, e o aviso de build novo quando sair a próxima versão.
-2. Etapa de design do produto (D-103), só com ordem do Eduardo. Depois dela, o extrator.
+1. Publicar a `v0.8.0` na máquina (T8 da spec, [runbooks/deploy.md](runbooks/deploy.md)): papel de
+   D-040, env, pareamento com o número pessoal (D-110), lista de grupos aprovada, `up -d`, mensagens
+   reais na tabela. Depois, um commit `docs:` registrando o deploy.
+2. Passo 7b (T10 a T19 da spec): `rides` com motorista e origem como tipos-soma, catálogo com os
+   bairros, `importing` com candidata, parser Ollama e regras, golden set, front com o selo.
+3. Etapa de design do produto (D-103), só com ordem do Eduardo.
 
 ## Pendências abertas
 
@@ -107,7 +114,9 @@ pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisó
 - Ao voltar do segundo plano com mudança no meio, o mural pode buscar duas vezes (foco e sinal):
   escolha registrada em D-104, não defeito.
 - Teto de descritores do container da API não foi conferido.
-- Falta provar o extrator rodando em Python 3.14 quando ele for embutido (D-070).
-- D-040 está como proposto; só importa quando o extrator entrar.
+- O extrator traz SQLAlchemy, Alembic, typer e tomlkit como dependências transitivas que o BrazCar não
+  usa; tirá-las é assunto do repo dele (D-041).
+- A imagem da API cresceu com `git` no build e `libmagic1` no runtime, exigências do extrator.
+- O worker usa o número pessoal do Eduardo (D-110) até haver chip dedicado.
 - Sobrou uma pasta `.whatsapp_scrapping_wip/proj1/.pytest_cache` com permissão negada no
   Windows. Remover manualmente como administrador. Está no `.gitignore`.

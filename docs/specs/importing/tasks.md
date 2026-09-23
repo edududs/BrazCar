@@ -5,20 +5,22 @@ Nada na máquina de teste sem ok explícito do Eduardo. Marcar `[x]` ao fechar.
 
 ## 7a — extrator embutido (release próprio)
 
-- [ ] T1. Dependência do extrator por git (tag `v0.2.1`) no `backend/pyproject.toml`; `uv sync`;
+- [x] T1. Dependência do extrator por git (tag `v0.2.1`) no `backend/pyproject.toml`; `uv sync`;
   prova de importação e de `NewAClient` em Python 3.14. Registrar o resultado (D-070).
-- [ ] T2. App `importing` com `SourceMessageModel` e migração; `DjangoStore` com o filtro de D-111;
+- [x] T2. App `importing` com `SourceMessageModel` e migração; `DjangoStore` com o filtro de D-111;
   contrato `MessageWriter` em `tests/contracts/` (fake, SQLite, Postgres): idempotência por
   (conta, id), descarte de mídia, vazio, `from_me` e grupo fora da lista.
-- [ ] T3. Settings: `WHATSAPP_*`, `IMPORT_PURGE`, `IMPORT_RAW_RETENTION_HOURS`; parser de
+- [x] T3. Settings: `WHATSAPP_*`, `IMPORT_PURGE`, `IMPORT_RAW_RETENTION_HOURS`; parser de
   `WHATSAPP_GROUPS` (`jid=rótulo;...`) com teste.
-- [ ] T4. Comandos `pair_whatsapp`, `list_whatsapp_groups`, `run_extractor` (bootstrap + handler que
+- [x] T4. Comandos `pair_whatsapp`, `list_whatsapp_groups`, `run_extractor` (bootstrap + handler que
   acorda + varredura); teste do laço com fonte fake do extrator.
-- [ ] T5. Porta `Purge` com `WorkerPurge` e `PgCronPurge` (`install_purge_schedule`); contrato no
+- [x] T5. Porta `Purge` com `WorkerPurge` e `PgCronPurge` (`install_purge_schedule`); contrato no
   Postgres provando o mesmo resultado; regra de 7a (retenção de mensagem crua).
-- [ ] T6. Admin somente leitura de `SourceMessage`.
-- [ ] T7. `infra/compose.yml`: serviço `worker`; Postgres com `pg_cron` (imagem oficial ou própria,
-  com fluxo no GHCR) ou registro de que não coube; `infra/api.env.example` com as variáveis novas.
+- [x] T6. ~~Admin somente leitura~~ `manage.py source_messages` (D-124).
+- [x] T7. `infra/compose.yml`: serviço `worker`; Postgres com `pg_cron` em imagem própria
+  (`infra/postgres`, fluxo `image` publica `brazcar-postgres`); `infra/api.env.example` com as variáveis
+  novas. Provado local: build da API com git e libmagic, comandos do worker rodando no container em
+  3.14.7, job do pg_cron executando no Postgres de dev, papel de D-040 criando as tabelas no schema `whatsapp`.
 - [ ] T8. Na máquina, com ok em cada passo: usuário e schema de D-040; env; `pair_whatsapp`;
   `list_whatsapp_groups` → lista aprovada → `WHATSAPP_GROUPS`; `up -d`; conferir mensagens na
   tabela, restart do worker, poda. Runbook `deploy.md` com o feito de fato; D-040 decidida ou substituída.

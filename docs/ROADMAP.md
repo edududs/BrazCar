@@ -18,8 +18,8 @@ Plataforma que funciona sozinha, sem extrator.
 ## Depois
 
 - **Passo 7, `importing`.** Em andamento, em dois releases (spec em `docs/specs/importing/`):
-  **7a** embute o extrator (worker no compose, `DjangoStore`, pareamento, D-040 testado) com
-  mensagens cruas fluindo em produção; **7b** transforma mensagem em carona no mural (candidata,
+  **7a** embute o extrator (worker no compose, `DjangoStore`, pareamento, D-040 testado): **feito, tag
+  `v0.8.0`**, mensagens cruas fluindo em produção depois do deploy; **7b** transforma mensagem em carona no mural (candidata,
   parser com LLM local e regras, golden set, carona de motorista externo, ADR-0015 e ADR-0016).
   A carona importada não tem dono com conta, então só expira pelo horário e é apagada ao partir.
 - **Atualização de carona importada por mensagem posterior** ("lotou", "só 1 vaga", "cancelei"),
