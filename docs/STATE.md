@@ -83,12 +83,14 @@ API local: conta com a barra, carona A→B com destino em texto livre, parada no
 antes do destino, e o mural filtrado por "setor o ceilandia" achando só essa carona. Publicado:
 a imagem `0.6.0` aplicou a migration de `search`, o `index_rides` do entrypoint indexou a carona
 que já estava lá, e pelo túnel a busca por um destino em texto livre a achou. O front do Vercel
-serve as telas novas. **Falta a validação no celular.**
+serve as telas novas. O Eduardo testou a `v0.5.0` no celular (foi dali que vieram estes
+ajustes) e encerrou o passo com a `v0.6.0` publicada.
 
 ## Próximo passo
 
-1. Conferir num iPhone, em `brazcar.elj-labs.org`: cadastro, publicar, contato e o mural
-   atualizando sozinho, inclusive depois de voltar do segundo plano.
+1. Conferir no celular o que a `v0.6.0` mudou, se ainda não foi: barra de navegação, conta com
+   carro opcional, carona A→B e "passa por" achando parada em texto livre. E o mural atualizando
+   sozinho depois de voltar do segundo plano, que nenhum teste cobriu.
 2. Passo 6, tempo real de verdade: o que falta de ADR-0010 e D-077 no front (heartbeat vigiado,
    reconexão ao voltar ao foco já vêm do adaptador; medir no app instalado), `LISTEN/NOTIFY` só se
    o segundo de atraso incomodar (D-050).
