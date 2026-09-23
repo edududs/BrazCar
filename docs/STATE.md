@@ -4,7 +4,7 @@ Atualizado em 2026-09-22.
 
 ## Onde estamos
 
-Versão `v0.5.0`: passo 5 (`rides`) concluído. Antes dele: esqueleto (`v0.1.0`), SSE confirmado
+Versão `v0.6.0`: passo 5 (`rides`) concluído e ajustado depois do teste no celular. Antes dele: esqueleto (`v0.1.0`), SSE confirmado
 pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido (`v0.2.1`), `places`
 (`v0.3.0`) e `accounts` (`v0.4.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 `brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.5.0` desde
@@ -72,9 +72,9 @@ de um formulário e abortou a resposta de um login (o cookie não chegou); não 
 Durante o teste havia outro Vite antigo na 5173; o novo subiu na 5175, e a API precisa das duas
 origens em `DJANGO_CORS_ALLOWED_ORIGINS` ou a checagem de `Origin` devolve 403.
 
-## Ajustes depois do teste no celular (a publicar)
+## Ajustes depois do teste no celular (`v0.6.0`)
 
-Pedidos do Eduardo em 2026-09-22, feitos e conferidos localmente, ainda **sem versão nem deploy**:
+Pedidos do Eduardo em 2026-09-22, depois de testar a `v0.5.0` no celular:
 rota como "Sai de", "Vai para" e paradas no caminho opcionais (D-099); busca como contexto próprio
 `search` (D-100) e filtro "passa por" em texto livre que acha também paradas "outro" (D-101);
 barra de navegação em todas as páginas e conta com carro opcional e fechado (D-102). Verificado:
