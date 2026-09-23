@@ -13,6 +13,7 @@ Uma linha por documento. Abra só o que a tarefa pede.
 | [domain/rides.md](domain/rides.md) | Glossário e invariantes de caronas. | Conceito muda ou é renomeado |
 | [domain/accounts.md](domain/accounts.md) | Glossário e invariantes de contas. | Idem |
 | [domain/places.md](domain/places.md) | Glossário e invariantes de lugares. | Idem |
+| [domain/search.md](domain/search.md) | Glossário e invariantes da busca por texto. | Idem |
 
 | [runbooks/deploy.md](runbooks/deploy.md) | Como a API e o front são publicados, e as armadilhas já pagas. | O procedimento de deploy muda |
 | [runbooks/close-step.md](runbooks/close-step.md) | Ritual para fechar um passo: verificação, documentos, versão, changelog, release, memória. | O ritual muda |

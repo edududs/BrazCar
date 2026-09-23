@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "ninja",
     "brazcar.shared.adapters",
+    "brazcar.search.adapters",
     "brazcar.places.adapters",
     "brazcar.accounts.adapters",
     "brazcar.rides.adapters",
