@@ -7,7 +7,7 @@ Atualizado em 2026-09-22.
 Versão `v0.6.0`: passo 5 (`rides`) concluído e ajustado depois do teste no celular. Antes dele: esqueleto (`v0.1.0`), SSE confirmado
 pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido (`v0.2.1`), `places`
 (`v0.3.0`) e `accounts` (`v0.4.0`). API publicada em `api-brazcar.elj-labs.org` e front em
-`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.5.0` desde
+`brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.6.0` desde
 2026-09-22.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
@@ -80,7 +80,10 @@ rota como "Sai de", "Vai para" e paradas no caminho opcionais (D-099); busca com
 barra de navegação em todas as páginas e conta com carro opcional e fechado (D-102). Verificado:
 portão rápido dos dois lados, contrato do `SearchIndex` no fake e em SQLite, e no Chrome contra a
 API local: conta com a barra, carona A→B com destino em texto livre, parada no caminho entrando
-antes do destino, e o mural filtrado por "setor o ceilandia" achando só essa carona.
+antes do destino, e o mural filtrado por "setor o ceilandia" achando só essa carona. Publicado:
+a imagem `0.6.0` aplicou a migration de `search`, o `index_rides` do entrypoint indexou a carona
+que já estava lá, e pelo túnel a busca por um destino em texto livre a achou. O front do Vercel
+serve as telas novas. **Falta a validação no celular.**
 
 ## Próximo passo
 
