@@ -1,6 +1,7 @@
 """Django settings. Every deployment-specific value comes from the environment."""
 
 import os
+import re
 from pathlib import Path
 
 import dj_database_url
@@ -20,6 +21,14 @@ def _env_bool(name: str, *, default: bool) -> bool:
 def _env_list(name: str, *, default: list[str]) -> list[str]:
     raw = os.environ.get(name)
     return default if raw is None else [item.strip() for item in raw.split(",") if item.strip()]
+
+
+def _env_version(name: str, *, default: str) -> str:
+    value = os.environ.get(name, default).strip()
+    if re.fullmatch(r"\d+\.\d+\.\d+", value) is None:
+        message = f"{name} must be MAJOR.MINOR.PATCH, got {value!r}"
+        raise ImproperlyConfigured(message)
+    return value
 
 
 def _secret_key(*, debug: bool) -> str:
@@ -100,6 +109,9 @@ CORS_ALLOW_CREDENTIALS = True
 RIDE_DEPARTURE_TOLERANCE_MINUTES = int(os.environ.get("RIDE_DEPARTURE_TOLERANCE_MINUTES", "20"))
 RIDE_CONTACT_LIMIT = int(os.environ.get("RIDE_CONTACT_LIMIT", "20"))
 RIDE_CONTACT_WINDOW_HOURS = int(os.environ.get("RIDE_CONTACT_WINDOW_HOURS", "24"))
+
+# Oldest front the API still serves (D-052, D-105). Below it the app asks for an update. 0.0.0 is no floor.
+WEB_MINIMUM_VERSION = _env_version("WEB_MINIMUM_VERSION", default="0.0.0")
 
 # Diagnostic SSE route of the tunnel risk test (D-049). Empty keeps the route off.
 SSE_DIAGNOSTICS_TOKEN = os.environ.get("SSE_DIAGNOSTICS_TOKEN", "")

@@ -724,6 +724,20 @@
         ],
         "title": "StopOut",
         "type": "object"
+      },
+      "WebVersionOut": {
+        "properties": {
+          "minimum": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Minimum",
+            "type": "string"
+          }
+        },
+        "required": [
+          "minimum"
+        ],
+        "title": "WebVersionOut",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -1546,6 +1560,28 @@
         "summary": "Change Seats",
         "tags": [
           "rides"
+        ]
+      }
+    },
+    "/api/web-version": {
+      "get": {
+        "operationId": "get_web_version",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebVersionOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Get Web Version",
+        "tags": [
+          "health"
         ]
       }
     }
