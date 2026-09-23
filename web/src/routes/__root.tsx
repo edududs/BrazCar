@@ -69,12 +69,7 @@ function RootLayout() {
           </div>
         </>
       )}
-      <AppFooter>
-        {/* The version opens the SSE diagnostics: the installed app has no address bar (D-049). */}
-        <Link to="/diagnostics" search={{}}>
-          BrazCar {floor.version}
-        </Link>
-      </AppFooter>
+      <AppFooter>BrazCar {floor.version}</AppFooter>
     </div>
   );
 }

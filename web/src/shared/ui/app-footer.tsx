@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 interface AppFooterProps {
-  /** The build's version, usually wrapped in a link to the support page. */
+  /** The build's version, and whatever support needs next to it. */
   readonly children: ReactNode;
 }
 

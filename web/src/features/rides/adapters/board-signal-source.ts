@@ -1,8 +1,12 @@
 import { apiBaseUrl } from "@/shared/adapters/api/base-url";
 import { openResilientEventSource } from "@/shared/adapters/resilient-event-source";
 
-/** Keeps the connection alive through the tunnel and iOS (ADR-0013): a `ping` every 15s from the API. */
-const SILENCE_LIMIT_MS = 45_000;
+/**
+ * Keeps the connection alive through the tunnel and iOS (ADR-0013): a `ping` every 15s from the API.
+ * Two missed pings plus margin. A network swap from the iPhone's Control Center kills the socket with
+ * no event at all, and only this watchdog notices (D-107).
+ */
+const SILENCE_LIMIT_MS = 35_000;
 const RESUME_GRACE_MS = 3000;
 
 export interface BoardSignalSubscription {

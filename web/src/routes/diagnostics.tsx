@@ -10,9 +10,9 @@ import { TextField } from "@/shared/ui/text-field";
 
 /**
  * DIAGNOSTIC page of the SSE tunnel risk test (D-049), removable with the backend route.
- * /diagnostics?token=…&tickSeconds=1&heartbeatSeconds=15&heartbeatKind=comment&silenceLimitMs=45000
+ * /diagnostics?token=…&tickSeconds=1&heartbeatSeconds=15&heartbeatKind=event&silenceLimitMs=35000
  * &resumeGraceMs=3000 — only the token is required; the router writes the defaults back into the URL.
- * The installed app has no address bar: it gets here from the footer and types the token.
+ * Kept on purpose, reachable only by typing the address (D-107); without a token it asks for one.
  */
 
 const numberOr = (value: unknown, fallback: number): number => {
@@ -35,7 +35,7 @@ export const Route = createFileRoute("/diagnostics")({
     heartbeatKind: (search.heartbeatKind === "comment"
       ? "comment"
       : "event") satisfies HeartbeatKind,
-    silenceLimitMs: numberOr(search.silenceLimitMs, 45_000),
+    silenceLimitMs: numberOr(search.silenceLimitMs, 35_000),
     resumeGraceMs: numberOr(search.resumeGraceMs, 3000),
   }),
   component: DiagnosticsPage,
