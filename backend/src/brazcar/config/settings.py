@@ -111,6 +111,15 @@ RIDE_DEPARTURE_TOLERANCE_MINUTES = int(os.environ.get("RIDE_DEPARTURE_TOLERANCE_
 RIDE_CONTACT_LIMIT = int(os.environ.get("RIDE_CONTACT_LIMIT", "20"))
 RIDE_CONTACT_WINDOW_HOURS = int(os.environ.get("RIDE_CONTACT_WINDOW_HOURS", "24"))
 
+# The WhatsApp worker (D-108, D-109, D-119). Only `run_extractor` and its siblings read these.
+WHATSAPP_ACCOUNT = os.environ.get("WHATSAPP_ACCOUNT", "").strip()
+WHATSAPP_SESSION_DSN = os.environ.get(
+    "WHATSAPP_SESSION_DSN", (BACKEND_DIR / "whatsapp-session.sqlite3").as_posix()
+)
+WHATSAPP_GROUPS = os.environ.get("WHATSAPP_GROUPS", "")  # `jid=label;jid=label`
+IMPORT_PURGE = os.environ.get("IMPORT_PURGE", "worker")  # `worker` or `pg_cron`
+IMPORT_RAW_RETENTION_HOURS = int(os.environ.get("IMPORT_RAW_RETENTION_HOURS", "24"))
+
 # Oldest front the API still serves (D-052, D-105). Below it the app asks for an update. 0.0.0 is no floor.
 WEB_MINIMUM_VERSION = _env_version("WEB_MINIMUM_VERSION", default="0.0.0")
 
