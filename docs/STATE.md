@@ -88,7 +88,7 @@ ajustes) e encerrou o passo com a `v0.6.0` publicada.
 
 ## Próximo passo
 
-1. Conferir no celular o que a `v0.6.0` mudou, se ainda não foi: barra de navegação, conta com
+1. ~~Conferir no celular~~ Feito em 2026-09-23: a `v0.6.0` foi validada num iPhone. Ainda sem cobrir: barra de navegação, conta com
    carro opcional, carona A→B e "passa por" achando parada em texto livre. E o mural atualizando
    sozinho depois de voltar do segundo plano, que nenhum teste cobriu.
 2. Passo 6, tempo real de verdade: o que falta de ADR-0010 e D-077 no front (heartbeat vigiado,

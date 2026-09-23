@@ -11,6 +11,8 @@ Plataforma que funciona sozinha, sem extrator.
 - `rides`: publicar, editar, fechar, reabrir, cancelar, repetir, mural com filtros, contato. **Feito, tag `v0.5.0`; ajustes do teste no celular na `v0.6.0`** (rota A→B, busca por texto em contexto próprio, navegação).
 - Tempo real por revisão do mural. **Sinal SSE e invalidação no front feitos na `v0.5.0`; falta medir no app instalado.**
 - Front e PWA instalável, online-only.
+- **Etapa de design do produto**, depois de todas as peças acima existirem: identidade visual,
+  layout e fluxo pensados de verdade. Até lá as telas são funcionais e sem polimento (D-103).
 - Deploy na máquina de teste e front no Vercel.
 
 ## Depois
