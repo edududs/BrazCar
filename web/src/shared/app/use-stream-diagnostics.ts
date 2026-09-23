@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 
-import { type DisplayMode, detectDisplayMode } from "../adapters/display-mode";
+import { detectDisplayMode } from "../adapters/display-mode";
+import type { DisplayMode } from "../domain/app-shell";
 import type { ResilientEventSource } from "../adapters/resilient-event-source";
 import {
   type DiagnosticMessage,

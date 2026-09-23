@@ -36,11 +36,17 @@ fi
 
 # The version lives in the tag. The backend package follows it, the API reads it from the package,
 # and the contract and the generated front types are rebuilt so they carry the same number (D-082).
+# The front's package.json follows it too: the build shows it and compares it with the floor (D-105).
 (cd backend && uv version "${next#v}" >/dev/null && uv run poe openapi >/dev/null)
-(cd web && yarn gen:api >/dev/null)
+(cd web && node -e '
+    const fs = require("node:fs");
+    const manifest = JSON.parse(fs.readFileSync("package.json", "utf8"));
+    manifest.version = process.argv[1];
+    fs.writeFileSync("package.json", JSON.stringify(manifest, null, 2) + "\n");
+' "${next#v}" && yarn gen:api >/dev/null)
 git cliff --tag "$next" --output CHANGELOG.md 2>/dev/null
 
-git add CHANGELOG.md backend/pyproject.toml backend/uv.lock contract/openapi.json web/src/shared/adapters/api/schema.d.ts
+git add CHANGELOG.md backend/pyproject.toml backend/uv.lock contract/openapi.json web/package.json web/src/shared/adapters/api/schema.d.ts
 git commit --quiet -m "chore(release): $next"
 
 # The tag message is the notes alone: the release workflow publishes it as the release body, and a

@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { Car } from "@/features/accounts/domain/account";
 import { usePlace } from "@/features/places/app/use-place";
 import { PlacePicker } from "@/features/places/ui/place-picker";
+import { useUnsavedWork } from "@/shared/app/unsaved-work";
 import { ActionButton } from "@/shared/ui/action-button";
 import { CheckboxField } from "@/shared/ui/checkbox-field";
 import { Form } from "@/shared/ui/form";
@@ -36,6 +37,7 @@ export function RideForm({
   onSubmit,
   departureHint,
 }: RideFormProps) {
+  useUnsavedWork(); // a new build asks before discarding what is typed here (D-052)
   const [draft, setDraft] = useState<RideDraft>(initial);
   const [departure, setDeparture] = useState(toLocalInput(initial.departureAt));
   const [error, setError] = useState<string | null>(null);

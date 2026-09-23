@@ -25,5 +25,11 @@ paths:
 - Rotas: TanStack Router. Filtros do mural vivem na URL.
 - Primitivos sobre o Base UI (D-088), embrulhados em `shared/ui/`, com Tailwind v4 e tokens em
   variáveis CSS. Acessibilidade de diálogo, menu e sheet não se faz à mão.
-- PWA online-only: o service worker só pré-carrega a casca. Sem rede, tela de aviso.
-  Atualização em modo `prompt`. Respeitar safe-area e detectar modo standalone num adaptador só.
+- PWA online-only (D-106): o service worker só pré-carrega a casca, sem `runtimeCaching`. Sem rede,
+  tela de aviso por cima da página montada. Atualização em modo `prompt`, e tela com digitação em
+  andamento chama `useUnsavedWork()`. Respeitar safe-area e detectar modo standalone num adaptador só.
+- Versão do front é o `version` do `package.json`, que o `scripts/release.sh` acompanha; nunca
+  editar à mão fora do release (D-105).
+- iOS só registra service worker em contexto seguro: testar PWA no celular pelo HTTPS publicado.
+  Numa aba em segundo plano do Chrome automatizado `visibilityState` é `hidden`, e o refetch ao
+  focar não dispara; `visibilitychange` sintético precisa de `bubbles: true` para o TanStack ver.

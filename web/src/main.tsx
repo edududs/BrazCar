@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { routeTree } from "./routeTree.gen";
+import { registerServiceWorker } from "./shared/adapters/service-worker";
 import "./styles.css";
 
 const queryClient = new QueryClient();
@@ -27,3 +28,5 @@ createRoot(container).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+
+registerServiceWorker();

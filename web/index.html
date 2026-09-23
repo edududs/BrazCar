@@ -3,9 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <!-- Opens standalone from the iOS home screen. The manifest and the service worker come with the PWA step. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- Opens standalone from the home screen. `apple-` is the legacy form; keeping both covers old
+         and new iOS. The manifest comes from vite.config.ts. -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="BrazCar" />
+    <!-- An opaque status bar with dark text: the page starts below it, on a light background. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#fafaf9" />
+    <meta name="description" content="Caronas entre Brazlândia e Brasília." />
     <title>BrazCar</title>
   </head>
   <body>

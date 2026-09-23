@@ -10,7 +10,8 @@ interface AppNavProps {
 /** The bar on top of every page: the way to anywhere else, from anywhere. */
 export function AppNav({ brand, children }: AppNavProps) {
   return (
-    <header className="border-b border-neutral-soft bg-surface">
+    // Under a notch or the status bar the insets are non-zero (viewport-fit=cover); elsewhere zero.
+    <header className="border-b border-neutral-soft bg-surface pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
       <nav className="mx-auto flex max-w-md items-center justify-between gap-3 px-6 py-3 text-sm">
         <span className="text-base font-semibold">{brand}</span>
         <span className="flex items-center gap-4">{children}</span>
