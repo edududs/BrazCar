@@ -47,6 +47,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-099 | Na tela, a rota é "Sai de", "Vai para" e paradas no caminho opcionais, inseridas antes do destino; só as do meio se removem. O domínio não muda: duas paradas são o mínimo porque são a origem e o destino (D-013) | decidido | |
 | D-101 | O filtro "passa por" do mural é texto livre (`?q=`), não identificador de lugar: casa com qualquer parada, do catálogo ou "outro", sem acento nem caixa, todos os termos presentes. Parada do catálogo é achada pelo nome, pelos apelidos e pelos nomes dos lugares acima dela ("Plano Piloto" acha a Esplanada). O casamento é da porta `RideSearch`, sobre o índice do contexto `search` (D-100) | decidido | |
 | D-096 | O card do mural e toda resposta de escrita são o mesmo schema `RideOut`, com situação e ações calculadas para quem pede (ADR-0011); a rota de escrita relê a carona pelo `ShowRide` em vez de serializar a entidade | decidido | |
+| D-121 | Tolerância de "já saiu" (D-017) passa a 10 minutos por padrão (`RIDE_DEPARTURE_TOLERANCE_MINUTES`); vale para toda carona, publicada ou importada | decidido | |
 
 ## Lugares
 
@@ -57,6 +58,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-083 | O agregado de `places` é o catálogo inteiro (`Catalog`), porque as invariantes atravessam lugares; a porta carrega e grava o catálogo todo, e busca, apelido e descendentes são resolvidos em memória, em Python, sem recurso de banco. Rever se o catálogo passar de centenas de lugares | decidido | |
 | D-087 | O catálogo de `places` é mantido por um arquivo versionado (`backend/src/brazcar/places/adapters/catalog.toml`) e pelo comando idempotente `manage.py sync_places`, que passa pelo caso de uso e roda no entrypoint junto com a migração. O admin do Django não escreve em lugar nenhum; se entrar, é somente leitura, e só depois de `accounts` (D-028) | decidido | |
 | D-084 | Identificador de lugar é um slug estável (`plano-piloto`): legível na semente e na URL do filtro do mural, e renomear o lugar não o muda | decidido | |
+| D-122 | O catálogo ganha os bairros de Brazlândia como filhos de `brazlandia` (Rodeador, Vila São José, Veredas, Fassincra, Assentamento, Setor Tradicional, Setor Norte, Ouro Verde) e os pontos de Brasília que os grupos citam (Colônia 26 de Setembro, Acesso G, Esplanada, SAAN, Brasil 21, Pátio Brasil, SCS...), com apelidos nas grafias vistas. Quadras ("33/34", "5 norte") ficam como texto livre; entram como filhos de bairro quando houver terceiro uso | decidido | |
 
 ## Contas e privacidade
 
@@ -96,7 +98,25 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-042 | `DjangoStore` implementa a porta de escrita do extrator, no lugar de SQLAlchemy e Alembic | decidido | [0009](0009-extractor-via-django-store.md) |
 | D-043 | O extrator roda como management command em serviço próprio, com reinício automático | decidido | [0009](0009-extractor-via-django-store.md) |
 | D-044 | A importação lê da tabela de mensagens com marcador; o evento só acorda o consumidor | decidido | [0009](0009-extractor-via-django-store.md) |
-| D-045 | Contexto `importing`: mensagem candidata, revisão, vira carona | adiado | |
+| D-045 | Contexto `importing`: mensagem candidata, revisão, vira carona | substituída por D-113 | |
+| D-108 | O extrator roda como serviço `worker` do `infra/compose.yml`, na mesma imagem da API, com `manage.py run_extractor`: um processo por conta, `restart: unless-stopped`, sem `RUN_MIGRATIONS`, esperando a API saudável. Pareamento uma vez por `docker compose run --rm worker python manage.py pair_whatsapp`, com o QR no terminal do ssh; a sessão fica no Postgres, sem volume. O Ollama do host é alcançado por `host.docker.internal` | decidido | |
+| D-109 | Grupos observados são uma lista de JID com rótulo em variável de ambiente fora do repo (`WHATSAPP_GROUPS`), nunca por nome: o extrator devolve nome nulo para grupo, e JID antigo embute o telefone de quem criou o grupo, então a lista não é versionada e o rótulo é o que a interface mostra. Grupo novo entra editando o env e reiniciando o worker; a lista é aprovada pelo Eduardo antes de cada deploy | decidido | |
+| D-110 | Até o fim do passo 7 o worker usa o número pessoal do Eduardo, só leitura, sem enviar nada; chip dedicado do BrazCar depois. Banimento por leitura é improvável; envio automatizado é o que o WhatsApp pune | decidido | |
+| D-111 | O `DjangoStore` guarda só mensagens de texto de grupo, não vazias e não enviadas pela própria conta, em colunas tipadas (conta, id da mensagem, JID do grupo, telefone e nome do remetente, enviada em, texto, recebida em), sem o JSON do `Message` inteiro e sem mídia; unicidade por (conta, id da mensagem) | decidido | [0009](0009-extractor-via-django-store.md) |
+| D-112 | O consumidor da importação vive no processo do worker como tarefa asyncio: o handler do extrator só a acorda (D-044), ela varre as pendências ao subir e a cada minuto, e julga uma candidata por vez. Panic do Go derruba os dois e o restart recomeça pela tabela | decidido | |
+
+## Importação
+
+| ID | Decisão | Status | Registro |
+|---|---|---|---|
+| D-113 | Contexto `importing` (substitui D-045): mensagem-fonte vira candidata por remetente, chave de texto normalizado e janela de 6h (a mesma carona em quatro grupos é uma candidata com quatro fontes); a candidata é julgada e, aceita, vira carona. Cada etapa é idempotente: reprocessar mensagem não cria segunda candidata, reprocessar candidata não cria segunda carona, e repostagem do mesmo remetente para a mesma partida (mesmo minuto) se junta à carona existente | decidido | [0015](0015-imported-ride-model.md) |
+| D-114 | Carona importada mora em `rides`: `RideOffer.driver` é tipo-soma `RegisteredDriver` (conta e carro) ou `ExternalDriver` (telefone e nome do WhatsApp), e `origin` é `Published` ou `WhatsApp` (texto original, rótulo do grupo, enviada em). Sem conta-sombra: reivindicar a carona ao cadastrar o mesmo telefone só depois da verificação de posse (OTP reverso), porque hoje qualquer usuário logado obtém o telefone pela rota de contato | decidido | [0015](0015-imported-ride-model.md) |
+| D-115 | Julgamento: porta `RideParser`, adaptador Ollama com JSON schema derivado do tipo Pydantic (plano: `kind` oferta, pedido, atualização ou outro, mais campos opcionais), `temperature 0` e few-shot em pt-BR. O modelo devolve paradas como texto e horário relativo; lugar e data são resolvidos em código. A confiança é calculada por conferências ancoradas no texto, nunca declarada pelo modelo. Sempre pelo LLM, uma candidata por vez. Modelo: o menor que passar no golden set (gemma3:4b ou qwen3.5:4b), 7B só se falhar; fake determinístico no portão rápido | decidido | [0016](0016-llm-extracts-rules-verify.md) |
+| D-116 | Aceite automático, sem fila: oferta com horário resolvido, duas paradas (do catálogo ou texto livre) e confiança acima de `IMPORT_ACCEPT_THRESHOLD`. Vagas ausente vale 2, preço ausente vale R$ 7,00, pagamento ausente vale dinheiro e PIX. As demais candidatas ficam com o motivo, visíveis no admin somente leitura até a poda | decidido | |
+| D-117 | Carona importada aparece no mesmo mural com selo "via WhatsApp", sem carro e sem ação de dono; expira só pelo horário. O detalhe mostra o texto original, o rótulo do grupo e quando foi enviada. Contato exige login e limite como hoje e devolve `wa.me` do remetente, sem placa. Confiança não aparece na interface | decidido | |
+| D-118 | No passo 7 só há criação: "lotou", "só 1 vaga" e "cancelei" são classificadas como atualização e guardadas sem efeito. Aplicar atualização por mensagem posterior é o incremento seguinte | decidido | |
+| D-119 | Dado mínimo: só texto, nunca mídia. Carona importada, candidata e mensagens-fonte são apagadas juntas quando a carona vira "já saiu"; mensagem que não virou carona é apagada 24h depois do julgamento; nada fica em histórico. Remetente que pedir para sair entra numa lista de bloqueio e tudo dele é apagado. A poda é uma porta com dois adaptadores, `pg_cron` no Postgres da máquina e varredura no processo do worker em SQLite, com contrato provando que as duas regras são a mesma | decidido | |
+| D-120 | Golden set: mensagens reais dos grupos, anonimizadas (remetente, telefone, e-mail, placa e nome trocados), versionadas em `backend/tests/importing/golden/` com o julgamento esperado. Roda no portão pesado contra o Ollama; é o que permite trocar de modelo | decidido | |
 
 ## Tempo real e PWA
 
@@ -126,6 +146,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-071 | TypeScript fica na 6.0.x: a 7 (porta nativa) não expõe a API de compilador que o typescript-eslint e o openapi-typescript usam. Subir quando os dois suportarem | decidido | |
 | D-072 | Rotas do TanStack Router por arquivo em `web/src/routes/`, finas, só compondo; `routeTree.gen.ts` é gerado e versionado | decidido | |
 | D-073 | Em desenvolvimento o Vite faz proxy de `/api` para a API local; em produção o front usa `VITE_API_BASE_URL` | decidido | |
+| D-123 | Paradas por um campo só, com autocomplete do catálogo e texto livre aceito, sem select e sem "outro": decidido agora, implementado na etapa de design (D-103), porque refaz o formulário de publicar | decidido | |
 
 ## Deploy e operação
 

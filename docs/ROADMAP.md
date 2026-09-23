@@ -17,9 +17,17 @@ Plataforma que funciona sozinha, sem extrator.
 
 ## Depois
 
-- **`importing`.** Contexto que transforma mensagens do WhatsApp em caronas candidatas, com
-  revisão antes de virarem carona. Depende do `DjangoStore` e do worker do extrator (ADR-0009).
-  A carona importada não tem dono com conta, então só expira pelo horário.
+- **Passo 7, `importing`.** Em andamento, em dois releases (spec em `docs/specs/importing/`):
+  **7a** embute o extrator (worker no compose, `DjangoStore`, pareamento, D-040 testado) com
+  mensagens cruas fluindo em produção; **7b** transforma mensagem em carona no mural (candidata,
+  parser com LLM local e regras, golden set, carona de motorista externo, ADR-0015 e ADR-0016).
+  A carona importada não tem dono com conta, então só expira pelo horário e é apagada ao partir.
+- **Atualização de carona importada por mensagem posterior** ("lotou", "só 1 vaga", "cancelei"),
+  amarrada por remetente e horário. No passo 7 só é classificada e guardada (D-118).
+- **Reivindicação da carona importada** pelo motorista que se cadastra com o mesmo telefone. Só
+  depois do OTP reverso, porque sem verificação de posse qualquer conta poderia assumi-la (ADR-0015).
+- **Paradas por autocomplete com texto livre** no formulário, sem select nem "outro" (D-123):
+  entra na etapa de design.
 - **`LISTEN/NOTIFY`** como segundo adaptador da porta de revisão, quando um segundo de atraso incomodar.
 - **Pedidos de carona.** Passageiro pedindo é outro agregado, com outro ciclo de vida.
 - **Verificação de telefone por OTP reverso.** O site mostra um código, a pessoa o envia por
