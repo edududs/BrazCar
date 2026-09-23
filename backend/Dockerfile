@@ -3,6 +3,8 @@
 
 FROM ghcr.io/astral-sh/uv:python3.14-bookworm-slim AS build
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
+# The extractor is a git dependency (ADR-0009): uv needs the git binary to fetch it. Build stage only.
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 # Dependencies first: this layer only changes with the lock file.
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -18,7 +20,8 @@ FROM python:3.14-slim-bookworm
 ENV PYTHONUNBUFFERED=1 \
     PATH="/app/.venv/bin:$PATH" \
     DJANGO_SETTINGS_MODULE=brazcar.config.settings
-RUN useradd --system --uid 10001 --no-create-home brazcar
+# libmagic: the WhatsApp client behind the extractor loads it at import time (ADR-0009).
+RUN apt-get update && apt-get install -y --no-install-recommends libmagic1 && rm -rf /var/lib/apt/lists/*     && useradd --system --uid 10001 --no-create-home brazcar
 WORKDIR /app
 COPY --from=build /app/.venv ./.venv
 COPY manage.py docker-entrypoint.sh scripts/container_healthcheck.py ./
