@@ -8,7 +8,7 @@ import { loadManifest, type DemoManifest } from "./manifest";
 import { apiOrigin, webOrigin } from "./origins";
 
 /**
- * The one screenshot helper (D-133) and the fixtures every suite shares.
+ * The one screenshot helper (D-134) and the fixtures every suite shares.
  *
  * `snap(page, "journey/state")` writes `docs/screens/<project>/journey/state.png` and nothing else
  * in the suite ever calls `page.screenshot`: one place decides the name, the size and the waiting,
@@ -56,7 +56,7 @@ export const test = base.extend<Fixtures>({
   },
 
   // Besides the picture, `snap` writes what the catalogue needs to describe it: the route, the
-  // heading of the screen and the journey that led there. The generator joins the two (D-133).
+  // heading of the screen and the journey that led there. The generator joins the two (D-134).
   snap: async ({ isMobile }, use, testInfo) => {
     const project = testInfo.project.name;
     await use(async (page, name) => {

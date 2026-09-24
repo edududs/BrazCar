@@ -2,7 +2,7 @@
 
 Como encher um banco de demonstração, rodar o Playwright por todas as jornadas e refazer o
 [catálogo de telas](../screens/README.md). As decisões estão em
-[D-132 e D-133](../decisions/README.md); o porquê das imagens, em [D-103](../decisions/README.md).
+[D-133 e D-134](../decisions/README.md); o porquê das imagens, em [D-103](../decisions/README.md).
 
 ## O que é cada peça
 

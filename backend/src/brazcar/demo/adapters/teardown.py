@@ -1,4 +1,4 @@
-"""Removing what an earlier run of the seed left behind (D-132).
+"""Removing what an earlier run of the seed left behind (D-133).
 
 The one place in the project that writes to tables by hand, and on purpose: no use case says
 "forget every demonstration account with its rides and its history", and inventing one would put a

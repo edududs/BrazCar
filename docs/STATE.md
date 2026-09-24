@@ -93,7 +93,7 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 - Tempo real (D-104, D-107): rajada ao acordar vale uma busca, qualquer que seja o sorteio; busca
   ao focar e ao voltar a rede é explícita; ao reconectar o primeiro quadro do stream é a comparação
   de revisão; vigia de silêncio do mural em 35s.
-- `demo` (D-132): pacote `backend/src/brazcar/demo/`, só com `adapters/`, e o comando
+- `demo` (D-133): pacote `backend/src/brazcar/demo/`, só com `adapters/`, e o comando
   `manage.py seed_demo`. Sete contas (motorista com um carro, com dois, sem carro, só passageiro,
   nome social longo, conta nova, e a dona de uma carona importada), quinze caronas cobrindo toda
   situação calculada em três dias, com e sem tarifas, com e sem observações (uma no limite de 500),
@@ -102,7 +102,7 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   onze candidatas com um veredito de cada tipo, um remetente bloqueado; e pedidos de contato,
   inclusive uma conta com a cota do dia inteira gasta. Determinístico dado o momento em que roda,
   recusa-se fora de `DEBUG`, apaga o que criou antes de recriar, e grava um manifesto.
-- Ponta a ponta (D-133): `web/e2e/` com o Playwright em dois projetos, celular e desktop, 94 testes
+- Ponta a ponta (D-134): `web/e2e/` com o Playwright em dois projetos, celular e desktop, 94 testes
   cobrindo visitante, cadastro e conta, motorista, passageiro, importadas e tempo real. Cada estado
   relevante é fotografado pelo helper `snap`; 127 imagens em `docs/screens/` (4,9 MB) e o
   `docs/screens/README.md` gerado por `scripts/screens-catalog.mjs`. Tasks `yarn e2e` e
@@ -156,7 +156,7 @@ a carona que outro contexto acabou de publicar (SSE).
 
 **Não verificado:** a cobertura do front nesta máquina (`@vitest/coverage-v8` não está instalado
 aqui; roda no fluxo do GitHub); as telas no WebKit e num iPhone de verdade (a suíte roda os dois
-projetos no Chromium, D-133); o interpretador lendo preços por parada contra um Ollama de verdade
+projetos no Chromium, D-134); o interpretador lendo preços por parada contra um Ollama de verdade
 (o golden set não mede `fares`, e as 120 mensagens não trazem o julgamento esperado desse campo);
 as telas novas num celular. Ainda de antes: o front publicado mostrando o selo e a mensagem
 original, no celular; o job do `pg_cron` apagando uma carona importada que partiu; o worker
@@ -184,6 +184,9 @@ O primitivo `shared/ui/availability-badge.tsx` não é usado por ninguém.
 
 ## Pendências abertas
 
+- **Endereço que não é rota nenhuma cai no "Not Found" do roteador**: em inglês, sem tratamento e
+  sem caminho de volta, contra a regra de interface em pt-BR (D-007). Visível em
+  `docs/screens/*/shell/route-not-found.png`.
 - **Não há como excluir a conta pela interface.** O backend tem `DELETE /api/accounts/me` e o front
   tem a mutação `deleteAccount` em `useSession`, mas nenhum botão a chama: o `AccountPanel` nem a
   recebe. D-033 põe a exclusão no MVP, então isso é buraco, não escopo adiado. Achado ao fotografar

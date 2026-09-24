@@ -1,4 +1,4 @@
-"""`manage.py seed_demo`: a database with one ride of every situation, for the screens (D-132).
+"""`manage.py seed_demo`: a database with one ride of every situation, for the screens (D-133).
 
 It refuses to run unless `DJANGO_DEBUG` is on or `--yes-i-know` is given, and it starts by
 forgetting whatever an earlier run left, so running it twice leaves the same rows.

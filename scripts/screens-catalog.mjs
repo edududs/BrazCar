@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Writes docs/screens/README.md from the pictures the end to end suite took (D-133).
+// Writes docs/screens/README.md from the pictures the end to end suite took (D-134).
 //
 //   node scripts/screens-catalog.mjs
 //
@@ -16,7 +16,7 @@ const screensDir = path.join(root, "docs", "screens");
 const notesDir = path.join(root, "web", "e2e", ".state", "screens");
 const catalogue = path.join(screensDir, "README.md");
 
-// O celular primeiro: é o projeto principal (D-132). O resto entra em ordem alfabética.
+// O celular primeiro: é o projeto principal (D-133). O resto entra em ordem alfabética.
 const projectTitles = { mobile: "Celular", desktop: "Desktop" };
 const projectOrder = ["mobile", "desktop"];
 

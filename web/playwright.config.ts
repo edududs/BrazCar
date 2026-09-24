@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { apiOrigin, apiPort, manifestPath, webOrigin, webPort } from "./e2e/support/origins";
 
 /**
- * End to end suite and screens catalogue (D-132, D-133).
+ * End to end suite and screens catalogue (D-133, D-134).
  *
  * The front is the built app served by `vite preview`, never the dev server: what goes to the air
  * is what gets photographed, service worker and all. The API runs on its own SQLite file, seeded

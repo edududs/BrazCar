@@ -17,7 +17,7 @@ Padrões usados: [Conventional Commits](https://www.conventionalcommits.org/pt-b
   `POSTGRES_*` do `.env` da raiz, o mesmo do `compose.yml`; se a porta 5432 for de outro projeto, é
   ali que se muda (`POSTGRES_PORT=5433`), não na task.
 - Se o passo mexeu em tela: `yarn screens` em `web/`, verde, e o `git diff` de `docs/screens/`
-  conferido. A suíte de ponta a ponta não está nos dois portões de propósito (D-133); é aqui que
+  conferido. A suíte de ponta a ponta não está nos dois portões de propósito (D-134); é aqui que
   ela roda. Ver [screens.md](screens.md).
 - `git status` limpo. Nada pela metade vira versão.
 

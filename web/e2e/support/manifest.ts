@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
- * What `manage.py seed_demo` wrote (D-132). Identifiers are born in the domain, so they change on
+ * What `manage.py seed_demo` wrote (D-133). Identifiers are born in the domain, so they change on
  * every run; the slugs do not. Reading them here keeps the suites free of constants that would rot.
  */
 

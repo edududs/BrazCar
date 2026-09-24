@@ -1,4 +1,4 @@
-"""`manage.py seed_demo` (D-132): where it refuses, what it promises, and that it repeats itself.
+"""`manage.py seed_demo` (D-133): where it refuses, what it promises, and that it repeats itself.
 
 Seeding is not cheap, so the promises are checked together on one run instead of one run apiece.
 """
@@ -73,7 +73,7 @@ async def test_refuses_outside_debug() -> None:
 async def test_seeds_everything_it_promises(tmp_path: Path) -> None:
     seeded = await _seed(tmp_path / "manifest.json")
 
-    # Contas: uma de cada feitio (D-132).
+    # Contas: uma de cada feitio (D-133).
     assert len(seeded.accounts) == len(data.PEOPLE)
     assert await User.objects.acount() == len(data.PEOPLE)
     cars = {account.slug: len(account.cars) for account in seeded.accounts}

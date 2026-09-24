@@ -59,7 +59,7 @@ def test_every_context_has_an_adapters_layer(context: str) -> None:
 
 def test_demo_is_composition_only() -> None:
     """`demo` is not a context: it has no vocabulary and no rule, only the seed that drives the
-    other contexts' use cases (D-132). Growing a core there would mean it had become one."""
+    other contexts' use cases (D-133). Growing a core there would mean it had become one."""
     packages = {
         child.name for child in (PACKAGE / "demo").iterdir() if child.is_dir() and child.name != "__pycache__"
     }

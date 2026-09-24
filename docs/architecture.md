@@ -153,7 +153,7 @@ enviado para serviço de terceiros (D-008); o piso fica em `backend/poe_tasks.to
 Verificação feita à mão durante um passo vira teste automatizado no mesmo passo, e bugfix entra com
 o teste que o reproduz (D-126). De D-065 falta o Schemathesis sobre o OpenAPI.
 
-**Ponta a ponta e telas** (D-132, D-133). `manage.py seed_demo` enche um banco com uma carona de
+**Ponta a ponta e telas** (D-133, D-134). `manage.py seed_demo` enche um banco com uma carona de
 cada situação, passando pelos casos de uso; o Playwright sobe a API com essa semente e o front
 construído, percorre as jornadas e fotografa cada estado por um helper único. As imagens ficam em
 `docs/screens/` e o [catálogo](screens/README.md) é gerado delas. A suíte é task própria
