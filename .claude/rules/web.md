@@ -23,6 +23,9 @@ paths:
 - SSE só por `shared/adapters/resilient-event-source.ts`, nunca `EventSource` cru. Reconectar é
   caminho feliz, não erro; eventos que chegam em rajada ao acordar valem um sinal só (ADR-0013).
 - Rotas: TanStack Router. Filtros do mural vivem na URL.
+- Testar componente e comportamento, não só hook: o que a pessoa faz na tela (clicar, digitar,
+  submeter, ver o estado mudar) precisa de teste com Testing Library. Fluxo conferido à mão vira
+  teste no mesmo passo (D-109). A meta de cobertura do front é a mesma do backend.
 - Primitivos sobre o Base UI (D-088), embrulhados em `shared/ui/`, com Tailwind v4 e tokens em
   variáveis CSS. Acessibilidade de diálogo, menu e sheet não se faz à mão.
 - PWA online-only (D-106): o service worker só pré-carrega a casca, sem `runtimeCaching`. Sem rede,

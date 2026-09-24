@@ -107,7 +107,17 @@ portão só roda se os caminhos dele mudaram. O portão rápido leva cerca de 30
 cerca de 40 no front.
 
 A cobertura é medida dentro do fluxo do GitHub: o resumo vai para o log do passo e o passo falha
-abaixo do piso. Nenhum serviço externo lê o código ou recebe relatório (`D-008`).
+abaixo do piso. Nenhum serviço externo lê o código ou recebe relatório (`D-008`). Os dois lados
+medem o pacote inteiro, o que hoje dá 96% no backend e 20% no front, com pisos de 92% e 15%. O
+número do front é baixo porque só os hooks headless têm teste, e ele é medido assim de propósito,
+para que a lacuna apareça; a meta é a paridade com o backend.
+
+A lacuna se fecha por regra permanente: verificação feita à mão durante um passo vira teste
+automatizado no mesmo passo, e bugfix entra com o teste que o reproduz (`D-109`). Um agente
+que conferiu um fluxo no navegador ou uma rota por `curl` deixa esse caminho coberto antes de
+fechar o passo, para que o passo seguinte não o quebre em silêncio. Duas peças decididas em `D-065`
+continuam sem existir, o Schemathesis sobre o OpenAPI e o E2E com Playwright nas jornadas críticas;
+elas entram num passo próprio de qualidade, o primeiro depois do 7a.
 
 ## Encerrar um passo
 

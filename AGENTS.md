@@ -26,6 +26,8 @@ Este arquivo é o único sempre carregado. Todo o resto é sob demanda: comece p
 10. **Documentação no mesmo commit.** Decisão nova vira linha em
     [docs/decisions/README.md](docs/decisions/README.md); decisão antiga nunca é editada, é substituída.
 11. **Segredos.** Nunca ler nem versionar tokens. Arquivos de ambiente ficam fora do repo.
+12. **O que foi verificado à mão vira teste no mesmo passo**; bugfix entra com o teste que o
+    reproduz. Ver [D-109](docs/decisions/README.md).
 
 ## Onde está cada coisa
 

@@ -13,6 +13,9 @@ Plataforma que funciona sozinha, sem extrator.
 - Front e PWA instalável, online-only. **Feito, tag `v0.7.0`** (D-105, D-106).
 - **Etapa de design do produto**, depois de todas as peças acima existirem: identidade visual,
   layout e fluxo pensados de verdade. Até lá as telas são funcionais e sem polimento (D-103).
+- **Passo de qualidade**, o primeiro depois do 7a: testes de componente e comportamento no front
+  até a cobertura empatar com a do backend, Schemathesis sobre o contrato OpenAPI e E2E com
+  Playwright nas jornadas críticas, com screenshots como evidência (D-109).
 - Deploy na máquina de teste e front no Vercel.
 
 ## Depois
