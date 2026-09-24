@@ -34,7 +34,9 @@ Variável nova no `api.env` entra antes do `up -d`; o modelo é `infra/api.env.e
 Resend, então o e-mail de recuperação vai para o log do container. Em 2026-09-22 (v0.5.0) nada entrou:
 os limites de `rides` (`RIDE_*`) têm padrão no código. Em 2026-09-23 (v0.7.0) também nada: sem
 `WEB_MINIMUM_VERSION` a API serve sem piso. Em 2026-09-24 (v0.11.0) nada entrou no `api.env`; a
-migração `0003` aplicou no `up`.
+migração `0003` aplicou no `up`. Em 2026-09-24 (v0.12.0) entrou `EMAIL_*` no `api.env` (SMTP do
+Resend, chave fora do repo): a recuperação de senha passa a mandar e-mail de verdade; sem migração.
+O disparo de teste no deploy não deixou linha de erro de SMTP no log da API.
 
 ## Worker do WhatsApp (passo 7a)
 
