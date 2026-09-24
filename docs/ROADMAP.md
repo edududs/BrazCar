@@ -25,6 +25,8 @@ Plataforma que funciona sozinha, sem extrator.
 - **Passo de qualidade**, o primeiro depois do 7a, que fechou na `v0.8.0`: testes de componente e
   comportamento no front até a cobertura empatar com a do backend, Schemathesis sobre o contrato
   OpenAPI e E2E com Playwright nas jornadas críticas, com screenshots como evidência (D-126).
+- **Observações na carona publicada** (`notes`, D-129): passo curto, antes da etapa de design, porque
+  muda domínio e contrato.
 - **Atualização de carona importada por mensagem posterior** ("lotou", "só 1 vaga", "cancelei"),
   amarrada por remetente e horário. No passo 7 só é classificada e guardada (D-118).
 - **Reivindicação da carona importada** pelo motorista que se cadastra com o mesmo telefone. Só

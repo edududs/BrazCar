@@ -28,22 +28,22 @@ Nada na máquina de teste sem ok explícito do Eduardo. Marcar `[x]` ao fechar.
 
 ## 7b — importação (release próprio)
 
-- [ ] T10. `rides` domínio: `Driver`, `RideOrigin`, `import_offer`, ações, contato sem placa;
+- [x] T10. `rides` domínio: `Driver`, `RideOrigin`, `import_offer`, ações, contato sem placa;
   testes puros e Hypothesis existentes ainda verdes.
-- [ ] T11. `rides` adaptadores: migração, `from_row`/`to_row` dos tipos-soma, `delete`,
+- [x] T11. `rides` adaptadores: migração, `from_row`/`to_row` dos tipos-soma, `delete`,
   `by_external_departure`, `RideOut`/`RideDetailOut`, contrato nos dois bancos; tolerância 10 min.
-- [ ] T12. Catálogo: bairros de Brazlândia e pontos de Brasília com apelidos (D-122); `sync_places`.
-- [ ] T13. `importing` domínio: `text_key`, `Candidate`/`Verdict`, `Judgement`, `Checks`/confiança,
+- [x] T12. Catálogo: bairros de Brazlândia e pontos de Brasília com apelidos (D-122); `sync_places`.
+- [x] T13. `importing` domínio: `text_key`, `Candidate`/`Verdict`, `Judgement`, `Checks`/confiança,
   `resolve_departure`, `decide`; testes puros, Hypothesis em `text_key` e `resolve_departure`.
-- [ ] T14. Portas e casos de uso (`IngestMessage`, `JudgeCandidate`, `BlockSender`, `PurgeImported`)
+- [x] T14. Portas e casos de uso (`IngestMessage`, `JudgeCandidate`, `BlockSender`, `PurgeImported`)
   com fakes; testes de idempotência: mensagem repetida, candidata repetida, repostagem por partida.
-- [ ] T15. Adaptadores: repositórios e contratos; `StopResolver` sobre o catálogo; `ImportedRides`
+- [x] T15. Adaptadores: repositórios e contratos; `StopResolver` sobre o catálogo; `ImportedRides`
   sobre `rides`; `OllamaRideParser` (httpx, schema, few-shot) e `FakeRideParser`; poda completa nos
   dois adaptadores; consumidor no `run_extractor`; `import_rides`, `block_sender`; admin de candidatas.
-- [ ] T16. Golden set: converter a amostra anonimizada em `tests/importing/golden/*.jsonl` com
+- [~] T16. Golden set (rotulado e versionado; falta medir na máquina): converter a amostra anonimizada em `tests/importing/golden/*.jsonl` com
   julgamento esperado; `poe test-golden`; medir gemma3:4b e qwen3.5:4b (acerto e latência) na
   máquina com ok; escolher o modelo e registrar.
-- [ ] T17. Front: selo, carro opcional, bloco da mensagem original, contato sem placa; tipos do
+- [x] T17. Front: selo, carro opcional, bloco da mensagem original, contato sem placa; tipos do
   OpenAPI; testes dos hooks tocados.
 - [ ] T18. Deploy com ok: modelo baixado, env, `up -d`; verificar carona importada no mural
   publicado e no celular; runbook.

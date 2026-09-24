@@ -9,43 +9,49 @@ Depende do extrator embutido (ADR-0009) e entrega para `rides` por porta (ADR-00
 |---|---|---|
 | conta pareada | `account` | O número de WhatsApp que o worker lê. Um processo por conta (D-043); a sessão fica no banco. |
 | grupo observado | `WatchedGroup` | JID de grupo e rótulo, da variável de ambiente `WHATSAPP_GROUPS` (D-109). Só o que está na lista é gravado; o rótulo é o que a interface mostra. |
-| mensagem-fonte | `SourceMessage` | Mensagem de texto de um grupo observado, gravada pelo `DjangoStore` (D-111): conta, id da mensagem, JID do grupo, remetente, enviada em, texto, recebida em. Única por (conta, id). |
-| remetente | `Sender` | Telefone e nome de exibição de quem postou. O telefone é a identidade do motorista externo. |
-| chave de texto | `TextKey` | O texto sem acento, sem caixa, sem emoji nem pontuação, com espaços colapsados. Duas mensagens com a mesma chave são a mesma postagem. |
-| janela de junção | `DEDUP_WINDOW` | 6 horas. Mensagem com o mesmo remetente e a mesma chave dentro da janela entra na candidata existente; fora dela abre outra. |
-| candidata | `Candidate` | Uma postagem, com uma ou mais mensagens-fonte (a mesma carona em quatro grupos é uma candidata com quatro fontes). Raiz do agregado. |
-| veredito | `Verdict` | Tipo-soma: pendente `Pending`, aceita `Accepted(ride_id)`, rejeitada `Rejected(reason)`, falhou `Failed(error, attempts)`. Só a aceita tem carona. |
-| interpretador | `RideParser` | Porta: texto e contexto (enviada em, rótulo do grupo) entram, julgamento tipado sai. Adaptador Ollama em produção, fake nos testes (D-115). |
-| saída do interpretador | `ParserOutput` | O tipo plano que vira JSON schema para o modelo: `kind`, e campos opcionais de oferta. Nunca chega ao domínio sem virar julgamento. |
+| mensagem-fonte | `SourceMessage` | Mensagem de texto de um grupo observado, gravada pelo `DjangoStore` (D-111): conta, id da mensagem, JID do grupo, remetente, enviada em, texto, recebida em. Única por (conta, id). Tomada por uma candidata, vive e morre com ela. |
+| remetente | `Sender` | Telefone (dígitos, sem `+`) e nome de exibição de quem postou. O telefone é a identidade do motorista externo e a chave para achar uma conta (D-127). |
+| chave de texto | `text_key` | O texto sem acento, sem caixa, só letras, dígitos e espaço simples. Duas mensagens com a mesma chave são a mesma postagem. |
+| janela de junção | `DEDUP_WINDOW` | 6 horas. Mensagem com o mesmo remetente e a mesma chave, enviada dentro da janela da primeira, entra na candidata existente; fora dela abre outra. |
+| candidata | `Candidate` | Uma postagem, com uma ou mais mensagens-fonte (`sources`), o texto da primeira, o rótulo do primeiro grupo, primeira e última vez vista, e o veredito. Raiz do agregado. |
+| veredito | `Verdict` | Tipo-soma: pendente `Pending`, aceita `Accepted(ride_id, joined)`, rejeitada `Rejected(reason, confidence)`, falhou `Failed(error, attempts)`. Só a aceita tem carona. |
+| motivo de rejeição | `RejectReason` | `not_an_offer`, `no_time`, `no_seats`, `few_stops`, `low_confidence`, `unknown_place`. |
+| interpretador | `RideParser` | Porta: texto, enviada em e rótulo do grupo entram; `ParserOutput` sai. Adaptador `OllamaRideParser` em produção (D-115); `ScriptedParser` nos testes. |
+| saída do interpretador | `ParserOutput` | O tipo plano que vira JSON schema para o modelo: `kind`, `time` ("HH:MM"), `day`, `stops` como escritas, `seats`, `price`, `payment_methods`, `closed`. `to_judgement` o converte; o que o modelo escreveu mal vira "não disse", nunca erro. |
 | julgamento | `Judgement` | Tipo-soma do que a mensagem é: oferta `Offer`, pedido `Request`, atualização `Update`, outro `Other`. Só a oferta vira carona (D-009). |
-| oferta interpretada | `Offer` | Horário relativo (`time`, `day`), paradas como texto em ordem, vagas, preço, formas de pagamento, tudo opcional menos as paradas. |
-| resolução de parada | `StopResolver` | Porta para `places`: texto de parada vira `CatalogStop` quando casa com nome ou apelido; senão `FreeTextStop`. O modelo nunca escolhe identificador. |
-| resolução de horário | `resolve_departure` | Função pura: enviada em, `day` e `time` viram `departure_at` no fuso do mural. Horário já passado sem "hoje" cai no dia seguinte (a oferta da manhã é postada na noite anterior). |
-| conferências | `Checks` | Conjunto de verificações determinísticas ancoradas no texto: vagas aparecem, horário aparece, preço aparece, cada parada aparece, quantas casaram no catálogo. Gravadas com a candidata. |
-| confiança | `Confidence` | Número de 0 a 1 calculado das conferências, nunca declarado pelo modelo. |
-| limiar de aceite | `IMPORT_ACCEPT_THRESHOLD` | Abaixo dele a oferta é rejeitada com motivo (D-116). |
+| oferta interpretada | `Offer` | Hora `at` e dia `Day` (hoje, amanhã, não disse), paradas como texto em ordem, vagas, preço, formas de pagamento; tudo opcional. |
+| resolução de parada | `StopResolver` | Porta para `places`: cada texto de parada vira `ResolvedStop` com o lugar do catálogo cujo nome ou apelido é exatamente aquele, ou sem lugar (texto livre). O modelo nunca escolhe identificador. |
+| resolução de horário | `resolve_departure` | Função pura: enviada em, `Day` e hora viram `departure_at` no fuso do mural. Hora já passada sem "hoje" cai no dia seguinte (a oferta da manhã é postada na noite anterior). |
+| conferências | `Checks` | Determinísticas, ancoradas no texto: a hora aparece nos dígitos, as vagas aparecem, o preço aparece, que fração das paradas aparece, quantas o catálogo conhece. Campo que a mensagem não deu conta como conferido. |
+| confiança | `Checks.confidence` | Número de 0 a 1 com pesos fixos no domínio (hora 0,35; paradas 0,35; vagas 0,15; preço 0,15), nunca declarado pelo modelo. |
+| limiar de aceite | `IMPORT_ACCEPT_THRESHOLD` | Abaixo dele a oferta é rejeitada por `low_confidence` (D-116). Padrão 0,7. |
+| regra de aceite | `decide` | Função pura: oferta, com hora resolvida, vagas diferentes de zero, duas paradas e confiança acima do limiar vira `Accept(RideDraft)`; senão `Rejected(reason)`. |
 | padrões de ausência | `DEFAULT_SEATS`, `DEFAULT_PRICE`, `DEFAULT_PAYMENT` | Vagas 2, R$ 7,00, dinheiro e PIX, quando a oferta não diz (D-116). |
-| rascunho de carona | `RideDraft` | O que `importing` entrega a `rides`: motorista externo, origem WhatsApp, rota resolvida, partida, vagas, preço, pagamento. |
-| carona importada | em `rides`: `ExternalDriver`, `WhatsAppOrigin` | A `RideOffer` criada a partir de uma candidata (ADR-0015). Sem dono com conta; expira só pelo horário. |
-| junção por partida | `same_departure` | Mesmo remetente e mesma partida no mesmo minuto é a mesma carona: a candidata nova se anexa à existente (D-113). |
-| lista de bloqueio | `BlockedSender` | Telefone de quem pediu para sair. Mensagens, candidatas e caronas dele são apagadas e nada novo dele é gravado (D-119). |
-| poda | `Purge` | Porta: apaga carona importada, candidata e mensagens-fonte quando a carona vira "já saiu", e mensagem sem carona 24h após o julgamento. Adaptadores `pg_cron` e varredura no worker (D-119). |
-| consumidor | `run_extractor` | Tarefa asyncio no processo do worker, acordada pelo handler do extrator, com varredura ao subir e a cada minuto; uma candidata por vez (D-112). |
-| golden set | `tests/importing/golden/` | Mensagens reais anonimizadas com o julgamento esperado. Portão pesado contra o Ollama (D-120). |
+| rascunho de carona | `RideDraft` | O que `importing` entrega a `rides`: paradas resolvidas, partida, vagas, preço, pagamento. `RidesBridge` o traduz para os tipos daquele contexto e chama `ImportRide`. |
+| carona importada | em `rides`: `RideOrigin` WhatsApp | A `RideOffer` criada a partir de uma candidata: da conta com o telefone do remetente, sem carro, ou de motorista externo (ADR-0015, D-127). |
+| junção por partida | `ImportRide` | Mesmo motorista e mesma partida é a mesma carona: a candidata nova é aceita como `joined` (D-113). |
+| redação | `redact_personal_data` | Em `shared/domain`: telefone, e-mail, CPF e placa viram `[…]` antes de o texto original chegar à carona (D-128). |
+| lista de bloqueio | `BlockedSenders` | Telefone de quem pediu para sair. `BlockSender` apaga mensagens, candidatas e caronas dele; a varredura nunca mais o toma (D-119). |
+| varredura | `run_extractor` | Tarefa asyncio no processo do worker, acordada pelo handler do extrator, ao subir e a cada minuto (D-112): `IngestMessages` (mensagem em candidata), `JudgeCandidates` (uma por vez), `PurgeImported` quando a poda é do worker. |
+| poda | `PurgeImported` | Caso de uso (D-119): apaga as caronas de motorista externo que já saíram, com candidatas e mensagens; as candidatas sem carona julgadas há mais de 24h; as mensagens não tomadas há mais de 24h. O job do `pg_cron` é a mesma regra em SQL (`purge_statements`), provada igual por contrato no Postgres. |
+| golden set | `tests/importing/golden/messages.jsonl` | 120 mensagens reais anonimizadas com a leitura esperada. `poe test-golden` mede um modelo contra o Ollama: acerto de tipo, acerto por campo e latência (D-120). |
+| inspeção | `manage.py candidates`, `source_messages`, `import_rides` | O que foi julgado e por quê, o que chegou, e uma varredura à mão (D-124). |
 
 ## Invariantes
 
-- Mensagem-fonte só existe para grupo observado, texto não vazio e remetente não bloqueado.
-- Uma mensagem-fonte pertence a no máximo uma candidata; marcada, nunca é reprocessada.
-- Uma candidata aceita aponta para exatamente uma carona; uma carona importada vem de uma ou mais
-  candidatas do mesmo remetente e da mesma partida.
-- Só `Offer` vira carona, e só com horário resolvido e duas paradas. Sem regra, sem carona: o
-  julgamento que falha deixa a candidata pendente ou falha, nunca cria carona pela metade.
+- Mensagem-fonte só existe para grupo observado, texto não vazio e remetente com telefone; de
+  remetente bloqueado, é apagada na varredura.
+- Uma mensagem-fonte pertence a no máximo uma candidata; tomada, nunca é reprocessada.
+- Uma candidata aceita aponta para exatamente uma carona; a mesma carona pode ter várias
+  candidatas do mesmo remetente e da mesma partida (`joined`).
+- Só `Offer` vira carona, e só com horário resolvido e duas paradas. O julgamento que falha deixa a
+  candidata para a próxima varredura, até `IMPORT_MAX_ATTEMPTS`; nunca cria carona pela metade.
 - O modelo nunca escolhe lugar do catálogo nem data absoluta; isso é código.
 - Telefone do remetente nunca sai por lista; só pela rota de contato de `rides` (D-031).
-- Nada importado sobrevive à partida: carona, candidata e fontes somem juntas (D-119).
+- Nada de motorista externo sobrevive à partida: carona, candidata e fontes somem juntas (D-119).
+  Carona vinculada a conta é do dono e fica.
 
 ## Fora do passo 7
 
-Atualização por mensagem posterior (D-118), reivindicação da carona pelo motorista (após OTP, D-034),
-pedidos de passageiro como agregado (D-010), fila de revisão.
+Atualização por mensagem posterior (D-118), reivindicação por conta criada depois (após OTP,
+D-034), pedidos de passageiro como agregado (D-010), fila de revisão.

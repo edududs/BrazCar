@@ -5,6 +5,9 @@
 | No negócio | No código | O que é |
 |---|---|---|
 | carona | `RideOffer` | Oferta de um motorista para uma viagem específica. Raiz do agregado. |
+| motorista | `Driver` | Tipo-soma: `RegisteredDriver` (conta e carro; o carro pode faltar só numa carona importada, D-127) ou `ExternalDriver` (telefone e nome do WhatsApp, sem conta; ADR-0015). |
+| origem | `RideOrigin` | Tipo-soma: `PublishedOrigin` (publicada aqui) ou `WhatsAppOrigin` (texto original já redigido, rótulo do grupo, enviada em; D-117, D-128). |
+| carona importada | `is_imported` | Carona com origem WhatsApp. Sem ação de dono quando o motorista é externo; apagada pela poda quando parte (D-119). |
 | rota | `Route` | Sequência ordenada de paradas. Nunca um par origem e destino. |
 | parada | `Stop` | Um ponto da rota: `CatalogStop` (referência a um lugar do catálogo, por identificador) ou `FreeTextStop` (texto livre, "outro"). |
 | vagas | `seats_available` | Vagas restantes, ajustadas à mão pelo motorista. |
@@ -16,8 +19,10 @@
 | forma de pagamento | `PaymentMethod` | Conjunto fechado: dinheiro `cash`, PIX `pix`. |
 | carro na carona | `CarSnapshot` | Cópia de modelo, cor e placa no momento da publicação. |
 | repetir carona | `RepeatRide` | Caso de uso que cria uma carona nova a partir de outra. |
+| importar carona | `ImportRide` | Caso de uso chamado por `importing`: acha a conta pelo telefone do remetente ou cria motorista externo, junta repostagem da mesma partida (D-113), grava e indexa. |
+| esquecer caronas | `ForgetRides` | Apaga caronas de motorista externo, para a poda (D-119). Nunca as de conta. |
 | ações permitidas | `Actions` | O que quem vê pode fazer com a carona, calculado no servidor: editar, mudar vagas, cancelar, repetir, pedir contato e até quando pode adiar. |
-| card do mural | `BoardRide` | O que a lista mostra: nome social, modelo e cor do carro, paradas com nome, situação e ações. Nunca telefone nem placa. |
+| card do mural | `BoardRide` | O que a lista mostra: nome, carro (modelo e cor, quando há), origem, mensagem original (quando importada), paradas com nome, situação e ações. Nunca telefone nem placa. |
 | filtros do mural | `BoardFilter` | Dia, "passa por" em texto livre, só com vaga, preço máximo. Vivem na URL do front. |
 | busca de caronas | `RideSearch` | Acha caronas pelo texto das paradas: nome, apelidos e lugares acima de cada parada do catálogo, e o texto das paradas "outro" (D-101). |
 | pedido de contato | `ContactRequest` | Registro de quem pediu o contato de qual carona. Tabela própria. |
@@ -33,7 +38,7 @@ Eventos: `RidePublished`, `SeatsChanged`, `RideEdited`, `RideReopened`, `RideCan
 Função pura de quatro dados, lida nesta ordem:
 
 1. `cancelled_at` preenchido: **cancelada**.
-2. Agora passou de `departure_at` mais a tolerância (cerca de 20 minutos, configurável): **já saiu**.
+2. Agora passou de `departure_at` mais a tolerância (10 minutos por padrão, configurável; D-121): **já saiu**.
 3. `seats_available` igual a zero: **lotada** (fechada).
 4. `reopened_at` preenchido: **reaberta**. Senão: **aberta**.
 
@@ -43,6 +48,9 @@ Função pura de quatro dados, lida nesta ordem:
   fechada reabre e grava `reopened_at`. Fechar e "lotou" são o mesmo gesto.
 - Cancelada é definitiva. Quem muda de ideia usa repetir.
 - Publicar exige um carro cadastrado na conta, e a carona nova nasce com pelo menos uma vaga.
+  Só uma carona importada pode vir sem carro (conta achada pelo telefone) ou sem conta (motorista
+  externo); a importada nunca vem de origem publicada.
+- Motorista externo não é dono de nada: ninguém edita, muda vagas, cancela ou repete a carona dele.
 - Rota tem pelo menos duas paradas, em ordem: a primeira é de onde sai, a última para onde vai, e
   entre elas as paradas no caminho, opcionais. Parada do catálogo aponta para um lugar que existe.
 - Datas voltam do banco no fuso do mural (`America/Sao_Paulo`): "mesmo dia" e o filtro por dia
@@ -61,6 +69,8 @@ Função pura de quatro dados, lida nesta ordem:
 O read-model do mural traz nome social, modelo e cor do carro. Telefone e placa só saem pela
 rota de contato, que exige login, tem limite por conta e grava um `ContactRequest`. Só carona
 aberta ou reaberta aceita pedido de contato; o motorista nunca vê o botão na própria carona.
+Na carona importada o contato vai ao telefone do remetente (ou da conta achada por ele) e volta
+sem placa; o texto original que o detalhe mostra já passou pela redação de dados pessoais (D-128).
 
 ## Fora do MVP
 

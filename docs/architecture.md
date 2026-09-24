@@ -32,13 +32,15 @@ flowchart TB
         PL[places]
         SH[shared: revisão do mural, SSE,<br/>limite de requisições, e-mail]
         SE[search: índice de texto<br/>independente do projeto]
-        IM[importing: mensagens-fonte<br/>do extrator, poda]
+        IM[importing: mensagem-fonte,<br/>candidata, julgamento, poda]
     end
     F -->|OpenAPI gerado| R & AC & PL
     R -->|id de lugar| PL
     R -->|id de conta e carro| AC
     R -->|texto das paradas| SE
-    IM -.-> R
+    IM -->|rascunho de carona| R
+    IM -->|texto de parada| PL
+    IM -.->|Ollama local| LLM[(Ollama<br/>na máquina)]
 ```
 
 Cada contexto é um pacote com três camadas.
@@ -75,6 +77,15 @@ duas vezes de propósito: como caso de uso que a varredura aplica, e como job do
 da máquina; um contrato prova que apagam o mesmo. A sessão do WhatsApp fica num papel e schema
 próprios do mesmo Postgres (D-040).
 
+**Importar uma carona.** A varredura do worker junta as mensagens não tomadas em candidatas, por
+remetente, chave de texto e janela de 6h (D-113), e julga uma candidata por vez: o interpretador
+(porta `RideParser`, adaptador Ollama com o JSON schema de `ParserOutput`, ADR-0016) devolve tipo,
+horário relativo, paradas como texto, vagas, preço e pagamento; o código resolve as paradas contra o
+catálogo e a data a partir do carimbo da mensagem, confere cada valor contra as próprias palavras
+(confiança, D-115) e decide (D-116). Aceita, vira `RideOffer` pelo caso de uso `ImportRide` de
+`rides`: a conta com aquele telefone, sem carro, ou um motorista externo (ADR-0015, D-127), com o
+texto original redigido (D-128). Nada importado sobrevive à partida (D-119).
+
 **Contato.** A lista nunca traz telefone nem placa (schema `RideOut`, D-096). O botão chama uma rota própria, que exige
 login, aplica limite por conta, registra o pedido e devolve o link `wa.me` com mensagem pronta e a
 placa (ADR-0006).
@@ -95,6 +106,9 @@ placa (ADR-0006).
 - **Busca.** Contexto `search` com a porta `SearchIndex`, sem nada do projeto no núcleo; hoje uma
   tabela com texto normalizado e `contains`, trocável por Redis ou Elasticsearch (D-100).
 - **Regras só no backend.** A API devolve a situação calculada e as ações permitidas (ADR-0011).
+- **Dados pessoais em texto livre.** `shared/domain/personal_data.py` diz o que parece telefone,
+  e-mail, CPF ou placa; a importação redige antes de gravar (D-128) e o formulário passará a recusar
+  (D-129). Uma regra só, para nunca haver duas expressões divergindo.
 - **Observabilidade.** Logs estruturados em JSON na saída padrão e um endpoint de saúde. Nada de terceiros.
 - **Limite de requisições.** Porta `RateLimiter` em `shared/application`, com chave por conta ou por
   telefone e uma tabela de hits como adaptador (D-097). Contato, login e recuperação de senha passam por ela.
