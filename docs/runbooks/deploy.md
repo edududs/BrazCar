@@ -33,7 +33,8 @@ Variável nova no `api.env` entra antes do `up -d`; o modelo é `infra/api.env.e
 2026-09-22 (v0.4.0) entrou `PASSWORD_RESET_LINK`; `EMAIL_*` ficou de fora até haver a chave do
 Resend, então o e-mail de recuperação vai para o log do container. Em 2026-09-22 (v0.5.0) nada entrou:
 os limites de `rides` (`RIDE_*`) têm padrão no código. Em 2026-09-23 (v0.7.0) também nada: sem
-`WEB_MINIMUM_VERSION` a API serve sem piso.
+`WEB_MINIMUM_VERSION` a API serve sem piso. Em 2026-09-24 (v0.11.0) nada entrou no `api.env`; a
+migração `0003` aplicou no `up`.
 
 ## Worker do WhatsApp (passo 7a)
 
@@ -78,7 +79,11 @@ volume: é a mesma base, `18-alpine`, com a extensão copiada para dentro.
   registro responde `denied` mesmo com a imagem pública. Por isso o BrazCar usa um `DOCKER_CONFIG`
   próprio e vazio em `~/.brazcar/docker`, que puxa como anônimo sem tocar no login dos outros (D-081).
   Não é preciso token. Só se a imagem virar privada: token clássico com `read:packages` e
-  `docker login ghcr.io --password-stdin` nesse mesmo diretório.
+  `docker login ghcr.io --password-stdin` nesse mesmo diretório. O `DOCKER_CONFIG` precisa estar
+  exportado no mesmo shell do `docker compose up` (ou `pull`), não só de um comando anterior: cada
+  chamada de `ssh` abre um shell novo, então `export` num comando e `docker compose up` no
+  seguinte perde a variável e volta a usar o login de outro projeto (aconteceu em 2026-09-24, no
+  deploy da v0.11.0).
 - **Container que nunca fica saudável não é roteado.** O Traefik ignora container `unhealthy`, e o
   sintoma é 404 do Traefik, não erro da API. O healthcheck da imagem se apresenta com o primeiro
   host de `DJANGO_ALLOWED_HOSTS`, porque o Django recusa `127.0.0.1` com debug desligado.
