@@ -66,6 +66,10 @@ class DjangoCandidates:
         ).order_by("first_seen_at")[:limit]
         return tuple([candidate_from_row(row) async for row in rows])
 
+    async def judged_since(self, since: datetime) -> tuple[Candidate, ...]:
+        rows = CandidateModel.objects.filter(first_seen_at__gte=since).exclude(verdict="pending")
+        return tuple([candidate_from_row(row) async for row in rows.order_by("first_seen_at")])
+
     async def forget_by_ride(self, ride_ids: Collection[UUID]) -> int:
         if not ride_ids:
             return 0

@@ -305,3 +305,36 @@ def test_what_the_model_writes_badly_becomes_not_said_never_an_error() -> None:
     assert read.price is None
     assert read.stops == ("Vila", "Rodeador")
     assert to_judgement(ParserOutput(kind="offer", time="25:00")).at is None  # type: ignore[union-attr]
+
+
+def test_a_long_route_keeps_where_it_leaves_from_and_where_it_goes() -> None:
+    """The Brazlândia to Aeroporto offer of 24/09 lost the airport when the cut took the tail."""
+    from brazcar.importing.application import (  # noqa: PLC0415 - the boundary under test
+        ParserOutput,
+        to_judgement,
+    )
+    from brazcar.importing.application.parser_output import MAX_STOPS  # noqa: PLC0415 - same
+
+    airport = [
+        "Veredas",
+        "Vila",
+        "Rodeador",
+        "Estrutural",
+        "Anvisa",
+        "Octogonal",
+        "Setor Policial",
+        "Bombeiros",
+        "Teca Aeroporto",
+        "Log Brasília",
+    ]
+    too_long = [f"Parada {n}" for n in range(MAX_STOPS + 5)]
+
+    kept = to_judgement(ParserOutput(kind="offer", time="06:15", stops=airport))
+    cut = to_judgement(ParserOutput(kind="offer", time="06:15", stops=too_long))
+
+    assert isinstance(kept, Offer)
+    assert kept.stops == tuple(airport)
+    assert isinstance(cut, Offer)
+    assert len(cut.stops) == MAX_STOPS
+    assert cut.stops[0] == "Parada 0"
+    assert cut.stops[-1] == too_long[-1]

@@ -6,7 +6,8 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from datetime import timedelta, tzinfo
+from datetime import datetime, timedelta, tzinfo
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from brazcar.importing.domain import (
@@ -170,6 +171,38 @@ class PurgeImported:
         candidates += await self.candidates.forget_judged_before(now - self.rules.retention)
         messages = await self.messages.delete_older_than(now - self.rules.retention)
         return PurgeReport(rides=len(gone), candidates=candidates, messages=messages)
+
+
+class RejudgeReport(FrozenModel):
+    reopened: int
+    rides_released: int
+    kept: int  # accepted into an account's ride, left alone
+
+
+@dataclass(frozen=True, slots=True)
+class ReopenJudged:
+    """A manual rejudge (D-130): what was judged since a moment goes back to pending, and the external
+    rides it made leave the board, so the next sweep reads the same messages again. A tool for
+    control and tests, not a routine."""
+
+    candidates: Candidates
+    rides: ImportedRides
+
+    async def __call__(self, since: datetime) -> RejudgeReport:
+        reopened = released = kept = 0
+        seen_rides: dict[UUID, bool] = {}
+        for candidate in await self.candidates.judged_since(since):
+            verdict = candidate.verdict
+            if isinstance(verdict, Accepted):
+                if verdict.ride_id not in seen_rides:
+                    seen_rides[verdict.ride_id] = await self.rides.release(verdict.ride_id)
+                    released += seen_rides[verdict.ride_id]
+                if not seen_rides[verdict.ride_id]:
+                    kept += 1
+                    continue
+            await self.candidates.save(candidate.reopen())
+            reopened += 1
+        return RejudgeReport(reopened=reopened, rides_released=released, kept=kept)
 
 
 @dataclass(frozen=True, slots=True)

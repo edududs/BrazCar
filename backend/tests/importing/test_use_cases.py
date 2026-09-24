@@ -13,6 +13,7 @@ from brazcar.importing.application import (
     JudgeCandidates,
     ParserOutput,
     PurgeImported,
+    ReopenJudged,
 )
 from brazcar.importing.domain import Accepted, Failed, Rejected, RejectReason, Sender, SourceMessage
 
@@ -83,6 +84,7 @@ class Context:
         )
         self.purge = PurgeImported(self.messages, self.candidates, self.rides, self.clock, RULES)
         self.block = BlockSender(self.blocked, self.messages, self.candidates, self.rides)
+        self.reopen = ReopenJudged(self.candidates, self.rides)
 
     async def arriving(self, *messages: SourceMessage) -> int:
         for each in messages:
@@ -250,3 +252,28 @@ async def test_blocking_a_sender_erases_everything_of_theirs_and_keeps_the_rest(
     )  # the message went with its candidate
     assert [c.sender for c in ctx.candidates.rows.values()] == [bia]
     assert await ctx.blocked.is_blocked(ZE.phone)
+
+
+# --- rejudge ---------------------------------------------------------------------------------------
+
+
+async def test_a_rejudge_reads_the_day_again_and_leaves_an_accounts_ride_alone(ctx: Context) -> None:
+    bia = Sender(phone="5561999990001", display_name="Bia")
+    await ctx.arriving(message(message_id="a"), message(CHAT, message_id="b", sender=bia))
+    first = await ctx.judge(limit=2)
+    (ride_id,) = ctx.rides.created
+
+    report = await ctx.reopen(EVENING - timedelta(hours=1))
+    again = await ctx.judge(limit=2)
+
+    assert (report.reopened, report.rides_released, report.kept) == (2, 1, 0)
+    assert ride_id not in ctx.rides.created
+    assert len(ctx.rides.created) == 1  # made again from the same messages
+    assert sorted(j.candidate.verdict.kind for j in again) == sorted(j.candidate.verdict.kind for j in first)
+    assert (await ctx.reopen(EVENING + timedelta(hours=1))).reopened == 0  # nothing judged since then
+
+    (owned,) = ctx.rides.created
+    ctx.rides.owned.add(owned)
+    kept = await ctx.reopen(EVENING - timedelta(hours=1))
+    assert (kept.reopened, kept.rides_released, kept.kept) == (1, 0, 1)
+    assert owned in ctx.rides.created

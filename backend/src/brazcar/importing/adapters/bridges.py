@@ -77,6 +77,15 @@ class RidesBridge:
     async def forget_from(self, phone: str) -> tuple[UUID, ...]:
         return await self._forget_all(await self._rides.external_rides(phone=phone))
 
+    async def release(self, ride_id: UUID) -> bool:
+        ride = await self._rides.get(ride_id)
+        if ride is None:
+            return True
+        if ride.driver_id is not None:
+            return False
+        await self._forget([ride_id])
+        return True
+
     async def _forget_all(self, ride_ids: tuple[UUID, ...]) -> tuple[UUID, ...]:
         await self._forget(ride_ids)
         return ride_ids

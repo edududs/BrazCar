@@ -16,6 +16,7 @@ from brazcar.importing.application import (
     IngestMessages,
     JudgeCandidates,
     PurgeImported,
+    ReopenJudged,
 )
 from brazcar.places.adapters.repository import DjangoCatalogRepository
 from brazcar.rides.adapters.composition import ride_search
@@ -65,6 +66,7 @@ class ImportUseCases:
     judge: JudgeCandidates
     purge: PurgeImported
     block: BlockSender
+    reopen: ReopenJudged
 
 
 def import_use_cases(config: ImportingSettings) -> ImportUseCases:
@@ -97,6 +99,7 @@ def import_use_cases(config: ImportingSettings) -> ImportUseCases:
         judge=JudgeCandidates(candidates, parser, CatalogStopResolver(catalog), rides, clock, rules),
         purge=PurgeImported(messages, candidates, rides, clock, rules),
         block=BlockSender(blocked, messages, candidates, rides),
+        reopen=ReopenJudged(candidates, rides),
     )
 
 

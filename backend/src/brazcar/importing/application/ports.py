@@ -66,6 +66,10 @@ class Candidates(Protocol):
         """Never judged, or failed fewer than `max_attempts` times; oldest first (D-112)."""
         ...
 
+    async def judged_since(self, since: datetime) -> tuple[Candidate, ...]:
+        """Candidates first seen at or after `since` that already have a verdict, oldest first."""
+        ...
+
     async def forget_by_ride(self, ride_ids: Collection[UUID]) -> int:
         """Delete the candidates of these rides, and their messages with them (D-119)."""
         ...
@@ -112,6 +116,11 @@ class ImportedRides(Protocol):
 
     async def forget_from(self, phone: Phone) -> tuple[UUID, ...]:
         """Delete the external rides of one sender; the ids that went (D-119)."""
+        ...
+
+    async def release(self, ride_id: UUID) -> bool:
+        """Take the ride off the board so its candidate can be read again. False when an account owns
+        it: that ride is the driver's now and stays (D-127)."""
         ...
 
 

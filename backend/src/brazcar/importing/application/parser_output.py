@@ -13,7 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from brazcar.importing.domain import Day, Judgement, Offer, Other, Request, Update
 
-MAX_STOPS = 8
+MAX_STOPS = 15  # a long route is real ("Brazlândia 🔁 Aeroporto" has ten); past this, the middle goes
 MAX_SEATS = 8  # a car; more than that is a misreading ("26" is a quadra), so not said
 
 
@@ -86,4 +86,6 @@ def _stops(values: list[str]) -> tuple[str, ...]:
         stop = " ".join(value.split())[:60]
         if stop and stop.casefold() not in (s.casefold() for s in seen):
             seen.append(stop)
-    return tuple(seen[:MAX_STOPS])
+    if len(seen) > MAX_STOPS:  # never lose where it leaves from or where it goes
+        seen = [*seen[: MAX_STOPS - 1], seen[-1]]
+    return tuple(seen)

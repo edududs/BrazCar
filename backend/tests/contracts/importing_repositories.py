@@ -101,7 +101,13 @@ class ImportingRepositoriesContract:
         assert failed in await candidates.pending(1000, max_attempts=3)
         assert failed not in await candidates.pending(1000, max_attempts=1)
 
+        assert failed in await candidates.judged_since(RECEIVED - timedelta(hours=1))
         rejected = failed.judge(Rejected(reason=RejectReason.NO_TIME, confidence=0.5), at=RECEIVED)
+        await candidates.save(rejected)
+        assert rejected in await candidates.judged_since(RECEIVED - timedelta(hours=1))
+        assert rejected not in await candidates.judged_since(RECEIVED + timedelta(hours=1))
+        await candidates.save(rejected.reopen())
+        assert await candidates.get(candidate.id) == rejected.reopen()
         await candidates.save(rejected)
         assert await candidates.get(candidate.id) == rejected
         assert rejected not in await candidates.pending(1000, max_attempts=3)

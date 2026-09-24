@@ -79,6 +79,9 @@ class _RidesBridge:
     async def forget_from(self, phone: str) -> tuple[UUID, ...]:
         raise NotImplementedError
 
+    async def release(self, ride_id: UUID) -> bool:
+        raise NotImplementedError
+
     async def create(
         self, *, sender: Sender, message_text: str, group_label: str, sent_at: datetime, draft: RideDraft
     ) -> ImportedRide:

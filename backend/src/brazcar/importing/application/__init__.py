@@ -17,6 +17,8 @@ from .use_cases import (
     Judged,
     PurgeImported,
     PurgeReport,
+    RejudgeReport,
+    ReopenJudged,
 )
 
 __all__ = [
@@ -33,6 +35,8 @@ __all__ = [
     "ParserOutput",
     "PurgeImported",
     "PurgeReport",
+    "RejudgeReport",
+    "ReopenJudged",
     "RideParser",
     "SourceMessages",
     "StopResolver",

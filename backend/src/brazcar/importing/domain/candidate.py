@@ -108,6 +108,10 @@ class Candidate(FrozenModel):
         attempts = self.verdict.attempts + 1 if isinstance(self.verdict, Failed) else 1
         return self.judge(Failed(error=error[:200], attempts=attempts), at=at)
 
+    def reopen(self) -> Self:
+        """Back to pending, for a manual rejudge; the messages and the counts stay (D-130)."""
+        return self.evolve(verdict=Pending(), judged_at=None)
+
     @property
     def is_pending(self) -> bool:
         return isinstance(self.verdict, Pending)

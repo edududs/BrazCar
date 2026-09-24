@@ -87,6 +87,10 @@ class InMemoryCandidates:
         ]
         return tuple(sorted(due, key=lambda c: c.first_seen_at)[:limit])
 
+    async def judged_since(self, since: datetime) -> tuple[Candidate, ...]:
+        judged = [c for c in self.rows.values() if not c.is_pending and c.first_seen_at >= since]
+        return tuple(sorted(judged, key=lambda c: c.first_seen_at))
+
     async def forget_by_ride(self, ride_ids: Collection[UUID]) -> int:
         gone = [
             c.id
@@ -156,6 +160,7 @@ class RecordingImportedRides:
 
     def __init__(self) -> None:
         self.created: dict[UUID, tuple[Sender, str, str, datetime, RideDraft]] = {}
+        self.owned: set[UUID] = set()  # rides linked to an account: never released
         self.forgotten: list[UUID] = []
 
     async def create(
@@ -175,6 +180,12 @@ class RecordingImportedRides:
     async def forget_from(self, phone: str) -> tuple[UUID, ...]:
         gone = tuple(i for i, (who, _, _, _, _) in self.created.items() if who.phone == phone)
         return self._forget(gone)
+
+    async def release(self, ride_id: UUID) -> bool:
+        if ride_id in self.owned:
+            return False
+        self._forget((ride_id,) if ride_id in self.created else ())
+        return True
 
     def _forget(self, ids: tuple[UUID, ...]) -> tuple[UUID, ...]:
         for ride_id in ids:

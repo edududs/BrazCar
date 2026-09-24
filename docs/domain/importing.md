@@ -36,6 +36,7 @@ Depende do extrator embutido (ADR-0009) e entrega para `rides` por porta (ADR-00
 | poda | `PurgeImported` | Caso de uso (D-119): apaga as caronas de motorista externo que já saíram, com candidatas e mensagens; as candidatas sem carona julgadas há mais de 24h; as mensagens não tomadas há mais de 24h. O job do `pg_cron` é a mesma regra em SQL (`purge_statements`), provada igual por contrato no Postgres. |
 | golden set | `tests/importing/golden/messages.jsonl` | 120 mensagens reais anonimizadas com a leitura esperada. `poe test-golden` mede um modelo contra o Ollama: acerto de tipo, acerto por campo e latência (D-120). As medições ficam em [parser-models.md](../parser-models.md). |
 | inspeção | `manage.py candidates`, `source_messages`, `import_rides` | O que foi julgado e por quê, o que chegou, e uma varredura à mão (D-124). |
+| reprocessamento | `ReopenJudged`, `import_rides --rejudge` | Devolve a pendente o que foi julgado desde um dia e tira do mural as caronas externas que criou, para serem lidas de novo; a de conta fica (D-130). |
 
 ## Invariantes
 

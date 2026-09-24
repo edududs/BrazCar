@@ -66,7 +66,7 @@ Feito assim em 2026-09-24 (v0.9.0), com `api.env.bak-v0.8.0` guardando o anterio
 `RIDE_PARSER_MODEL` (o que passou no golden set) e `IMPORT_ACCEPT_THRESHOLD` no `api.env`; o job
 de poda ganhou a regra inteira, então `install_purge_schedule` roda de novo na troca de versão.
 Para olhar: `manage.py candidates` (julgamentos e motivos), `manage.py import_rides` (uma varredura
-à mão), `manage.py block_sender <telefone>` (quem pediu para sair, D-119).
+à mão; com `--rejudge` relê o dia de hoje, D-130), `manage.py block_sender <telefone>` (quem pediu para sair, D-119).
 
 Grupo novo: editar `WHATSAPP_GROUPS` e `docker compose up -d worker`. O worker não migra (`RUN_MIGRATIONS`
 só na API) e espera a API ficar saudável. Trocar a imagem do Postgres pela que tem `pg_cron` mantém o
