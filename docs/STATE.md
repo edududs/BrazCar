@@ -102,11 +102,17 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   onze candidatas com um veredito de cada tipo, um remetente bloqueado; e pedidos de contato,
   inclusive uma conta com a cota do dia inteira gasta. Determinístico dado o momento em que roda,
   recusa-se fora de `DEBUG`, apaga o que criou antes de recriar, e grava um manifesto.
-- Ponta a ponta (D-134): `web/e2e/` com o Playwright em dois projetos, celular e desktop, 94 testes
+- Ponta a ponta (D-134): `web/e2e/` com o Playwright em dois projetos, celular e desktop, 95 testes
   cobrindo visitante, cadastro e conta, motorista, passageiro, importadas e tempo real. Cada estado
-  relevante é fotografado pelo helper `snap`; 127 imagens em `docs/screens/` (4,9 MB) e o
+  relevante é fotografado pelo helper `snap`; 131 imagens em `docs/screens/` (5,1 MB) e o
   `docs/screens/README.md` gerado por `scripts/screens-catalog.mjs`. Tasks `yarn e2e` e
   `yarn screens`; workflow `e2e.yml` no GitHub. Runbook em [runbooks/screens.md](runbooks/screens.md).
+- Dois defeitos achados ao fotografar as telas no passo de coleta, corrigidos antes da etapa de
+  design: a tela de conta ganhou o botão "Excluir conta", separado das ações comuns, atrás de um
+  `ConfirmDialog` que explica a consequência e chama a mutação `deleteAccount` que já existia em
+  `useSession` (D-033); e a rota raiz ganhou `notFoundComponent` em português, com o primitivo
+  `shared/ui/route-not-found.tsx` sobre o `NoticeScreen` e um link de volta ao mural, no lugar do
+  "Not Found" em inglês do roteador (D-007).
 - Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
   (`poe coverage`), 88,58% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
   (`yarn coverage`), piso de 15%, com meta de paridade (D-126). O resumo
@@ -142,7 +148,7 @@ preço sumindo quando uma parada tem tarifa, o "a partir de" no card e as tarifa
 no detalhe.
 
 **Verificado de verdade no passo de coleta:** portão rápido e portão pesado dos dois lados, e a
-suíte de ponta a ponta verde nos dois projetos (94 casos, 1 pulado: a dica de instalação só existe
+suíte de ponta a ponta verde nos dois projetos (95 casos, 1 pulado: a dica de instalação só existe
 no celular). A semente roda duas vezes sem duplicar, recusa fora de `DEBUG` e, com `--forget`, não
 deixa linha nenhuma — coberto por teste. Pelo navegador, de verdade e com o banco de verdade:
 mural com e sem filtro, filtro de dia e de vaga na URL, "passa por" achando pelo apelido ("SCS") e
@@ -151,8 +157,10 @@ senha errada; recuperação de senha até a tela do e-mail; carros cadastrados e
 simples, com muitas paradas e tarifas, com parada em texto livre, e a observação com telefone
 recusada com a frase do botão; editar dentro do mesmo dia e a recusa de outro dia; vagas fechando e
 reabrindo; cancelar com diálogo; repetir; pedir contato com a placa, sem placa na importada, e a
-recusa com a cota do dia gasta; a mensagem original redigida; e o mural aprendendo, sem recarregar,
-a carona que outro contexto acabou de publicar (SSE).
+recusa com a cota do dia gasta; a mensagem original redigida; o mural aprendendo, sem recarregar, a
+carona que outro contexto acabou de publicar (SSE); excluir a conta pelo diálogo de confirmação, o
+telefone dela deixando de servir para entrar, e a página em português para todo endereço que não é
+rota nenhuma.
 
 **Não verificado:** a cobertura do front nesta máquina (`@vitest/coverage-v8` não está instalado
 aqui; roda no fluxo do GitHub); as telas no WebKit e num iPhone de verdade (a suíte roda os dois
@@ -183,14 +191,6 @@ O primitivo `shared/ui/availability-badge.tsx` não é usado por ninguém.
    até a do backend.
 
 ## Pendências abertas
-
-- **Endereço que não é rota nenhuma cai no "Not Found" do roteador**: em inglês, sem tratamento e
-  sem caminho de volta, contra a regra de interface em pt-BR (D-007). Visível em
-  `docs/screens/*/shell/route-not-found.png`.
-- **Não há como excluir a conta pela interface.** O backend tem `DELETE /api/accounts/me` e o front
-  tem a mutação `deleteAccount` em `useSession`, mas nenhum botão a chama: o `AccountPanel` nem a
-  recebe. D-033 põe a exclusão no MVP, então isso é buraco, não escopo adiado. Achado ao fotografar
-  as telas; a jornada correspondente não existe no catálogo.
 
 - Texto dos termos de uso e de privacidade ainda não foi escrito (D-033); o cadastro já grava o
   aceite e a tela já mostra a frase, sem link.
