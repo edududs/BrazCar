@@ -26,8 +26,9 @@ Plataforma que funciona sozinha, sem extrator.
 - **Passo de qualidade**, o primeiro depois do 7a, que fechou na `v0.8.0`: testes de componente e
   comportamento no front até a cobertura empatar com a do backend, Schemathesis sobre o contrato
   OpenAPI e E2E com Playwright nas jornadas críticas, com screenshots como evidência (D-126).
-- **Observações e preço por parada** (`notes`, D-129; `fare` por parada, D-131): um passo curto,
-  antes da etapa de design, porque os dois mudam domínio, contrato e o formulário de publicar.
+- **Observações e preço por parada** (`notes`, D-129; `fare` por parada, D-131). **Feito, tag
+  `v0.11.0`**: domínio, contrato, formulário, card e detalhe, e o interpretador lendo o preço de
+  cada parada.
 - **Painel de administração no front**, num caminho próprio e protegido por papel de administrador,
   no lugar do admin do Django (D-124): ver mensagens, candidatas e caronas importadas, disparar o
   reprocessamento (D-130), bloquear remetente. Visual cuidado, como os temas de admin costumam dar,

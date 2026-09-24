@@ -4,8 +4,9 @@ Atualizado em 2026-09-24.
 
 ## Onde estamos
 
-Versão `v0.9.0`: passo 7b (importação no mural) concluído no repo. Antes: extrator embutido
-(`v0.8.0`), tempo real e PWA (`v0.7.0`), esqueleto (`v0.1.0`),
+Versão `v0.11.0`: passo curto de observações e preço por parada concluído no repo. Antes:
+`v0.10.0` (reprocessamento manual e rota de até 15 paradas), `v0.9.0` (passo 7b, importação no
+mural), extrator embutido (`v0.8.0`), tempo real e PWA (`v0.7.0`), esqueleto (`v0.1.0`),
 SSE confirmado pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido
 (`v0.2.1`), `places` (`v0.3.0`), `accounts` (`v0.4.0`), `rides` (`v0.5.0`) e os ajustes do teste
 no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
@@ -33,6 +34,12 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   (com descendentes), dia, vagas e preço; `GET /mine`, `GET /{id}`; publicar, editar, vagas,
   cancelar, repetir (só o dono); contato (ADR-0006, D-095); `GET /revision` e `GET /signal` (SSE).
   Read model `RideOut` sem telefone nem placa, com situação e ações prontas (D-096).
+- `rides` (v0.11.0): `RideOffer.notes` é texto livre opcional de até 500 caracteres, em publicar,
+  editar e repetir, recusado (422) quando parece telefone, e-mail ou placa, pelo detector de
+  `shared/domain/personal_data.py` (D-129); `Stop.fare` é o preço de chegar até aquela parada, e
+  com alguma tarifa o `price` da carona é a menor delas, calculado por `price_from` (D-131). O
+  read model leva `notes`, a tarifa de cada parada e `has_fares`, para a tela só desenhar. Migração
+  `rides.0003`, aditiva. A busca "passa por" continua lendo só as paradas.
 - `rides` (v0.9.0): `RideOffer.driver` é tipo-soma `RegisteredDriver` (conta e carro, carro
   opcional só na importada) ou `ExternalDriver` (telefone e nome do WhatsApp); `origin` é `Published`
   ou `WhatsApp` com o texto original redigido (ADR-0015, D-127, D-128). `ImportRide` (conta pelo
@@ -48,9 +55,20 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   anonimizadas e as medições por modelo em [parser-models.md](parser-models.md): `qwen3.5:4b` é o
   padrão. Catálogo com os bairros de Brazlândia e pontos de Brasília (D-122). Detector de dados
   pessoais em `shared/domain/personal_data.py`.
+- `importing` (v0.11.0): o interpretador devolve pares parada e valor (`StopFare`, `OfferFare`) e
+  `attach_fares` decide, em código, a qual parada cada par pertence; par que não nomeia uma parada
+  só, que cai na parada de saída ou cujo valor não está na mensagem é descartado (D-131). A
+  candidata aceita carrega as tarifas e o rascunho custa a menor delas. Os pesos da confiança não
+  mudaram e a importação continua sem preencher `notes` (D-129).
 - `web/` (v0.9.0): card com selo "via WhatsApp" e carro opcional, detalhe com a mensagem original,
   contato sem placa; primeiros testes de componente (`ride-card`, `ride-detail`, `contact-button`)
   sobre um harness com roteador em `shared/testing/`.
+- `web/` (v0.11.0): formulário com caixa de observações e contador de 500, e campo de preço em cada
+  parada menos a primeira; com alguma tarifa o campo de preço da carona some, porque quem decide é
+  a API. Card com as observações numa linha cortada e "a partir de" quando a API marca `has_fares`;
+  detalhe com as observações inteiras e a tarifa ao lado de cada parada. Primitivo novo
+  `TextAreaField` em `shared/ui`. Testes de componente de `ride-form`, e de `ride-changes` e
+  `useRouteDraft` no headless (D-126).
 - Contratos de porta em `backend/tests/contracts/` (D-085): `CatalogRepository`,
   `AccountRepository`, `RideRepository` e `RateLimiter`, cada um no fake, em SQLite e no Postgres
   do compose (`poe test-postgres`).
@@ -73,8 +91,8 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   ao focar e ao voltar a rede é explícita; ao reconectar o primeiro quadro do stream é a comparação
   de revisão; vigia de silêncio do mural em 35s.
 - Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
-  (`poe coverage`), 92% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
-  (`yarn coverage`), 20% medidos sobre `src` e piso de 15%, com meta de paridade (D-126). O resumo
+  (`poe coverage`), 88,58% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
+  (`yarn coverage`), piso de 15%, com meta de paridade (D-126). O resumo
   fica no log do passo e nada é enviado para serviço de terceiros (D-008).
 
 **Verificado de verdade no passo 7b:** portão rápido (343 testes no backend, 63 no front, com os
@@ -92,12 +110,24 @@ candidatas (uma repostada em 3 grupos, outra em 2) e criou 3 caronas; a quarta f
 não oferta. As 3 aparecem no mural público pela API, sem carro, sem ação de dono e sem telefone no
 payload.
 
-**Não verificado:** o front publicado mostrando o selo e a mensagem original, no celular; o job do
-`pg_cron` apagando uma carona importada que partiu; o worker sobrevivendo a panic do Go ou a
-reinício do Postgres. Ainda de passos anteriores: o worker sobrevivendo a panic do Go ou reinício do Postgres; o
-mural atualizando sozinho ao voltar do segundo plano no app instalado; o aviso de build novo e a
-tela de piso num iPhone; ícone maskable no Android; `login` e `password-reset` estourados pelo
-navegador; e-mail de verdade pelo Resend.
+**Verificado de verdade no passo das observações e do preço por parada:** portão rápido (373 testes
+no backend, 75 no front) e portão pesado dos dois lados, com os 31 contratos no Postgres do compose.
+Cobertura do backend em 88,58%, acima do piso de 87%. Pelas rotas, com o banco de verdade:
+observações escritas, reescritas, apagadas e fora da busca "passa por"; telefone, e-mail e placa
+recusados com 422 e a frase do botão de contato; tarifa por parada precificando a carona pela menor
+delas, ignorando o preço digitado, entrando no filtro de preço máximo e sobrevivendo ao repetir;
+tarifa na primeira parada recusada. No front, por teste de componente: o contador de 500, o campo de
+preço sumindo quando uma parada tem tarifa, o "a partir de" no card e as tarifas ao lado das paradas
+no detalhe.
+
+**Não verificado:** a cobertura do front nesta máquina (`@vitest/coverage-v8` não está instalado
+aqui; roda no fluxo do GitHub); o interpretador lendo preços por parada contra um Ollama de verdade
+(o golden set não mede `fares`, e as 120 mensagens não trazem o julgamento esperado desse campo);
+as telas novas num celular. Ainda de antes: o front publicado mostrando o selo e a mensagem
+original, no celular; o job do `pg_cron` apagando uma carona importada que partiu; o worker
+sobrevivendo a panic do Go ou a reinício do Postgres; o mural atualizando sozinho ao voltar do
+segundo plano no app instalado; o aviso de build novo e a tela de piso num iPhone; ícone maskable
+no Android; `login` e `password-reset` estourados pelo navegador; e-mail de verdade pelo Resend.
 
 **Pendências de design (D-103), para a etapa de design:** ícones provisórios (quadrado azul com
 círculo branco); o aviso de build novo e a dica de instalação são uma faixa simples sob a barra; a
@@ -106,8 +136,10 @@ pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisó
 
 ## Próximo passo
 
-1. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato.
-2. Passo curto de observações e preço por parada na carona (`notes`, D-129; `fare`, D-131).
+1. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
+   e as telas novas de observações e preço por parada.
+2. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
+   mensagens que trazem lista de preços (as de número 25, 31, 34 e 41).
 3. Passo de qualidade (Playwright, Schemathesis, cobertura do front) e a etapa de design (D-103),
    na ordem que o Eduardo decidir.
 
@@ -137,6 +169,9 @@ pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisó
 - O worker usa o número pessoal do Eduardo (D-110) até haver chip dedicado.
 - D-126 diz que o passo de qualidade é o primeiro depois do 7a; o Eduardo decidiu fazer o 7b antes.
   A decisão não foi editada; a ordem real está aqui.
+- Tarifa importada que não casa com nenhuma parada (ou casa com mais de uma) é descartada em
+  silêncio, e a carona fica com as tarifas que sobraram, ou sem nenhuma. Ninguém vê o descarte; só
+  o comando `candidates` mostra o que foi lido. Decidir se vale registrar o descarte em algum lugar.
 - A normalização de texto agora existe três vezes (`places`, `search`, `importing`): candidata a
   `shared/domain` no próximo toque em qualquer uma delas.
 - Sobrou uma pasta `.whatsapp_scrapping_wip/proj1/.pytest_cache` com permissão negada no
