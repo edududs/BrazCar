@@ -7,6 +7,7 @@ dos grupos de WhatsApp e os põe num mural com filtros, atualizado sem recarrega
 [![web](https://github.com/edududs/BrazCar/actions/workflows/web.yml/badge.svg)](https://github.com/edududs/BrazCar/actions/workflows/web.yml)
 [![release](https://github.com/edududs/BrazCar/actions/workflows/release.yml/badge.svg)](https://github.com/edududs/BrazCar/actions/workflows/release.yml)
 [![versão](https://img.shields.io/github/v/tag/edududs/BrazCar?label=vers%C3%A3o&sort=semver)](https://github.com/edududs/BrazCar/releases)
+[![licença](https://img.shields.io/badge/licen%C3%A7a-MIT-blue)](LICENSE)
 
 ## O problema
 
@@ -157,3 +158,5 @@ Comece pelo índice: [docs/INDEX.md](docs/INDEX.md), uma linha por documento.
 Onde o projeto está, o que foi verificado e o próximo passo: [docs/STATE.md](docs/STATE.md). O que
 vem depois: [docs/ROADMAP.md](docs/ROADMAP.md). O histórico de versões:
 [CHANGELOG.md](CHANGELOG.md).
+
+Licença: MIT ([LICENSE](LICENSE)).
