@@ -119,6 +119,11 @@ WHATSAPP_SESSION_DSN = os.environ.get(
 WHATSAPP_GROUPS = os.environ.get("WHATSAPP_GROUPS", "")  # `jid=label;jid=label`
 IMPORT_PURGE = os.environ.get("IMPORT_PURGE", "worker")  # `worker` or `pg_cron`
 IMPORT_RAW_RETENTION_HOURS = int(os.environ.get("IMPORT_RAW_RETENTION_HOURS", "24"))
+# The interpreter (D-115): a local Ollama, reached from the container by host.docker.internal.
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+RIDE_PARSER_MODEL = os.environ.get("RIDE_PARSER_MODEL", "gemma3:4b")
+IMPORT_ACCEPT_THRESHOLD = float(os.environ.get("IMPORT_ACCEPT_THRESHOLD", "0.7"))
+IMPORT_MAX_ATTEMPTS = int(os.environ.get("IMPORT_MAX_ATTEMPTS", "5"))
 
 # Oldest front the API still serves (D-052, D-105). Below it the app asks for an update. 0.0.0 is no floor.
 WEB_MINIMUM_VERSION = _env_version("WEB_MINIMUM_VERSION", default="0.0.0")

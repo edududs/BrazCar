@@ -64,6 +64,8 @@ def test_guard_detects_deliberate_violations() -> None:
     )
     assert violations("import ninja", f"{ROOT}.places.application.catalog", "places", "application")
     assert violations("import resend", f"{ROOT}.accounts.application.recover", "accounts", "application")
+    assert violations("import httpx", f"{ROOT}.importing.application.ports", "importing", "application")
+    assert violations("import ollama", f"{ROOT}.importing.domain.judgement", "importing", "domain")
     assert violations(f"from {ROOT}.rides import adapters", f"{ROOT}.rides.domain.ride", "rides", "domain")
     assert violations("from ..application import ports", f"{ROOT}.rides.domain.ride", "rides", "domain")
     assert violations(

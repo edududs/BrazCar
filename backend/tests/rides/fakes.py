@@ -62,6 +62,18 @@ class InMemoryRideRepository:
                 return ride
         return None
 
+    async def external_rides(
+        self, *, departed_before: datetime | None = None, phone: str | None = None
+    ) -> tuple[RideId, ...]:
+        found = [
+            r
+            for r in self.rides.values()
+            if isinstance(r.driver, ExternalDriver)
+            and (departed_before is None or r.departure_at < departed_before)
+            and (phone is None or r.driver.phone == phone)
+        ]
+        return tuple(r.id for r in sorted(found, key=lambda r: r.departure_at))
+
     async def history(self, ride_id: RideId) -> tuple[RideEvent, ...]:
         return tuple(self.events.get(ride_id, []))
 

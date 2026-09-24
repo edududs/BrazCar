@@ -97,3 +97,145 @@ parent = "asa-norte"
 id = "unb"
 name = "UnB"
 parent = "asa-norte"
+
+# Bairros e setores de Brazlândia (D-122), com as grafias que os grupos usam. Quadras ficam como
+# texto livre até haver terceiro uso.
+
+[[places]]
+id = "rodeador"
+name = "Rodeador"
+aliases = ["Rodiador", "Rodeado", "Setor Rodeador"]
+parent = "brazlandia"
+
+[[places]]
+id = "vila-sao-jose"
+name = "Vila São José"
+aliases = ["Vila", "Villa São José", "Vila S. José"]
+parent = "brazlandia"
+
+[[places]]
+id = "veredas"
+name = "Veredas"
+aliases = ["Vereda", "Setor Veredas", "Principal do Veredas"]
+parent = "brazlandia"
+
+[[places]]
+id = "fassincra"
+name = "Fassincra"
+aliases = ["Fascincra", "Fassinca", "Incra"]
+parent = "brazlandia"
+
+[[places]]
+id = "assentamento"
+name = "Assentamento"
+parent = "brazlandia"
+
+[[places]]
+id = "setor-tradicional"
+name = "Setor Tradicional"
+aliases = ["Tradicional", "Trad", "Cent Trad", "Centro de Brazlândia"]
+parent = "brazlandia"
+
+[[places]]
+id = "setor-norte"
+name = "Setor Norte"
+aliases = ["Str Norte", "Norte de Brazlândia"]
+parent = "brazlandia"
+
+[[places]]
+id = "ouro-verde"
+name = "Ouro Verde"
+aliases = ["Ouroverde"]
+parent = "brazlandia"
+
+[[places]]
+id = "rodoviaria-de-brazlandia"
+name = "Rodoviária de Brazlândia"
+aliases = ["Rodoviária de Braz"]
+parent = "brazlandia"
+
+# No caminho entre Brazlândia e o Plano.
+
+[[places]]
+id = "colonia-26-de-setembro"
+name = "Colônia 26 de Setembro"
+aliases = ["26 de Setembro", "26", "27 setembro"]
+
+[[places]]
+id = "cidade-do-automovel"
+name = "Cidade do Automóvel"
+
+[[places]]
+id = "setor-policial"
+name = "Setor Policial"
+aliases = ["Setor Policial Sul", "SPS"]
+
+[[places]]
+id = "ceasa"
+name = "Ceasa"
+
+# Pontos de Brasília que os grupos citam (D-122).
+
+[[places]]
+id = "acesso-g"
+name = "Acesso G"
+aliases = ["Conjunto Nacional", "CNJ", "Conjunto"]
+parent = "eixo-monumental"
+
+[[places]]
+id = "saan"
+name = "SAAN"
+aliases = ["Confederal"]
+parent = "asa-norte"
+
+[[places]]
+id = "brasil-21"
+name = "Brasil 21"
+aliases = ["b21", "Brasil XXI"]
+parent = "asa-sul"
+
+[[places]]
+id = "patio-brasil"
+name = "Pátio Brasil"
+aliases = ["Pátio"]
+parent = "asa-sul"
+
+[[places]]
+id = "torre-de-tv"
+name = "Torre de TV"
+aliases = ["Torre"]
+parent = "eixo-monumental"
+
+[[places]]
+id = "parque-da-cidade"
+name = "Parque da Cidade"
+aliases = ["Parque"]
+parent = "asa-sul"
+
+[[places]]
+id = "sudoeste"
+name = "Sudoeste"
+parent = "plano-piloto"
+
+[[places]]
+id = "noroeste"
+name = "Noroeste"
+parent = "plano-piloto"
+
+[[places]]
+id = "octogonal"
+name = "Octogonal"
+parent = "plano-piloto"
+
+[[places]]
+id = "aeroporto"
+name = "Aeroporto"
+aliases = ["Aeroporto de Brasília"]
+
+[[places]]
+id = "lago-sul"
+name = "Lago Sul"
+
+[[places]]
+id = "aguas-claras"
+name = "Águas Claras"

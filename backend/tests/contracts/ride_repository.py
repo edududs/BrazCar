@@ -126,6 +126,12 @@ class RideRepositoryContract:
         assert await repository.find_imported(driver.phone, ride.departure_at + timedelta(minutes=1)) is None
         assert await repository.find_imported("5500000000000", ride.departure_at) is None
 
+        assert ride.id in await repository.external_rides(phone=driver.phone)
+        assert ride.id in await repository.external_rides(
+            departed_before=ride.departure_at + timedelta(minutes=1)
+        )
+        assert ride.id not in await repository.external_rides(departed_before=ride.departure_at)
+
         before = await revision.current()
         await repository.delete(ride.id)
         await repository.delete(ride.id)  # gone already: nothing happens, nothing bumped

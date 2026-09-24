@@ -1,22 +1,39 @@
-"""Wires the worker to its adapters. Called by the management commands only."""
+"""Wires the worker and the commands to their adapters. Called by the management commands only."""
 
 import logging
 from collections.abc import Awaitable
+from dataclasses import dataclass
 
 from whatsapp_extractor import bootstrap
 from whatsapp_extractor.application import EventHandler
 from whatsapp_extractor.domain import MessageExtracted, Watchlist
 from whatsapp_extractor.settings import Settings, StoreKind, ViewKind
 
-from brazcar.importing.application import PurgeSourceMessages
+from brazcar.accounts.adapters.repository import DjangoAccountRepository
+from brazcar.importing.application import (
+    BlockSender,
+    ImportRules,
+    IngestMessages,
+    JudgeCandidates,
+    PurgeImported,
+)
+from brazcar.places.adapters.repository import DjangoCatalogRepository
+from brazcar.rides.adapters.composition import ride_search
+from brazcar.rides.adapters.directories import AccountDriverDirectory, CatalogPlaceDirectory
+from brazcar.rides.adapters.repository import DjangoRideRepository
+from brazcar.rides.application import ForgetRides, ImportRide
 from brazcar.shared.adapters.clock import SystemClock
 
+from .bridges import CatalogStopResolver, RidesBridge
 from .config import ImportingSettings, PurgeMode
-from .repository import DjangoSourceMessages
+from .ollama import OllamaRideParser
+from .repository import DjangoBlockedSenders, DjangoCandidates, DjangoSourceMessages
 from .store import DjangoStore
 from .worker import Extract, Sweep
 
 SWEEP_INTERVAL_SECONDS = 60.0
+JUDGEMENTS_PER_SWEEP = 50
+log = logging.getLogger(__name__)
 
 
 def extractor_settings(config: ImportingSettings, *, account: str | None = None) -> Settings:
@@ -42,22 +59,69 @@ def extract(config: ImportingSettings) -> Extract:
     return run
 
 
+@dataclass(frozen=True, slots=True)
+class ImportUseCases:
+    ingest: IngestMessages
+    judge: JudgeCandidates
+    purge: PurgeImported
+    block: BlockSender
+
+
+def import_use_cases(config: ImportingSettings) -> ImportUseCases:
+    messages = DjangoSourceMessages()
+    candidates = DjangoCandidates()
+    blocked = DjangoBlockedSenders()
+    clock = SystemClock()
+    catalog = DjangoCatalogRepository()
+    rides_repository = DjangoRideRepository()
+    rides = RidesBridge(
+        ImportRide(
+            rides_repository,
+            AccountDriverDirectory(DjangoAccountRepository()),
+            CatalogPlaceDirectory(catalog),
+            ride_search(),
+            clock,
+        ),
+        ForgetRides(rides_repository, ride_search()),
+        rides_repository,
+    )
+    rules = ImportRules(
+        departure_tolerance=config.departure_tolerance,
+        accept_threshold=config.accept_threshold,
+        max_attempts=config.max_attempts,
+        retention=config.raw_retention,
+    )
+    parser = OllamaRideParser(base_url=config.ollama_base_url, model=config.parser_model)
+    return ImportUseCases(
+        ingest=IngestMessages(messages, candidates, blocked, config.labels),
+        judge=JudgeCandidates(candidates, parser, CatalogStopResolver(catalog), rides, clock, rules),
+        purge=PurgeImported(messages, candidates, rides, clock, rules),
+        block=BlockSender(blocked, messages, candidates, rides),
+    )
+
+
 def sweep(config: ImportingSettings) -> Sweep:
-    """In 7a the sweep only applies the retention rule, and only where Postgres does not (D-119)."""
-    if config.purge is PurgeMode.PG_CRON:
-        return _nothing
-    purge = PurgeSourceMessages(DjangoSourceMessages(), SystemClock(), config.raw_retention)
+    """One pass (D-112): new messages into candidates, candidates judged one at a time, then the
+    purge unless Postgres does it by pg_cron (D-119)."""
+    use_cases = import_use_cases(config)
 
     async def run() -> None:
-        gone = await purge()
-        if gone:
-            logging.getLogger(__name__).info("purged %d source messages", gone)
+        taken = await use_cases.ingest()
+        judged = await use_cases.judge(limit=JUDGEMENTS_PER_SWEEP)
+        created = sum(1 for each in judged if each.created_ride)
+        if taken or judged:
+            log.info("sweep: %d message(s) taken, %d judged, %d ride(s) created", taken, len(judged), created)
+        if config.purge is PurgeMode.WORKER:
+            report = await use_cases.purge()
+            if report.rides or report.candidates or report.messages:
+                log.info(
+                    "purged %d ride(s), %d candidate(s), %d message(s)",
+                    report.rides,
+                    report.candidates,
+                    report.messages,
+                )
 
     return run
-
-
-async def _nothing() -> None:
-    return
 
 
 def quiet_extractor_logs() -> None:

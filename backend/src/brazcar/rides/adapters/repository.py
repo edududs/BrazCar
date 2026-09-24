@@ -52,6 +52,11 @@ class DjangoRideRepository:
     async def find_imported(self, driver: AccountId | Phone, departure_at: datetime) -> RideOffer | None:
         return await sync_to_async(_find_imported)(driver, departure_at)
 
+    async def external_rides(
+        self, *, departed_before: datetime | None = None, phone: Phone | None = None
+    ) -> tuple[RideId, ...]:
+        return await sync_to_async(_external_rides)(departed_before, phone)
+
     async def history(self, ride_id: RideId) -> tuple[RideEvent, ...]:
         return await sync_to_async(_history)(ride_id)
 
@@ -85,6 +90,15 @@ def _find_imported(driver: AccountId | Phone, departure_at: datetime) -> RideOff
     rows = rows.filter(driver_id=driver) if isinstance(driver, UUID) else rows.filter(driver_phone=driver)
     row = rows.prefetch_related("stops").first()
     return None if row is None else _to_entity(row)
+
+
+def _external_rides(departed_before: datetime | None, phone: Phone | None) -> tuple[RideId, ...]:
+    rows = RideModel.objects.filter(driver_id=None)
+    if departed_before is not None:
+        rows = rows.filter(departure_at__lt=departed_before)
+    if phone is not None:
+        rows = rows.filter(driver_phone=phone)
+    return tuple(rows.order_by("departure_at").values_list("id", flat=True))
 
 
 @transaction.atomic

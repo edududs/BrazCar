@@ -24,6 +24,9 @@ class Command(BaseCommand):
         if not pg_cron_available():
             message = "pg_cron is not available on this database; use IMPORT_PURGE=worker instead"
             raise CommandError(message)
-        retention = ImportingSettings.from_django().raw_retention
-        job_id = install_schedule(retention)
-        self.stdout.write(f"{JOB_NAME}: job {job_id}, {EVERY_FIVE_MINUTES}, retention {retention}")
+        config = ImportingSettings.from_django()
+        job_id = install_schedule(retention=config.raw_retention, tolerance=config.departure_tolerance)
+        self.stdout.write(
+            f"{JOB_NAME}: job {job_id}, {EVERY_FIVE_MINUTES}, retention {config.raw_retention}, "
+            f"rides forgotten {config.departure_tolerance} after departure"
+        )

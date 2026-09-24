@@ -1,0 +1,284 @@
+"""The rules of `importing` without any adapter: keys, candidates, checks, schedule and acceptance."""
+
+from datetime import UTC, datetime, time, timedelta
+from decimal import Decimal
+from zoneinfo import ZoneInfo
+
+import pytest
+from hypothesis import given
+from hypothesis import strategies as st
+
+from brazcar.importing.domain import (
+    DEDUP_WINDOW,
+    Accept,
+    Candidate,
+    Day,
+    Failed,
+    Offer,
+    Other,
+    Pending,
+    Rejected,
+    RejectReason,
+    Request,
+    ResolvedStop,
+    Sender,
+    SourceMessage,
+    Update,
+    check,
+    decide,
+    digit_tokens,
+    resolve_departure,
+    text_key,
+)
+
+BRASILIA = ZoneInfo("America/Sao_Paulo")
+TOLERANCE = timedelta(minutes=10)
+EVENING = datetime(2026, 9, 22, 21, 15, tzinfo=BRASILIA)  # the evening post for the morning ride
+OFFER_TEXT = "*03 VAGAS as 05:45*\n🚘 Veredas\n🚘 Rodeador\n🚘 Estrutural\n🚘 Rodoviária\n💵 7,00 Pix"
+ZE = Sender(phone="5561999990009", display_name="Zé")
+
+
+def message(
+    text: str = OFFER_TEXT, *, sent_at: datetime = EVENING, sender: Sender = ZE, message_id: str = "m1"
+) -> SourceMessage:
+    return SourceMessage(
+        account="5561900000001",
+        message_id=message_id,
+        chat_jid="120363000000000001@g.us",
+        sender=sender,
+        sent_at=sent_at,
+        text=text,
+        received_at=sent_at + timedelta(seconds=2),
+    )
+
+
+# --- text key --------------------------------------------------------------------------------------
+
+
+def test_the_key_ignores_accents_case_emoji_and_punctuation() -> None:
+    assert text_key("🚘 Rodoviária do Plano!  (Americanas)") == "rodoviaria do plano americanas"
+    assert text_key("*03 VAGAS as 05:45*") == text_key("03 vagas às 05:45")
+    assert digit_tokens("*03 VAGAS as 05:45* 7h30 17H, 06:20hrs") == {
+        "03",
+        "05",
+        "45",
+        "7",
+        "30",
+        "17",
+        "06",
+        "20",
+    }
+
+
+@given(st.text(max_size=80))
+def test_the_key_is_idempotent_and_never_has_double_spaces(text: str) -> None:
+    key = text_key(text)
+    assert text_key(key) == key
+    assert "  " not in key
+    assert key == key.strip()
+
+
+# --- candidate -------------------------------------------------------------------------------------
+
+
+def test_a_repost_within_the_window_joins_the_candidate_and_counts_its_sources() -> None:
+    candidate = Candidate.open(message(), group_label="Rota")
+    repost = message(
+        "03 vagas às 05:45 🚗 Veredas 🚗 Rodeador 🚗 Estrutural 🚗 Rodoviária 7,00 Pix",
+        sent_at=EVENING + timedelta(minutes=3),
+        message_id="m2",
+    )
+
+    assert candidate.accepts(repost)
+    joined = candidate.absorb(repost)
+    assert joined.sources == 2
+    assert joined.last_seen_at == repost.sent_at
+    assert joined.first_seen_at == EVENING
+
+
+@pytest.mark.parametrize(
+    ("other", "why"),
+    [
+        (message(sent_at=EVENING + DEDUP_WINDOW + timedelta(minutes=1)), "past the window"),
+        (message(sent_at=EVENING - timedelta(minutes=1)), "before the first"),
+        (message(sender=Sender(phone="5561999990008", display_name="Zé")), "another sender"),
+        (message("02 VAGAS as 05:45 Veredas Rodeador Estrutural Rodoviária 7,00 Pix"), "other words"),
+    ],
+)
+def test_what_is_not_the_same_posting(other: SourceMessage, why: str) -> None:
+    candidate = Candidate.open(message(), group_label="Rota")
+
+    assert not candidate.accepts(other), why
+
+
+def test_a_judged_candidate_accepts_nothing_more_and_a_failure_counts_attempts() -> None:
+    candidate = Candidate.open(message(), group_label="Rota")
+
+    rejected = candidate.judge(Rejected(reason=RejectReason.NOT_AN_OFFER), at=EVENING)
+    failed = candidate.fail("ollama away", at=EVENING).fail("still away", at=EVENING)
+
+    assert not rejected.accepts(message(message_id="m2"))
+    assert isinstance(failed.verdict, Failed)
+    assert failed.verdict.attempts == 2
+    assert candidate.is_pending
+    assert not failed.is_pending
+    assert isinstance(candidate.verdict, Pending)
+    with pytest.raises(ValueError, match="judged"):
+        candidate.evolve(judged_at=EVENING)
+
+
+# --- checks ----------------------------------------------------------------------------------------
+
+
+def test_checks_confirm_each_value_in_the_words_and_forgive_what_was_not_said() -> None:
+    offer = Offer(
+        at=time(5, 45),
+        stops=("Veredas", "Rodeador", "Estrutural", "Rodoviária"),
+        seats=3,
+        price=Decimal("7.00"),
+        payment_methods=frozenset({"pix"}),
+    )
+
+    backed = check(offer, OFFER_TEXT, resolved=(True, True, True, True))
+    invented = check(
+        offer.evolve(at=time(19, 30), seats=4, stops=("Veredas", "Esplanada")),
+        OFFER_TEXT,
+        resolved=(True, False),
+    )
+    silent = check(Offer(stops=("Veredas", "Rodoviária")), OFFER_TEXT, resolved=(True, True))
+
+    assert backed.confidence == 1.0
+    assert backed.catalog_stops == 4
+    assert invented.time_in_text is False
+    assert invented.seats_in_text is False
+    assert invented.stops_in_text == 0.5
+    assert invented.confidence == pytest.approx(0.15 + 0.175)
+    assert silent.confidence == 1.0
+
+
+# --- schedule --------------------------------------------------------------------------------------
+
+
+def test_the_evening_post_for_the_morning_means_tomorrow_and_a_time_still_ahead_means_today() -> None:
+    morning = resolve_departure(
+        sent_at=EVENING, day=Day.UNKNOWN, at=time(5, 45), zone=BRASILIA, tolerance=TOLERANCE
+    )
+    later_tonight = resolve_departure(
+        sent_at=EVENING, day=Day.UNKNOWN, at=time(22, 0), zone=BRASILIA, tolerance=TOLERANCE
+    )
+    just_passed = resolve_departure(
+        sent_at=EVENING, day=Day.UNKNOWN, at=time(21, 10), zone=BRASILIA, tolerance=TOLERANCE
+    )
+
+    assert morning == datetime(2026, 9, 23, 5, 45, tzinfo=BRASILIA)
+    assert later_tonight == datetime(2026, 9, 22, 22, 0, tzinfo=BRASILIA)
+    assert just_passed == datetime(2026, 9, 22, 21, 10, tzinfo=BRASILIA)  # within the tolerance: today
+
+
+def test_said_days_win_and_no_time_means_no_departure() -> None:
+    assert resolve_departure(
+        sent_at=EVENING, day=Day.TODAY, at=time(5, 45), zone=BRASILIA, tolerance=TOLERANCE
+    ) == datetime(2026, 9, 22, 5, 45, tzinfo=BRASILIA)
+    assert resolve_departure(
+        sent_at=EVENING, day=Day.TOMORROW, at=time(22, 0), zone=BRASILIA, tolerance=TOLERANCE
+    ) == datetime(2026, 9, 23, 22, 0, tzinfo=BRASILIA)
+    assert (
+        resolve_departure(sent_at=EVENING, day=Day.UNKNOWN, at=None, zone=BRASILIA, tolerance=TOLERANCE)
+        is None
+    )
+
+
+@given(
+    sent_at=st.datetimes(
+        min_value=datetime(2026, 1, 1, tzinfo=UTC).replace(tzinfo=None),
+        max_value=datetime(2026, 12, 31, tzinfo=UTC).replace(tzinfo=None),
+        timezones=st.just(UTC),
+    ),
+    at=st.times(),
+    day=st.sampled_from(Day),
+)
+def test_a_resolved_departure_is_in_the_board_zone_and_never_far_in_the_past(
+    sent_at: datetime, at: time, day: Day
+) -> None:
+    departure = resolve_departure(sent_at=sent_at, day=day, at=at, zone=BRASILIA, tolerance=TOLERANCE)
+
+    assert departure is not None
+    assert departure.tzinfo is BRASILIA
+    assert departure.time() == at
+    if day is Day.UNKNOWN:
+        assert departure + TOLERANCE >= sent_at
+        assert departure - sent_at < timedelta(days=1) + TOLERANCE
+
+
+# --- acceptance ------------------------------------------------------------------------------------
+
+STOPS = (
+    ResolvedStop(text="Veredas", place_id="veredas"),
+    ResolvedStop(text="Rodoviária", place_id="rodoviaria-do-plano"),
+)
+DEPARTURE = datetime(2026, 9, 23, 5, 45, tzinfo=BRASILIA)
+FULL = Offer(
+    at=time(5, 45),
+    stops=("Veredas", "Rodoviária"),
+    seats=3,
+    price=Decimal("8.00"),
+    payment_methods=frozenset({"pix"}),
+)
+SURE = check(FULL, OFFER_TEXT.replace("7,00", "8,00"), resolved=(True, True))
+
+
+def test_an_offer_with_time_and_two_stops_above_the_threshold_becomes_a_draft_with_defaults_filled() -> None:
+    bare = Offer(at=time(5, 45), stops=("Veredas", "Rodoviária"))
+
+    full = decide(FULL, departure_at=DEPARTURE, stops=STOPS, checks=SURE, threshold=0.7)
+    filled = decide(
+        bare,
+        departure_at=DEPARTURE,
+        stops=STOPS,
+        checks=check(bare, OFFER_TEXT, resolved=(True, True)),
+        threshold=0.7,
+    )
+
+    assert isinstance(full, Accept)
+    assert (full.draft.seats, full.draft.price, full.draft.payment_methods) == (
+        3,
+        Decimal("8.00"),
+        frozenset({"pix"}),
+    )
+    assert isinstance(filled, Accept)
+    assert (filled.draft.seats, filled.draft.price, filled.draft.payment_methods) == (
+        2,
+        Decimal("7.00"),
+        frozenset({"cash", "pix"}),
+    )
+
+
+@pytest.mark.parametrize(
+    ("judgement", "departure", "stops", "checks", "reason"),
+    [
+        (Request(), None, (), None, RejectReason.NOT_AN_OFFER),
+        (Update(closed=True), None, (), None, RejectReason.NOT_AN_OFFER),
+        (Other(), None, (), None, RejectReason.NOT_AN_OFFER),
+        (FULL.evolve(at=None), None, STOPS, SURE, RejectReason.NO_TIME),
+        (FULL.evolve(seats=0), DEPARTURE, STOPS, SURE, RejectReason.NO_SEATS),
+        (FULL, DEPARTURE, STOPS[:1], SURE, RejectReason.FEW_STOPS),
+        (
+            FULL,
+            DEPARTURE,
+            STOPS,
+            SURE.evolve(time_in_text=False, stops_in_text=0.0),
+            RejectReason.LOW_CONFIDENCE,
+        ),
+    ],
+)
+def test_what_is_refused_and_why(
+    judgement: Offer | Request | Update | Other,
+    departure: datetime | None,
+    stops: tuple[ResolvedStop, ...],
+    checks: object,
+    reason: RejectReason,
+) -> None:
+    decision = decide(judgement, departure_at=departure, stops=stops, checks=checks, threshold=0.7)  # type: ignore[arg-type]
+
+    assert isinstance(decision, Rejected)
+    assert decision.reason is reason

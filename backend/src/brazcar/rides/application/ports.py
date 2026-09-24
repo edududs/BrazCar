@@ -49,6 +49,12 @@ class RideRepository(Protocol):
         """The not cancelled imported ride of this account or phone leaving exactly then (D-113)."""
         ...
 
+    async def external_rides(
+        self, *, departed_before: datetime | None = None, phone: Phone | None = None
+    ) -> tuple[RideId, ...]:
+        """Rides of external drivers: those that left before a moment, or those of one phone (D-119)."""
+        ...
+
     async def history(self, ride_id: RideId) -> tuple[RideEvent, ...]:
         """What happened, in order. For charts and "edited" badges, never for a rule (ADR-0005)."""
         ...

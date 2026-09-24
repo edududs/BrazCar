@@ -25,6 +25,11 @@ class ImportingSettings:
     groups: tuple[WatchedGroup, ...]
     purge: PurgeMode
     raw_retention: timedelta
+    ollama_base_url: str
+    parser_model: str
+    accept_threshold: float
+    max_attempts: int
+    departure_tolerance: timedelta
 
     @classmethod
     def from_django(cls) -> Self:
@@ -34,7 +39,16 @@ class ImportingSettings:
             groups=parse_groups(settings.WHATSAPP_GROUPS),
             purge=PurgeMode(settings.IMPORT_PURGE),
             raw_retention=timedelta(hours=settings.IMPORT_RAW_RETENTION_HOURS),
+            ollama_base_url=settings.OLLAMA_BASE_URL,
+            parser_model=settings.RIDE_PARSER_MODEL,
+            accept_threshold=settings.IMPORT_ACCEPT_THRESHOLD,
+            max_attempts=settings.IMPORT_MAX_ATTEMPTS,
+            departure_tolerance=timedelta(minutes=settings.RIDE_DEPARTURE_TOLERANCE_MINUTES),
         )
+
+    @property
+    def labels(self) -> dict[str, str]:
+        return {group.jid: group.label for group in self.groups}
 
     def require_account(self) -> str:
         if not self.account:

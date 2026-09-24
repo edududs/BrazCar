@@ -5,7 +5,7 @@ from asgiref.sync import sync_to_async
 from django.core.management import call_command
 
 from brazcar.importing.adapters.repository import DjangoSourceMessages
-from tests.contracts.source_messages import fresh
+from tests.contracts.importing_repositories import fresh
 
 
 @pytest.mark.django_db(transaction=True)

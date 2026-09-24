@@ -34,6 +34,11 @@ def test_the_extractor_watches_exactly_the_configured_groups_and_writes_nowhere_
         groups=parse_groups("120363000000000001@g.us=Um;120363000000000002@g.us=Dois"),
         purge=PurgeMode.WORKER,
         raw_retention=timedelta(hours=24),
+        ollama_base_url="http://127.0.0.1:11434",
+        parser_model="gemma3:4b",
+        accept_threshold=0.7,
+        max_attempts=5,
+        departure_tolerance=timedelta(minutes=10),
     )
 
     settings = extractor_settings(config)

@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="ridemodel",
             name="origin_kind",
-            field=models.CharField(default="published", max_length=8),
+            field=models.CharField(default="published", max_length=12),
         ),
         migrations.AddField(
             model_name="ridemodel",

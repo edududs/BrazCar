@@ -28,6 +28,12 @@ cmd = "pytest -m contract"
 envfile = "../.env"
 env = { POSTGRES_DB.default = "brazcar", POSTGRES_USER.default = "brazcar", POSTGRES_PASSWORD.default = "brazcar", POSTGRES_PORT.default = "5432", DATABASE_URL = "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:${POSTGRES_PORT}/${POSTGRES_DB}", EXPECT_DB_VENDOR = "postgresql" }
 
+[tasks.test-golden]
+help = "Measure the interpreter on the golden set against an Ollama (D-120): OLLAMA_BASE_URL and RIDE_PARSER_MODEL"
+cmd = "pytest tests/importing/test_golden.py -m heavy -s"
+envfile = "../.env"
+env = { OLLAMA_BASE_URL.default = "http://127.0.0.1:11434", RIDE_PARSER_MODEL.default = "gemma3:4b" }
+
 [tasks.fix]
 help = "Pipeline to run before calling work done"
 sequence = ["format", "lint", "types"]

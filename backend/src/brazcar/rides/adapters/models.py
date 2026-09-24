@@ -18,7 +18,7 @@ class RideModel(models.Model):
     car_color = models.CharField(max_length=60, blank=True)
     car_plate = models.CharField(max_length=7, blank=True)  # never in a list payload (D-031)
     # Where the ride came from (D-117): the original words stay with it and go with it (D-119).
-    origin_kind = models.CharField(max_length=8, default="published")
+    origin_kind = models.CharField(max_length=12, default="published")
     origin_text = models.TextField(blank=True)
     origin_group_label = models.CharField(max_length=60, blank=True)
     origin_sent_at = models.DateTimeField(null=True, blank=True)

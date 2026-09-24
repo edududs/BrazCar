@@ -23,3 +23,5 @@ ignore = [
 "src/brazcar/*/adapters/migrations/**" = ["RUF012", "E501"]
 # standalone command-line tools, run by path, never imported
 "scripts/**" = ["INP001"]
+# the pg_cron job is SQL text by design: constants and whole seconds only, no input from anyone
+"src/brazcar/importing/adapters/purge.py" = ["S608"]
