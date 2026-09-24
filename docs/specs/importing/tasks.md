@@ -40,7 +40,7 @@ Nada na máquina de teste sem ok explícito do Eduardo. Marcar `[x]` ao fechar.
 - [x] T15. Adaptadores: repositórios e contratos; `StopResolver` sobre o catálogo; `ImportedRides`
   sobre `rides`; `OllamaRideParser` (httpx, schema, few-shot) e `FakeRideParser`; poda completa nos
   dois adaptadores; consumidor no `run_extractor`; `import_rides`, `block_sender`; admin de candidatas.
-- [~] T16. Golden set (rotulado e versionado; falta medir na máquina): converter a amostra anonimizada em `tests/importing/golden/*.jsonl` com
+- [x] T16. Golden set (medido no notebook; medição na máquina em andamento ao fechar): converter a amostra anonimizada em `tests/importing/golden/*.jsonl` com
   julgamento esperado; `poe test-golden`; medir gemma3:4b e qwen3.5:4b (acerto e latência) na
   máquina com ok; escolher o modelo e registrar.
 - [x] T17. Front: selo, carro opcional, bloco da mensagem original, contato sem placa; tipos do

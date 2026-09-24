@@ -4,13 +4,13 @@ Atualizado em 2026-09-24.
 
 ## Onde estamos
 
-Versão `v0.8.0`: passo 7a (extrator embutido) concluído; o 7b (importação no mural) é o próximo. Antes:
-tempo real e PWA (`v0.7.0`), esqueleto (`v0.1.0`),
+Versão `v0.9.0`: passo 7b (importação no mural) concluído no repo. Antes: extrator embutido
+(`v0.8.0`), tempo real e PWA (`v0.7.0`), esqueleto (`v0.1.0`),
 SSE confirmado pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido
 (`v0.2.1`), `places` (`v0.3.0`), `accounts` (`v0.4.0`), `rides` (`v0.5.0`) e os ajustes do teste
 no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 `brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.7.0` desde
-2026-09-23; a API e o worker na `v0.8.0` desde 2026-09-24.
+2026-09-23; a API e o worker na `v0.8.0` desde 2026-09-24; a `v0.9.0` ainda não foi publicada.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -33,15 +33,24 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   (com descendentes), dia, vagas e preço; `GET /mine`, `GET /{id}`; publicar, editar, vagas,
   cancelar, repetir (só o dono); contato (ADR-0006, D-095); `GET /revision` e `GET /signal` (SSE).
   Read model `RideOut` sem telefone nem placa, com situação e ações prontas (D-096).
-- `importing` (v0.8.0, só a metade do extrator; desenho completo em D-108 a D-124, ADR-0015 e
-  ADR-0016, spec em `specs/importing/`): `SourceMessage` e `WatchedGroup` no domínio; porta
-  `SourceMessages` e caso de uso `PurgeSourceMessages`; `DjangoStore` como `MessageWriter` do extrator
-  (`whatsapp-extractor` v0.2.1 por git), gravando só texto de grupo observado, de outra pessoa, com
-  telefone (D-111); `run_extractor` com o laço de D-112, `pair_whatsapp`, `list_whatsapp_groups`,
-  `install_purge_schedule` (job do `pg_cron`) e `source_messages` (inspeção, D-124). Contratos em
-  `tests/contracts/source_messages.py` e o da poda (SQL do job = caso de uso) só no Postgres.
-  `infra/postgres`: imagem oficial mais `pg_cron`, publicada pelo fluxo `image`; `whatsapp-role.sql`
-  cria o papel e o schema de D-040. `infra/compose.yml` ganhou o serviço `worker`.
+- `rides` (v0.9.0): `RideOffer.driver` é tipo-soma `RegisteredDriver` (conta e carro, carro
+  opcional só na importada) ou `ExternalDriver` (telefone e nome do WhatsApp); `origin` é `Published`
+  ou `WhatsApp` com o texto original redigido (ADR-0015, D-127, D-128). `ImportRide` (conta pelo
+  telefone ou externo; junção por partida) e `ForgetRides`; contato sem placa para externo; `RideOut`
+  com `car` opcional, `origin` e `origin_message`; tolerância 10 min (D-121).
+- `importing` (v0.9.0; desenho em D-108 a D-129, ADR-0015 e ADR-0016; glossário em
+  [domain/importing.md](domain/importing.md)): mensagem-fonte, candidata com veredito, julgamento
+  (`Offer`, `Request`, `Update`, `Other`), conferências e confiança, `resolve_departure`, `decide`;
+  casos de uso `IngestMessages`, `JudgeCandidates`, `PurgeImported`, `BlockSender`; adaptadores
+  Django, `OllamaRideParser` (JSON schema de `ParserOutput`, pensamento desligado, `httpx` só ali),
+  `CatalogStopResolver`, `RidesBridge`; poda em SQL para o `pg_cron` provada igual ao caso de uso por
+  contrato; comandos `import_rides`, `candidates`, `block_sender`. Golden set de 120 mensagens reais
+  anonimizadas e as medições por modelo em [parser-models.md](parser-models.md): `qwen3.5:4b` é o
+  padrão. Catálogo com os bairros de Brazlândia e pontos de Brasília (D-122). Detector de dados
+  pessoais em `shared/domain/personal_data.py`.
+- `web/` (v0.9.0): card com selo "via WhatsApp" e carro opcional, detalhe com a mensagem original,
+  contato sem placa; primeiros testes de componente (`ride-card`, `ride-detail`, `contact-button`)
+  sobre um harness com roteador em `shared/testing/`.
 - Contratos de porta em `backend/tests/contracts/` (D-085): `CatalogRepository`,
   `AccountRepository`, `RideRepository` e `RateLimiter`, cada um no fake, em SQLite e no Postgres
   do compose (`poe test-postgres`).
@@ -68,27 +77,21 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   (`yarn coverage`), 20% medidos sobre `src` e piso de 15%, com meta de paridade (D-126). O resumo
   fica no log do passo e nada é enviado para serviço de terceiros (D-008).
 
-**Verificado de verdade no passo 7a:** portão rápido (276 testes) e o contrato no Postgres do
-compose (26), inclusive o da poda. Na máquina local: extrator e neonize importam e abrem sessão em
-Python 3.14 no Windows e, dentro da imagem da API, em Linux 3.14.7 (a imagem precisou de `git` no
-build e `libmagic1` no runtime); o CI do repo do extrator também passa em 3.13 e 3.14 (run
-35934801089 de lá). No Postgres de dev, reconstruído com a imagem de `infra/postgres`: o papel de
-D-040 fez o neonize criar as 17 tabelas `whatsmeow_*` no schema `whatsapp`, nenhuma em `public`;
-`install_purge_schedule` criou o job e o `pg_cron` o executou sozinho (`succeeded`, `DELETE 0`);
-os comandos do worker recusam com mensagem clara a falta de grupos, de conta e de pareamento.
+**Verificado de verdade no passo 7b:** portão rápido (343 testes no backend, 63 no front, com os
+primeiros de componente) e portão pesado dos dois lados, com 31 contratos no Postgres do compose,
+entre eles o que prova que a poda em SQL do `pg_cron` e o caso de uso apagam as mesmas linhas.
+Golden set medido no notebook (RTX 4050): `qwen3.5:4b` tipo 95%, campos 92%, mediana 1,3 s;
+`qwen2.5:7b-instruct` 91%, 93%, 3,1 s; `qwen2.5:3b-instruct` reprovado no dia. Na máquina de teste,
+pelo túnel: `qwen3.5:4b` 94%, 91%, mediana 4,3 s; `gemma3:4b` 92%, 83%, 4,0 s (tabela completa em
+[parser-models.md](parser-models.md)); o container do worker alcança o Ollama por `host.docker.internal`.
 
-Publicado e conferido em 2026-09-24, com ok em cada passo: as duas imagens `0.8.0` puxadas do GHCR;
-Postgres recriado com `pg_cron` sobre o mesmo volume; migração `importing.0001` aplicada; papel e
-schema de D-040 criados; pareamento do número pessoal (D-110) num terminal limpo; seis grupos
-listados com nome e aprovados (D-109); job de poda instalado e executando a cada cinco minutos;
-worker autenticado, recebendo mensagens reais (as duas primeiras, do mesmo remetente em dois
-grupos, dez minutos depois de subir) e voltando sozinho de um `restart` pela sessão gravada.
-
-**Não verificado:** o worker sobrevivendo a um panic do Go e a um reinício do Postgres; a poda
-apagando de fato (ainda não há mensagem com mais de 24h). Ainda de passos anteriores: o mural atualizando sozinho ao voltar do segundo plano no app instalado, o
-aviso de build novo e a tela de piso num iPhone, o vigia de 35s em produção, ícone maskable no
-Android, a página de edição com adiamento depois da partida, `login` e `password-reset` estourados
-pelo navegador, e-mail de verdade pelo Resend.
+**Não verificado:** a importação de ponta a ponta em produção (mensagem real virando carona no mural
+publicado e no celular), o job do `pg_cron` com a regra nova, o worker judgeando com o Ollama da
+máquina, e o front publicado com o selo. É o T18 da spec, depois do push da tag e com ok em cada
+passo. Ainda de passos anteriores: o worker sobrevivendo a panic do Go ou reinício do Postgres; o
+mural atualizando sozinho ao voltar do segundo plano no app instalado; o aviso de build novo e a
+tela de piso num iPhone; ícone maskable no Android; `login` e `password-reset` estourados pelo
+navegador; e-mail de verdade pelo Resend.
 
 **Pendências de design (D-103), para a etapa de design:** ícones provisórios (quadrado azul com
 círculo branco); o aviso de build novo e a dica de instalação são uma faixa simples sob a barra; a
@@ -97,9 +100,13 @@ pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisó
 
 ## Próximo passo
 
-1. Passo 7b (T10 a T19 da spec): `rides` com motorista e origem como tipos-soma, catálogo com os
-   bairros, `importing` com candidata, parser Ollama e regras, golden set, front com o selo.
-2. Etapa de design do produto (D-103), só com ordem do Eduardo.
+1. Publicar a `v0.9.0` na máquina (T18 da spec, [runbooks/deploy.md](runbooks/deploy.md)):
+   `OLLAMA_BASE_URL`, `RIDE_PARSER_MODEL`, `IMPORT_ACCEPT_THRESHOLD` no `api.env`,
+   `install_purge_schedule` de novo (a regra mudou), `up -d`, e a primeira carona importada no mural.
+   Depois, um commit `docs:` registrando o deploy e apagando `docs/specs/importing/`.
+2. Passo curto de observações na carona publicada (`notes`, D-129).
+3. Passo de qualidade (Playwright, Schemathesis, cobertura do front) e a etapa de design (D-103),
+   na ordem que o Eduardo decidir.
 
 ## Pendências abertas
 
@@ -125,5 +132,9 @@ pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisó
   usa; tirá-las é assunto do repo dele (D-041).
 - A imagem da API cresceu com `git` no build e `libmagic1` no runtime, exigências do extrator.
 - O worker usa o número pessoal do Eduardo (D-110) até haver chip dedicado.
+- D-126 diz que o passo de qualidade é o primeiro depois do 7a; o Eduardo decidiu fazer o 7b antes.
+  A decisão não foi editada; a ordem real está aqui.
+- A normalização de texto agora existe três vezes (`places`, `search`, `importing`): candidata a
+  `shared/domain` no próximo toque em qualquer uma delas.
 - Sobrou uma pasta `.whatsapp_scrapping_wip/proj1/.pytest_cache` com permissão negada no
   Windows. Remover manualmente como administrador. Está no `.gitignore`.

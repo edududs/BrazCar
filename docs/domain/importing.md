@@ -34,7 +34,7 @@ Depende do extrator embutido (ADR-0009) e entrega para `rides` por porta (ADR-00
 | lista de bloqueio | `BlockedSenders` | Telefone de quem pediu para sair. `BlockSender` apaga mensagens, candidatas e caronas dele; a varredura nunca mais o toma (D-119). |
 | varredura | `run_extractor` | Tarefa asyncio no processo do worker, acordada pelo handler do extrator, ao subir e a cada minuto (D-112): `IngestMessages` (mensagem em candidata), `JudgeCandidates` (uma por vez), `PurgeImported` quando a poda é do worker. |
 | poda | `PurgeImported` | Caso de uso (D-119): apaga as caronas de motorista externo que já saíram, com candidatas e mensagens; as candidatas sem carona julgadas há mais de 24h; as mensagens não tomadas há mais de 24h. O job do `pg_cron` é a mesma regra em SQL (`purge_statements`), provada igual por contrato no Postgres. |
-| golden set | `tests/importing/golden/messages.jsonl` | 120 mensagens reais anonimizadas com a leitura esperada. `poe test-golden` mede um modelo contra o Ollama: acerto de tipo, acerto por campo e latência (D-120). |
+| golden set | `tests/importing/golden/messages.jsonl` | 120 mensagens reais anonimizadas com a leitura esperada. `poe test-golden` mede um modelo contra o Ollama: acerto de tipo, acerto por campo e latência (D-120). As medições ficam em [parser-models.md](../parser-models.md). |
 | inspeção | `manage.py candidates`, `source_messages`, `import_rides` | O que foi julgado e por quê, o que chegou, e uma varredura à mão (D-124). |
 
 ## Invariantes
