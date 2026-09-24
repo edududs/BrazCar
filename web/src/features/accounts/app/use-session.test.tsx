@@ -13,6 +13,7 @@ vi.mock("../adapters/accounts-gateway");
 const ana: Account = {
   id: "a1",
   phone: "+5561999990001",
+  phoneDisplay: "(61) 99999-0001",
   displayName: "Ana",
   email: null,
   cars: [],

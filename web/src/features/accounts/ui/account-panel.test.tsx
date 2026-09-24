@@ -10,6 +10,7 @@ import { AccountPanel } from "./account-panel";
 const ana: Account = {
   id: "a1",
   phone: "+5561999990001",
+  phoneDisplay: "(61) 99999-0001",
   displayName: "Ana",
   email: null,
   cars: [],
@@ -34,6 +35,15 @@ async function show(
   );
   return screen.findByRole("button", { name: "Excluir conta" });
 }
+
+describe("AccountPanel data", () => {
+  it("shows the phone formatted, never the raw E.164", async () => {
+    await show(() => Promise.resolve());
+
+    expect(screen.getByText("(61) 99999-0001")).toBeDefined();
+    expect(screen.queryByText("+5561999990001")).toBeNull();
+  });
+});
 
 describe("AccountPanel delete control", () => {
   it("opens a dialog that explains what happens, separate from the everyday actions", async () => {

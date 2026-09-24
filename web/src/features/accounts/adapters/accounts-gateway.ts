@@ -15,6 +15,7 @@ function toAccount(out: AccountOut): Account {
   return {
     id: out.id,
     phone: out.phone,
+    phoneDisplay: out.phone_display,
     displayName: out.display_name,
     email: out.email ?? null,
     cars: out.cars,

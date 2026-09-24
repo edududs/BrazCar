@@ -10,11 +10,10 @@ from uuid import UUID
 from pydantic import Field, StringConstraints
 
 from brazcar.shared.domain.model import FrozenModel
+from brazcar.shared.domain.phone import PhoneNumber
 
 type AccountId = UUID
 type ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
-type Phone = Annotated[str, StringConstraints(pattern=r"^[0-9]{8,15}$")]
-"""Digits as WhatsApp addresses them, country code first and no `+`: what `wa.me` takes."""
 
 
 class CarSnapshot(FrozenModel):
@@ -39,7 +38,7 @@ class ExternalDriver(FrozenModel):
     """A driver who posted in a group and has no account here. The phone is the identity (D-114)."""
 
     kind: Literal["external"] = "external"
-    phone: Phone
+    phone: PhoneNumber  # any valid number: the group already proved it has WhatsApp (D-137)
     display_name: ShortText
 
 

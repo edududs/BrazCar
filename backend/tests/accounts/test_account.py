@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from uuid import uuid4
 
 import pytest
 from hypothesis import given
@@ -8,10 +9,13 @@ from pydantic import ValidationError
 from brazcar.accounts.domain import (
     Account,
     CarNotFoundError,
+    ForeignPhoneNumberError,
+    NotAMobilePhoneError,
     PlateAlreadyOnAccountError,
+    account_phone,
     normalize_license_plate,
-    normalize_phone_number,
 )
+from brazcar.shared.domain.phone import InvalidPhoneNumberError
 
 ACCEPTED_AT = datetime(2026, 9, 22, 12, 0, tzinfo=UTC)
 
@@ -22,16 +26,39 @@ def register(**overrides: str | None) -> Account:
 
 
 @pytest.mark.parametrize(
-    "raw", ["61999990001", "(61) 99999-0001", "+55 61 9 9999-0001", "5561999990001", "61 9.9999.0001"]
+    "raw",
+    [
+        "61999990001",
+        "(61) 99999-0001",
+        "+55 61 9 9999-0001",
+        "5561999990001",
+        "61 9.9999.0001",
+        "061 99999-0001",  # the long-distance zero some people still type
+    ],
 )
 def test_phone_is_stored_as_e164_whatever_the_typing(raw: str) -> None:
-    assert normalize_phone_number(raw) == "+5561999990001"
+    assert account_phone(raw).e164() == "+5561999990001"
 
 
-@pytest.mark.parametrize("raw", ["", "99999-0001", "61 3999-0001", "061 99999-0001", "+1 202 555 0100"])
-def test_phone_must_be_a_brazilian_mobile_with_area_code(raw: str) -> None:
-    with pytest.raises(ValueError, match="Brazilian mobile"):
-        normalize_phone_number(raw)
+@pytest.mark.parametrize("raw", ["", "99999-0001", "61 9", "20 99999-0001", "abc"])
+def test_phone_must_be_a_number_with_area_code(raw: str) -> None:
+    with pytest.raises(InvalidPhoneNumberError):
+        account_phone(raw)
+
+
+def test_phone_of_another_country_is_refused_for_now() -> None:
+    with pytest.raises(ForeignPhoneNumberError):
+        account_phone("+1 415 555 2671")
+
+
+def test_a_landline_cannot_own_an_account() -> None:
+    with pytest.raises(NotAMobilePhoneError):
+        account_phone("(61) 3333-4444")
+
+
+def test_the_account_itself_refuses_a_landline_built_by_hand() -> None:
+    with pytest.raises(ValidationError):
+        Account(id=uuid4(), phone="+556133334444", display_name="Ana", terms_accepted_at=ACCEPTED_AT)  # pyright: ignore[reportArgumentType]
 
 
 @pytest.mark.parametrize(
@@ -50,7 +77,7 @@ def test_plate_rejects_other_shapes(raw: str) -> None:
 def test_register_normalizes_and_keeps_no_verification() -> None:
     account = register(phone="(61) 99999-0001", display_name="  Ana ", email="")
 
-    assert account.phone == "+5561999990001"
+    assert account.phone.e164() == "+5561999990001"
     assert account.display_name == "Ana"
     assert account.email is None
     assert account.phone_verified_at is None

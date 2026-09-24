@@ -27,6 +27,7 @@ from brazcar.rides.adapters.repository import DjangoRideRepository
 from brazcar.rides.application import ForgetRides
 from brazcar.rides.domain import CatalogStop, ExternalDriver, PaymentMethod, RideId, RideOffer
 from brazcar.shared.adapters.board_revision import DjangoBoardRevision, bump_board_revision
+from brazcar.shared.domain.phone import PhoneNumber
 from tests.contracts.importing_repositories import fresh, own_phone
 from tests.rides.strategies import external, whatsapp_origin
 
@@ -76,7 +77,7 @@ class _RidesBridge:
         await self.forget(ids)
         return ids
 
-    async def forget_from(self, phone: str) -> tuple[UUID, ...]:
+    async def forget_from(self, phone: PhoneNumber) -> tuple[UUID, ...]:
         raise NotImplementedError
 
     async def release(self, ride_id: UUID) -> bool:

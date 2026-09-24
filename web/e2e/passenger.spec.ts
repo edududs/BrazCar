@@ -15,6 +15,7 @@ test("pedir contato revela o WhatsApp e a placa", async ({ page, demo, signIn, s
   const link = page.getByRole("link", { name: "Falar no WhatsApp" });
   await expect(link).toBeVisible();
   await expect(link).toHaveAttribute("href", /^https:\/\/wa\.me\/55/);
+  await expect(page.getByText(/^Telefone \(\d{2}\) \d{5}-\d{4}\.$/)).toBeVisible();
   await expect(page.getByText("Placa")).toBeVisible();
   await snap(page, "contact/revealed");
 });

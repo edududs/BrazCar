@@ -5,6 +5,7 @@ from hypothesis import assume, given
 
 from brazcar.accounts.application import AccountRepository
 from brazcar.accounts.domain import Account, PhoneAlreadyRegisteredError
+from brazcar.shared.domain.phone import PhoneNumber
 from tests.accounts.strategies import accounts
 
 from . import contract_settings
@@ -20,7 +21,7 @@ class AccountRepositoryContract:
     def make_repository(self) -> AccountRepository:
         raise NotImplementedError
 
-    async def _free(self, repository: AccountRepository, *phones: str) -> None:
+    async def _free(self, repository: AccountRepository, *phones: PhoneNumber) -> None:
         for phone in phones:
             owner = await repository.by_phone(phone)
             if owner is not None:
@@ -71,7 +72,7 @@ class AccountRepositoryContract:
         repository = self.make_repository()
 
         assert await repository.get(uuid4()) is None
-        assert await repository.by_phone("+5561900000000") is None
+        assert await repository.by_phone(PhoneNumber.parse("+5561900000000")) is None
 
     @contract_settings
     @given(account=accounts())

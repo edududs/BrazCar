@@ -3,6 +3,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from brazcar.accounts.domain import Account, AccountId, Car, PhoneAlreadyRegisteredError
+from brazcar.shared.domain.phone import PhoneNumber
 
 from .models import CarModel, User
 
@@ -13,8 +14,8 @@ class DjangoAccountRepository:
     async def get(self, account_id: AccountId) -> Account | None:
         return await sync_to_async(_get)(id=account_id)
 
-    async def by_phone(self, phone: str) -> Account | None:
-        return await sync_to_async(_get)(phone=phone)
+    async def by_phone(self, phone: PhoneNumber) -> Account | None:
+        return await sync_to_async(_get)(phone=phone.e164())  # E.164 in the column (D-089)
 
     async def save(self, account: Account) -> None:
         await sync_to_async(_save)(account)
@@ -31,7 +32,7 @@ def _get(**lookup: object) -> Account | None:
 @transaction.atomic
 def _save(account: Account) -> None:
     fields = {
-        "phone": account.phone,
+        "phone": account.phone.e164(),
         "display_name": account.display_name,
         "email": account.email,
         "terms_accepted_at": account.terms_accepted_at,
@@ -69,7 +70,7 @@ def _to_entity(row: User) -> Account:
     assert row.phone is not None  # noqa: S101 - `_get` filters erased rows, the only ones without a phone
     return Account(
         id=row.id,
-        phone=row.phone,
+        phone=PhoneNumber.parse(row.phone),
         display_name=row.display_name,
         email=row.email or None,
         terms_accepted_at=row.terms_accepted_at,

@@ -1,14 +1,13 @@
 from typing import Protocol
 
 from brazcar.accounts.domain import Account, AccountId
+from brazcar.shared.domain.phone import PhoneNumber
 
 
 class AccountRepository(Protocol):
     async def get(self, account_id: AccountId) -> Account | None: ...
 
-    async def by_phone(self, phone: str) -> Account | None:
-        """`phone` already normalized (E.164)."""
-        ...
+    async def by_phone(self, phone: PhoneNumber) -> Account | None: ...
 
     async def save(self, account: Account) -> None:
         """Insert or replace the account and its cars, whole (ADR-0008).
@@ -27,7 +26,7 @@ class Credentials(Protocol):
 
     async def register(self, account_id: AccountId, password: str) -> None: ...
 
-    async def verify(self, phone: str, password: str) -> AccountId | None: ...
+    async def verify(self, phone: PhoneNumber, password: str) -> AccountId | None: ...
 
     async def change(self, account_id: AccountId, password: str) -> None: ...
 

@@ -398,6 +398,8 @@ export interface components {
             id: string;
             /** Phone */
             phone: string;
+            /** Phone Display */
+            phone_display: string;
             /**
              * Terms Accepted At
              * Format: date-time
@@ -464,6 +466,8 @@ export interface components {
         };
         /** ContactOut */
         ContactOut: {
+            /** Phone Display */
+            phone_display: string;
             /** Plate */
             plate: string | null;
             /** Whatsapp Url */

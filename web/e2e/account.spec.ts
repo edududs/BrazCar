@@ -22,13 +22,24 @@ test("criar conta: os erros aparecem e a conta entra direto no mural", async ({
   await expect(page.getByRole("alert")).toBeVisible();
   await snap(page, "signup/refused");
 
-  await page.getByLabel("Telefone").fill(phone);
+  // Digitado como se digita: com país, parênteses, o nove solto e hífen; o campo arruma sozinho.
+  const [area, rest] = [phone.slice(3, 5), phone.slice(5)];
+  const field = page.getByLabel("Telefone");
+  await field.clear();
+  await field.pressSequentially(
+    `+55 (${area}) ${rest.slice(0, 1)} ${rest.slice(1, 5)}-${rest.slice(5)}`,
+  );
+  await expect(field).toHaveValue(`+55 ${area} ${rest.slice(0, 5)} ${rest.slice(5)}`);
   await page.getByLabel(/^Senha/).fill("uma-senha-de-demonstracao");
+  await snap(page, "signup/phone-formatted");
   await page.getByRole("button", { name: "Criar conta" }).click();
 
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("link", { name: "Conta" })).toBeVisible();
   await snap(page, "board/signed-in");
+
+  await page.getByRole("link", { name: "Conta" }).click();
+  await expect(page.getByText(`(${area}) ${rest.slice(0, 5)}-${rest.slice(5)}`)).toBeVisible();
 });
 
 test("entrar: senha errada é recusada e a certa leva ao mural", async ({ page, demo, snap }) => {

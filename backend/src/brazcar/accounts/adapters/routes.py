@@ -29,13 +29,16 @@ from brazcar.accounts.domain import (
     Account,
     Car,
     CarNotFoundError,
+    ForeignPhoneNumberError,
     InvalidCredentialsError,
     InvalidResetTokenError,
+    NotAMobilePhoneError,
     PhoneAlreadyRegisteredError,
     PlateAlreadyOnAccountError,
     TooManyAttemptsError,
 )
 from brazcar.shared.adapters.session_auth import session_auth
+from brazcar.shared.domain.phone import InvalidPhoneNumberError
 
 from .models import User
 
@@ -55,7 +58,8 @@ class AccountOut(Schema):
     """The owner's own view. Nobody else's account comes out of this API."""
 
     id: UUID
-    phone: str
+    phone: str  # E.164
+    phone_display: str  # "(61) 99999-9999", ready to show (D-137)
     display_name: str
     email: str | None
     terms_accepted_at: datetime
@@ -66,7 +70,8 @@ class AccountOut(Schema):
     def of(cls, account: Account) -> Self:
         return cls(
             id=account.id,
-            phone=account.phone,
+            phone=account.phone.e164(),
+            phone_display=account.phone.display(),
             display_name=account.display_name,
             email=account.email,
             terms_accepted_at=account.terms_accepted_at,
@@ -107,6 +112,13 @@ class Done(Schema):
     ok: bool = True
 
 
+PHONE_REFUSALS: dict[type[ValueError], str] = {  # one message per reason, in Portuguese
+    InvalidPhoneNumberError: "telefone inválido: digite o celular com DDD, como (61) 99999-9999",
+    ForeignPhoneNumberError: "por enquanto só números do Brasil",
+    NotAMobilePhoneError: "use um número de celular: o contato é pelo WhatsApp",
+}
+
+
 @dataclass(frozen=True, slots=True)
 class AccountUseCases:
     accounts: AccountRepository  # for "who am I", which has no rule to run
@@ -135,12 +147,7 @@ def _add_entry_routes(router: Router, use_cases: AccountUseCases) -> None:
         if not data.accepts_terms:
             raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, "os termos precisam ser aceitos")
         _check_password(data.password)
-        try:
-            account = await use_cases.register(
-                phone=data.phone, password=data.password, display_name=data.display_name, email=data.email
-            )
-        except PhoneAlreadyRegisteredError as error:
-            raise HttpError(HTTPStatus.CONFLICT, "este telefone já tem conta") from error
+        account = await _register(use_cases.register, data)
         await _start_session(request, account)
         return Status(HTTPStatus.CREATED, AccountOut.of(account))
 
@@ -209,6 +216,17 @@ def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
         await use_cases.delete(_account_id(request))
         await sync_to_async(logout)(request)
         return Done()
+
+
+async def _register(register: RegisterAccount, data: RegisterIn) -> Account:
+    try:
+        return await register(
+            phone=data.phone, password=data.password, display_name=data.display_name, email=data.email
+        )
+    except PhoneAlreadyRegisteredError as error:
+        raise HttpError(HTTPStatus.CONFLICT, "este telefone já tem conta") from error
+    except (InvalidPhoneNumberError, ForeignPhoneNumberError, NotAMobilePhoneError) as error:
+        raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, PHONE_REFUSALS[type(error)]) from error
 
 
 def _account_id(request: HttpRequest) -> UUID:

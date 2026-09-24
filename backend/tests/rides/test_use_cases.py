@@ -30,6 +30,7 @@ from brazcar.rides.domain import (
     RideStatus,
     UnknownPlaceError,
 )
+from brazcar.shared.domain.phone import PhoneNumber
 
 from .fakes import (
     FixedClock,
@@ -45,10 +46,10 @@ from .strategies import BRASILIA, EPOCH
 ANA = DriverAccount(
     id=uuid4(),
     display_name="Ana",
-    phone="+5561999990001",
+    phone=PhoneNumber.parse("+5561999990001"),
     cars=(DriverCar(car_id=uuid4(), model="Gol", color="prata", plate="ABC1234"),),
 )
-BIA = DriverAccount(id=uuid4(), display_name="Bia", phone="+5561999990002", cars=())
+BIA = DriverAccount(id=uuid4(), display_name="Bia", phone=PhoneNumber.parse("+5561999990002"), cars=())
 ROUTE = (CatalogStop(place_id="esplanada"), FreeTextStop(text="Incra 8"), CatalogStop(place_id="brazlandia"))
 RULES = RideRules(contact_limit=2, contact_window=timedelta(hours=1))
 

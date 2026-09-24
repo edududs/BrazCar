@@ -15,7 +15,6 @@ from brazcar.rides.domain import (
     NoCarError,
     NotTheDriverError,
     PaymentMethod,
-    Phone,
     RegisteredDriver,
     RideId,
     RideNotFoundError,
@@ -28,6 +27,7 @@ from brazcar.rides.domain import (
 )
 from brazcar.shared.application.ports import Clock, RateLimiter
 from brazcar.shared.domain.model import FrozenModel
+from brazcar.shared.domain.phone import PhoneNumber
 
 from .ports import (
     ContactRequests,
@@ -186,7 +186,7 @@ class ImportRide:
     async def __call__(  # noqa: PLR0913 - the whole ride comes in at once
         self,
         *,
-        sender_phone: Phone,
+        sender_phone: PhoneNumber,
         sender_name: str,
         origin: WhatsAppOrigin,
         route: Route,
@@ -297,6 +297,7 @@ class Contact(FrozenModel):
     """What the contact route hands back: the only way the phone and the plate leave (ADR-0006)."""
 
     whatsapp_url: str
+    phone: PhoneNumber  # shown next to the link, so it can be saved or called (D-137)
     plate: str | None  # none for an external driver: the platform never saw a car
 
 
@@ -328,7 +329,7 @@ class RequestContact:
         if not allowed:
             raise ContactLimitError
         await self.contacts.record(requester_id=requester_id, ride_id=ride.id, at=now)
-        return Contact(whatsapp_url=_whatsapp_link(name, phone, ride), plate=plate)
+        return Contact(whatsapp_url=_whatsapp_link(name, phone, ride), phone=phone, plate=plate)
 
 
 # --- helpers -------------------------------------------------------------------------------------
@@ -408,7 +409,7 @@ def _driver_name(ride: RideOffer, names: dict[AccountId, str]) -> str:
     return names[ride.driver.account_id]
 
 
-def _whatsapp_link(name: str, phone: str, ride: RideOffer) -> str:
+def _whatsapp_link(name: str, phone: PhoneNumber, ride: RideOffer) -> str:
     when = ride.departure_at.strftime("%H:%M")
     text = f"Oi, {name}! Vi sua carona das {when} no BrazCar. Ainda tem vaga?"
-    return f"https://wa.me/{phone.lstrip('+')}?text={quote(text)}"
+    return f"https://wa.me/{phone.jid_user()}?text={quote(text)}"

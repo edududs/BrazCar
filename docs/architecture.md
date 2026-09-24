@@ -109,6 +109,10 @@ placa (ADR-0006).
 - **Dados pessoais em texto livre.** `shared/domain/personal_data.py` diz o que parece telefone,
   e-mail, CPF ou placa; a importação redige antes de gravar (D-128) e o formulário passará a recusar
   (D-129). Uma regra só, para nunca haver duas expressões divergindo.
+- **Telefone.** Um value object só, `shared/domain/phone/PhoneNumber`, com país, DDD e assinante
+  (D-135). A `phonenumbers` entra só por `shared/domain/phone/codec.py`, sem porta, e o teste de
+  arquitetura garante isso (D-136); no front, a `libphonenumber-js` só por
+  `shared/app/phone-codec.ts`. O que cada contexto aceita fica por cima dele (D-137).
 - **Observabilidade.** Logs estruturados em JSON na saída padrão e um endpoint de saúde. Nada de terceiros.
 - **Limite de requisições.** Porta `RateLimiter` em `shared/application`, com chave por conta ou por
   telefone e uma tabela de hits como adaptador (D-097). Contato, login e recuperação de senha passam por ela.

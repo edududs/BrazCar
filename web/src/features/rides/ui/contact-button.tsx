@@ -21,6 +21,9 @@ export function ContactButton({ rideId }: ContactButtonProps) {
     return (
       <div className="flex flex-col gap-2">
         <p className="text-sm">
+          Telefone <strong>{contact.phoneDisplay}</strong>.
+        </p>
+        <p className="text-sm">
           {contact.plate === null ? (
             "Sem placa cadastrada: confirme o carro com o motorista. Combine pelo WhatsApp:"
           ) : (

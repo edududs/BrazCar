@@ -26,6 +26,7 @@ describe("ContactButton", () => {
   it("shows the plate and the WhatsApp link once the API hands them out", async () => {
     mocked.requestContact.mockResolvedValue({
       whatsappUrl: "https://wa.me/5561999990001?text=Oi",
+      phoneDisplay: "(61) 99999-0001",
       plate: "ABC1234",
     });
 
@@ -34,12 +35,14 @@ describe("ContactButton", () => {
     const link = await screen.findByRole("link", { name: "Falar no WhatsApp" });
     expect(link.getAttribute("href")).toBe("https://wa.me/5561999990001?text=Oi");
     expect(screen.getByText("ABC1234")).toBeDefined();
+    expect(screen.getByText("(61) 99999-0001")).toBeDefined();
     expect(mocked.requestContact).toHaveBeenCalledWith("r1");
   });
 
   it("says there is no plate for a driver the platform only knows by phone", async () => {
     mocked.requestContact.mockResolvedValue({
       whatsappUrl: "https://wa.me/5561999990009?text=Oi",
+      phoneDisplay: "(61) 99999-0009",
       plate: null,
     });
 

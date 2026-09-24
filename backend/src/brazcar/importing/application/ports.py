@@ -6,7 +6,6 @@ from uuid import UUID
 from brazcar.importing.domain import (
     Candidate,
     CandidateId,
-    Phone,
     ResolvedStop,
     RideDraft,
     Sender,
@@ -14,6 +13,7 @@ from brazcar.importing.domain import (
 )
 from brazcar.shared.application.ports import Clock
 from brazcar.shared.domain.model import FrozenModel
+from brazcar.shared.domain.phone import PhoneNumber
 
 from .parser_output import ParserOutput
 
@@ -46,7 +46,7 @@ class SourceMessages(Protocol):
         candidate. Returns how many went (D-119)."""
         ...
 
-    async def delete_from(self, phone: Phone) -> int:
+    async def delete_from(self, phone: PhoneNumber) -> int:
         """Forget every message of one sender, attached or not (D-119)."""
         ...
 
@@ -54,7 +54,7 @@ class SourceMessages(Protocol):
 class Candidates(Protocol):
     async def get(self, candidate_id: CandidateId) -> Candidate | None: ...
 
-    async def open_for(self, phone: Phone, text_key: str, *, since: datetime) -> Candidate | None:
+    async def open_for(self, phone: PhoneNumber, text_key: str, *, since: datetime) -> Candidate | None:
         """The pending candidate of this sender with these words first seen at or after `since`."""
         ...
 
@@ -78,7 +78,7 @@ class Candidates(Protocol):
         """Delete the candidates judged before `cutoff` that made no ride, with their messages."""
         ...
 
-    async def forget_from(self, phone: Phone) -> int:
+    async def forget_from(self, phone: PhoneNumber) -> int:
         """Delete every candidate of one sender, with their messages (D-119)."""
         ...
 
@@ -114,7 +114,7 @@ class ImportedRides(Protocol):
         """Delete the external rides that left before `before`; the ids that went (D-119)."""
         ...
 
-    async def forget_from(self, phone: Phone) -> tuple[UUID, ...]:
+    async def forget_from(self, phone: PhoneNumber) -> tuple[UUID, ...]:
         """Delete the external rides of one sender; the ids that went (D-119)."""
         ...
 
@@ -125,6 +125,6 @@ class ImportedRides(Protocol):
 
 
 class BlockedSenders(Protocol):
-    async def is_blocked(self, phone: Phone) -> bool: ...
+    async def is_blocked(self, phone: PhoneNumber) -> bool: ...
 
-    async def block(self, phone: Phone) -> None: ...
+    async def block(self, phone: PhoneNumber) -> None: ...

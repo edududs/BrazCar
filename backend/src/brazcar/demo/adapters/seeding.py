@@ -42,6 +42,7 @@ from brazcar.rides.domain import (
 )
 from brazcar.shared.domain.model import FrozenModel
 from brazcar.shared.domain.personal_data import redact_personal_data
+from brazcar.shared.domain.phone import PhoneNumber
 
 from . import dataset as data
 
@@ -305,7 +306,7 @@ async def _published(
 async def _imported(wiring: DemoWiring, *, anchor: datetime) -> dict[str, RideOffer]:
     """Three rides read from the groups (ADR-0015): plain, with fares, and one an account owns."""
     external = await wiring.import_ride(
-        sender_phone=data.SENDER_EXTERNAL.phone,
+        sender_phone=PhoneNumber.from_jid_user(data.SENDER_EXTERNAL.phone),
         sender_name=data.SENDER_EXTERNAL.display_name,
         origin=_origin(data.MESSAGE_EXTERNAL, anchor=anchor, minutes=-45),
         route=_catalog("setor-tradicional", "esplanada"),
@@ -315,7 +316,7 @@ async def _imported(wiring: DemoWiring, *, anchor: datetime) -> dict[str, RideOf
         payment_methods=CASH,
     )
     with_fares = await wiring.import_ride(
-        sender_phone=data.SENDER_FARES.phone,
+        sender_phone=PhoneNumber.from_jid_user(data.SENDER_FARES.phone),
         sender_name=data.SENDER_FARES.display_name,
         origin=_origin(data.MESSAGE_WITH_FARES, anchor=anchor, minutes=-40),
         route=(
@@ -330,7 +331,7 @@ async def _imported(wiring: DemoWiring, *, anchor: datetime) -> dict[str, RideOf
         payment_methods=BOTH,
     )
     owned = await wiring.import_ride(
-        sender_phone=data.SENDER_WITH_ACCOUNT.phone,
+        sender_phone=PhoneNumber.from_jid_user(data.SENDER_WITH_ACCOUNT.phone),
         sender_name=data.SENDER_WITH_ACCOUNT.display_name,
         origin=_origin(data.MESSAGE_FROM_ACCOUNT, anchor=anchor, minutes=-35),
         route=_catalog("rodeador", "rodoviaria-do-plano"),
@@ -392,7 +393,7 @@ async def _group_traffic(
             continue
         await wiring.candidates.save(candidate.judge(verdict, at=judged_at))
         verdicts[verdict.kind] = verdicts.get(verdict.kind, 0) + 1
-    await wiring.block(data.SENDER_BLOCKED.phone)
+    await wiring.block(PhoneNumber.from_jid_user(data.SENDER_BLOCKED.phone))
     return verdicts
 
 
@@ -415,10 +416,10 @@ def _postings(*, anchor: datetime) -> tuple[SourceMessage, ...]:
     sent = anchor - 50 * MINUTE
     return tuple(
         SourceMessage(
-            account=data.WORKER_ACCOUNT,
+            account=PhoneNumber.from_jid_user(data.WORKER_ACCOUNT),
             message_id=f"demo-{index:02d}",
             chat_jid=jid,
-            sender=Sender(phone=sender.phone, display_name=sender.display_name),
+            sender=Sender(phone=PhoneNumber.from_jid_user(sender.phone), display_name=sender.display_name),
             sent_at=sent + index * MINUTE,
             text=text,
             received_at=sent + index * MINUTE,

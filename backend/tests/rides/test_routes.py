@@ -326,6 +326,7 @@ async def test_contact_needs_a_session_hands_out_the_link_and_the_plate_and_is_l
     assert seen["actions"]["can_contact"] is True
     assert contact.status_code == HTTPStatus.OK
     assert body(contact)["plate"] == "ABC1234"
+    assert body(contact)["phone_display"] == "(61) 99999-0001"
     assert body(contact)["whatsapp_url"].startswith("https://wa.me/5561999990001?text=")
     assert answers == [HTTPStatus.OK] * 19 + [HTTPStatus.TOO_MANY_REQUESTS]
 

@@ -14,7 +14,6 @@ from brazcar.rides.domain import (
     ExternalDriver,
     FreeTextStop,
     PaymentMethod,
-    Phone,
     PublishedOrigin,
     RegisteredDriver,
     RideEvent,
@@ -25,6 +24,7 @@ from brazcar.rides.domain import (
     WhatsAppOrigin,
 )
 from brazcar.shared.adapters.board_revision import bump_board_revision
+from brazcar.shared.domain.phone import PhoneNumber
 
 from .models import ContactRequestModel, RideEventModel, RideModel, StopModel
 
@@ -49,11 +49,13 @@ class DjangoRideRepository:
     async def by_driver(self, driver_id: AccountId) -> tuple[RideOffer, ...]:
         return await sync_to_async(_by_driver)(driver_id)
 
-    async def find_imported(self, driver: AccountId | Phone, departure_at: datetime) -> RideOffer | None:
+    async def find_imported(
+        self, driver: AccountId | PhoneNumber, departure_at: datetime
+    ) -> RideOffer | None:
         return await sync_to_async(_find_imported)(driver, departure_at)
 
     async def external_rides(
-        self, *, departed_before: datetime | None = None, phone: Phone | None = None
+        self, *, departed_before: datetime | None = None, phone: PhoneNumber | None = None
     ) -> tuple[RideId, ...]:
         return await sync_to_async(_external_rides)(departed_before, phone)
 
@@ -85,19 +87,23 @@ def _by_driver(driver_id: AccountId) -> tuple[RideOffer, ...]:
     return tuple(_to_entity(row) for row in rows)
 
 
-def _find_imported(driver: AccountId | Phone, departure_at: datetime) -> RideOffer | None:
+def _find_imported(driver: AccountId | PhoneNumber, departure_at: datetime) -> RideOffer | None:
     rows = RideModel.objects.filter(origin_kind="whatsapp", departure_at=departure_at, cancelled_at=None)
-    rows = rows.filter(driver_id=driver) if isinstance(driver, UUID) else rows.filter(driver_phone=driver)
+    rows = (
+        rows.filter(driver_id=driver)
+        if isinstance(driver, UUID)
+        else rows.filter(driver_phone=driver.jid_user())
+    )
     row = rows.prefetch_related("stops").first()
     return None if row is None else _to_entity(row)
 
 
-def _external_rides(departed_before: datetime | None, phone: Phone | None) -> tuple[RideId, ...]:
+def _external_rides(departed_before: datetime | None, phone: PhoneNumber | None) -> tuple[RideId, ...]:
     rows = RideModel.objects.filter(driver_id=None)
     if departed_before is not None:
         rows = rows.filter(departure_at__lt=departed_before)
     if phone is not None:
-        rows = rows.filter(driver_phone=phone)
+        rows = rows.filter(driver_phone=phone.jid_user())
     return tuple(rows.order_by("departure_at").values_list("id", flat=True))
 
 
@@ -166,7 +172,7 @@ def _driver_fields(driver: Driver) -> dict[str, object]:
         }
     return {
         "driver_id": None,
-        "driver_phone": driver.phone,
+        "driver_phone": driver.phone.jid_user(),  # digits, as WhatsApp addresses it
         "driver_name": driver.display_name,
         "car_id": None,
         "car_model": "",
@@ -218,7 +224,7 @@ def _to_entity(row: RideModel) -> RideOffer:
 def _to_driver(row: RideModel) -> Driver:
     """One shape or the other (ADR-0015); a row with both or neither is bad data, not a state."""
     if row.driver_id is None:
-        return ExternalDriver(phone=row.driver_phone, display_name=row.driver_name)
+        return ExternalDriver(phone=PhoneNumber.from_jid_user(row.driver_phone), display_name=row.driver_name)
     assert isinstance(row.driver_id, UUID)  # noqa: S101 - the user's key is the account's UUID (D-090)
     if row.car_id is None:  # linked by phone to the account, car unknown (D-127)
         return RegisteredDriver(account_id=row.driver_id, car=None)

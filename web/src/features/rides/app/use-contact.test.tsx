@@ -26,7 +26,11 @@ describe("useContact", () => {
   });
 
   it("asks once and keeps the link and the plate the API handed out", async () => {
-    const contact = { whatsappUrl: "https://wa.me/5561999990001?text=Oi", plate: "ABC1234" };
+    const contact = {
+      whatsappUrl: "https://wa.me/5561999990001?text=Oi",
+      phoneDisplay: "(61) 99999-0001",
+      plate: "ABC1234",
+    };
     mocked.requestContact.mockResolvedValue(contact);
     const { result } = renderContact();
     expect(result.current.contact).toBeNull();

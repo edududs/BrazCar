@@ -32,19 +32,20 @@ from brazcar.importing.domain import (
     resolve_departure,
     text_key,
 )
+from brazcar.shared.domain.phone import PhoneNumber
 
 BRASILIA = ZoneInfo("America/Sao_Paulo")
 TOLERANCE = timedelta(minutes=10)
 EVENING = datetime(2026, 9, 22, 21, 15, tzinfo=BRASILIA)  # the evening post for the morning ride
 OFFER_TEXT = "*03 VAGAS as 05:45*\n🚘 Veredas\n🚘 Rodeador\n🚘 Estrutural\n🚘 Rodoviária\n💵 7,00 Pix"
-ZE = Sender(phone="5561999990009", display_name="Zé")
+ZE = Sender(phone=PhoneNumber.from_jid_user("5561999990009"), display_name="Zé")
 
 
 def message(
     text: str = OFFER_TEXT, *, sent_at: datetime = EVENING, sender: Sender = ZE, message_id: str = "m1"
 ) -> SourceMessage:
     return SourceMessage(
-        account="5561900000001",
+        account=PhoneNumber.from_jid_user("5561900000001"),
         message_id=message_id,
         chat_jid="120363000000000001@g.us",
         sender=sender,
@@ -103,7 +104,10 @@ def test_a_repost_within_the_window_joins_the_candidate_and_counts_its_sources()
     [
         (message(sent_at=EVENING + DEDUP_WINDOW + timedelta(minutes=1)), "past the window"),
         (message(sent_at=EVENING - timedelta(minutes=1)), "before the first"),
-        (message(sender=Sender(phone="5561999990008", display_name="Zé")), "another sender"),
+        (
+            message(sender=Sender(phone=PhoneNumber.from_jid_user("5561999990008"), display_name="Zé")),
+            "another sender",
+        ),
         (message("02 VAGAS as 05:45 Veredas Rodeador Estrutural Rodoviária 7,00 Pix"), "other words"),
     ],
 )

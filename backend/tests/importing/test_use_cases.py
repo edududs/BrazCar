@@ -17,6 +17,7 @@ from brazcar.importing.application import (
     StopFare,
 )
 from brazcar.importing.domain import Accepted, Failed, Rejected, RejectReason, Sender, SourceMessage
+from brazcar.shared.domain.phone import PhoneNumber
 
 from .fakes import (
     FixedClock,
@@ -32,7 +33,7 @@ BRASILIA = ZoneInfo("America/Sao_Paulo")
 EVENING = datetime(2026, 9, 22, 21, 15, tzinfo=BRASILIA)
 NEXT_MORNING = datetime(2026, 9, 23, 5, 45, tzinfo=BRASILIA)
 GROUPS = {"1@g.us": "Rota Plano", "2@g.us": "Rota 2"}
-ZE = Sender(phone="5561999990009", display_name="Zé")
+ZE = Sender(phone=PhoneNumber.from_jid_user("5561999990009"), display_name="Zé")
 OFFER = "*03 VAGAS as 05:45*\n🚘 Veredas\n🚘 Rodeador\n🚘 Rodoviária\n💵 7,00 Pix 61 98888-7777"
 ASK = "Alguma vaga voltando 12h sentido Braz?"
 CHAT = "bom dia pessoal"
@@ -56,7 +57,7 @@ def message(
     sender: Sender = ZE,
 ) -> SourceMessage:
     return SourceMessage(
-        account="5561900000001",
+        account=PhoneNumber.from_jid_user("5561900000001"),
         message_id=message_id,
         chat_jid=chat,
         sender=sender,
@@ -112,7 +113,11 @@ async def test_the_same_posting_in_three_groups_is_one_candidate_with_three_sour
             message_id="c",
             sent_at=EVENING + timedelta(minutes=2),
         ),
-        message(ASK, message_id="d", sender=Sender(phone="5561999990001", display_name="Bia")),
+        message(
+            ASK,
+            message_id="d",
+            sender=Sender(phone=PhoneNumber.from_jid_user("5561999990001"), display_name="Bia"),
+        ),
     )
 
     candidates = sorted(ctx.candidates.rows.values(), key=lambda c: c.first_seen_at)
@@ -265,7 +270,7 @@ async def test_the_purge_forgets_the_ride_that_left_with_its_candidate_and_messa
 
 
 async def test_blocking_a_sender_erases_everything_of_theirs_and_keeps_the_rest(ctx: Context) -> None:
-    bia = Sender(phone="5561999990001", display_name="Bia")
+    bia = Sender(phone=PhoneNumber.from_jid_user("5561999990001"), display_name="Bia")
     await ctx.arriving(message(message_id="a"), message(ASK, message_id="b", sender=bia))
     await ctx.judge(limit=2)
 
@@ -284,7 +289,7 @@ async def test_blocking_a_sender_erases_everything_of_theirs_and_keeps_the_rest(
 
 
 async def test_a_rejudge_reads_the_day_again_and_leaves_an_accounts_ride_alone(ctx: Context) -> None:
-    bia = Sender(phone="5561999990001", display_name="Bia")
+    bia = Sender(phone=PhoneNumber.from_jid_user("5561999990001"), display_name="Bia")
     await ctx.arriving(message(message_id="a"), message(CHAT, message_id="b", sender=bia))
     first = await ctx.judge(limit=2)
     (ride_id,) = ctx.rides.created

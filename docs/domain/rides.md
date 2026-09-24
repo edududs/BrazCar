@@ -5,7 +5,7 @@
 | No negócio | No código | O que é |
 |---|---|---|
 | carona | `RideOffer` | Oferta de um motorista para uma viagem específica. Raiz do agregado. |
-| motorista | `Driver` | Tipo-soma: `RegisteredDriver` (conta e carro; o carro pode faltar só numa carona importada, D-127) ou `ExternalDriver` (telefone e nome do WhatsApp, sem conta; ADR-0015). |
+| motorista | `Driver` | Tipo-soma: `RegisteredDriver` (conta e carro; o carro pode faltar só numa carona importada, D-127) ou `ExternalDriver` (telefone e nome do WhatsApp, sem conta; ADR-0015). O telefone é o `PhoneNumber` de `shared` (D-135): qualquer número válido, fixo ou de fora (D-137). |
 | origem | `RideOrigin` | Tipo-soma: `PublishedOrigin` (publicada aqui) ou `WhatsAppOrigin` (texto original já redigido, rótulo do grupo, enviada em; D-117, D-128). |
 | carona importada | `is_imported` | Carona com origem WhatsApp. Sem ação de dono quando o motorista é externo; apagada pela poda quando parte (D-119). |
 | rota | `Route` | Sequência ordenada de paradas. Nunca um par origem e destino. |

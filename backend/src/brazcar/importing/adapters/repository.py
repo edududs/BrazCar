@@ -21,6 +21,7 @@ from brazcar.importing.domain import (
     SourceMessage,
     Verdict,
 )
+from brazcar.shared.domain.phone import PhoneNumber
 
 from .models import BlockedSenderModel, CandidateModel, SourceMessageModel
 
@@ -37,8 +38,8 @@ class DjangoSourceMessages:
         deleted, _ = await SourceMessageModel.objects.filter(candidate=None, received_at__lt=cutoff).adelete()
         return deleted
 
-    async def delete_from(self, phone: str) -> int:
-        deleted, _ = await SourceMessageModel.objects.filter(sender_phone=phone).adelete()
+    async def delete_from(self, phone: PhoneNumber) -> int:
+        deleted, _ = await SourceMessageModel.objects.filter(sender_phone=phone.jid_user()).adelete()
         return deleted
 
 
@@ -47,10 +48,10 @@ class DjangoCandidates:
         row = await CandidateModel.objects.filter(id=candidate_id).afirst()
         return None if row is None else candidate_from_row(row)
 
-    async def open_for(self, phone: str, text_key: str, *, since: datetime) -> Candidate | None:
+    async def open_for(self, phone: PhoneNumber, text_key: str, *, since: datetime) -> Candidate | None:
         row = (
             await CandidateModel.objects.filter(
-                sender_phone=phone, text_key=text_key, verdict="pending", first_seen_at__gte=since
+                sender_phone=phone.jid_user(), text_key=text_key, verdict="pending", first_seen_at__gte=since
             )
             .order_by("first_seen_at")
             .afirst()
@@ -79,16 +80,18 @@ class DjangoCandidates:
         stale = CandidateModel.objects.filter(judged_at__lt=cutoff).exclude(verdict="accepted")
         return await sync_to_async(_forget)(stale)
 
-    async def forget_from(self, phone: str) -> int:
-        return await sync_to_async(_forget)(CandidateModel.objects.filter(sender_phone=phone))
+    async def forget_from(self, phone: PhoneNumber) -> int:
+        return await sync_to_async(_forget)(CandidateModel.objects.filter(sender_phone=phone.jid_user()))
 
 
 class DjangoBlockedSenders:
-    async def is_blocked(self, phone: str) -> bool:
-        return await BlockedSenderModel.objects.filter(phone=phone).aexists()
+    async def is_blocked(self, phone: PhoneNumber) -> bool:
+        return await BlockedSenderModel.objects.filter(phone=phone.jid_user()).aexists()
 
-    async def block(self, phone: str) -> None:
-        await BlockedSenderModel.objects.aget_or_create(phone=phone, defaults={"blocked_at": timezone.now()})
+    async def block(self, phone: PhoneNumber) -> None:
+        await BlockedSenderModel.objects.aget_or_create(
+            phone=phone.jid_user(), defaults={"blocked_at": timezone.now()}
+        )
 
 
 # --- rows and entities -----------------------------------------------------------------------------
@@ -97,11 +100,11 @@ class DjangoBlockedSenders:
 @transaction.atomic
 def _save_message(message: SourceMessage) -> bool:
     _, created = SourceMessageModel.objects.get_or_create(
-        account=message.account,
+        account=message.account.jid_user(),
         message_id=message.message_id,
         defaults={
             "chat_jid": message.chat_jid,
-            "sender_phone": message.sender.phone,
+            "sender_phone": message.sender.phone.jid_user(),
             "sender_name": message.sender.display_name,
             "sent_at": message.sent_at,
             "text": message.text,
@@ -115,9 +118,9 @@ def _save_message(message: SourceMessage) -> bool:
 def _save_candidate(candidate: Candidate, attaching: SourceMessage | None) -> None:
     CandidateModel.objects.update_or_create(id=candidate.id, defaults=_candidate_fields(candidate))
     if attaching is not None:
-        SourceMessageModel.objects.filter(account=attaching.account, message_id=attaching.message_id).update(
-            candidate_id=candidate.id
-        )
+        SourceMessageModel.objects.filter(
+            account=attaching.account.jid_user(), message_id=attaching.message_id
+        ).update(candidate_id=candidate.id)
 
 
 @transaction.atomic
@@ -130,7 +133,7 @@ def _forget(rows: QuerySet[CandidateModel]) -> int:
 def _candidate_fields(candidate: Candidate) -> dict[str, object]:
     verdict = candidate.verdict
     fields: dict[str, object] = {
-        "sender_phone": candidate.sender.phone,
+        "sender_phone": candidate.sender.phone.jid_user(),
         "sender_name": candidate.sender.display_name,
         "text_key": candidate.text_key[:2000],
         "text": candidate.text,
@@ -175,7 +178,7 @@ def _verdict_from_row(row: CandidateModel) -> Verdict:
 def candidate_from_row(row: CandidateModel) -> Candidate:
     return Candidate(
         id=row.id,
-        sender=Sender(phone=row.sender_phone, display_name=row.sender_name),
+        sender=Sender(phone=PhoneNumber.from_jid_user(row.sender_phone), display_name=row.sender_name),
         text_key=row.text_key,
         text=row.text,
         group_label=row.group_label,
@@ -189,10 +192,10 @@ def candidate_from_row(row: CandidateModel) -> Candidate:
 
 def message_from_row(row: SourceMessageModel) -> SourceMessage:
     return SourceMessage(
-        account=row.account,
+        account=PhoneNumber.from_jid_user(row.account),
         message_id=row.message_id,
         chat_jid=row.chat_jid,
-        sender=Sender(phone=row.sender_phone, display_name=row.sender_name),
+        sender=Sender(phone=PhoneNumber.from_jid_user(row.sender_phone), display_name=row.sender_name),
         sent_at=_local(row.sent_at),
         text=row.text,
         received_at=_local(row.received_at),

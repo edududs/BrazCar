@@ -31,6 +31,7 @@ from brazcar.rides.domain import (
     UnknownPlaceError,
     allowed_actions,
 )
+from brazcar.shared.domain.phone import PhoneNumber
 
 from .fakes import (
     FixedClock,
@@ -41,7 +42,7 @@ from .fakes import (
     catalog_places,
     indexed_search,
 )
-from .strategies import EPOCH, car, external, registered, whatsapp_origin
+from .strategies import EPOCH, EXTERNAL_PHONE, car, external, registered, whatsapp_origin
 
 TOLERANCE = timedelta(minutes=10)
 ROUTE = (CatalogStop(place_id="esplanada"), FreeTextStop(text="Vila"), CatalogStop(place_id="brazlandia"))
@@ -49,7 +50,7 @@ DEPARTURE = EPOCH + timedelta(hours=13)
 ANA = DriverAccount(
     id=uuid4(),
     display_name="Ana",
-    phone="+5561999990001",
+    phone=PhoneNumber.parse("+5561999990001"),
     cars=(DriverCar(car_id=uuid4(), model="Gol", color="prata", plate="ABC1234"),),
 )
 RULES = RideRules()
@@ -159,7 +160,7 @@ class Context:
             self.rides, self.drivers, self.contacts, InMemoryRateLimiter(self.clock), self.clock, RULES
         )
 
-    async def imported(self, phone: str = "5561999990009", name: str = "Zé do grupo") -> RideOffer:
+    async def imported(self, phone: PhoneNumber = EXTERNAL_PHONE, name: str = "Zé do grupo") -> RideOffer:
         result = await self.import_ride(
             sender_phone=phone,
             sender_name=name,
@@ -182,9 +183,11 @@ async def test_an_unknown_phone_makes_an_external_driver_and_a_known_one_links_t
     ctx: Context,
 ) -> None:
     stranger = await ctx.imported()
-    ana = await ctx.imported(phone="5561999990001", name="Ana no grupo")
+    ana = await ctx.imported(phone=PhoneNumber.from_jid_user("5561999990001"), name="Ana no grupo")
 
-    assert stranger.driver == ExternalDriver(phone="5561999990009", display_name="Zé do grupo")
+    assert stranger.driver == ExternalDriver(
+        phone=PhoneNumber.from_jid_user("5561999990009"), display_name="Zé do grupo"
+    )
     assert ana.driver == RegisteredDriver(account_id=ANA.id, car=None)
     assert ctx.rides.revision == 2
     assert [r.id for r in await ctx.mine(ANA.id)] == [ana.id]
@@ -193,7 +196,7 @@ async def test_an_unknown_phone_makes_an_external_driver_and_a_known_one_links_t
 async def test_a_second_post_for_the_same_departure_joins_the_first_ride(ctx: Context) -> None:
     first = await ctx.imported()
     again = await ctx.import_ride(
-        sender_phone="5561999990009",
+        sender_phone=PhoneNumber.from_jid_user("5561999990009"),
         sender_name="Zé do grupo",
         origin=whatsapp_origin(EPOCH + timedelta(minutes=5)),
         route=ROUTE[:2],
@@ -203,7 +206,7 @@ async def test_a_second_post_for_the_same_departure_joins_the_first_ride(ctx: Co
         payment_methods=frozenset({PaymentMethod.PIX}),
     )
     other_time = await ctx.import_ride(
-        sender_phone="5561999990009",
+        sender_phone=PhoneNumber.from_jid_user("5561999990009"),
         sender_name="Zé do grupo",
         origin=whatsapp_origin(),
         route=ROUTE,
@@ -222,7 +225,7 @@ async def test_a_second_post_for_the_same_departure_joins_the_first_ride(ctx: Co
 async def test_the_catalog_still_guards_the_stops_of_an_imported_ride(ctx: Context) -> None:
     with pytest.raises(UnknownPlaceError):
         await ctx.import_ride(
-            sender_phone="5561999990009",
+            sender_phone=PhoneNumber.from_jid_user("5561999990009"),
             sender_name="Zé",
             origin=whatsapp_origin(),
             route=(CatalogStop(place_id="nowhere"), FreeTextStop(text="Vila")),
@@ -255,13 +258,14 @@ async def test_contact_goes_to_the_sender_without_a_plate(ctx: Context) -> None:
     contact = await ctx.contact(ANA.id, ride.id)
 
     assert contact.whatsapp_url.startswith("https://wa.me/5561999990009?text=")
+    assert contact.phone == EXTERNAL_PHONE
     assert contact.plate is None
     assert len(ctx.contacts.recorded) == 1
 
 
 async def test_forgetting_removes_external_rides_only_and_bumps_the_board(ctx: Context) -> None:
     stranger = await ctx.imported()
-    ana = await ctx.imported(phone="5561999990001")
+    ana = await ctx.imported(phone=PhoneNumber.from_jid_user("5561999990001"))
     before = ctx.rides.revision
 
     forgotten = await ctx.forget([stranger.id, ana.id, uuid4()])

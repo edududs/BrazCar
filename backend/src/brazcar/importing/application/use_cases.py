@@ -26,6 +26,7 @@ from brazcar.importing.domain import (
 )
 from brazcar.shared.domain.model import FrozenModel
 from brazcar.shared.domain.personal_data import redact_personal_data
+from brazcar.shared.domain.phone import PhoneNumber
 
 from .parser_output import to_judgement
 from .ports import (
@@ -216,7 +217,7 @@ class BlockSender:
     candidates: Candidates
     rides: ImportedRides
 
-    async def __call__(self, phone: str) -> PurgeReport:
+    async def __call__(self, phone: PhoneNumber) -> PurgeReport:
         await self.blocked.block(phone)
         rides = await self.rides.forget_from(phone)
         candidates = await self.candidates.forget_from(phone)

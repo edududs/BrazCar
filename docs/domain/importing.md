@@ -7,10 +7,10 @@ Depende do extrator embutido (ADR-0009) e entrega para `rides` por porta (ADR-00
 
 | No negócio | No código | O que é |
 |---|---|---|
-| conta pareada | `account` | O número de WhatsApp que o worker lê. Um processo por conta (D-043); a sessão fica no banco. |
+| conta pareada | `account` | O número de WhatsApp que o worker lê, também um `PhoneNumber`. Um processo por conta (D-043); a sessão fica no banco. |
 | grupo observado | `WatchedGroup` | JID de grupo e rótulo, da variável de ambiente `WHATSAPP_GROUPS` (D-109). Só o que está na lista é gravado; o rótulo é o que a interface mostra. |
 | mensagem-fonte | `SourceMessage` | Mensagem de texto de um grupo observado, gravada pelo `DjangoStore` (D-111): conta, id da mensagem, JID do grupo, remetente, enviada em, texto, recebida em. Única por (conta, id). Tomada por uma candidata, vive e morre com ela. |
-| remetente | `Sender` | Telefone (dígitos, sem `+`) e nome de exibição de quem postou. O telefone é a identidade do motorista externo e a chave para achar uma conta (D-127). |
+| remetente | `Sender` | Telefone e nome de exibição de quem postou. O telefone é o `PhoneNumber` de `shared` (D-135), lido do JID por `from_jid_user`, que devolve o nono dígito a endereço antigo (D-138), e gravado em dígitos sem `+`. É a identidade do motorista externo e a chave para achar uma conta (D-127). Qualquer número válido serve (D-137). |
 | chave de texto | `text_key` | O texto sem acento, sem caixa, só letras, dígitos e espaço simples. Duas mensagens com a mesma chave são a mesma postagem. |
 | janela de junção | `DEDUP_WINDOW` | 6 horas. Mensagem com o mesmo remetente e a mesma chave, enviada dentro da janela da primeira, entra na candidata existente; fora dela abre outra. |
 | candidata | `Candidate` | Uma postagem, com uma ou mais mensagens-fonte (`sources`), o texto da primeira, o rótulo do primeiro grupo, primeira e última vez vista, e o veredito. Raiz do agregado. |

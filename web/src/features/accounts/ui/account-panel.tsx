@@ -40,7 +40,7 @@ export function AccountPanel({
       <Card>
         <h2 className="text-base font-semibold">Seus dados</h2>
         <p className="text-sm">{account.displayName}</p>
-        <p className="text-sm opacity-70">{account.phone}</p>
+        <p className="text-sm opacity-70">{account.phoneDisplay}</p>
       </Card>
 
       <Card>

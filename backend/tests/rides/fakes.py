@@ -7,6 +7,7 @@ from brazcar.rides.adapters.directories import CatalogPlaceDirectory
 from brazcar.rides.adapters.search import IndexedRideSearch
 from brazcar.rides.application import DriverAccount
 from brazcar.rides.domain import AccountId, ExternalDriver, RideEvent, RideId, RideOffer
+from brazcar.shared.domain.phone import PhoneNumber
 from tests.places.fakes import InMemoryCatalogRepository
 from tests.search.fakes import InMemorySearchIndex
 from tests.shared.fakes import InMemoryRateLimiter
@@ -53,7 +54,9 @@ class InMemoryRideRepository:
         mine = [r for r in self.rides.values() if r.driver_id == driver_id]
         return tuple(sorted(mine, key=lambda r: r.departure_at, reverse=True))
 
-    async def find_imported(self, driver: AccountId | str, departure_at: datetime) -> RideOffer | None:
+    async def find_imported(
+        self, driver: AccountId | PhoneNumber, departure_at: datetime
+    ) -> RideOffer | None:
         for ride in self.rides.values():
             if not ride.is_imported or ride.cancelled_at is not None or ride.departure_at != departure_at:
                 continue
@@ -63,7 +66,7 @@ class InMemoryRideRepository:
         return None
 
     async def external_rides(
-        self, *, departed_before: datetime | None = None, phone: str | None = None
+        self, *, departed_before: datetime | None = None, phone: PhoneNumber | None = None
     ) -> tuple[RideId, ...]:
         found = [
             r
@@ -89,8 +92,8 @@ class InMemoryDrivers:
     async def get(self, account_id: AccountId) -> DriverAccount | None:
         return self.by_id.get(account_id)
 
-    async def by_phone(self, phone: str) -> DriverAccount | None:
-        return next((d for d in self.by_id.values() if d.phone.lstrip("+") == phone), None)
+    async def by_phone(self, phone: PhoneNumber) -> DriverAccount | None:
+        return next((d for d in self.by_id.values() if d.phone == phone), None)
 
 
 CATALOG = Catalog(

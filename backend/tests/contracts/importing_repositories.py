@@ -5,17 +5,20 @@ from uuid import uuid4
 
 from brazcar.importing.application import Candidates, SourceMessages
 from brazcar.importing.domain import Accepted, Candidate, Rejected, RejectReason, Sender, SourceMessage
+from brazcar.shared.domain.phone import PhoneNumber
 
 RECEIVED = datetime(2026, 9, 23, 20, 0, tzinfo=UTC)
 GROUP = "120363000000000001@g.us"
+ACCOUNT = PhoneNumber.from_jid_user("5561900000001")
+SENDER = PhoneNumber.from_jid_user("5561900000002")
 
 
 def fresh(
     *,
-    account: str = "5561900000001",
+    account: PhoneNumber = ACCOUNT,
     received_at: datetime = RECEIVED,
     text: str = "3 vagas 19:30",
-    phone: str = "5561900000002",
+    phone: PhoneNumber = SENDER,
 ) -> SourceMessage:
     """A message nobody else stored: examples do not get a clean table."""
     return SourceMessage(
@@ -29,9 +32,9 @@ def fresh(
     )
 
 
-def own_phone() -> str:
+def own_phone() -> PhoneNumber:
     """A sender nobody else uses, so counts and lookups by phone see only this test's rows."""
-    return f"55619{uuid4().int % 10**8:08d}"
+    return PhoneNumber.from_jid_user(f"55619{uuid4().int % 10**8:08d}")
 
 
 class ImportingRepositoriesContract:
@@ -55,8 +58,8 @@ class ImportingRepositoriesContract:
     async def test_two_accounts_may_hold_the_same_message_id(self) -> None:
         messages = self.make_messages()
         phone = own_phone()
-        message = fresh(account="5561900000001", phone=phone)
-        twin = message.evolve(account="5561900000009")
+        message = fresh(account=PhoneNumber.from_jid_user("5561900000001"), phone=phone)
+        twin = message.evolve(account=PhoneNumber.from_jid_user("5561900000009"))
 
         assert await messages.save(message) is True
         assert await messages.save(twin) is True

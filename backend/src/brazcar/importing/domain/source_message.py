@@ -6,18 +6,19 @@ from typing import Annotated, Self
 from pydantic import Field, StringConstraints, model_validator
 
 from brazcar.shared.domain.model import FrozenModel
+from brazcar.shared.domain.phone import PhoneNumber
 
-type Phone = Annotated[str, StringConstraints(pattern=r"^[0-9]{8,15}$")]
-"""Digits as WhatsApp addresses them, country code first and no `+`: `5561999999999`."""
 type GroupJid = Annotated[str, StringConstraints(pattern=r"^[0-9-]+@g\.us$")]
 type Label = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
 type Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 
 class Sender(FrozenModel):
-    """Who posted. The phone is the identity of the external driver; the name is only shown."""
+    """Who posted. The phone is the identity of the external driver; the name is only shown.
 
-    phone: Phone
+    Any valid number: being in the group already proves it has WhatsApp (D-137)."""
+
+    phone: PhoneNumber
     display_name: str = ""
 
 
@@ -31,7 +32,7 @@ class WatchedGroup(FrozenModel):
 class SourceMessage(FrozenModel):
     """Unique per (paired account, message id): two accounts in one group receive the same id."""
 
-    account: Phone
+    account: PhoneNumber  # the paired phone the worker runs as
     message_id: Annotated[str, Field(min_length=1, max_length=120)]
     chat_jid: GroupJid
     sender: Sender
@@ -49,4 +50,4 @@ class SourceMessage(FrozenModel):
 
     @property
     def key(self) -> tuple[str, str]:
-        return (self.account, self.message_id)
+        return (self.account.jid_user(), self.message_id)

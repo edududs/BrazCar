@@ -4,7 +4,8 @@ from brazcar.accounts.application import AccountRepository
 from brazcar.accounts.domain import Account
 from brazcar.places.application import CatalogRepository
 from brazcar.rides.application import DriverAccount, DriverCar
-from brazcar.rides.domain import AccountId, Phone, PlaceId
+from brazcar.rides.domain import AccountId, PlaceId
+from brazcar.shared.domain.phone import PhoneNumber
 
 
 class AccountDriverDirectory:
@@ -15,8 +16,8 @@ class AccountDriverDirectory:
         account = await self._accounts.get(account_id)
         return None if account is None else _driver_account(account)
 
-    async def by_phone(self, phone: Phone) -> DriverAccount | None:
-        account = await self._accounts.by_phone(f"+{phone}")  # accounts keep E.164 (D-089)
+    async def by_phone(self, phone: PhoneNumber) -> DriverAccount | None:
+        account = await self._accounts.by_phone(phone)
         return None if account is None else _driver_account(account)
 
 

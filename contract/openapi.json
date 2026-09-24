@@ -39,6 +39,10 @@
             "title": "Phone",
             "type": "string"
           },
+          "phone_display": {
+            "title": "Phone Display",
+            "type": "string"
+          },
           "terms_accepted_at": {
             "format": "date-time",
             "title": "Terms Accepted At",
@@ -48,6 +52,7 @@
         "required": [
           "id",
           "phone",
+          "phone_display",
           "display_name",
           "email",
           "terms_accepted_at",
@@ -210,6 +215,10 @@
       },
       "ContactOut": {
         "properties": {
+          "phone_display": {
+            "title": "Phone Display",
+            "type": "string"
+          },
           "plate": {
             "anyOf": [
               {
@@ -228,6 +237,7 @@
         },
         "required": [
           "whatsapp_url",
+          "phone_display",
           "plate"
         ],
         "title": "ContactOut",

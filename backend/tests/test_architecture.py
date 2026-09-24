@@ -1,4 +1,5 @@
-"""The core of each context may import only the stdlib, pydantic and the layers beneath it."""
+"""The core of each context may import only the stdlib, pydantic and the layers beneath it; a pure
+computation library enters through one named module (D-136)."""
 
 import ast
 import sys
@@ -16,13 +17,17 @@ LAYERS = {
     "application": ("domain", "application"),
 }
 CORE = [(context, layer) for context in CONTEXTS for layer in LAYERS]
+LIBRARY_DOORS = {f"{ROOT}.shared.domain.phone.codec": {"phonenumbers"}}
+"""Pure-computation libraries the core may use, each through one module and nowhere else (D-136)."""
 
 
-def allowed(context: str, layer: str) -> set[str]:
+def allowed(context: str, layer: str, module: str) -> set[str]:
     """Own layers beneath, plus the same layers of the shared kernel. Never another context."""
-    return {"pydantic"} | {
-        f"{ROOT}.{owner}.{beneath}" for owner in (context, SHARED) for beneath in LAYERS[layer]
-    }
+    return (
+        {"pydantic"}
+        | LIBRARY_DOORS.get(module, set())
+        | {f"{ROOT}.{owner}.{beneath}" for owner in (context, SHARED) for beneath in LAYERS[layer]}
+    )
 
 
 def violations(source: str, module: str, context: str, layer: str) -> list[str]:
@@ -34,7 +39,7 @@ def violations(source: str, module: str, context: str, layer: str) -> list[str]:
         elif isinstance(node, ast.ImportFrom):
             name = "." * node.level + (node.module or "")
             imported.append(resolve_name(name, package) if node.level else name)
-    permitted = allowed(context, layer)
+    permitted = allowed(context, layer, module)
     return [
         name
         for name in imported
@@ -84,6 +89,10 @@ def test_guard_detects_deliberate_violations() -> None:
         f"from {ROOT}.places.domain import Place", f"{ROOT}.rides.domain.ride", "rides", "domain"
     )
     assert violations(f"from {ROOT}.config import settings", f"{ROOT}.shared.domain.clock", SHARED, "domain")
+    assert violations("import phonenumbers", f"{ROOT}.rides.domain.driver", "rides", "domain")
+    assert violations(
+        "from phonenumbers import geocoder", f"{ROOT}.shared.domain.phone.phone_number", SHARED, "domain"
+    )
 
 
 def test_guard_accepts_the_allowed_imports() -> None:
@@ -94,3 +103,5 @@ def test_guard_accepts_the_allowed_imports() -> None:
         "from . import ports as own\n"
     )
     assert not violations(application, f"{ROOT}.rides.application.publish", "rides", "application")
+    codec = "import phonenumbers\nfrom phonenumbers import geocoder\n"
+    assert not violations(codec, f"{ROOT}.shared.domain.phone.codec", SHARED, "domain")

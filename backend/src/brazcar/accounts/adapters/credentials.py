@@ -8,6 +8,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from brazcar.accounts.domain import AccountId
+from brazcar.shared.domain.phone import PhoneNumber
 
 from .models import User
 
@@ -16,8 +17,8 @@ class DjangoCredentials:
     async def register(self, account_id: AccountId, password: str) -> None:
         await sync_to_async(_set_password)(account_id, password)
 
-    async def verify(self, phone: str, password: str) -> AccountId | None:
-        return await sync_to_async(_verify)(phone, password)
+    async def verify(self, phone: PhoneNumber, password: str) -> AccountId | None:
+        return await sync_to_async(_verify)(phone.e164(), password)
 
     async def change(self, account_id: AccountId, password: str) -> None:
         await sync_to_async(_set_password)(account_id, password)

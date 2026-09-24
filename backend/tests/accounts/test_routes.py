@@ -71,6 +71,7 @@ async def test_register_logs_in_and_shows_the_own_account_without_verification()
     me = await client.get("/api/accounts/me")
 
     assert account["phone"] == "+5561999990001"
+    assert account["phone_display"] == "(61) 99999-0001"
     assert account["can_drive"] is False
     assert me.status_code == HTTPStatus.OK
     assert body(me) == account
@@ -84,6 +85,24 @@ async def test_register_needs_the_terms_and_a_decent_password() -> None:
 
     assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
     assert weak.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+
+
+@pytest.mark.parametrize(
+    ("phone", "message"),
+    [
+        ("61 9", "telefone inválido: digite o celular com DDD, como (61) 99999-9999"),
+        ("+1 415 555 2671", "por enquanto só números do Brasil"),
+        ("(61) 3333-4444", "use um número de celular: o contato é pelo WhatsApp"),
+    ],
+)
+async def test_a_phone_that_cannot_own_an_account_is_refused_with_its_reason(
+    phone: str, message: str
+) -> None:
+    """Before D-137 a malformed phone escaped as a validation error and answered 500."""
+    refused = await browser().post("/api/accounts/register", {**ANA, "phone": phone})
+
+    assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+    assert body(refused) == {"detail": message}
 
 
 async def test_the_same_phone_cannot_register_twice() -> None:

@@ -1,13 +1,31 @@
 from uuid import UUID
 
+from brazcar.shared.domain.phone import PhoneNumber
+
 
 class AccountError(Exception):
     """Base of every rule of this context the API translates into a response."""
 
 
 class PhoneAlreadyRegisteredError(AccountError):
-    def __init__(self, phone: str) -> None:
-        super().__init__(f"{phone} already has an account")
+    def __init__(self, phone: PhoneNumber) -> None:
+        super().__init__(f"{phone.e164()} already has an account")
+        self.phone = phone
+
+
+class ForeignPhoneNumberError(AccountError, ValueError):
+    """A valid number of another country: accounts are Brazilian for now (D-137)."""
+
+    def __init__(self, phone: PhoneNumber) -> None:
+        super().__init__(f"{phone.e164()} is not a Brazilian number")
+        self.phone = phone
+
+
+class NotAMobilePhoneError(AccountError, ValueError):
+    """A landline: the contact goes by WhatsApp, so an account needs a mobile (D-137)."""
+
+    def __init__(self, phone: PhoneNumber) -> None:
+        super().__init__(f"{phone.e164()} is not a mobile number")
         self.phone = phone
 
 

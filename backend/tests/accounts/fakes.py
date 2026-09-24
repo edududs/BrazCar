@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from brazcar.accounts.domain import Account, AccountId, PhoneAlreadyRegisteredError
+from brazcar.shared.domain.phone import PhoneNumber
 
 
 class InMemoryAccountRepository:
@@ -13,7 +14,7 @@ class InMemoryAccountRepository:
     async def get(self, account_id: AccountId) -> Account | None:
         return self._accounts.get(account_id)
 
-    async def by_phone(self, phone: str) -> Account | None:
+    async def by_phone(self, phone: PhoneNumber) -> Account | None:
         return next((a for a in self._accounts.values() if a.phone == phone), None)
 
     async def save(self, account: Account) -> None:
@@ -34,7 +35,7 @@ class InMemoryCredentials:
     async def register(self, account_id: AccountId, password: str) -> None:
         self.passwords[account_id] = password
 
-    async def verify(self, phone: str, password: str) -> AccountId | None:
+    async def verify(self, phone: PhoneNumber, password: str) -> AccountId | None:
         account = await self.accounts.by_phone(phone)
         if account is None or self.passwords.get(account.id) != password:
             return None

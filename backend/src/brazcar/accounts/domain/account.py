@@ -6,9 +6,9 @@ from pydantic import EmailStr, StringConstraints, model_validator
 
 from brazcar.shared.domain.model import FrozenModel
 
+from .account_phone import AccountPhone, account_phone
 from .errors import CarNotFoundError, PlateAlreadyOnAccountError
 from .license_plate import LicensePlate
-from .phone_number import PhoneNumber
 
 type AccountId = UUID
 type CarId = UUID
@@ -27,7 +27,7 @@ class Account(FrozenModel):
     of the adapter, never domain state."""
 
     id: AccountId
-    phone: PhoneNumber
+    phone: AccountPhone
     display_name: ShortText
     email: EmailStr | None = None
     terms_accepted_at: datetime
@@ -53,7 +53,7 @@ class Account(FrozenModel):
     ) -> Self:
         return cls(
             id=uuid4(),
-            phone=phone,
+            phone=account_phone(phone),
             display_name=display_name,
             email=email or None,
             terms_accepted_at=accepted_terms_at,

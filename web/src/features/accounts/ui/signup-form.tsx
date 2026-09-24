@@ -1,8 +1,10 @@
 import { useState } from "react";
 
+import { usePhoneInput } from "@/shared/app/use-phone-input";
 import { ActionButton } from "@/shared/ui/action-button";
 import { CheckboxField } from "@/shared/ui/checkbox-field";
 import { Form } from "@/shared/ui/form";
+import { PhoneField } from "@/shared/ui/phone-field";
 import { TextField } from "@/shared/ui/text-field";
 
 import type { Account, SignupData } from "../domain/account";
@@ -15,8 +17,8 @@ interface SignupFormProps {
 }
 
 export function SignupForm({ signUp, busy, onDone }: SignupFormProps) {
-  const [data, setData] = useState<SignupData>({
-    phone: "",
+  const phone = usePhoneInput();
+  const [data, setData] = useState<Omit<SignupData, "phone">>({
     password: "",
     displayName: "",
     email: "",
@@ -24,31 +26,23 @@ export function SignupForm({ signUp, busy, onDone }: SignupFormProps) {
   });
   const [error, setError] = useState<string | null>(null);
   const set =
-    <K extends keyof SignupData>(key: K) =>
-    (value: SignupData[K]) => {
+    <K extends keyof typeof data>(key: K) =>
+    (value: (typeof data)[K]) => {
       setData((current) => ({ ...current, [key]: value }));
     };
 
   const submit = () => {
     setError(null);
-    signUp(data).then(onDone, (reason: unknown) => {
+    const e164 = phone.submitValue();
+    if (e164 === null) return;
+    signUp({ ...data, phone: e164 }).then(onDone, (reason: unknown) => {
       setError(reasonOf(reason));
     });
   };
 
   return (
     <Form onSubmit={submit} error={error}>
-      <TextField
-        label="Telefone"
-        value={data.phone}
-        onChange={set("phone")}
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel"
-        placeholder="61 99999-9999"
-        hint="É o número que vai receber as mensagens no WhatsApp."
-        required
-      />
+      <PhoneField {...phone.field} hint="É o celular que vai receber as mensagens no WhatsApp." />
       <TextField
         label="Nome"
         value={data.displayName}

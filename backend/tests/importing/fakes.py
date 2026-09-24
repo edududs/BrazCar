@@ -16,6 +16,7 @@ from brazcar.importing.domain import (
     Sender,
     SourceMessage,
 )
+from brazcar.shared.domain.phone import PhoneNumber
 
 
 class InMemorySourceMessages:
@@ -39,7 +40,7 @@ class InMemorySourceMessages:
             del self.rows[key]
         return len(gone)
 
-    async def delete_from(self, phone: str) -> int:
+    async def delete_from(self, phone: PhoneNumber) -> int:
         gone = [k for k, m in self.rows.items() if m.sender.phone == phone]
         for key in gone:
             del self.rows[key]
@@ -62,7 +63,7 @@ class InMemoryCandidates:
     async def get(self, candidate_id: CandidateId) -> Candidate | None:
         return self.rows.get(candidate_id)
 
-    async def open_for(self, phone: str, text_key: str, *, since: datetime) -> Candidate | None:
+    async def open_for(self, phone: PhoneNumber, text_key: str, *, since: datetime) -> Candidate | None:
         found = [
             c
             for c in self.rows.values()
@@ -107,7 +108,7 @@ class InMemoryCandidates:
         ]
         return self._forget(gone)
 
-    async def forget_from(self, phone: str) -> int:
+    async def forget_from(self, phone: PhoneNumber) -> int:
         return self._forget([c.id for c in self.rows.values() if c.sender.phone == phone])
 
     def _forget(self, ids: list[CandidateId]) -> int:
@@ -119,12 +120,12 @@ class InMemoryCandidates:
 
 class InMemoryBlockedSenders:
     def __init__(self) -> None:
-        self.phones: set[str] = set()
+        self.phones: set[PhoneNumber] = set()
 
-    async def is_blocked(self, phone: str) -> bool:
+    async def is_blocked(self, phone: PhoneNumber) -> bool:
         return phone in self.phones
 
-    async def block(self, phone: str) -> None:
+    async def block(self, phone: PhoneNumber) -> None:
         self.phones.add(phone)
 
 
@@ -177,7 +178,7 @@ class RecordingImportedRides:
         gone = tuple(i for i, (_, _, _, _, d) in self.created.items() if d.departure_at < before)
         return self._forget(gone)
 
-    async def forget_from(self, phone: str) -> tuple[UUID, ...]:
+    async def forget_from(self, phone: PhoneNumber) -> tuple[UUID, ...]:
         gone = tuple(i for i, (who, _, _, _, _) in self.created.items() if who.phone == phone)
         return self._forget(gone)
 

@@ -6,7 +6,8 @@
 |---|---|---|
 | conta | `Account` | Agregado: a conta e seus carros. Uma conta só serve a passageiro e a motorista. |
 | identificador | `AccountId` | UUID gerado no domínio; a linha do usuário do Django usa o mesmo (D-090). |
-| telefone | `PhoneNumber` | Value object. Celular brasileiro em E.164 (D-089). Identificador de login e destino do link `wa.me`. |
+| telefone | `PhoneNumber` | Value object de `shared` (D-135), gravado em E.164 (D-089). Identificador de login e destino do link `wa.me`. |
+| telefone de conta | `AccountPhone`, `account_phone` | A regra deste contexto sobre o `PhoneNumber`: só celular do Brasil (D-137). Fixo é `NotAMobilePhoneError`, número de fora é `ForeignPhoneNumberError`. |
 | nome social | `display_name` | Obrigatório. É o único nome exibido no mural, e o cadastro avisa isso. |
 | e-mail | `email` | Opcional. Serve só para recuperar a senha. |
 | telefone verificado | `phone_verified_at` | Previsto no modelo, sem uso no MVP. |
@@ -20,6 +21,7 @@
 ## Invariantes
 
 - Telefone é único por conta.
+- Telefone de conta é celular do Brasil. A conta e o contato o mostram como `(61) 99999-9999`.
 - Ver o mural não exige conta. Qualquer interação exige: publicar, pedir contato, editar.
 - Publicar carona exige pelo menos um carro. Uma placa aparece uma vez por conta.
 - A marca do carro não é guardada: o modelo já a traz ("Gol prata", "BYD cinza").

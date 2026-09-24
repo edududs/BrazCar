@@ -38,6 +38,10 @@ migração `0003` aplicou no `up`. Em 2026-09-24 (v0.12.0) entrou `EMAIL_*` no `
 Resend, chave fora do repo): a recuperação de senha passa a mandar e-mail de verdade; sem migração.
 Em 2026-09-24 (v0.12.1) nada entrou no `api.env`; sem migração.
 O disparo de teste no deploy não deixou linha de erro de SMTP no log da API.
+As migrações `importing.0003` e `rides.0004` (D-138) põem o nono dígito nos telefones gravados com
+o endereço antigo do WhatsApp; rodam no entrypoint da API com `RUN_MIGRATIONS=1`, e o operador
+confere no log uma linha `ninth digit (D-138)` por coluna, com zero ilegíveis
+(`docker compose logs api --since 3m | grep "ninth digit"`).
 
 ## Worker do WhatsApp (passo 7a)
 

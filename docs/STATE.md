@@ -117,6 +117,18 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 - Parada em rota deixa de alternar entre catálogo e texto livre pela caixa "Outro lugar": o
   `PlacePicker` vira o campo único que D-123 pedia, com o que foi digitado e não escolhido na
   lista valendo como a própria parada, em `web/src/features/places/ui/place-picker.tsx`.
+- Telefone (D-135 a D-138): value object `PhoneNumber` em `shared/domain/phone/`, feito de
+  `CountryCode`, `AreaCode` e `SubscriberNumber`, com `parse`, `from_jid_user`, `e164`, `jid_user`,
+  `display`, `international`, `region` e `is_mobile`, sobre a `phonenumbers` confinada em `codec.py`.
+  `accounts` aplica a regra de celular do Brasil (`account_phone`) e recusa fixo, número de fora e
+  número inválido com 422 e mensagem em português; antes, telefone malformado no cadastro
+  respondia 500. `rides` e `importing` aceitam qualquer número válido. O `from_jid_user` devolve o
+  nono dígito a endereço antigo do WhatsApp, o que conserta o vínculo de D-127 para esses
+  remetentes; as migrações `importing.0003` e `rides.0004` corrigem o que já estava gravado. A API
+  entrega `phone_display` na conta e no contato. No front, `usePhoneInput` em `shared/app` formata
+  enquanto a pessoa digita e valida antes de enviar, o primitivo `PhoneField` é usado no cadastro,
+  no login e na recuperação de senha, e o card de contato mostra o número; a `libphonenumber-js`
+  (`min`) fica confinada em `shared/app/phone-codec.ts` por regra do ESLint.
 - Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
   (`poe coverage`), 88,58% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
   (`yarn coverage`), piso de 15%, com meta de paridade (D-126). O resumo

@@ -166,6 +166,7 @@ class RideOut(Schema):
 
 class ContactOut(Schema):
     whatsapp_url: str
+    phone_display: str  # "(61) 99999-9999", or international from abroad (D-137)
     plate: str | None  # none for a driver the platform only knows by phone
 
 
@@ -354,7 +355,9 @@ def _add_contact_route(router: Router, use_cases: RideUseCases) -> None:
         """Login, a limit per account and a record: then the `wa.me` link and the plate (ADR-0006)."""
         with _translated():
             contact = await use_cases.contact(_account_id(request), ride_id)
-        return ContactOut(whatsapp_url=contact.whatsapp_url, plate=contact.plate)
+        return ContactOut(
+            whatsapp_url=contact.whatsapp_url, phone_display=contact.phone.display(), plate=contact.plate
+        )
 
 
 # --- translation -------------------------------------------------------------------------------------

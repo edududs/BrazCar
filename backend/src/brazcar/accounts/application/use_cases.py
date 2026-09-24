@@ -9,7 +9,7 @@ from brazcar.accounts.domain import (
     InvalidCredentialsError,
     InvalidResetTokenError,
     TooManyAttemptsError,
-    normalize_phone_number,
+    account_phone,
 )
 from brazcar.shared.application.ports import Clock, Mailer, RateLimiter
 
@@ -52,11 +52,11 @@ class LogIn:
 
     async def __call__(self, *, phone: str, password: str) -> Account:
         try:
-            normalized = normalize_phone_number(phone)
+            normalized = account_phone(phone)
         except ValueError as error:
             raise InvalidCredentialsError from error
         allowed = await self.limiter.acquire(
-            f"login:{normalized}", limit=self.limits.login_attempts, window=self.limits.login_window
+            f"login:{normalized.e164()}", limit=self.limits.login_attempts, window=self.limits.login_window
         )
         if not allowed:
             raise TooManyAttemptsError
@@ -102,11 +102,13 @@ class RequestPasswordReset:
 
     async def __call__(self, *, phone: str) -> None:
         try:
-            normalized = normalize_phone_number(phone)
+            normalized = account_phone(phone)
         except ValueError:
             return
         allowed = await self.limiter.acquire(
-            f"password-reset:{normalized}", limit=self.limits.reset_requests, window=self.limits.reset_window
+            f"password-reset:{normalized.e164()}",
+            limit=self.limits.reset_requests,
+            window=self.limits.reset_window,
         )
         if not allowed:
             return  # silently, like an unknown phone: the answer never says why

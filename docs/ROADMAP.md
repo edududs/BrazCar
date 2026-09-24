@@ -32,6 +32,10 @@ Plataforma que funciona sozinha, sem extrator.
 - **Observações e preço por parada** (`notes`, D-129; `fare` por parada, D-131). **Feito, tag
   `v0.11.0`**: domínio, contrato, formulário, card e detalhe, e o interpretador lendo o preço de
   cada parada.
+- **Telefone como value object composto** (D-135 a D-138). **Feito**: `PhoneNumber` em `shared`
+  com país, DDD e assinante, usado por `accounts`, `rides` e `importing`; campo que formata ao
+  digitar; número formatado na conta e no contato; e o vínculo da carona importada à conta
+  consertado para os endereços de WhatsApp sem o nono dígito.
 - **Painel de administração no front**, num caminho próprio e protegido por papel de administrador,
   no lugar do admin do Django (D-124): ver mensagens, candidatas e caronas importadas, disparar o
   reprocessamento (D-130), bloquear remetente. Visual cuidado, como os temas de admin costumam dar,

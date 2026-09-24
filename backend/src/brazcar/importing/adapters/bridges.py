@@ -17,6 +17,7 @@ from brazcar.rides.domain import (
     UnknownPlaceError,
     WhatsAppOrigin,
 )
+from brazcar.shared.domain.phone import PhoneNumber
 
 
 class CatalogStopResolver:
@@ -74,7 +75,7 @@ class RidesBridge:
     async def forget_departed(self, before: datetime) -> tuple[UUID, ...]:
         return await self._forget_all(await self._rides.external_rides(departed_before=before))
 
-    async def forget_from(self, phone: str) -> tuple[UUID, ...]:
+    async def forget_from(self, phone: PhoneNumber) -> tuple[UUID, ...]:
         return await self._forget_all(await self._rides.external_rides(phone=phone))
 
     async def release(self, ride_id: UUID) -> bool:

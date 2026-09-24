@@ -1,7 +1,9 @@
 import { useState } from "react";
 
+import { usePhoneInput } from "@/shared/app/use-phone-input";
 import { ActionButton } from "@/shared/ui/action-button";
 import { Form } from "@/shared/ui/form";
+import { PhoneField } from "@/shared/ui/phone-field";
 import { TextField } from "@/shared/ui/text-field";
 
 import type { Account, LoginData } from "../domain/account";
@@ -14,29 +16,22 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ logIn, busy, onDone }: LoginFormProps) {
-  const [phone, setPhone] = useState("");
+  const phone = usePhoneInput();
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const submit = () => {
     setError(null);
-    logIn({ phone, password }).then(onDone, (reason: unknown) => {
+    const e164 = phone.submitValue();
+    if (e164 === null) return;
+    logIn({ phone: e164, password }).then(onDone, (reason: unknown) => {
       setError(reasonOf(reason));
     });
   };
 
   return (
     <Form onSubmit={submit} error={error}>
-      <TextField
-        label="Telefone"
-        value={phone}
-        onChange={setPhone}
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel"
-        placeholder="61 99999-9999"
-        required
-      />
+      <PhoneField {...phone.field} />
       <TextField
         label="Senha"
         value={password}

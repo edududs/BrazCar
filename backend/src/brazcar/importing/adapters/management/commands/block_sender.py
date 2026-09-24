@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand, CommandError, CommandParser
 
 from brazcar.importing.adapters.composition import import_use_cases
 from brazcar.importing.adapters.config import ImportingSettings
+from brazcar.shared.domain.phone import InvalidPhoneNumberError, PhoneNumber
 
 
 class Command(BaseCommand):
@@ -20,10 +21,12 @@ class Command(BaseCommand):
     def handle(self, *args: object, **options: object) -> None:
         phone = options["phone"]
         assert isinstance(phone, str)  # noqa: S101 - argparse hands the declared type back
-        if not phone.isdigit():
+        try:
+            number = PhoneNumber.from_jid_user(phone)
+        except InvalidPhoneNumberError as error:
             message = "the phone is digits only, country code first, no +"
-            raise CommandError(message)
-        report = asyncio.run(import_use_cases(ImportingSettings.from_django()).block(phone))
+            raise CommandError(message) from error
+        report = asyncio.run(import_use_cases(ImportingSettings.from_django()).block(number))
         self.stdout.write(
             f"blocked; removed {report.rides} ride(s), {report.candidates} candidate(s), "
             f"{report.messages} message(s)"

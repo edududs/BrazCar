@@ -13,6 +13,7 @@ from whatsapp_extractor.domain import ChatKind, Message, MessageKind
 
 from brazcar.importing.application import Clock, SourceMessages
 from brazcar.importing.domain import Sender, SourceMessage, WatchedGroup
+from brazcar.shared.domain.phone import InvalidPhoneNumberError, PhoneNumber
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ class DjangoStore:
         self, messages: SourceMessages, *, account: str, groups: Iterable[WatchedGroup], clock: Clock
     ) -> None:
         self._messages = messages
-        self._account = account
+        self._account = PhoneNumber.from_jid_user(account)
         self._watched = frozenset(group.jid for group in groups)
         self._clock = clock
 
@@ -38,7 +39,7 @@ class DjangoStore:
 
 
 def to_source_message(
-    message: Message, *, account: str, watched: frozenset[str], received_at: datetime
+    message: Message, *, account: PhoneNumber, watched: frozenset[str], received_at: datetime
 ) -> SourceMessage | None:
     """The platform's view of an extracted message, or None when it is not worth keeping."""
     if message.chat.kind is not ChatKind.GROUP or message.chat.jid.value not in watched:
@@ -47,11 +48,15 @@ def to_source_message(
         return None
     if not message.content.text.strip() or message.sender.phone is None:
         return None
+    try:  # always through `from_jid_user`: the same person, with or without the ninth digit (D-138)
+        phone = PhoneNumber.from_jid_user(message.sender.phone)
+    except InvalidPhoneNumberError:
+        return None
     return SourceMessage(
         account=account,
         message_id=message.id,
         chat_jid=message.chat.jid.value,
-        sender=Sender(phone=message.sender.phone, display_name=message.sender.pushname),
+        sender=Sender(phone=phone, display_name=message.sender.pushname),
         sent_at=message.timestamp,
         text=message.content.text,
         received_at=received_at,

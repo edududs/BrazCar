@@ -1,5 +1,5 @@
 from .actions import Actions, allowed_actions
-from .driver import AccountId, CarSnapshot, Driver, ExternalDriver, Phone, RegisteredDriver
+from .driver import AccountId, CarSnapshot, Driver, ExternalDriver, RegisteredDriver
 from .errors import (
     ContactLimitError,
     DepartureChangeError,
@@ -48,7 +48,6 @@ __all__ = [
     "NotTheDriverError",
     "PaymentMethod",
     "PersonalDataError",
-    "Phone",
     "PlaceId",
     "PublishedOrigin",
     "RegisteredDriver",

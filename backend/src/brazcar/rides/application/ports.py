@@ -3,9 +3,10 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
-from brazcar.rides.domain import AccountId, Phone, PlaceId, RideEvent, RideId, RideOffer
+from brazcar.rides.domain import AccountId, PlaceId, RideEvent, RideId, RideOffer
 from brazcar.shared.application.ports import BoardRevision, BoardSignal
 from brazcar.shared.domain.model import FrozenModel
+from brazcar.shared.domain.phone import PhoneNumber
 
 __all__ = [
     "BoardRevision",
@@ -45,12 +46,14 @@ class RideRepository(Protocol):
         """Every ride of one registered driver, latest departure first."""
         ...
 
-    async def find_imported(self, driver: AccountId | Phone, departure_at: datetime) -> RideOffer | None:
+    async def find_imported(
+        self, driver: AccountId | PhoneNumber, departure_at: datetime
+    ) -> RideOffer | None:
         """The not cancelled imported ride of this account or phone leaving exactly then (D-113)."""
         ...
 
     async def external_rides(
-        self, *, departed_before: datetime | None = None, phone: Phone | None = None
+        self, *, departed_before: datetime | None = None, phone: PhoneNumber | None = None
     ) -> tuple[RideId, ...]:
         """Rides of external drivers: those that left before a moment, or those of one phone (D-119)."""
         ...
@@ -72,15 +75,15 @@ class DriverAccount(FrozenModel):
 
     id: AccountId
     display_name: str
-    phone: str
+    phone: PhoneNumber
     cars: tuple[DriverCar, ...]
 
 
 class DriverDirectory(Protocol):
     async def get(self, account_id: AccountId) -> DriverAccount | None: ...
 
-    async def by_phone(self, phone: Phone) -> DriverAccount | None:
-        """The account with this WhatsApp phone (digits, no `+`), if someone registered it (D-127)."""
+    async def by_phone(self, phone: PhoneNumber) -> DriverAccount | None:
+        """The account registered with the phone of a group message, if there is one (D-127)."""
         ...
 
 

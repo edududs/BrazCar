@@ -23,7 +23,7 @@ from .checks import Checks, check
 from .fares import attach_fares
 from .judgement import Day, Judgement, Offer, OfferFare, Other, Payment, Request, Update
 from .schedule import resolve_departure
-from .source_message import GroupJid, Phone, Sender, SourceMessage, WatchedGroup
+from .source_message import GroupJid, Sender, SourceMessage, WatchedGroup
 from .text_key import digit_tokens, text_key
 
 __all__ = [
@@ -46,7 +46,6 @@ __all__ = [
     "Other",
     "Payment",
     "Pending",
-    "Phone",
     "RejectReason",
     "Rejected",
     "Request",

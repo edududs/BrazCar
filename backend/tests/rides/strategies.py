@@ -18,6 +18,8 @@ from brazcar.rides.domain import (
     WhatsAppOrigin,
     price_from,
 )
+from brazcar.shared.domain.phone import PhoneNumber
+from tests.shared.phone_strategies import brazilian_mobiles
 
 BRASILIA = ZoneInfo("America/Sao_Paulo")
 EPOCH = datetime(2026, 9, 22, 6, 0, tzinfo=BRASILIA)
@@ -49,11 +51,14 @@ def car() -> CarSnapshot:
     return CarSnapshot(car_id=uuid4(), model="Gol", color="prata", plate="ABC1234")
 
 
+EXTERNAL_PHONE = PhoneNumber.from_jid_user("5561999990009")
+
+
 def registered(account_id: UUID | None = None) -> RegisteredDriver:
     return RegisteredDriver(account_id=account_id or uuid4(), car=car())
 
 
-def external(phone: str = "5561999990009") -> ExternalDriver:
+def external(phone: PhoneNumber = EXTERNAL_PHONE) -> ExternalDriver:
     return ExternalDriver(phone=phone, display_name="Motorista do grupo")
 
 
@@ -91,9 +96,8 @@ def rides(draw: st.DrawFn) -> RideOffer:
 def imported_rides(draw: st.DrawFn) -> RideOffer:
     """A ride read from a group: external driver, WhatsApp origin, never cancelled by anyone."""
     ride = draw(rides())
-    digits = draw(st.integers(10**9, 10**10 - 1))
     return ride.evolve(
-        driver=external(f"5561{digits}"),
+        driver=external(draw(brazilian_mobiles)),
         origin=whatsapp_origin(ride.published_at),
         notes=None,  # an import never writes notes: the original words already say it (D-129)
         departure_at=ride.departure_at.replace(second=0, microsecond=0),

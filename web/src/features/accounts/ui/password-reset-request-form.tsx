@@ -1,22 +1,25 @@
 import { useState } from "react";
 
+import { usePhoneInput } from "@/shared/app/use-phone-input";
 import { ActionButton } from "@/shared/ui/action-button";
 import { Form } from "@/shared/ui/form";
-import { TextField } from "@/shared/ui/text-field";
+import { PhoneField } from "@/shared/ui/phone-field";
 
 import { requestPasswordReset } from "../adapters/accounts-gateway";
 import { reasonOf } from "./reason";
 
 /** Asks for the e-mailed link. Says the same thing whatever the phone: nothing to learn here. */
 export function PasswordResetRequestForm() {
-  const [phone, setPhone] = useState("");
+  const phone = usePhoneInput();
   const [state, setState] = useState<"idle" | "busy" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
 
   const submit = () => {
     setError(null);
+    const e164 = phone.submitValue();
+    if (e164 === null) return;
     setState("busy");
-    requestPasswordReset(phone).then(
+    requestPasswordReset(e164).then(
       () => {
         setState("sent");
       },
@@ -36,17 +39,7 @@ export function PasswordResetRequestForm() {
   }
   return (
     <Form onSubmit={submit} error={error}>
-      <TextField
-        label="Telefone"
-        value={phone}
-        onChange={setPhone}
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel"
-        placeholder="61 99999-9999"
-        hint="Enviamos o link para o e-mail cadastrado na conta."
-        required
-      />
+      <PhoneField {...phone.field} hint="Enviamos o link para o e-mail cadastrado na conta." />
       <ActionButton submit emphasis="primary" disabled={state === "busy"}>
         Enviar link
       </ActionButton>

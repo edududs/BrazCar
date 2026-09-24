@@ -170,5 +170,5 @@ export async function requestContact(rideId: string): Promise<Contact> {
     params: { path: { ride_id: rideId } },
   });
   if (data === undefined) throw refused(response.status, error);
-  return { whatsappUrl: data.whatsapp_url, plate: data.plate };
+  return { whatsappUrl: data.whatsapp_url, phoneDisplay: data.phone_display, plate: data.plate };
 }

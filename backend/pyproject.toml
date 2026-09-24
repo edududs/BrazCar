@@ -9,6 +9,7 @@ dependencies = [
     "django-cors-headers>=4.9.0",
     "django-ninja>=1.7.1",
     "httpx>=0.28.1",
+    "phonenumbers>=9.0.39",
     "psycopg[binary]>=3.3.6",
     "pydantic[email]>=2.13.5",
     "uvicorn>=0.53.0",

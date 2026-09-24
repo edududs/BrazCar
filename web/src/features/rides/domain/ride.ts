@@ -99,6 +99,8 @@ export interface RideChanges {
 /** The only way the phone and the plate reach the screen (ADR-0006). */
 export interface Contact {
   readonly whatsappUrl: string;
+  /** Ready to show: `(61) 99999-0001`, or international for a number from abroad (D-137). */
+  readonly phoneDisplay: string;
   /** `null` for a driver the platform only knows by phone. */
   readonly plate: string | null;
 }

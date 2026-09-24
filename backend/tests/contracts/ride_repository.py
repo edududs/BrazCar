@@ -6,6 +6,7 @@ from hypothesis import strategies as st
 
 from brazcar.rides.application import BoardRevision, RideRepository
 from brazcar.rides.domain import AccountId, ExternalDriver, RideOffer
+from brazcar.shared.domain.phone import PhoneNumber
 from tests.rides.strategies import imported_rides, published, registered, rides
 
 from . import contract_settings
@@ -111,6 +112,23 @@ class RideRepositoryContract:
         assert await repository.history(uuid4()) == ()
 
     @contract_settings
+    @given(
+        ride=imported_rides(),
+        number=st.sampled_from(("+1 415 555 2671", "+351 912 345 678", "(61) 3333-4444")),
+    )
+    async def test_a_group_may_carry_a_landline_or_a_number_from_abroad(
+        self, ride: RideOffer, number: str
+    ) -> None:
+        """Any number WhatsApp carries is a driver (D-137); it comes back the same number."""
+        repository = self.make_repository()
+        ride = ride.evolve(driver=ExternalDriver(phone=PhoneNumber.parse(number), display_name="De fora"))
+        await repository.save(ride, (published(ride),))
+
+        assert await repository.get(ride.id) == ride
+        assert await repository.find_imported(PhoneNumber.parse(number), ride.departure_at) == ride
+        await repository.delete(ride.id)
+
+    @contract_settings
     @given(ride=imported_rides())
     async def test_an_imported_ride_is_found_by_its_driver_and_departure_then_forgotten(
         self, ride: RideOffer
@@ -124,7 +142,7 @@ class RideRepositoryContract:
         assert await repository.get(ride.id) == ride
         assert await repository.find_imported(driver.phone, ride.departure_at) == ride
         assert await repository.find_imported(driver.phone, ride.departure_at + timedelta(minutes=1)) is None
-        assert await repository.find_imported("5500000000000", ride.departure_at) is None
+        assert await repository.find_imported(PhoneNumber.parse("+44 7911 123456"), ride.departure_at) is None
 
         assert ride.id in await repository.external_rides(phone=driver.phone)
         assert ride.id in await repository.external_rides(
