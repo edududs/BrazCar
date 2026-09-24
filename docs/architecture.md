@@ -128,8 +128,8 @@ rápido, mais o contrato de repositório repetido no Postgres do compose e o bui
 
 Cobertura é medida só nos fluxos do GitHub, depois do portão rápido: os mesmos testes rápidos com
 `pytest-cov` no backend e `@vitest/coverage-v8` no front, resumo impresso no log e falha abaixo do
-piso (92% sobre `src/brazcar`; 52% sobre as camadas `domain` e `app` do front, onde os testes
-moram). Nada sai para serviço de terceiros (D-008); o piso vive em `backend/poe_tasks.toml` e em
-`web/vite.config.ts`.
+piso (92% sobre `src/brazcar`; 52% sobre as camadas `domain` e `app` do front, onde estão os
+testes). Nada é enviado para serviço de terceiros (D-008); o piso fica em
+`backend/poe_tasks.toml` e em `web/vite.config.ts`.
 
 De D-065 ainda não existem Schemathesis sobre o OpenAPI nem E2E com Playwright.
