@@ -40,8 +40,9 @@ Plataforma que funciona sozinha, sem extrator.
   amarrada por remetente e horário. No passo 7 só é classificada e guardada (D-118).
 - **Reivindicação da carona importada** pelo motorista que se cadastra com o mesmo telefone. Só
   depois do OTP reverso, porque sem verificação de posse qualquer conta poderia assumi-la (ADR-0015).
-- **Paradas por autocomplete com texto livre** no formulário, sem select nem "outro" (D-123):
-  entra na etapa de design.
+- **Paradas por autocomplete com texto livre** no formulário, sem select nem "outro" (D-123).
+  **Feito, tag `v0.13.0`**: o combobox aceita o que foi digitado e não escolhido na lista como a
+  própria parada.
 - **`LISTEN/NOTIFY`** como segundo adaptador da porta de revisão, quando um segundo de atraso incomodar.
 - **Pedidos de carona.** Passageiro pedindo é outro agregado, com outro ciclo de vida.
 - **Verificação de telefone por OTP reverso.** O site mostra um código, a pessoa o envia por

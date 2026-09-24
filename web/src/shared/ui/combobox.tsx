@@ -15,6 +15,8 @@ export interface ComboboxProps<T> {
   readonly onValueChange: (value: T | null) => void;
   readonly inputValue: string;
   readonly onInputValueChange: (inputValue: string) => void;
+  /** Fired when the input loses focus, for a caller that commits typed text on blur. */
+  readonly onInputBlur?: () => void;
   /** Shown inside the list instead of items: loading, failure, "nothing found". */
   readonly notice?: ReactNode;
 }
@@ -29,6 +31,7 @@ export function Combobox<T>({
   onValueChange,
   inputValue,
   onInputValueChange,
+  onInputBlur,
   notice,
 }: ComboboxProps<T>) {
   return (
@@ -46,6 +49,7 @@ export function Combobox<T>({
         {label}
         <BaseCombobox.Input
           placeholder={placeholder}
+          onBlur={onInputBlur}
           className="min-h-11 rounded-lg border border-neutral-soft bg-surface px-3 text-base font-normal outline-none focus:border-accent"
         />
       </label>

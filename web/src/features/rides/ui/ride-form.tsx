@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import type { Car } from "@/features/accounts/domain/account";
 import { usePlace } from "@/features/places/app/use-place";
-import { PlacePicker } from "@/features/places/ui/place-picker";
+import { PlacePicker, type PlaceChoice } from "@/features/places/ui/place-picker";
 import { useUnsavedWork } from "@/shared/app/unsaved-work";
 import { ActionButton } from "@/shared/ui/action-button";
 import { CheckboxField } from "@/shared/ui/checkbox-field";
@@ -177,34 +177,21 @@ const roleLabel = {
   destination: "Vai para",
 } as const satisfies Record<StopRole, string>;
 
-/** One stop: a place of the catalog, or "other" as text. The switch between the two is the checkbox.
- *
- * Every stop but the first may say what it costs to get there from the origin (D-131). */
+/** One stop: a place of the catalog, or whatever text the driver typed and did not choose from
+ * the list (D-123). Every stop but the first may say what it costs to get there from the origin
+ * (D-131). */
 function StopField({ role, stop, onChange, onRemove }: StopFieldProps) {
-  const [other, setOther] = useState(stop.placeId === null && stop.text !== "");
   const place = usePlace(stop.placeId);
   const label = roleLabel[role];
   return (
     <div className="flex flex-col gap-1 rounded-lg border border-neutral-soft p-3">
-      {other ? (
-        <TextField
-          label={label}
-          value={stop.text}
-          onChange={(text) => {
-            onChange({ ...stop, placeId: null, text });
-          }}
-          placeholder="Ex.: Incra 8, portão da escola"
-          required
-        />
-      ) : (
-        <PlacePicker
-          label={label}
-          value={place}
-          onChange={(chosen) => {
-            onChange({ ...stop, placeId: chosen?.id ?? null, text: "" });
-          }}
-        />
-      )}
+      <PlacePicker
+        label={label}
+        value={{ place, text: stop.text }}
+        onChange={(choice: PlaceChoice) => {
+          onChange({ ...stop, placeId: choice.place?.id ?? null, text: choice.text });
+        }}
+      />
       {role === "origin" ? null : (
         <TextField
           label="Preço até aqui"
@@ -218,18 +205,11 @@ function StopField({ role, stop, onChange, onRemove }: StopFieldProps) {
           }}
         />
       )}
-      <div className="flex items-center justify-between">
-        <CheckboxField
-          checked={other}
-          onChange={(checked) => {
-            setOther(checked);
-            onChange({ ...stop, placeId: null, text: "" });
-          }}
-        >
-          Outro lugar
-        </CheckboxField>
-        {role === "waypoint" ? <ActionButton onPress={onRemove}>Remover</ActionButton> : null}
-      </div>
+      {role === "waypoint" ? (
+        <div className="flex justify-end">
+          <ActionButton onPress={onRemove}>Remover</ActionButton>
+        </div>
+      ) : null}
     </div>
   );
 }

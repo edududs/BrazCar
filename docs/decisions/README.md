@@ -153,7 +153,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-071 | TypeScript fica na 6.0.x: a 7 (porta nativa) não expõe a API de compilador que o typescript-eslint e o openapi-typescript usam. Subir quando os dois suportarem | decidido | |
 | D-072 | Rotas do TanStack Router por arquivo em `web/src/routes/`, finas, só compondo; `routeTree.gen.ts` é gerado e versionado | decidido | |
 | D-073 | Em desenvolvimento o Vite faz proxy de `/api` para a API local; em produção o front usa `VITE_API_BASE_URL` | decidido | |
-| D-123 | Paradas por um campo só, com autocomplete do catálogo e texto livre aceito, sem select e sem "outro": decidido agora, implementado na etapa de design (D-103), porque refaz o formulário de publicar | decidido | |
+| D-123 | Paradas por um campo só, com autocomplete do catálogo e texto livre aceito, sem select e sem "outro": o combobox aceita o que foi digitado e não escolhido na lista como a própria parada, em texto livre. Implementada na `v0.13.0` | decidido | |
 
 ## Deploy e operação
 

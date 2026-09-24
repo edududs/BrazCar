@@ -1,13 +1,30 @@
 // @vitest-environment jsdom
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { fetchPlace, searchPlaces } from "@/features/places/adapters/places-gateway";
+import type { Place } from "@/features/places/domain/place";
 import { renderRouted } from "@/shared/testing/render-routed";
 
 import type { RideDraft } from "../domain/ride";
 import { RideForm } from "./ride-form";
 
 vi.mock("@/features/places/adapters/places-gateway");
+
+const esplanada: Place = {
+  id: "esplanada",
+  name: "Esplanada",
+  kind: "area",
+  aliases: [],
+  parentId: null,
+};
+
+beforeEach(() => {
+  vi.mocked(searchPlaces).mockResolvedValue([esplanada]);
+  vi.mocked(fetchPlace).mockImplementation((placeId) =>
+    Promise.resolve(placeId === esplanada.id ? esplanada : null),
+  );
+});
 
 const draft: RideDraft = {
   carId: "",
@@ -84,5 +101,87 @@ describe("RideForm", () => {
     await waitFor(() => {
       expect(screen.getByRole("alert")).toBeDefined();
     });
+  });
+});
+
+describe("StopField, a single field with catalog and free text (D-123)", () => {
+  it("shows the free text a stop already has when the ride is opened to edit", async () => {
+    show(() => Promise.resolve());
+
+    const origin = await screen.findByLabelText("Sai de");
+    expect((origin as HTMLInputElement).value).toBe("Brazlândia");
+    const destination = screen.getByLabelText("Vai para");
+    expect((destination as HTMLInputElement).value).toBe("Incra 8");
+  });
+
+  it("choosing a place from the list gives its id and clears the text", async () => {
+    const onSubmit = vi.fn<(draft: RideDraft) => Promise<unknown>>(() => Promise.resolve());
+    show(onSubmit);
+
+    const destination = await screen.findByLabelText("Vai para");
+    fireEvent.mouseDown(destination);
+    fireEvent.change(destination, { target: { value: "Espl" } });
+    fireEvent.click(await screen.findByRole("option", { name: "Esplanada" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit.mock.calls[0]?.[0].stops[1]).toEqual({
+      placeId: "esplanada",
+      text: "",
+      fare: "",
+    });
+  });
+
+  it("typing a place and leaving the field gives free text", async () => {
+    const onSubmit = vi.fn<(draft: RideDraft) => Promise<unknown>>(() => Promise.resolve());
+    show(onSubmit);
+
+    const destination = await screen.findByLabelText("Vai para");
+    fireEvent.change(destination, { target: { value: "Portão da escola, quadra 12" } });
+    fireEvent.blur(destination);
+
+    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit.mock.calls[0]?.[0].stops[1]).toEqual({
+      placeId: null,
+      text: "Portão da escola, quadra 12",
+      fare: "",
+    });
+  });
+
+  it("choosing from the list after typing clears the typed text", async () => {
+    const onSubmit = vi.fn<(draft: RideDraft) => Promise<unknown>>(() => Promise.resolve());
+    show(onSubmit);
+
+    const destination = await screen.findByLabelText("Vai para");
+    fireEvent.mouseDown(destination);
+    fireEvent.change(destination, { target: { value: "Espl" } });
+    fireEvent.click(await screen.findByRole("option", { name: "Esplanada" }));
+    fireEvent.blur(destination);
+
+    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onSubmit.mock.calls[0]?.[0].stops[1]).toEqual({
+      placeId: "esplanada",
+      text: "",
+      fare: "",
+    });
+  });
+
+  it("tells the driver that unmatched text still counts as the stop", async () => {
+    vi.mocked(searchPlaces).mockResolvedValue([]);
+    show(() => Promise.resolve());
+
+    const destination = await screen.findByLabelText("Vai para");
+    fireEvent.mouseDown(destination);
+    fireEvent.change(destination, { target: { value: "Sítio Novo" } });
+
+    await screen.findByText('Nenhum lugar do catálogo com "Sítio Novo"; vale como você escreveu.');
   });
 });

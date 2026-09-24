@@ -118,8 +118,8 @@ test("uma parada em texto livre entra na rota", async ({ page, demo, signIn, sna
 
   await page.getByLabel("Carro").selectOption({ index: 1 });
   await pickPlace(page, 0, "Sai de", "Vendinha");
-  await stops(page).nth(1).getByLabel("Outro lugar").check();
   await stops(page).nth(1).getByLabel("Vai para").fill("Portão da escola, quadra 12");
+  await expect(page.getByText(/vale como você escreveu/)).toBeVisible();
   await page.getByLabel("Saída").fill(localInput(demo.anchor, 11 * 60));
   await snap(page, "publish/free-text-stop");
 

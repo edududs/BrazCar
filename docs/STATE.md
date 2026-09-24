@@ -114,6 +114,9 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   `useSession` (D-033); e a rota raiz ganhou `notFoundComponent` em português, com o primitivo
   `shared/ui/route-not-found.tsx` sobre o `NoticeScreen` e um link de volta ao mural, no lugar do
   "Not Found" em inglês do roteador (D-007).
+- Parada em rota deixa de alternar entre catálogo e texto livre pela caixa "Outro lugar": o
+  `PlacePicker` vira o campo único que D-123 pedia, com o que foi digitado e não escolhido na
+  lista valendo como a própria parada, em `web/src/features/places/ui/place-picker.tsx`.
 - Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
   (`poe coverage`), 88,58% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
   (`yarn coverage`), piso de 15%, com meta de paridade (D-126). O resumo
@@ -224,3 +227,7 @@ O primitivo `shared/ui/availability-badge.tsx` não é usado por ninguém.
   `shared/domain` no próximo toque em qualquer uma delas.
 - Sobrou uma pasta `.whatsapp_scrapping_wip/proj1/.pytest_cache` com permissão negada no
   Windows. Remover manualmente como administrador. Está no `.gitignore`.
+- `docs/screens/{mobile,desktop}/publish/free-text-stop.png` ainda são da versão anterior, com a
+  caixa "Outro lugar": o `yarn screens` que fecharia o passo do campo único (D-123) não pôde rodar
+  de novo depois do ajuste fino no `PlacePicker` porque a máquina ficou sem memória disponível.
+  Rodar `cd web && yarn screens` e conferir só essas duas imagens.
