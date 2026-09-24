@@ -6,6 +6,35 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.12.0] - 2026-09-24
+
+### Adicionado
+
+- **demo:** Seed a database with one ride of every situation
+- **web:** Delete the account from the account page
+
+### Corrigido
+
+- **web:** Not-found page in Portuguese
+
+### Documentação
+
+- Record the v0.11.0 deploy
+- Record the collection step, its runbook and where the screens live
+- Renumber the collection step decisions to D-133 and D-134
+- Record the two fixes and regenerate the screens catalogue
+- Name the release the collection step closes
+
+### Testes
+
+- **web:** Walk every journey with Playwright and keep the screens
+- **web:** Name the incomplete reset link after what it shows
+- **web:** Keep the catalogue out of a plain suite run
+
+### Infraestrutura
+
+- Move the heavy gate to GitHub and drop the pre-push hook
+
 ## [0.11.0] - 2026-09-24
 
 ### Adicionado
