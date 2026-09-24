@@ -6,6 +6,16 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.10.0] - 2026-09-24
+
+### Adicionado
+
+- **importing:** Manual rejudge of a day, and routes of up to 15 stops that keep both ends
+
+### Documentação
+
+- Record the v0.9.0 deploy and close step 7
+
 ## [0.9.0] - 2026-09-24
 
 ### Adicionado
