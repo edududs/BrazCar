@@ -72,7 +72,7 @@ test("link de redefinir sem token pede outro", async ({ page, snap }) => {
 
   await expect(page.getByText("Este link está incompleto.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Pedir outro" })).toBeVisible();
-  await snap(page, "password-reset/no-token");
+  await snap(page, "password-reset/incomplete-link");
 });
 
 test("a conta sem sessão manda entrar", async ({ page, snap }) => {
