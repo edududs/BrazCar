@@ -11,12 +11,16 @@ from brazcar.importing.adapters.worker import run_worker
 
 
 class Counting:
-    def __init__(self, *, fail_first: bool = False) -> None:
+    def __init__(self, *, fail_first: bool = False, until: int = 0) -> None:
         self.passes = 0
         self.fail_first = fail_first
+        self.until = until
+        self.reached = asyncio.Event()  # set once `until` passes have run
 
     async def __call__(self) -> None:
         self.passes += 1
+        if self.passes >= self.until:
+            self.reached.set()
         if self.fail_first and self.passes == 1:
             message = "database away"
             raise RuntimeError(message)
@@ -39,14 +43,14 @@ async def test_the_sweep_runs_at_start_then_once_per_wake_and_stops_with_the_ext
 
 
 async def test_the_sweep_also_runs_on_the_interval_and_after_a_failure() -> None:
-    sweep = Counting(fail_first=True)
+    sweep = Counting(fail_first=True, until=3)
 
     async def extract(_: EventHandler[MessageExtracted]) -> None:
-        await asyncio.sleep(0.05)
+        await sweep.reached.wait()  # never woken: only the interval brings the passes, failure included
 
-    await run_worker(extract, sweep, interval=0.01)
+    await asyncio.wait_for(run_worker(extract, sweep, interval=0.01), timeout=5)
 
-    assert sweep.passes >= 3
+    assert sweep.passes == 3
 
 
 async def test_an_extractor_error_ends_the_worker_and_propagates() -> None:
