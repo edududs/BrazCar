@@ -45,7 +45,7 @@ Plataforma que funciona sozinha, sem extrator.
 - **Reivindicação da carona importada** pelo motorista que se cadastra com o mesmo telefone. Só
   depois do OTP reverso, porque sem verificação de posse qualquer conta poderia assumi-la (ADR-0015).
 - **Paradas por autocomplete com texto livre** no formulário, sem select nem "outro" (D-123).
-  **Feito, tag `v0.13.0`**: o combobox aceita o que foi digitado e não escolhido na lista como a
+  **Feito, tag `v0.12.1`**: o combobox aceita o que foi digitado e não escolhido na lista como a
   própria parada.
 - **`LISTEN/NOTIFY`** como segundo adaptador da porta de revisão, quando um segundo de atraso incomodar.
 - **Pedidos de carona.** Passageiro pedindo é outro agregado, com outro ciclo de vida.
