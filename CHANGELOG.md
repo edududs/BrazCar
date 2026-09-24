@@ -6,6 +6,20 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.12.1] - 2026-09-24
+
+### Corrigido
+
+- **web:** A typed stop is a free-text stop, no checkbox
+
+### Documentação
+
+- Record the v0.12.0 deploy
+
+### Infraestrutura
+
+- **web:** Keep the Playwright run directory out of ESLint
+
 ## [0.12.0] - 2026-09-24
 
 ### Adicionado
