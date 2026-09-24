@@ -107,7 +107,7 @@ pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisó
 ## Próximo passo
 
 1. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato.
-2. Passo curto de observações na carona publicada (`notes`, D-129).
+2. Passo curto de observações e preço por parada na carona (`notes`, D-129; `fare`, D-131).
 3. Passo de qualidade (Playwright, Schemathesis, cobertura do front) e a etapa de design (D-103),
    na ordem que o Eduardo decidir.
 

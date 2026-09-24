@@ -26,8 +26,8 @@ Plataforma que funciona sozinha, sem extrator.
 - **Passo de qualidade**, o primeiro depois do 7a, que fechou na `v0.8.0`: testes de componente e
   comportamento no front até a cobertura empatar com a do backend, Schemathesis sobre o contrato
   OpenAPI e E2E com Playwright nas jornadas críticas, com screenshots como evidência (D-126).
-- **Observações na carona publicada** (`notes`, D-129): passo curto, antes da etapa de design, porque
-  muda domínio e contrato.
+- **Observações e preço por parada** (`notes`, D-129; `fare` por parada, D-131): um passo curto,
+  antes da etapa de design, porque os dois mudam domínio, contrato e o formulário de publicar.
 - **Painel de administração no front**, num caminho próprio e protegido por papel de administrador,
   no lugar do admin do Django (D-124): ver mensagens, candidatas e caronas importadas, disparar o
   reprocessamento (D-130), bloquear remetente. Visual cuidado, como os temas de admin costumam dar,
@@ -55,6 +55,7 @@ Plataforma que funciona sozinha, sem extrator.
 - **Web Push** para "apareceu carona no meu filtro". No iOS exige o app instalado.
 - **Reputação de motorista** e avaliação.
 - **Carona recorrente** de verdade, com dias da semana. Hoje o "repetir esta carona" cobre o uso.
-- **Preço por trecho.** Muda o modelo de rota inteiro.
+- **Preço conforme o ponto de embarque.** O preço "até a parada" entra com a D-131; cobrar
+  diferente conforme onde se embarca exigiria remodelar a rota, e nenhum grupo faz isso hoje.
 - **Exportação de dados do usuário.**
 - **Gráficos** a partir do histórico de eventos.
