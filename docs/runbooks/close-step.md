@@ -10,11 +10,12 @@ Padrões usados: [Conventional Commits](https://www.conventionalcommits.org/pt-b
 ## 1. Verificar
 
 - `uv run poe check` em `backend/` e `yarn run check` em `web/`, os dois verdes. Mostre a saída real.
-- O portão pesado uma vez, sem esperar o push: `uv run poe check-heavy` em `backend/` e
-  `yarn run check:heavy` em `web/`. São as mesmas tasks que o hook de `pre-push` chama. Não rode o
-  arquivo do hook à mão: ele lê as refs pela entrada padrão e, sem elas, sai verde sem testar nada.
-  O contrato no Postgres usa o `POSTGRES_*` do `.env` da raiz, o mesmo do `compose.yml`; se a
-  porta 5432 for de outro projeto, é ali que se muda (`POSTGRES_PORT=5433`), não na task.
+- O portão pesado uma vez, antes da release: `uv run poe check-heavy` em `backend/` e
+  `yarn run check:heavy` em `web/`. Nenhum hook roda teste no push (D-132): o GitHub roda o mesmo
+  portão pesado, com Postgres como serviço do runner, mas rodá-lo localmente antes de cortar a
+  versão continua sendo o ato explícito do ritual de encerramento. O contrato no Postgres usa o
+  `POSTGRES_*` do `.env` da raiz, o mesmo do `compose.yml`; se a porta 5432 for de outro projeto, é
+  ali que se muda (`POSTGRES_PORT=5433`), não na task.
 - `git status` limpo. Nada pela metade vira versão.
 
 ## 2. Higiene

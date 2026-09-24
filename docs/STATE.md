@@ -94,6 +94,10 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   (`poe coverage`), 88,58% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
   (`yarn coverage`), piso de 15%, com meta de paridade (D-126). O resumo
   fica no log do passo e nada é enviado para serviço de terceiros (D-008).
+- Portões (D-132): o `pre-push` saiu, nenhum hook roda teste no push. O GitHub roda o portão
+  pesado (Postgres como serviço do runner, build do front); localmente ele é ato explícito do
+  ritual de encerramento. Um hook `commit-msg` recusa assunto fora do Conventional Commits e
+  trailer ou menção a ferramenta de IA.
 
 **Verificado de verdade no passo 7b:** portão rápido (343 testes no backend, 63 no front, com os
 primeiros de componente) e portão pesado dos dois lados, com 31 contratos no Postgres do compose,

@@ -9,11 +9,32 @@ on:
     paths: ["backend/**", "contract/**", "docs/**", "**.md", ".github/workflows/backend.yml"]
 
 jobs:
-  fast-gate:
+  gate:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: brazcar
+          POSTGRES_USER: brazcar
+          POSTGRES_PASSWORD: brazcar
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U brazcar -d brazcar"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=10
+    env:
+      # Same brazcar/brazcar/brazcar on 5432 as the service above and as compose.yml (D-039); poe
+      # test-postgres builds DATABASE_URL from these instead of falling back to its own defaults.
+      POSTGRES_DB: brazcar
+      POSTGRES_USER: brazcar
+      POSTGRES_PASSWORD: brazcar
+      POSTGRES_PORT: "5432"
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
@@ -21,7 +42,9 @@ jobs:
           enable-cache: true
           working-directory: backend
       - run: uv sync --locked
-      - run: uv run poe check
+      # Heavy gate (D-132): the fast checks, every test, and the repository contract on the
+      # Postgres service above, now that the pre-push hook is gone.
+      - run: uv run poe check-heavy
       # Coverage is measured here, not on the local gate, so committing stays fast. No third-party
       # service reads it (D-008): the summary goes to the log and the floor is in poe_tasks.toml.
       - run: uv run poe coverage

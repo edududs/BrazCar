@@ -140,9 +140,10 @@ cd backend && uv sync && uv run poe hooks && uv run poe serve   # API em http://
 cd web && yarn install && yarn dev                              # front em http://localhost:5173
 ```
 
-Antes de declarar algo pronto: `uv run poe fix` em `backend/` e `yarn fix` em `web/`. O portão que
-os hooks e o GitHub rodam é `uv run poe check` e `yarn run check`; o pesado é `uv run poe
-check-heavy` e `yarn run check:heavy`. Mudou a API? Rode `uv run poe openapi` e depois
+Antes de declarar algo pronto: `uv run poe fix` em `backend/` e `yarn fix` em `web/`. O portão que o
+hook de `pre-commit` roda é `uv run poe check` e `yarn run check`; o GitHub roda o mesmo portão
+rápido e, além dele, o pesado (`uv run poe check-heavy` e `yarn run check:heavy`), que também é ato
+explícito do ritual de encerramento local. Mudou a API? Rode `uv run poe openapi` e depois
 `yarn gen:api`.
 
 ## Como o projeto é conduzido

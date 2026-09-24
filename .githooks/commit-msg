@@ -1,0 +1,26 @@
+#!/bin/sh
+# commit-msg gate (D-132): Conventional Commits subject, no AI-tool trailer or mention anywhere in
+# the message. Cheap and local; the heavy gate moved to GitHub and no hook runs tests on push.
+
+msg_file=$1
+subject=$(sed -n '1p' "$msg_file")
+
+case "$subject" in
+  Merge*|Revert*)
+    ;;
+  *)
+    type_re='^(feat|fix|perf|refactor|docs|test|build|ci|chore|style|revert)(\([^)]+\))?!?: .+'
+    if ! echo "$subject" | grep -qE "$type_re"; then
+      echo 'commit-msg: subject must follow Conventional Commits, e.g. "feat(scope): description"' >&2
+      exit 1
+    fi
+    ;;
+esac
+
+bad_re='co-authored-by|generated with|claude|anthropic|session_|https://claude\.ai'
+if sed '1d' "$msg_file" | grep -v '^#' | grep -qiE "$bad_re"; then
+  echo 'commit-msg: message mentions an AI tool or carries its trailer, which this repo never does' >&2
+  exit 1
+fi
+
+exit 0

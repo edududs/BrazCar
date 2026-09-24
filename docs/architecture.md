@@ -136,9 +136,11 @@ repositório, na mesma imagem do deploy.
 ## Qualidade
 
 Rápido e a cada commit, no hook de `pre-commit` e no GitHub: formatação, lint, tipos, testes de
-domínio e de rota, teste de arquitetura, divergência do OpenAPI, links da documentação. Pesado e
-local, no hook de `pre-push` e na task completa (`poe check-heavy`, `yarn check:heavy`): tudo do
-rápido, mais o contrato de repositório repetido no Postgres do compose e o build do front.
+domínio e de rota, teste de arquitetura, divergência do OpenAPI, links da documentação. Pesado, no
+GitHub e sob demanda local (`poe check-heavy`, `yarn check:heavy`): tudo do rápido, mais o contrato
+de repositório repetido no Postgres (serviço do runner no GitHub, compose localmente) e o build do
+front. Nenhum hook roda teste no push: o `pre-push` saiu, e um `commit-msg` de milissegundos recusa
+assunto fora do Conventional Commits ou mensagem com trailer ou menção a ferramenta de IA (D-132).
 
 Cobertura é medida só nos fluxos do GitHub, depois do portão rápido: os mesmos testes rápidos com
 `pytest-cov` no backend e `@vitest/coverage-v8` no front, resumo impresso no log e falha abaixo do

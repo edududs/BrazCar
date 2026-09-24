@@ -9,7 +9,7 @@ on:
     paths: ["web/**", "contract/**", ".github/workflows/web.yml"]
 
 jobs:
-  fast-gate:
+  gate:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -21,7 +21,9 @@ jobs:
           node-version: 24
       - run: corepack enable
       - run: yarn install --immutable
-      - run: yarn run check
+      # Heavy gate (D-132): the fast checks plus the production build, now that the pre-push hook
+      # is gone.
+      - run: yarn run check:heavy
       # Coverage is measured here, not on the local gate, so committing stays fast. No third-party
       # service reads it (D-008): the summary goes to the log and the floor is in vite.config.ts.
       - run: yarn run coverage
