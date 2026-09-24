@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "brazcar.accounts.adapters",
     "brazcar.rides.adapters",
     "brazcar.importing.adapters",
+    "brazcar.demo.adapters",  # no models and no routes: only `manage.py seed_demo` lives there (D-132)
 ]
 AUTH_USER_MODEL = "accounts.User"  # the custom user precedes auth's first migration (D-028)
 
