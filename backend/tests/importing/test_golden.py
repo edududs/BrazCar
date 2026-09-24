@@ -8,6 +8,7 @@ worker runs (ADR-0016); `poe test-golden` prints the whole table.
 
 import json
 import os
+import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -73,7 +74,7 @@ def compare(case: Case, got: ParserOutput, score: Score) -> None:
         "day": got.day == wanted.day,
         "seats": got.seats == wanted.seats,
         "price": _price(got.price) == _price(wanted.price),
-        "stops": [_fold(s) for s in got.stops] == [_fold(s) for s in wanted.stops],
+        "stops": _stops(got.stops) == _stops(wanted.stops),
     }
     score.field_total += len(checks)
     score.fields += sum(checks.values())
@@ -89,14 +90,24 @@ def _price(value: str | None) -> str | None:
 
 
 def _fold(text: str) -> str:
-    return " ".join(text.casefold().split())
+    """Substance, not punctuation: no parenthetical detail, "A/B" and "A ou B" as two, folded."""
+    return " ".join(re.sub(r"\([^)]*\)", " ", text).casefold().split())
+
+
+def _stops(stops: list[str]) -> list[str]:
+    return [
+        folded
+        for stop in stops
+        for part in re.split(r"\s*/\s*|\s+ou\s+", stop)
+        if (folded := _fold(part)) and not folded.isdigit()
+    ]
 
 
 @pytest.mark.skipif("OLLAMA_BASE_URL" not in os.environ, reason="set OLLAMA_BASE_URL to measure a model")
 @pytest.mark.skipif(not GOLDEN.exists(), reason="no golden set yet")
 async def test_the_model_reads_the_golden_set_well_enough() -> None:
     parser = OllamaRideParser(
-        base_url=os.environ["OLLAMA_BASE_URL"], model=os.environ.get("RIDE_PARSER_MODEL", "gemma3:4b")
+        base_url=os.environ["OLLAMA_BASE_URL"], model=os.environ.get("RIDE_PARSER_MODEL", "qwen3.5:4b")
     )
     cases = load_cases()
     score = Score()
@@ -113,7 +124,7 @@ async def test_the_model_reads_the_golden_set_well_enough() -> None:
     field_share = score.fields / score.field_total if score.field_total else 1.0
     seconds = sorted(score.seconds)
     print(  # noqa: T201 - the table is the point of this test
-        f"\nmodel {os.environ.get('RIDE_PARSER_MODEL', 'gemma3:4b')}: {len(cases)} messages, "
+        f"\nmodel {os.environ.get('RIDE_PARSER_MODEL', 'qwen3.5:4b')}: {len(cases)} messages, "
         f"kind {kind_share:.0%}, offer fields {field_share:.0%}, "
         f"latency median {seconds[len(seconds) // 2]:.1f}s max {seconds[-1]:.1f}s"
     )

@@ -121,7 +121,7 @@ IMPORT_PURGE = os.environ.get("IMPORT_PURGE", "worker")  # `worker` or `pg_cron`
 IMPORT_RAW_RETENTION_HOURS = int(os.environ.get("IMPORT_RAW_RETENTION_HOURS", "24"))
 # The interpreter (D-115): a local Ollama, reached from the container by host.docker.internal.
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-RIDE_PARSER_MODEL = os.environ.get("RIDE_PARSER_MODEL", "gemma3:4b")
+RIDE_PARSER_MODEL = os.environ.get("RIDE_PARSER_MODEL", "qwen3.5:4b")  # the golden set chose it (D-120)
 IMPORT_ACCEPT_THRESHOLD = float(os.environ.get("IMPORT_ACCEPT_THRESHOLD", "0.7"))
 IMPORT_MAX_ATTEMPTS = int(os.environ.get("IMPORT_MAX_ATTEMPTS", "5"))
 

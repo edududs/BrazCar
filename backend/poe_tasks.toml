@@ -32,7 +32,7 @@ env = { POSTGRES_DB.default = "brazcar", POSTGRES_USER.default = "brazcar", POST
 help = "Measure the interpreter on the golden set against an Ollama (D-120): OLLAMA_BASE_URL and RIDE_PARSER_MODEL"
 cmd = "pytest tests/importing/test_golden.py -m heavy -s"
 envfile = "../.env"
-env = { OLLAMA_BASE_URL.default = "http://127.0.0.1:11434", RIDE_PARSER_MODEL.default = "gemma3:4b" }
+env = { OLLAMA_BASE_URL.default = "http://127.0.0.1:11434", RIDE_PARSER_MODEL.default = "qwen3.5:4b", PYTHONIOENCODING = "utf-8" }
 
 [tasks.fix]
 help = "Pipeline to run before calling work done"

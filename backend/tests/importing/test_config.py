@@ -35,7 +35,7 @@ def test_the_extractor_watches_exactly_the_configured_groups_and_writes_nowhere_
         purge=PurgeMode.WORKER,
         raw_retention=timedelta(hours=24),
         ollama_base_url="http://127.0.0.1:11434",
-        parser_model="gemma3:4b",
+        parser_model="qwen3.5:4b",
         accept_threshold=0.7,
         max_attempts=5,
         departure_tolerance=timedelta(minutes=10),

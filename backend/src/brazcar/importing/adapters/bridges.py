@@ -1,5 +1,6 @@
 """What `importing` asks the other contexts, through their own ports and use cases (D-006)."""
 
+import re
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
@@ -25,9 +26,20 @@ class CatalogStopResolver:
         self._catalog = catalog
 
     async def resolve(self, texts: tuple[str, ...]) -> tuple[ResolvedStop, ...]:
+        """ "Vila/Veredas" or "Fassincra ou Rodeador" are two stops when both halves are known places;
+        "33/34" is one stop nobody knows. A detail in parentheses does not hide the place."""
         catalog = await self._catalog.load()
         resolved: list[ResolvedStop] = []
         for text in texts:
+            parts = [part.strip() for part in re.split(r"\s*/\s*|\s+ou\s+", text) if part.strip()]
+            places = [catalog.named(part) or catalog.named(part.partition("(")[0]) for part in parts]
+            if len(parts) > 1 and all(place is not None for place in places):
+                resolved.extend(
+                    ResolvedStop(text=part, place_id=place.id)
+                    for part, place in zip(parts, places, strict=True)
+                    if place is not None
+                )
+                continue
             place = catalog.named(text) or catalog.named(text.partition("(")[0])
             resolved.append(ResolvedStop(text=text, place_id=None if place is None else place.id))
         return tuple(resolved)

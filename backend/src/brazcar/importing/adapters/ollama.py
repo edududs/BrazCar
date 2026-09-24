@@ -42,6 +42,7 @@ class OllamaRideParser:
             json={
                 "model": self._model,
                 "stream": False,
+                "think": False,  # a thinking model would spend a minute reasoning; the schema is the answer
                 "format": self._schema,
                 "options": {"temperature": 0, "num_ctx": 4096},
                 "messages": [
