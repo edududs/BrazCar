@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { ActionButton } from "@/shared/ui/action-button";
 import { Card } from "@/shared/ui/card";
+import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Form } from "@/shared/ui/form";
 import { TextField } from "@/shared/ui/text-field";
 
@@ -14,10 +15,21 @@ interface AccountPanelProps {
   readonly addCar: (data: CarData) => Promise<Account>;
   readonly removeCar: (carId: string) => Promise<Account>;
   readonly logOut: () => Promise<void>;
+  readonly deleteAccount: () => Promise<void>;
+  /** Where the account goes once it is gone: the board, with a way to notice it. */
+  readonly onDeleted: () => void;
 }
 
 /** The owner's own account: who they are, the cars they may drive with, and the way out. */
-export function AccountPanel({ account, busy, addCar, removeCar, logOut }: AccountPanelProps) {
+export function AccountPanel({
+  account,
+  busy,
+  addCar,
+  removeCar,
+  logOut,
+  deleteAccount,
+  onDeleted,
+}: AccountPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const fail = (reason: unknown) => {
     setError(reasonOf(reason));
@@ -72,7 +84,58 @@ export function AccountPanel({ account, busy, addCar, removeCar, logOut }: Accou
       >
         Sair da conta
       </ActionButton>
+
+      <div className="flex flex-col gap-2 border-t border-neutral-soft pt-4">
+        <DeleteAccountControl
+          busy={busy}
+          deleteAccount={deleteAccount}
+          onDeleted={onDeleted}
+          onError={fail}
+        />
+      </div>
     </div>
+  );
+}
+
+interface DeleteAccountControlProps {
+  readonly busy: boolean;
+  readonly deleteAccount: () => Promise<void>;
+  readonly onDeleted: () => void;
+  readonly onError: (reason: unknown) => void;
+}
+
+/** Separate from the everyday actions above, and behind its own confirmation (D-033). */
+function DeleteAccountControl({
+  busy,
+  deleteAccount,
+  onDeleted,
+  onError,
+}: DeleteAccountControlProps) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <ActionButton
+        emphasis="critical"
+        disabled={busy}
+        onPress={() => {
+          setOpen(true);
+        }}
+      >
+        Excluir conta
+      </ActionButton>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Excluir sua conta?"
+        description="A conta some e as caronas publicadas por ela saem do mural. Esta ação não pode ser desfeita."
+        confirmLabel="Excluir conta"
+        busy={busy}
+        onConfirm={() => {
+          setOpen(false);
+          deleteAccount().then(onDeleted, onError);
+        }}
+      />
+    </>
   );
 }
 

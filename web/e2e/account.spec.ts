@@ -132,3 +132,42 @@ test("sair da conta devolve o visitante ao mural público", async ({ page, signI
   await expect(page.getByText("Você não está conectado.")).toBeVisible();
   await snap(page, "account/signed-out");
 });
+
+test("excluir conta: o diálogo explica, confirma, e o telefone deixa de servir para entrar", async ({
+  page,
+  demo,
+  isMobile,
+  snap,
+}) => {
+  // Conta própria deste teste, criada aqui (não da semente), para não desligar da sessão de
+  // nenhuma outra jornada que divide o mesmo banco. Um número por projeto, como o cadastro.
+  const phone = demo.suitePhoneAt(isMobile ? 2 : 3);
+  const password = "uma-senha-de-demonstracao";
+  await page.goto("/cadastro");
+  await page.getByLabel("Telefone").fill(phone);
+  await page.getByLabel("Nome").fill("Conta Para Excluir");
+  await page.getByLabel(/^Senha/).fill(password);
+  await page.getByLabel("Li e aceito os termos").check();
+  await page.getByRole("button", { name: "Criar conta" }).click();
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/conta");
+  await page.getByRole("button", { name: "Excluir conta" }).click();
+  await expect(page.getByText("Excluir sua conta?")).toBeVisible();
+  await expect(
+    page.getByText("A conta some e as caronas publicadas por ela saem do mural."),
+  ).toBeVisible();
+  await snap(page, "account/delete-dialog");
+
+  await page.getByRole("alertdialog").getByRole("button", { name: "Excluir conta" }).click();
+  await expect(page.getByRole("heading", { name: "Caronas", level: 1 })).toBeVisible();
+  await expect(page.getByText("Conta excluída.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Entrar", exact: true })).toBeVisible();
+  await snap(page, "account/deleted");
+
+  await page.goto("/entrar");
+  await page.getByLabel("Telefone").fill(phone);
+  await page.getByLabel(/^Senha/).fill(password);
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await expect(page.getByText("telefone ou senha incorretos")).toBeVisible();
+});

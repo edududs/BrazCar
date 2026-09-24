@@ -86,9 +86,15 @@ IMPORTED_OWNER = DemoPerson(
 )
 """The account whose phone a group message carries: its imported ride is hers (D-127)."""
 
-SUITE_PHONES: tuple[str, ...] = ("+5561900000010", "+5561900000011")
+SUITE_PHONES: tuple[str, ...] = (
+    "+5561900000010",
+    "+5561900000011",
+    "+5561900000012",
+    "+5561900000013",
+)
 """Reserved for the accounts the end to end suite creates itself. The seed never writes them; the
-teardown forgets them, so a suite that signs up starts from an empty phone every run."""
+teardown forgets them, so a suite that signs up starts from an empty phone every run. Two are spent
+on sign-up (one per project), two on deleting the account it just created (one per project)."""
 
 PEOPLE: tuple[DemoPerson, ...] = (
     DRIVER_ONE_CAR,
