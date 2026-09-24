@@ -21,6 +21,19 @@ class Day(StrEnum):
     UNKNOWN = "unknown"
 
 
+type Money = Annotated[Decimal, Field(gt=0, max_digits=6, decimal_places=2)]
+
+
+class OfferFare(FrozenModel):
+    """ "R$ 9,00 → Aeroporto": a price and the words it was written next to (D-131).
+
+    Which stop those words are is decided in code, never by the model (ADR-0016).
+    """
+
+    stop: StopText
+    price: Money
+
+
 class Offer(FrozenModel):
     """A driver offering seats. Everything but the stops may be missing; the message often is."""
 
@@ -29,7 +42,8 @@ class Offer(FrozenModel):
     day: Day = Day.UNKNOWN
     stops: tuple[StopText, ...] = ()  # in the order written: the first is where it leaves from
     seats: Annotated[int, Field(ge=0, le=8)] | None = None
-    price: Annotated[Decimal, Field(gt=0, max_digits=6, decimal_places=2)] | None = None
+    price: Money | None = None
+    fares: tuple[OfferFare, ...] = ()  # a price per stop, when the message gives one (D-131)
     payment_methods: frozenset[Payment] = frozenset()
 
 

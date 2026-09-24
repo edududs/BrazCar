@@ -14,6 +14,7 @@ from brazcar.importing.application import (
     ParserOutput,
     PurgeImported,
     ReopenJudged,
+    StopFare,
 )
 from brazcar.importing.domain import Accepted, Failed, Rejected, RejectReason, Sender, SourceMessage
 
@@ -173,6 +174,31 @@ async def test_a_second_candidate_for_the_same_departure_joins_the_ride(ctx: Con
         True,
     )
     assert len(ctx.rides.created) == 1
+
+
+async def test_a_price_per_stop_reaches_the_draft_and_prices_the_ride_from_the_cheapest() -> None:
+    priced = (
+        "*03 VAGAS as 05:45*\n🚘 Veredas\n🚘 Rodeador\n🚘 Rodoviária\n💸 7,00 Rodeador\n💸 9,00 Rodoviária"
+    )
+    read = OFFER_READ.model_copy(
+        update={
+            "price": "7.00",
+            "fares": [
+                StopFare(stop="Rodeador", price="7.00"),
+                StopFare(stop="Rodoviária", price="9.00"),
+                StopFare(stop="Ceilândia", price="12.00"),  # a place this ride never names
+            ],
+        }
+    )
+    ctx = Context((priced, read))
+    await ctx.arriving(message(priced))
+
+    (judged,) = await ctx.judge()
+
+    assert isinstance(judged.candidate.verdict, Accepted)
+    (*_, draft) = next(iter(ctx.rides.created.values()))
+    assert [stop.fare for stop in draft.stops] == [None, Decimal("7.00"), Decimal("9.00")]
+    assert draft.price == Decimal("7.00")
 
 
 async def test_requests_and_chat_are_rejected_with_their_reason(ctx: Context) -> None:

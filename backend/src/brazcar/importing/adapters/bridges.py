@@ -93,5 +93,5 @@ class RidesBridge:
 
 def _stop(stop: ResolvedStop) -> Stop:
     if stop.place_id is not None:
-        return CatalogStop(place_id=stop.place_id)
-    return FreeTextStop(text=stop.text)
+        return CatalogStop(place_id=stop.place_id, fare=stop.fare)
+    return FreeTextStop(text=stop.text, fare=stop.fare)

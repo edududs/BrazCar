@@ -20,7 +20,8 @@ from .candidate import (
     Verdict,
 )
 from .checks import Checks, check
-from .judgement import Day, Judgement, Offer, Other, Payment, Request, Update
+from .fares import attach_fares
+from .judgement import Day, Judgement, Offer, OfferFare, Other, Payment, Request, Update
 from .schedule import resolve_departure
 from .source_message import GroupJid, Phone, Sender, SourceMessage, WatchedGroup
 from .text_key import digit_tokens, text_key
@@ -41,6 +42,7 @@ __all__ = [
     "GroupJid",
     "Judgement",
     "Offer",
+    "OfferFare",
     "Other",
     "Payment",
     "Pending",
@@ -55,6 +57,7 @@ __all__ = [
     "Update",
     "Verdict",
     "WatchedGroup",
+    "attach_fares",
     "check",
     "decide",
     "digit_tokens",

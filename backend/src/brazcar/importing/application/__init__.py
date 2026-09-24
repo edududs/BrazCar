@@ -1,4 +1,4 @@
-from .parser_output import ParserOutput, to_judgement
+from .parser_output import ParserOutput, StopFare, to_judgement
 from .ports import (
     BlockedSenders,
     Candidates,
@@ -39,6 +39,7 @@ __all__ = [
     "ReopenJudged",
     "RideParser",
     "SourceMessages",
+    "StopFare",
     "StopResolver",
     "to_judgement",
 ]

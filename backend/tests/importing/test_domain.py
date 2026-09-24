@@ -15,6 +15,7 @@ from brazcar.importing.domain import (
     Day,
     Failed,
     Offer,
+    OfferFare,
     Other,
     Pending,
     Rejected,
@@ -24,6 +25,7 @@ from brazcar.importing.domain import (
     Sender,
     SourceMessage,
     Update,
+    attach_fares,
     check,
     decide,
     digit_tokens,
@@ -284,6 +286,83 @@ def test_what_is_refused_and_why(
     assert decision.reason is reason
 
 
+# --- fares (D-131) ----------------------------------------------------------------------------------
+
+AIRPORT_TEXT = (
+    "🔹AEROPORTO🔁BRAZLÂNDIA\nSaída: 18h00\n"
+    "Octogonal→Anvisa\nEstrutural→Rodeador\nVila→Veredas\n"
+    "💰 Valores:\nR$ 9,00 → Aeroporto\nR$ 8,00 → Anvisa\nR$ 7,00 → Estrutural\n"
+)
+AIRPORT_STOPS = (
+    ResolvedStop(text="Teca Aeroporto"),
+    ResolvedStop(text="Octogonal"),
+    ResolvedStop(text="Anvisa", place_id="anvisa"),
+    ResolvedStop(text="Estrutural", place_id="estrutural"),
+    ResolvedStop(text="Rodeador", place_id="rodeador"),
+)
+
+
+def test_each_fare_lands_on_the_one_stop_its_words_name() -> None:
+    fares = (
+        OfferFare(stop="Aeroporto", price=Decimal("9.00")),
+        OfferFare(stop="Anvisa", price=Decimal("8.00")),
+        OfferFare(stop="Estrutural", price=Decimal("7.00")),
+    )
+
+    attached = attach_fares(AIRPORT_STOPS, fares, AIRPORT_TEXT)
+
+    assert [stop.fare for stop in attached] == [
+        None,  # "Aeroporto" only names the first stop, and that is where the ride leaves from
+        None,
+        Decimal("8.00"),
+        Decimal("7.00"),
+        None,
+    ]
+
+
+@pytest.mark.parametrize(
+    ("fare", "why"),
+    [
+        (OfferFare(stop="Ceilândia", price=Decimal("9.00")), "no stop with those words"),
+        (OfferFare(stop="Lago Sul", price=Decimal("9.00")), "two stops with those words"),
+        (OfferFare(stop="Rodeador", price=Decimal("12.00")), "a value the message never wrote"),
+        (OfferFare(stop="Veredas", price=Decimal("9.00")), "the stop the ride leaves from"),
+    ],
+)
+def test_a_fare_that_cannot_be_tied_to_one_stop_is_dropped(fare: OfferFare, why: str) -> None:
+    text = "2 vagas 5:20 Veredas Rodeador Pontão do lago sul Ql 06 lago sul\nAté o lago sul 9,00"
+    stops = (
+        ResolvedStop(text="Veredas"),
+        ResolvedStop(text="Rodeador"),
+        ResolvedStop(text="Pontão do lago sul"),
+        ResolvedStop(text="Ql 06 lago sul"),
+    )
+
+    attached = attach_fares(stops, (fare,), text)
+
+    assert [stop.fare for stop in attached] == [None, None, None, None], why
+
+
+def test_the_draft_of_a_fared_offer_costs_the_cheapest_fare() -> None:
+    offer = FULL.evolve(fares=(OfferFare(stop="Rodoviária", price=Decimal("9.00")),))
+    stops = (STOPS[0], STOPS[1].evolve(fare=Decimal("9.00")))
+
+    decision = decide(offer, departure_at=DEPARTURE, stops=stops, checks=SURE, threshold=0.7)
+
+    assert isinstance(decision, Accept)
+    assert decision.draft.price == Decimal("9.00")  # not the 8.00 the message named for the trip
+    assert [stop.fare for stop in decision.draft.stops] == [None, Decimal("9.00")]
+
+
+def test_fares_do_not_move_the_confidence() -> None:
+    """Confidence weighs time, stops, seats and price, and D-131 did not change the weights."""
+    with_fares = FULL.evolve(fares=(OfferFare(stop="Rodoviária", price=Decimal("9.00")),))
+
+    assert check(with_fares, OFFER_TEXT, resolved=(True, True)) == check(
+        FULL, OFFER_TEXT, resolved=(True, True)
+    )
+
+
 # --- parser output ---------------------------------------------------------------------------------
 
 
@@ -305,6 +384,31 @@ def test_what_the_model_writes_badly_becomes_not_said_never_an_error() -> None:
     assert read.price is None
     assert read.stops == ("Vila", "Rodeador")
     assert to_judgement(ParserOutput(kind="offer", time="25:00")).at is None  # type: ignore[union-attr]
+
+
+def test_a_price_list_the_model_cannot_spell_is_dropped_line_by_line() -> None:
+    from brazcar.importing.application import (  # noqa: PLC0415 - the boundary under test
+        ParserOutput,
+        StopFare,
+        to_judgement,
+    )
+
+    read = to_judgement(
+        ParserOutput(
+            kind="offer",
+            time="18:00",
+            stops=["Aeroporto", "Estrutural"],
+            fares=[
+                StopFare(stop=" Aeroporto ", price="9,00"),
+                StopFare(stop="Estrutural", price="de graça"),
+                StopFare(stop="", price="7.00"),
+            ],
+        )
+    )
+
+    assert isinstance(read, Offer)
+    assert read.fares == (OfferFare(stop="Aeroporto", price=Decimal("9.00")),)
+    assert to_judgement(ParserOutput(kind="offer", time="18:00")).fares == ()  # type: ignore[union-attr]
 
 
 def test_a_long_route_keeps_where_it_leaves_from_and_where_it_goes() -> None:

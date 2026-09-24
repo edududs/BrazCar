@@ -18,6 +18,7 @@ from brazcar.importing.domain import (
     Offer,
     Rejected,
     RejectReason,
+    attach_fares,
     check,
     decide,
     resolve_departure,
@@ -109,7 +110,8 @@ class JudgeCandidates:
         judgement = to_judgement(output)
         departure = stops = checks = None
         if isinstance(judgement, Offer):
-            stops = await self.resolver.resolve(judgement.stops)
+            resolved = await self.resolver.resolve(judgement.stops)
+            stops = attach_fares(resolved, judgement.fares, candidate.text)
             departure = resolve_departure(
                 sent_at=candidate.first_seen_at,
                 day=judgement.day,

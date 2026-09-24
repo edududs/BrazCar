@@ -25,6 +25,7 @@ class ResolvedStop(FrozenModel):
 
     text: StopText
     place_id: PlaceId | None = None
+    fare: Annotated[Decimal, Field(gt=0, max_digits=6, decimal_places=2)] | None = None
 
     @property
     def known(self) -> bool:
@@ -75,8 +76,16 @@ def decide(
             stops=stops,
             departure_at=departure_at,
             seats=judgement.seats if judgement.seats is not None else DEFAULT_SEATS,
-            price=judgement.price if judgement.price is not None else DEFAULT_PRICE,
+            price=_price(stops, judgement.price),
             payment_methods=judgement.payment_methods or DEFAULT_PAYMENT,
         ),
         confidence=confidence,
     )
+
+
+def _price(stops: tuple[ResolvedStop, ...], said: Decimal | None) -> Decimal:
+    """The cheapest fare the stops carry; failing that, what the message said; failing that, R$ 7,00."""
+    fares = [stop.fare for stop in stops if stop.fare is not None]
+    if fares:
+        return min(fares)
+    return said if said is not None else DEFAULT_PRICE

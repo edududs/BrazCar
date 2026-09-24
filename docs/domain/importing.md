@@ -17,17 +17,19 @@ Depende do extrator embutido (ADR-0009) e entrega para `rides` por porta (ADR-00
 | veredito | `Verdict` | Tipo-soma: pendente `Pending`, aceita `Accepted(ride_id, joined)`, rejeitada `Rejected(reason, confidence)`, falhou `Failed(error, attempts)`. Só a aceita tem carona. |
 | motivo de rejeição | `RejectReason` | `not_an_offer`, `no_time`, `no_seats`, `few_stops`, `low_confidence`, `unknown_place`. |
 | interpretador | `RideParser` | Porta: texto, enviada em e rótulo do grupo entram; `ParserOutput` sai. Adaptador `OllamaRideParser` em produção (D-115); `ScriptedParser` nos testes. |
-| saída do interpretador | `ParserOutput` | O tipo plano que vira JSON schema para o modelo: `kind`, `time` ("HH:MM"), `day`, `stops` como escritas, `seats`, `price`, `payment_methods`, `closed`. `to_judgement` o converte; o que o modelo escreveu mal vira "não disse", nunca erro. |
+| saída do interpretador | `ParserOutput` | O tipo plano que vira JSON schema para o modelo: `kind`, `time` ("HH:MM"), `day`, `stops` como escritas, `seats`, `price`, `fares`, `payment_methods`, `closed`. `to_judgement` o converte; o que o modelo escreveu mal vira "não disse", nunca erro. |
+| preço por parada | `StopFare`, `OfferFare` | Um par de palavras e valor ("R$ 9,00 → Aeroporto"), como o modelo devolve e como o domínio o guarda (D-131). Qual parada é cada par não sai do modelo. |
 | julgamento | `Judgement` | Tipo-soma do que a mensagem é: oferta `Offer`, pedido `Request`, atualização `Update`, outro `Other`. Só a oferta vira carona (D-009). |
 | oferta interpretada | `Offer` | Hora `at` e dia `Day` (hoje, amanhã, não disse), paradas como texto em ordem, vagas, preço, formas de pagamento; tudo opcional. |
 | resolução de parada | `StopResolver` | Porta para `places`: cada texto de parada vira `ResolvedStop` com o lugar do catálogo cujo nome ou apelido é exatamente aquele, ou sem lugar (texto livre). O modelo nunca escolhe identificador. |
+| casamento de tarifa | `attach_fares` | Função pura: cada par parada e valor vira a tarifa da única parada que aquelas palavras nomeiam, se o valor também aparece na mensagem (D-131). |
 | resolução de horário | `resolve_departure` | Função pura: enviada em, `Day` e hora viram `departure_at` no fuso do mural. Hora já passada sem "hoje" cai no dia seguinte (a oferta da manhã é postada na noite anterior). |
 | conferências | `Checks` | Determinísticas, ancoradas no texto: a hora aparece nos dígitos, as vagas aparecem, o preço aparece, que fração das paradas aparece, quantas o catálogo conhece. Campo que a mensagem não deu conta como conferido. |
 | confiança | `Checks.confidence` | Número de 0 a 1 com pesos fixos no domínio (hora 0,35; paradas 0,35; vagas 0,15; preço 0,15), nunca declarado pelo modelo. |
 | limiar de aceite | `IMPORT_ACCEPT_THRESHOLD` | Abaixo dele a oferta é rejeitada por `low_confidence` (D-116). Padrão 0,7. |
 | regra de aceite | `decide` | Função pura: oferta, com hora resolvida, vagas diferentes de zero, duas paradas e confiança acima do limiar vira `Accept(RideDraft)`; senão `Rejected(reason)`. |
 | padrões de ausência | `DEFAULT_SEATS`, `DEFAULT_PRICE`, `DEFAULT_PAYMENT` | Vagas 2, R$ 7,00, dinheiro e PIX, quando a oferta não diz (D-116). |
-| rascunho de carona | `RideDraft` | O que `importing` entrega a `rides`: paradas resolvidas, partida, vagas, preço, pagamento. `RidesBridge` o traduz para os tipos daquele contexto e chama `ImportRide`. |
+| rascunho de carona | `RideDraft` | O que `importing` entrega a `rides`: paradas resolvidas com as tarifas que casaram, partida, vagas, preço, pagamento. `RidesBridge` o traduz para os tipos daquele contexto e chama `ImportRide`. |
 | carona importada | em `rides`: `RideOrigin` WhatsApp | A `RideOffer` criada a partir de uma candidata: da conta com o telefone do remetente, sem carro, ou de motorista externo (ADR-0015, D-127). |
 | junção por partida | `ImportRide` | Mesmo motorista e mesma partida é a mesma carona: a candidata nova é aceita como `joined` (D-113). |
 | redação | `redact_personal_data` | Em `shared/domain`: telefone, e-mail, CPF e placa viram `[…]` antes de o texto original chegar à carona (D-128). |
@@ -47,7 +49,12 @@ Depende do extrator embutido (ADR-0009) e entrega para `rides` por porta (ADR-00
   candidatas do mesmo remetente e da mesma partida (`joined`).
 - Só `Offer` vira carona, e só com horário resolvido e duas paradas. O julgamento que falha deixa a
   candidata para a próxima varredura, até `IMPORT_MAX_ATTEMPTS`; nunca cria carona pela metade.
-- O modelo nunca escolhe lugar do catálogo nem data absoluta; isso é código.
+- O modelo nunca escolhe lugar do catálogo, data absoluta nem a qual parada pertence uma tarifa;
+  isso é código. Par de parada e valor que não nomeia nenhuma parada, nomeia mais de uma, cai na
+  parada de saída ou traz valor que a mensagem não escreveu é descartado: preço errado na carona
+  toda é pior do que carona sem tarifa. Com tarifas, o preço do rascunho é a menor delas (D-131).
+- A importação nunca preenche as observações da carona: o texto original já diz o que foi dito
+  (D-129). As tarifas não entram na confiança; os pesos de `Checks` seguem os de D-115.
 - Telefone do remetente nunca sai por lista; só pela rota de contato de `rides` (D-031).
 - Nada de motorista externo sobrevive à partida: carona, candidata e fontes somem juntas (D-119).
   Carona vinculada a conta é do dono e fica.
