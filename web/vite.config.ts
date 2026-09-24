@@ -5,7 +5,7 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 // vitest/config re-exports Vite's defineConfig with the `test` key typed, so there is one config.
-import { defineConfig } from "vitest/config";
+import { coverageConfigDefaults, defineConfig } from "vitest/config";
 
 import packageJson from "./package.json" with { type: "json" };
 
@@ -66,18 +66,14 @@ export default defineConfig({
   test: {
     coverage: {
       provider: "v8",
-      // The gate measures where the logic lives: the headless layers (`domain` and `app`), which
-      // is also where every unit test is. `ui` is drawing and `adapters` talk to the network,
-      // browser or service worker; those are the heavy gate's job (build) and the planned E2E
-      // (D-065). No third-party service reads this (D-008): the summary goes to the log.
-      include: [
-        "src/features/*/domain/**",
-        "src/features/*/app/**",
-        "src/shared/domain/**",
-        "src/shared/app/**",
-      ],
+      // The whole of src, like the backend measures the whole of src/brazcar (D-109). Today only
+      // the headless hooks are tested, so the number is low on purpose: the target is parity with
+      // the backend, reached by testing components and behaviour too. No third-party service reads
+      // this (D-008): the summary goes to the log and the floor is right here.
+      include: ["src/**"],
+      exclude: [...coverageConfigDefaults.exclude, "src/routeTree.gen.ts", "src/**/*.fixture.*"],
       reporter: ["text", "text-summary"],
-      thresholds: { statements: 52, lines: 52 },
+      thresholds: { statements: 15, lines: 15 },
     },
   },
 });

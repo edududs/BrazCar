@@ -63,10 +63,10 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 - Tempo real (D-104, D-107): rajada ao acordar vale uma busca, qualquer que seja o sorteio; busca
   ao focar e ao voltar a rede é explícita; ao reconectar o primeiro quadro do stream é a comparação
   de revisão; vigia de silêncio do mural em 35s.
-- Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com
-  `pytest-cov` (`poe coverage`, piso 92% sobre `src/brazcar`) e front com `@vitest/coverage-v8`
-  (`yarn coverage`, piso 52% sobre `domain` e `app`). O resumo fica no log do passo e nada é
-  enviado para serviço de terceiros (D-008).
+- Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
+  (`poe coverage`), 96% medidos sobre `src/brazcar` e piso de 92%; front com `@vitest/coverage-v8`
+  (`yarn coverage`), 20% medidos sobre `src` e piso de 15%, com meta de paridade (D-109). O resumo
+  fica no log do passo e nada é enviado para serviço de terceiros (D-008).
 
 **Verificado de verdade no passo 7a:** portão rápido (276 testes) e o contrato no Postgres do
 compose (26), inclusive o da poda. Na máquina local: extrator e neonize importam e abrem sessão em

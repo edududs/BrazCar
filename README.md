@@ -109,8 +109,10 @@ Cada item indica onde conferir.
   em modo `strict`, TypeScript `strict` com eslint `strictTypeChecked`. Sem `Any` e sem `any`. O
   tipo gerado do OpenAPI fica confinado aos adaptadores, e o CI falha se
   [`contract/openapi.json`](contract/openapi.json) divergir do código.
-- **Cobertura medida no próprio CI**, sem serviço de terceiros: mínimo exigido de 92% no backend e
-  52% nas camadas headless do front, com o resumo impresso no log do fluxo.
+- **Cobertura medida no próprio CI**, sem serviço de terceiros, com o resumo impresso no log do
+  fluxo. Backend: 96% medidos sobre `src/brazcar`, mínimo exigido de 92%. Front: 20% medidos sobre
+  `src`, mínimo exigido de 15%, porque hoje só os hooks headless têm teste. A meta do front é
+  paridade com o backend, cobrindo componentes e comportamento (D-109).
 - **Versão calculada dos commits.** [`scripts/release.sh`](scripts/release.sh) lê os Conventional
   Commits com git-cliff, calcula o próximo SemVer, gera o `CHANGELOG.md` no formato Keep a
   Changelog, alinha backend e front e cria a tag anotada. A tag vira GitHub Release e imagem no
