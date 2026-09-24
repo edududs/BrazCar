@@ -145,6 +145,7 @@ def _fields(ride: RideOffer) -> dict[str, object]:
         "seats_available": ride.seats_available,
         "price": ride.price,
         "payment_methods": sorted(method.value for method in ride.payment_methods),
+        "notes": ride.notes or "",  # blank is none, as with every other optional text here
         "published_at": ride.published_at,
         "reopened_at": ride.reopened_at,
         "cancelled_at": ride.cancelled_at,
@@ -186,9 +187,14 @@ def _origin_fields(origin: RideOrigin) -> dict[str, object]:
 
 
 def _stop_row(ride_id: RideId, position: int, stop: Stop) -> StopModel:
-    if isinstance(stop, CatalogStop):
-        return StopModel(ride_id=ride_id, position=position, kind=stop.kind, place_id=stop.place_id)
-    return StopModel(ride_id=ride_id, position=position, kind=stop.kind, text=stop.text)
+    return StopModel(
+        ride_id=ride_id,
+        position=position,
+        kind=stop.kind,
+        place_id=stop.place_id if isinstance(stop, CatalogStop) else "",
+        text="" if isinstance(stop, CatalogStop) else stop.text,
+        fare=stop.fare,
+    )
 
 
 def _to_entity(row: RideModel) -> RideOffer:
@@ -202,6 +208,7 @@ def _to_entity(row: RideModel) -> RideOffer:
         seats_available=row.seats_available,
         price=row.price,
         payment_methods=frozenset(PaymentMethod(value) for value in row.payment_methods),
+        notes=row.notes or None,
         published_at=_local(row.published_at),
         reopened_at=None if row.reopened_at is None else _local(row.reopened_at),
         cancelled_at=None if row.cancelled_at is None else _local(row.cancelled_at),
@@ -233,7 +240,9 @@ def _to_origin(row: RideModel) -> RideOrigin:
 
 
 def _to_stop(row: StopModel) -> Stop:
-    return CatalogStop(place_id=row.place_id) if row.kind == "catalog" else FreeTextStop(text=row.text)
+    if row.kind == "catalog":
+        return CatalogStop(place_id=row.place_id, fare=row.fare)
+    return FreeTextStop(text=row.text, fare=row.fare)
 
 
 def _local(moment: datetime) -> datetime:

@@ -10,21 +10,24 @@
 | carona importada | `is_imported` | Carona com origem WhatsApp. Sem ação de dono quando o motorista é externo; apagada pela poda quando parte (D-119). |
 | rota | `Route` | Sequência ordenada de paradas. Nunca um par origem e destino. |
 | parada | `Stop` | Um ponto da rota: `CatalogStop` (referência a um lugar do catálogo, por identificador) ou `FreeTextStop` (texto livre, "outro"). |
+| tarifa | `Stop.fare` | Opcional: quanto custa ir da origem até aquela parada (D-131). A parada de onde a carona sai nunca tem. |
+| observações | `notes` | Texto livre opcional do motorista, até 500 caracteres, sem formatação (D-129). Recusa telefone, e-mail e placa; nunca vem de importação. |
 | vagas | `seats_available` | Vagas restantes, ajustadas à mão pelo motorista. |
 | horário de partida | `departure_at` | Horário atual, com fuso. |
 | horário original | `original_departure_at` | Gravado na publicação, nunca muda. Base da regra de atraso. |
 | situação | `RideStatus` | Calculada, nunca gravada: aberta `open`, reaberta `reopened`, lotada `full`, já saiu `departed`, cancelada `cancelled`. |
 | reaberta | `reopened_at` | Data do último reabrir. É transição, não situação gravada. |
-| preço | `price` | `Decimal`, único por carona, padrão R$ 7,00. |
+| preço | `price` | `Decimal`, único por carona, padrão R$ 7,00. Com tarifas na rota é a menor delas, calculado por `price_from`, e deixa de ser digitado (D-131). |
+| tem tarifa | `has_fares` | Alguma parada diz o próprio preço, então o preço da carona é um "a partir de". O read model entrega pronto; a tela só desenha. |
 | forma de pagamento | `PaymentMethod` | Conjunto fechado: dinheiro `cash`, PIX `pix`. |
 | carro na carona | `CarSnapshot` | Cópia de modelo, cor e placa no momento da publicação. |
 | repetir carona | `RepeatRide` | Caso de uso que cria uma carona nova a partir de outra. |
 | importar carona | `ImportRide` | Caso de uso chamado por `importing`: acha a conta pelo telefone do remetente ou cria motorista externo, junta repostagem da mesma partida (D-113), grava e indexa. |
 | esquecer caronas | `ForgetRides` | Apaga caronas de motorista externo, para a poda (D-119). Nunca as de conta. |
 | ações permitidas | `Actions` | O que quem vê pode fazer com a carona, calculado no servidor: editar, mudar vagas, cancelar, repetir, pedir contato e até quando pode adiar. |
-| card do mural | `BoardRide` | O que a lista mostra: nome, carro (modelo e cor, quando há), origem, mensagem original (quando importada), paradas com nome, situação e ações. Nunca telefone nem placa. |
+| card do mural | `BoardRide` | O que a lista mostra: nome, carro (modelo e cor, quando há), origem, mensagem original (quando importada), paradas com nome e tarifa, observações, situação e ações. Nunca telefone nem placa. |
 | filtros do mural | `BoardFilter` | Dia, "passa por" em texto livre, só com vaga, preço máximo. Vivem na URL do front. |
-| busca de caronas | `RideSearch` | Acha caronas pelo texto das paradas: nome, apelidos e lugares acima de cada parada do catálogo, e o texto das paradas "outro" (D-101). |
+| busca de caronas | `RideSearch` | Acha caronas pelo texto das paradas: nome, apelidos e lugares acima de cada parada do catálogo, e o texto das paradas "outro" (D-101). Observações ficam de fora do índice. |
 | pedido de contato | `ContactRequest` | Registro de quem pediu o contato de qual carona. Tabela própria. |
 | histórico | `RideEvent` | Tabela só de acréscimo com os eventos do agregado. |
 | revisão do mural | `BoardRevision` | Contador único, em `shared`, incrementado por toda escrita que muda o mural. |
@@ -53,6 +56,15 @@ Função pura de quatro dados, lida nesta ordem:
 - Motorista externo não é dono de nada: ninguém edita, muda vagas, cancela ou repete a carona dele.
 - Rota tem pelo menos duas paradas, em ordem: a primeira é de onde sai, a última para onde vai, e
   entre elas as paradas no caminho, opcionais. Parada do catálogo aponta para um lugar que existe.
+- Tarifa é o preço de chegar até a parada, contado da origem, então a primeira parada nunca tem
+  uma (`FareOnOriginError`). Não há ordem exigida entre tarifas: só precisam ser positivas.
+- Havendo tarifa em alguma parada, o preço da carona é a menor delas e o preço digitado é ignorado;
+  sem nenhuma, o preço é o que o motorista digitou. Publicar, editar e repetir passam por
+  `price_from`, e a entidade recusa uma carona em que os dois discordem.
+- Observações são texto simples de até 500 caracteres. Sequência que pareça telefone, e-mail ou
+  placa é recusada (`PersonalDataError`), nunca redigida: quem publica é dono das palavras e
+  corrige. O detector é o mesmo da importação, em `shared/domain/personal_data.py` (D-128, D-129).
+  Editar com texto vazio apaga as observações; carona importada nunca tem observações.
 - Datas voltam do banco no fuso do mural (`America/Sao_Paulo`): "mesmo dia" e o filtro por dia
   leem a data local, nunca a UTC.
 
@@ -74,4 +86,5 @@ sem placa; o texto original que o detalhe mostra já passou pela redação de da
 
 ## Fora do MVP
 
-Pedido de carona por passageiro, recorrência, preço por trecho, reserva de vaga, avaliação.
+Pedido de carona por passageiro, recorrência, preço conforme o ponto de embarque (D-131), reserva
+de vaga, avaliação.

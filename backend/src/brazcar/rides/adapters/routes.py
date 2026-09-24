@@ -38,14 +38,17 @@ from brazcar.rides.application import (
     StopView,
 )
 from brazcar.rides.domain import (
+    NOTES_LIMIT,
     Actions,
     CatalogStop,
     ContactLimitError,
     DepartureChangeError,
+    FareOnOriginError,
     FreeTextStop,
     NoCarError,
     NotTheDriverError,
     PaymentMethod,
+    PersonalDataError,
     RideCancelledError,
     RideError,
     RideLockedError,
@@ -69,10 +72,11 @@ BROWSER_RETRY_MS = 3000
 class StopOut(Schema):
     place_id: str | None
     label: str
+    fare: Decimal | None  # what it costs to come this far from the origin (D-131)
 
     @classmethod
     def of(cls, stop: StopView) -> Self:
-        return cls(place_id=stop.place_id, label=stop.label)
+        return cls(place_id=stop.place_id, label=stop.label, fare=stop.fare)
 
 
 class RideCarOut(Schema):
@@ -129,9 +133,11 @@ class RideOut(Schema):
     origin: OriginKind
     origin_message: OriginMessageOut | None
     stops: list[StopOut]
+    notes: str | None  # free words of the driver, never from an import (D-129)
     departure_at: datetime
     seats_available: int
     price: Decimal
+    has_fares: bool  # the price is the cheapest fare: the screen shows it as "a partir de" (D-131)
     payment_methods: list[PaymentMethod]
     status: RideStatus
     actions: ActionsOut
@@ -146,9 +152,11 @@ class RideOut(Schema):
             origin=ride.origin,
             origin_message=None if ride.origin_message is None else OriginMessageOut.of(ride.origin_message),
             stops=[StopOut.of(stop) for stop in ride.stops],
+            notes=ride.notes,
             departure_at=ride.departure_at,
             seats_available=ride.seats_available,
             price=ride.price,
+            has_fares=ride.has_fares,
             payment_methods=list(ride.payment_methods),
             status=ride.status,
             actions=ActionsOut.of(ride.actions),
@@ -178,10 +186,14 @@ class BoardQuery(Schema):
 
 
 class StopIn(Schema):
-    """A place of the catalog by identifier, or free text for "other" (D-013). One of the two."""
+    """A place of the catalog by identifier, or free text for "other" (D-013). One of the two.
+
+    `fare` is what it costs to come this far from the origin, so the first stop never has one (D-131).
+    """
 
     place_id: str | None = None
     text: str | None = None
+    fare: Decimal | None = Field(default=None, gt=0)
 
 
 class PublishIn(Schema):
@@ -189,17 +201,19 @@ class PublishIn(Schema):
     stops: list[StopIn] = Field(min_length=2)
     departure_at: datetime
     seats_available: int = Field(ge=1, le=8)
-    price: Decimal = Field(default=Decimal("7.00"), gt=0)
+    price: Decimal = Field(default=Decimal("7.00"), gt=0)  # ignored when a stop carries a fare (D-131)
     payment_methods: list[PaymentMethod] = Field(min_length=1)
+    notes: str | None = Field(default=None, max_length=NOTES_LIMIT)
 
 
 class EditIn(Schema):
-    """Absent means unchanged."""
+    """Absent means unchanged; empty notes erase them."""
 
     stops: list[StopIn] | None = Field(default=None, min_length=2)
     departure_at: datetime | None = None
     price: Decimal | None = Field(default=None, gt=0)
     payment_methods: list[PaymentMethod] | None = Field(default=None, min_length=1)
+    notes: str | None = Field(default=None, max_length=NOTES_LIMIT)
 
 
 class SeatsIn(Schema):
@@ -285,6 +299,7 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
                 seats_available=data.seats_available,
                 price=data.price,
                 payment_methods=frozenset(data.payment_methods),
+                notes=data.notes,
             )
         return Status(HTTPStatus.CREATED, RideOut.of(await use_cases.show(ride.id, driver_id)))
 
@@ -299,6 +314,7 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
                 departure_at=data.departure_at,
                 price=data.price,
                 payment_methods=None if data.payment_methods is None else frozenset(data.payment_methods),
+                notes=data.notes,
             )
         return RideOut.of(await use_cases.show(ride_id, driver_id))
 
@@ -363,6 +379,14 @@ _REFUSALS: dict[type[Exception], tuple[HTTPStatus, str]] = {
     NotTheDriverError: (HTTPStatus.FORBIDDEN, "só o motorista mexe nesta carona"),
     NoCarError: (HTTPStatus.UNPROCESSABLE_CONTENT, "cadastre um carro para publicar"),
     UnknownPlaceError: (HTTPStatus.UNPROCESSABLE_CONTENT, "lugar fora do catálogo"),
+    PersonalDataError: (
+        HTTPStatus.UNPROCESSABLE_CONTENT,
+        "não escreva telefone, e-mail ou placa nas observações; o contato sai pelo botão de contato",
+    ),
+    FareOnOriginError: (
+        HTTPStatus.UNPROCESSABLE_CONTENT,
+        "a primeira parada é de onde a carona sai; o preço é o de chegar às paradas seguintes",
+    ),
     RideCancelledError: (HTTPStatus.CONFLICT, "carona cancelada é definitiva; repita-a"),
     RideLockedError: (HTTPStatus.CONFLICT, "passaram duas horas do horário original; só cancelar"),
     RideNotOpenError: (HTTPStatus.CONFLICT, "esta carona não está aceitando passageiros"),
@@ -381,9 +405,9 @@ def _route(stops: list[StopIn]) -> Route:
 
 def _stop(stop: StopIn) -> Stop:
     if stop.place_id and not stop.text:
-        return CatalogStop(place_id=stop.place_id)
+        return CatalogStop(place_id=stop.place_id, fare=stop.fare)
     if stop.text and not stop.place_id:
-        return FreeTextStop(text=stop.text)
+        return FreeTextStop(text=stop.text, fare=stop.fare)
     raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, "cada parada é um lugar do catálogo ou um texto")
 
 

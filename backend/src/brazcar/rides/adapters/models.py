@@ -27,6 +27,8 @@ class RideModel(models.Model):
     seats_available = models.PositiveSmallIntegerField()
     price = models.DecimalField(max_digits=6, decimal_places=2)
     payment_methods: models.JSONField[list[str]] = models.JSONField()  # the `PaymentMethod` values
+    # Plain words of the driver, never written by an import; blank is none, as everywhere here (D-129).
+    notes = models.TextField(blank=True)
     published_at = models.DateTimeField()
     reopened_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
@@ -54,6 +56,8 @@ class StopModel(models.Model):
     kind = models.CharField(max_length=8)
     place_id = models.CharField(max_length=64, blank=True)
     text = models.CharField(max_length=60, blank=True)
+    # What it costs to come this far from the origin; null when the driver named one price (D-131).
+    fare = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
 
     class Meta:
         db_table = "rides_stop"

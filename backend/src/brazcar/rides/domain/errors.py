@@ -49,6 +49,20 @@ class UnknownPlaceError(RideError):
         self.place_id = place_id
 
 
+class PersonalDataError(RideError):
+    """Notes carrying a phone, an e-mail or a plate: refused, never redacted (D-129)."""
+
+    def __init__(self) -> None:
+        super().__init__("notes must not carry a phone, an e-mail or a plate")
+
+
+class FareOnOriginError(RideError):
+    """A fare is what it costs to reach a stop, so the stop the ride leaves from has none (D-131)."""
+
+    def __init__(self) -> None:
+        super().__init__("the first stop is where the ride leaves from; it has no fare")
+
+
 class RideNotOpenError(RideError):
     def __init__(self) -> None:
         super().__init__("this ride is not taking passengers now")

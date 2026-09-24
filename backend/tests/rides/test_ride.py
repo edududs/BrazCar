@@ -9,11 +9,14 @@ from pydantic import ValidationError
 
 from brazcar.rides.domain import (
     DELAY_LIMIT,
+    NOTES_LIMIT,
     Actions,
     CatalogStop,
     DepartureChangeError,
+    FareOnOriginError,
     FreeTextStop,
     PaymentMethod,
+    PersonalDataError,
     RideCancelled,
     RideCancelledError,
     RideEdited,
@@ -22,8 +25,10 @@ from brazcar.rides.domain import (
     RidePublished,
     RideReopened,
     RideStatus,
+    Route,
     SeatsChanged,
     allowed_actions,
+    fares_of,
 )
 
 from .strategies import BRASILIA, EPOCH, car, moments, rides
@@ -33,14 +38,23 @@ ROUTE = (CatalogStop(place_id="esplanada"), CatalogStop(place_id="estrutural"), 
 DRIVER = uuid4()
 
 
-def publish(departure: datetime = EPOCH + timedelta(hours=13), seats: int = 3) -> RideOffer:
+def publish(
+    departure: datetime = EPOCH + timedelta(hours=13),
+    seats: int = 3,
+    *,
+    route: Route = ROUTE,
+    price: Decimal = Decimal("7.00"),
+    notes: str | None = None,
+) -> RideOffer:
     return RideOffer.publish(
         driver_id=DRIVER,
         car=car(),
-        route=ROUTE,
+        route=route,
         departure_at=departure,
         seats_available=seats,
+        price=price,
         payment_methods=frozenset({PaymentMethod.CASH, PaymentMethod.PIX}),
+        notes=notes,
         now=EPOCH,
     ).ride
 
@@ -79,6 +93,103 @@ def test_invalid_rides_cannot_exist(bad: dict[str, object]) -> None:
     ride = publish()
     with pytest.raises(ValidationError):
         ride.evolve(**bad)
+
+
+# --- notes (D-129) -------------------------------------------------------------------------
+
+
+def test_notes_are_kept_trimmed_and_erased_by_empty_text() -> None:
+    ride = publish(notes="  Levo mala, aviso no grupo.  ")
+
+    erased = ride.edit(notes="   ", now=EPOCH)
+    rewritten = ride.edit(notes="Sem mala hoje", now=EPOCH)
+    untouched = ride.edit(price=Decimal(8), now=EPOCH)
+
+    assert ride.notes == "Levo mala, aviso no grupo."
+    assert publish().notes is None
+    assert erased.ride.notes is None
+    assert isinstance(erased.events[0], RideEdited)
+    assert rewritten.ride.notes == "Sem mala hoje"
+    assert untouched.ride.notes == ride.notes
+    assert ride.edit(notes="Levo mala, aviso no grupo.", now=EPOCH).events == ()
+
+
+PERSONAL = ["Chama no 61 99999-0001", "manda e-mail para ana@exemplo.com", "carro placa ABC1D23"]
+
+
+@pytest.mark.parametrize("notes", PERSONAL)
+def test_notes_with_a_phone_an_email_or_a_plate_are_refused(notes: str) -> None:
+    with pytest.raises(PersonalDataError):
+        publish(notes=notes)
+    with pytest.raises(PersonalDataError):
+        publish().edit(notes=notes, now=EPOCH)
+
+
+def test_repeating_carries_the_notes() -> None:
+    ride = publish(notes="Levo mala")
+
+    repeated = ride.repeat(departure_at=EPOCH + timedelta(days=1), car=car(), now=EPOCH)
+
+    assert repeated.ride.notes == "Levo mala"
+
+
+def test_notes_longer_than_the_limit_cannot_exist() -> None:
+    with pytest.raises(ValidationError):
+        publish().evolve(notes="a" * (NOTES_LIMIT + 1))
+
+
+# --- fares (D-131) -------------------------------------------------------------------------
+
+FARED = (
+    CatalogStop(place_id="esplanada"),
+    CatalogStop(place_id="estrutural", fare=Decimal("9.00")),
+    FreeTextStop(text="Incra 8", fare=Decimal("7.00")),
+)
+
+
+def test_with_fares_the_price_is_the_cheapest_and_the_typed_one_is_ignored() -> None:
+    ride = publish(route=FARED, price=Decimal("20.00"))
+
+    assert ride.price == Decimal("7.00")
+    assert ride.has_fares is True
+    assert publish().has_fares is False
+
+
+def test_editing_the_route_reprices_the_ride_and_dropping_the_fares_frees_the_price() -> None:
+    ride = publish(route=FARED, price=Decimal("20.00"))
+    now = EPOCH + timedelta(hours=1)
+
+    cheaper = ride.edit(route=(*FARED[:2], FARED[2].evolve(fare=Decimal("5.00"))), now=now)
+    plain = ride.edit(route=ROUTE, price=Decimal("8.00"), now=now)
+    typed_with_fares = ride.edit(price=Decimal("30.00"), now=now)
+
+    assert cheaper.ride.price == Decimal("5.00")
+    assert plain.ride.price == Decimal("8.00")
+    assert plain.ride.has_fares is False
+    assert typed_with_fares.events == ()  # the fares decide the price, so nothing changed
+
+
+def test_a_fare_on_the_first_stop_is_refused() -> None:
+    with pytest.raises(FareOnOriginError):
+        publish(route=(CatalogStop(place_id="esplanada", fare=Decimal("7.00")), *FARED[1:]))
+
+
+def test_repeating_carries_the_fares_and_the_price_they_give() -> None:
+    ride = publish(route=FARED, price=Decimal("20.00"))
+
+    repeated = ride.repeat(departure_at=EPOCH + timedelta(days=1), car=car(), now=EPOCH)
+
+    assert repeated.ride.route == FARED
+    assert repeated.ride.price == Decimal("7.00")
+
+
+@given(ride=rides())
+def test_the_price_is_always_the_cheapest_fare_when_there_is_one(ride: RideOffer) -> None:
+    fares = fares_of(ride.route)
+    assert ride.route[0].fare is None
+    assert ride.has_fares is bool(fares)
+    if fares:
+        assert ride.price == min(fares)
 
 
 # --- status ----------------------------------------------------------------------------------

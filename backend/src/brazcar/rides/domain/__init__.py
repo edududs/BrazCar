@@ -3,8 +3,10 @@ from .driver import AccountId, CarSnapshot, Driver, ExternalDriver, Phone, Regis
 from .errors import (
     ContactLimitError,
     DepartureChangeError,
+    FareOnOriginError,
     NoCarError,
     NotTheDriverError,
+    PersonalDataError,
     RideCancelledError,
     RideError,
     RideLockedError,
@@ -14,12 +16,22 @@ from .errors import (
 )
 from .events import RideCancelled, RideEdited, RideEvent, RidePublished, RideReopened, SeatsChanged
 from .origin import PublishedOrigin, RideOrigin, WhatsAppOrigin
-from .ride import DEFAULT_PRICE, DELAY_LIMIT, Change, PaymentMethod, RideId, RideOffer, RideStatus
-from .route import CatalogStop, FreeTextStop, PlaceId, Route, Stop
+from .ride import (
+    DEFAULT_PRICE,
+    DELAY_LIMIT,
+    NOTES_LIMIT,
+    Change,
+    PaymentMethod,
+    RideId,
+    RideOffer,
+    RideStatus,
+)
+from .route import CatalogStop, Fare, FreeTextStop, PlaceId, Route, Stop, fares_of, price_from
 
 __all__ = [
     "DEFAULT_PRICE",
     "DELAY_LIMIT",
+    "NOTES_LIMIT",
     "AccountId",
     "Actions",
     "CarSnapshot",
@@ -29,10 +41,13 @@ __all__ = [
     "DepartureChangeError",
     "Driver",
     "ExternalDriver",
+    "Fare",
+    "FareOnOriginError",
     "FreeTextStop",
     "NoCarError",
     "NotTheDriverError",
     "PaymentMethod",
+    "PersonalDataError",
     "Phone",
     "PlaceId",
     "PublishedOrigin",
@@ -57,4 +72,6 @@ __all__ = [
     "UnknownPlaceError",
     "WhatsAppOrigin",
     "allowed_actions",
+    "fares_of",
+    "price_from",
 ]

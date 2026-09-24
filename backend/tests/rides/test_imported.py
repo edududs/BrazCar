@@ -119,6 +119,26 @@ def test_an_external_ride_cannot_be_repeated() -> None:
         imported().repeat(departure_at=DEPARTURE + timedelta(days=1), car=car(), now=EPOCH)
 
 
+def test_an_imported_ride_carries_fares_but_never_notes() -> None:
+    """The message is priced per stop like the groups write it (D-131); the words are the origin's."""
+    fared = (ROUTE[0], ROUTE[1].evolve(fare=Decimal("9.00")), ROUTE[2].evolve(fare=Decimal("7.00")))
+
+    ride = RideOffer.import_offer(
+        driver=external(),
+        origin=whatsapp_origin(),
+        route=fared,
+        departure_at=DEPARTURE,
+        seats_available=3,
+        price=Decimal("20.00"),
+        payment_methods=frozenset({PaymentMethod.PIX}),
+        now=EPOCH,
+    ).ride
+
+    assert ride.price == Decimal("7.00")
+    assert ride.has_fares is True
+    assert ride.notes is None
+
+
 # --- use cases -------------------------------------------------------------------------------------
 
 

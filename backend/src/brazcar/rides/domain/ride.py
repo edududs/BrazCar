@@ -4,22 +4,31 @@ from enum import StrEnum
 from typing import Annotated, Self
 from uuid import UUID, uuid4
 
-from pydantic import Field, model_validator
+from pydantic import Field, StringConstraints, model_validator
 
 from brazcar.shared.domain.model import FrozenModel
+from brazcar.shared.domain.personal_data import has_personal_data
 
 from .driver import AccountId, CarSnapshot, Driver, RegisteredDriver
-from .errors import DepartureChangeError, RideCancelledError, RideLockedError
+from .errors import (
+    DepartureChangeError,
+    FareOnOriginError,
+    PersonalDataError,
+    RideCancelledError,
+    RideLockedError,
+)
 from .events import RideCancelled, RideEdited, RideEvent, RidePublished, RideReopened, SeatsChanged
 from .origin import PublishedOrigin, RideOrigin, WhatsAppOrigin
-from .route import Route
+from .route import Route, fares_of, price_from
 
 DEFAULT_PRICE = Decimal("7.00")
 DELAY_LIMIT = timedelta(hours=2)  # counted from the original departure, always (ADR-0004)
+NOTES_LIMIT = 500  # characters of plain text, no formatting (D-129)
 
 type RideId = UUID
 type Seats = Annotated[int, Field(ge=0, le=8)]
 type Price = Annotated[Decimal, Field(gt=0, max_digits=6, decimal_places=2)]
+type Notes = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=NOTES_LIMIT)]
 
 
 class PaymentMethod(StrEnum):
@@ -43,8 +52,9 @@ class RideOffer(FrozenModel):
     departure_at: datetime
     original_departure_at: datetime  # written once, never changed (ADR-0004)
     seats_available: Seats
-    price: Price = DEFAULT_PRICE
+    price: Price = DEFAULT_PRICE  # with fares on the route, the cheapest of them (D-131)
     payment_methods: frozenset[PaymentMethod] = Field(min_length=1)
+    notes: Notes | None = None  # what the driver wants said, free of personal data (D-129)
     published_at: datetime
     reopened_at: datetime | None = None
     cancelled_at: datetime | None = None
@@ -58,7 +68,18 @@ class RideOffer(FrozenModel):
         if isinstance(self.origin, PublishedOrigin) and self.car is None:
             message = "a ride published here always has an account and a car; only an imported one may not"
             raise ValueError(message)
+        if self.route[0].fare is not None:
+            raise FareOnOriginError
+        fares = fares_of(self.route)
+        if fares and self.price != min(fares):
+            message = "with fares, the price is the cheapest of them; build it with `price_from` (D-131)"
+            raise ValueError(message)
         return self
+
+    @property
+    def has_fares(self) -> bool:
+        """Whether the price is a "from" price: some stop says what it costs to reach it (D-131)."""
+        return bool(fares_of(self.route))
 
     @property
     def driver_id(self) -> AccountId | None:
@@ -89,6 +110,7 @@ class RideOffer(FrozenModel):
         seats_available: int,
         price: Decimal = DEFAULT_PRICE,
         payment_methods: frozenset[PaymentMethod],
+        notes: str | None = None,
         now: datetime,
     ) -> Change:
         ride = cls(
@@ -98,8 +120,9 @@ class RideOffer(FrozenModel):
             departure_at=departure_at,
             original_departure_at=departure_at,
             seats_available=seats_available,
-            price=price,
+            price=price_from(route, price),
             payment_methods=payment_methods,
+            notes=checked_notes(notes),
             published_at=now,
         )
         return Change(ride=ride, events=(RidePublished(ride_id=ride.id, at=now),))
@@ -118,7 +141,8 @@ class RideOffer(FrozenModel):
         now: datetime,
     ) -> Change:
         """A ride read from a group (ADR-0015): the account with that phone if there is one, else
-        an external driver; no car either way; the original words kept."""
+        an external driver; no car either way; the original words kept. Never any notes: the words
+        of the message already say what the driver said (D-129)."""
         ride = cls(
             id=uuid4(),
             driver=driver,
@@ -127,14 +151,14 @@ class RideOffer(FrozenModel):
             departure_at=departure_at,
             original_departure_at=departure_at,
             seats_available=seats_available,
-            price=price,
+            price=price_from(route, price),
             payment_methods=payment_methods,
             published_at=now,
         )
         return Change(ride=ride, events=(RidePublished(ride_id=ride.id, at=now),))
 
     def repeat(self, *, departure_at: datetime, car: CarSnapshot, now: datetime) -> Change:
-        """A new ride with this one's route, seats, price and payment; the car as it is today."""
+        """A new ride with this one's route, fares, seats, price, payment and notes; today's car."""
         if not isinstance(self.driver, RegisteredDriver):
             message = "only a registered driver repeats a ride"
             raise TypeError(message)
@@ -146,6 +170,7 @@ class RideOffer(FrozenModel):
             seats_available=max(self.seats_available, 1),
             price=self.price,
             payment_methods=self.payment_methods,
+            notes=self.notes,
             now=now,
         )
 
@@ -185,23 +210,28 @@ class RideOffer(FrozenModel):
             events.append(RideReopened(ride_id=self.id, at=now))
         return Change(ride=self.evolve(**changes), events=tuple(events))
 
-    def edit(
+    def edit(  # noqa: PLR0913 - one call edits every editable field at once
         self,
         *,
         route: Route | None = None,
         departure_at: datetime | None = None,
         price: Decimal | None = None,
         payment_methods: frozenset[PaymentMethod] | None = None,
+        notes: str | None = None,
         now: datetime,
     ) -> Change:
+        """Absent means unchanged; for the notes, empty text is how they are erased (D-129)."""
         self._require_changeable(now)
         changes: dict[str, object] = {}
         if route is not None:
             changes["route"] = route
-        if price is not None:
-            changes["price"] = price
+        priced = price_from(route if route is not None else self.route, price or self.price)
+        if priced != self.price:
+            changes["price"] = priced
         if payment_methods is not None:
             changes["payment_methods"] = payment_methods
+        if notes is not None and (edited := checked_notes(notes)) != self.notes:
+            changes["notes"] = edited
         if departure_at is not None and departure_at != self.departure_at:
             self._check_departure_change(departure_at, now)
             changes["departure_at"] = departure_at
@@ -245,3 +275,19 @@ class Change(FrozenModel):
 
     ride: RideOffer
     events: tuple[RideEvent, ...]
+
+
+def checked_notes(text: str | None) -> str | None:
+    """Blank is no notes; a phone, an e-mail or a plate is refused, never redacted (D-129).
+
+    Whoever publishes owns the words and can fix them, so the answer is a refusal; the importing
+    redacts instead, because nobody there can be asked (D-128). The pattern is the same one.
+    """
+    if text is None:
+        return None
+    trimmed = text.strip()
+    if not trimmed:
+        return None
+    if has_personal_data(trimmed):
+        raise PersonalDataError
+    return trimmed

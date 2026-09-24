@@ -479,11 +479,13 @@ export interface components {
         };
         /**
          * EditIn
-         * @description Absent means unchanged.
+         * @description Absent means unchanged; empty notes erase them.
          */
         EditIn: {
             /** Departure At */
             departure_at?: string | null;
+            /** Notes */
+            notes?: string | null;
             /** Payment Methods */
             payment_methods?: components["schemas"]["PaymentMethod"][] | null;
             /** Price */
@@ -572,6 +574,8 @@ export interface components {
              * Format: date-time
              */
             departure_at: string;
+            /** Notes */
+            notes?: string | null;
             /** Payment Methods */
             payment_methods: components["schemas"]["PaymentMethod"][];
             /**
@@ -640,6 +644,8 @@ export interface components {
             departure_at: string;
             /** Driver Name */
             driver_name: string;
+            /** Has Fares */
+            has_fares: boolean;
             /**
              * Id
              * Format: uuid
@@ -647,6 +653,8 @@ export interface components {
             id: string;
             /** Is Mine */
             is_mine: boolean;
+            /** Notes */
+            notes: string | null;
             origin: components["schemas"]["OriginKind"];
             origin_message: components["schemas"]["OriginMessageOut"] | null;
             /** Payment Methods */
@@ -672,8 +680,12 @@ export interface components {
         /**
          * StopIn
          * @description A place of the catalog by identifier, or free text for "other" (D-013). One of the two.
+         *
+         *     `fare` is what it costs to come this far from the origin, so the first stop never has one (D-131).
          */
         StopIn: {
+            /** Fare */
+            fare?: number | string | null;
             /** Place Id */
             place_id?: string | null;
             /** Text */
@@ -681,6 +693,8 @@ export interface components {
         };
         /** StopOut */
         StopOut: {
+            /** Fare */
+            fare: string | null;
             /** Label */
             label: string;
             /** Place Id */

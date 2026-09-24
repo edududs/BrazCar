@@ -156,6 +156,77 @@ async def test_the_card_shows_the_driver_and_the_car_but_never_the_phone_or_the_
     assert body(revision)["revision"] >= 1
 
 
+async def test_notes_go_out_with_the_ride_are_edited_and_erased_and_never_reach_the_search() -> None:
+    ana, car_id = await driver()
+
+    published = await publish(ana, car_id, notes="  Levo mala pequena.  ")
+    rewritten = await ana.patch(f"/api/rides/{published['id']}", {"notes": "Sem mala hoje"})
+    erased = await ana.patch(f"/api/rides/{published['id']}", {"notes": ""})
+    by_notes = body(await Browser().get("/api/rides", {"q": "mala"}))
+
+    assert published["notes"] == "Levo mala pequena."
+    assert body(rewritten)["notes"] == "Sem mala hoje"
+    assert body(erased)["notes"] is None
+    assert by_notes == []  # "passa por" reads the stops, never the notes (D-129)
+
+
+@pytest.mark.parametrize("notes", ["Chama no 61 99999-0001", "ana@exemplo.com", "meu carro é o ABC1D23"])
+async def test_notes_with_a_phone_an_email_or_a_plate_are_refused(notes: str) -> None:
+    ana, car_id = await driver()
+
+    refused = await ana.post("/api/rides", ride_payload(car_id=car_id, notes=notes))
+
+    assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+    assert "botão de contato" in body(refused)["detail"]
+
+
+async def test_a_fare_per_stop_prices_the_ride_from_the_cheapest_one() -> None:
+    ana, car_id = await driver()
+    fared = [
+        {"place_id": "brazlandia"},
+        {"text": "Incra 8", "fare": "9.00"},
+        {"place_id": "esplanada", "fare": "7.00"},
+    ]
+
+    published = await publish(ana, car_id, stops=fared, price="20.00")
+    on_origin = await ana.post(
+        "/api/rides",
+        ride_payload(car_id=car_id, stops=[{"place_id": "brazlandia", "fare": "7.00"}, {"text": "y"}]),
+    )
+    under_eight = body(await Browser().get("/api/rides", {"max_price": "8"}))
+
+    assert published["price"] == "7.00"  # the typed 20.00 is ignored (D-131)
+    assert published["has_fares"] is True
+    assert [stop["fare"] for stop in published["stops"]] == [None, "9.00", "7.00"]
+    assert on_origin.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+    assert "primeira parada" in body(on_origin)["detail"]
+    assert [r["id"] for r in under_eight] == [published["id"]]
+
+
+async def test_a_ride_without_fares_keeps_the_typed_price() -> None:
+    ana, car_id = await driver()
+
+    published = await publish(ana, car_id, price="9.50")
+
+    assert published["price"] == "9.50"
+    assert published["has_fares"] is False
+    assert [stop["fare"] for stop in published["stops"]] == [None, None, None]
+    assert published["notes"] is None
+
+
+async def test_repeating_carries_the_notes_and_the_fares() -> None:
+    ana, car_id = await driver()
+    fared = [{"place_id": "brazlandia"}, {"place_id": "esplanada", "fare": "9.00"}]
+    ride = await publish(ana, car_id, stops=fared, notes="Levo mala")
+
+    repeated = await ana.post(f"/api/rides/{ride['id']}/repeat", {"departure_at": tomorrow(9)})
+
+    assert repeated.status_code == HTTPStatus.CREATED
+    assert body(repeated)["notes"] == "Levo mala"
+    assert body(repeated)["price"] == "9.00"
+    assert [stop["fare"] for stop in body(repeated)["stops"]] == [None, "9.00"]
+
+
 async def test_the_board_filters_by_text_of_any_stop_day_seats_and_price() -> None:
     ana, car_id = await driver()
     cheap = await publish(ana, car_id)

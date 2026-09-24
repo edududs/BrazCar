@@ -67,6 +67,7 @@ class PublishRide:
         seats_available: int,
         price: Decimal = DEFAULT_PRICE,
         payment_methods: frozenset[PaymentMethod],
+        notes: str | None = None,
     ) -> RideOffer:
         driver = await _require_driver(self.drivers, driver_id)
         car = _snapshot(driver, car_id)
@@ -79,6 +80,7 @@ class PublishRide:
             seats_available=seats_available,
             price=price,
             payment_methods=payment_methods,
+            notes=notes,
             now=self.clock.now(),
         )
         await self.rides.save(change.ride, change.events)
@@ -102,6 +104,7 @@ class EditRide:
         departure_at: datetime | None = None,
         price: Decimal | None = None,
         payment_methods: frozenset[PaymentMethod] | None = None,
+        notes: str | None = None,
     ) -> RideOffer:
         ride = await _own_ride(self.rides, driver_id, ride_id)
         if route is not None:
@@ -111,6 +114,7 @@ class EditRide:
             departure_at=departure_at,
             price=price,
             payment_methods=payment_methods,
+            notes=notes,
             now=self.clock.now(),
         )
         await self.rides.save(change.ride, change.events)

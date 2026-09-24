@@ -127,6 +127,36 @@ async def test_a_new_route_is_found_by_its_new_stops(ctx: Context) -> None:
     assert await ctx.board(BoardFilter(text="incra"), viewer=None) == ()
 
 
+async def test_the_card_carries_the_notes_and_the_fare_of_each_stop(ctx: Context) -> None:
+    fared = (
+        CatalogStop(place_id="esplanada"),
+        FreeTextStop(text="Incra 8", fare=Decimal("9.00")),
+        CatalogStop(place_id="brazlandia", fare=Decimal("7.00")),
+    )
+    ride = await ctx.publish(
+        ANA.id,
+        car_id=ANA.cars[0].car_id,
+        route=fared,
+        departure_at=EPOCH + timedelta(hours=13),
+        seats_available=3,
+        price=Decimal("20.00"),
+        payment_methods=frozenset({PaymentMethod.PIX}),
+        notes="Levo mala pequena",
+    )
+
+    (shown,) = await ctx.board(BoardFilter(), viewer=None)
+    plain = await ctx.edit(ANA.id, ride.id, route=ROUTE, price=Decimal("8.00"), notes="")
+    (after,) = await ctx.board(BoardFilter(), viewer=None)
+
+    assert shown.notes == "Levo mala pequena"
+    assert [stop.fare for stop in shown.stops] == [None, Decimal("9.00"), Decimal("7.00")]
+    assert shown.price == Decimal("7.00")  # the cheapest fare, not the typed price (D-131)
+    assert shown.has_fares is True
+    assert plain.price == Decimal("8.00")
+    assert after.notes is None
+    assert after.has_fares is False
+
+
 async def test_the_board_hides_phone_and_plate_and_resolves_place_names(ctx: Context) -> None:
     await ctx.published()
 

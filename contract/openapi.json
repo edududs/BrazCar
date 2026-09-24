@@ -245,7 +245,7 @@
         "type": "object"
       },
       "EditIn": {
-        "description": "Absent means unchanged.",
+        "description": "Absent means unchanged; empty notes erase them.",
         "properties": {
           "departure_at": {
             "anyOf": [
@@ -258,6 +258,18 @@
               }
             ],
             "title": "Departure At"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
           },
           "payment_methods": {
             "anyOf": [
@@ -475,6 +487,18 @@
             "title": "Departure At",
             "type": "string"
           },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
           "payment_methods": {
             "items": {
               "$ref": "#/components/schemas/PaymentMethod"
@@ -652,6 +676,10 @@
             "title": "Driver Name",
             "type": "string"
           },
+          "has_fares": {
+            "title": "Has Fares",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -660,6 +688,17 @@
           "is_mine": {
             "title": "Is Mine",
             "type": "boolean"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
           },
           "origin": {
             "$ref": "#/components/schemas/OriginKind"
@@ -708,9 +747,11 @@
           "origin",
           "origin_message",
           "stops",
+          "notes",
           "departure_at",
           "seats_available",
           "price",
+          "has_fares",
           "payment_methods",
           "status",
           "actions",
@@ -746,8 +787,24 @@
         "type": "object"
       },
       "StopIn": {
-        "description": "A place of the catalog by identifier, or free text for \"other\" (D-013). One of the two.",
+        "description": "A place of the catalog by identifier, or free text for \"other\" (D-013). One of the two.\n\n`fare` is what it costs to come this far from the origin, so the first stop never has one (D-131).",
         "properties": {
+          "fare": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fare"
+          },
           "place_id": {
             "anyOf": [
               {
@@ -776,6 +833,18 @@
       },
       "StopOut": {
         "properties": {
+          "fare": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fare"
+          },
           "label": {
             "title": "Label",
             "type": "string"
@@ -794,7 +863,8 @@
         },
         "required": [
           "place_id",
-          "label"
+          "label",
+          "fare"
         ],
         "title": "StopOut",
         "type": "object"

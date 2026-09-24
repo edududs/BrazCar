@@ -23,6 +23,7 @@ type OriginKind = Literal["published", "whatsapp"]
 class StopView(FrozenModel):
     place_id: str | None
     label: str
+    fare: Decimal | None  # what it costs to come this far from the origin, when the driver said (D-131)
 
 
 class CarView(FrozenModel):
@@ -47,9 +48,11 @@ class BoardRide(FrozenModel):
     origin: OriginKind
     origin_message: OriginMessageView | None
     stops: tuple[StopView, ...]
+    notes: str | None  # what the driver wanted said, in plain words (D-129)
     departure_at: datetime
     seats_available: int
     price: Decimal
+    has_fares: bool  # the price is the cheapest fare, so the screen says "a partir de" (D-131)
     payment_methods: tuple[PaymentMethod, ...]
     status: RideStatus
     actions: Actions
@@ -89,14 +92,20 @@ def to_board_ride(  # noqa: PLR0913 - a projection joins several sources by desi
             else None
         ),
         stops=tuple(
-            StopView(place_id=stop.place_id, label=labels.get(stop.place_id, stop.place_id))
+            StopView(
+                place_id=stop.place_id,
+                label=labels.get(stop.place_id, stop.place_id),
+                fare=stop.fare,
+            )
             if isinstance(stop, CatalogStop)
-            else StopView(place_id=None, label=stop.text)
+            else StopView(place_id=None, label=stop.text, fare=stop.fare)
             for stop in ride.route
         ),
+        notes=ride.notes,
         departure_at=ride.departure_at,
         seats_available=ride.seats_available,
         price=ride.price,
+        has_fares=ride.has_fares,
         payment_methods=tuple(sorted(ride.payment_methods)),
         status=ride.status(now, tolerance),
         actions=allowed_actions(ride, viewer, now, tolerance),
