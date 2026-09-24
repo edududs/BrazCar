@@ -6,6 +6,18 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.13.0] - 2026-09-24
+
+### Adicionado
+
+- Phone number as one composite value object for every context
+
+### Documentação
+
+- Record the v0.12.1 deploy
+- Screens of the journeys the phone step touched
+- The free-text stop shipped in v0.12.1, not v0.13.0
+
 ## [0.12.1] - 2026-09-24
 
 ### Corrigido
