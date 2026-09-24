@@ -4,9 +4,10 @@ Atualizado em 2026-09-24.
 
 ## Onde estamos
 
-Sobre a `v0.11.0`, o passo de coleta: semente de demonstração, suíte de ponta a ponta com o
-Playwright e [catálogo de telas](screens/README.md), para a etapa de design (D-103) ter o que
-olhar. Antes: passo curto de observações e preço por parada. Antes disso:
+Versão `v0.12.0`: passo de coleta concluído no repo: semente de demonstração, suíte de ponta a
+ponta com o Playwright e [catálogo de telas](screens/README.md), para a etapa de design (D-103)
+ter o que olhar; e o portão pesado passou para o GitHub (D-132). Antes: `v0.11.0`, passo curto
+de observações e preço por parada. Antes disso:
 `v0.10.0` (reprocessamento manual e rota de até 15 paradas), `v0.9.0` (passo 7b, importação no
 mural), extrator embutido (`v0.8.0`), tempo real e PWA (`v0.7.0`), esqueleto (`v0.1.0`),
 SSE confirmado pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido
