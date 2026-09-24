@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from brazcar.importing.domain import Day, Judgement, Offer, Other, Request, Update
 
 MAX_STOPS = 8
+MAX_SEATS = 8  # a car; more than that is a misreading ("26" is a quadra), so not said
 
 
 class ParserOutput(BaseModel):
@@ -30,7 +31,7 @@ class ParserOutput(BaseModel):
         default="unknown", description="which day the message means, if it says"
     )
     stops: list[str] = Field(default=[], description="the places named, in the order written, as written")
-    seats: int | None = Field(default=None, ge=0, le=8, description="seats offered, if a number is given")
+    seats: int | None = Field(default=None, description="seats offered, if a number is given")
     price: str | None = Field(default=None, description="price per person in reais as 7.00, or null")
     payment_methods: list[Literal["cash", "pix"]] = Field(default=[])
     closed: bool = Field(default=False, description="for an update: the offer is closed or cancelled")
@@ -43,14 +44,14 @@ def to_judgement(output: ParserOutput) -> Judgement:
                 at=_time(output.time),
                 day=Day(output.day),
                 stops=_stops(output.stops),
-                seats=output.seats,
+                seats=_seats(output.seats),
                 price=_price(output.price),
                 payment_methods=frozenset(output.payment_methods),
             )
         case "request":
             return Request()
         case "update":
-            return Update(seats=output.seats, closed=output.closed)
+            return Update(seats=_seats(output.seats), closed=output.closed)
         case "other":
             return Other()
 
@@ -63,6 +64,10 @@ def _time(value: str | None) -> time | None:
         return time(int(hour), int(minute or 0))
     except ValueError:
         return None
+
+
+def _seats(value: int | None) -> int | None:
+    return value if value is not None and 0 <= value <= MAX_SEATS else None
 
 
 def _price(value: str | None) -> Decimal | None:

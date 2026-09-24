@@ -282,3 +282,26 @@ def test_what_is_refused_and_why(
 
     assert isinstance(decision, Rejected)
     assert decision.reason is reason
+
+
+# --- parser output ---------------------------------------------------------------------------------
+
+
+def test_what_the_model_writes_badly_becomes_not_said_never_an_error() -> None:
+    from brazcar.importing.application import (  # noqa: PLC0415 - the boundary under test
+        ParserOutput,
+        to_judgement,
+    )
+
+    read = to_judgement(
+        ParserOutput(
+            kind="offer", time="7:5", seats=26, price="sete", stops=[" Vila ", "vila", "", "Rodeador"]
+        )
+    )
+
+    assert isinstance(read, Offer)
+    assert read.at == time(7, 5)
+    assert read.seats is None
+    assert read.price is None
+    assert read.stops == ("Vila", "Rodeador")
+    assert to_judgement(ParserOutput(kind="offer", time="25:00")).at is None  # type: ignore[union-attr]

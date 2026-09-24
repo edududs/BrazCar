@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from brazcar.importing.adapters.ollama import OllamaRideParser
+from brazcar.importing.adapters.ollama import OllamaRideParser, ParserAnswerError
 from brazcar.importing.application import ParserOutput
 
 GOLDEN = Path(__file__).with_name("golden") / "messages.jsonl"
@@ -114,8 +114,13 @@ async def test_the_model_reads_the_golden_set_well_enough() -> None:
     try:
         for case in cases:
             started = time.perf_counter()
-            got = await parser.parse(case.text, sent_at=case.sent_at, group_label="Rota")
-            score.seconds.append(time.perf_counter() - started)
+            try:
+                got = await parser.parse(case.text, sent_at=case.sent_at, group_label="Rota")
+            except ParserAnswerError as error:  # an answer outside the schema counts as a wrong kind
+                score.misses.append(f"#{case.seq} answer: {error}")
+                continue
+            finally:
+                score.seconds.append(time.perf_counter() - started)
             compare(case, got, score)
     finally:
         await parser.aclose()
