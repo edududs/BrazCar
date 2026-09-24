@@ -6,6 +6,19 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.11.0] - 2026-09-24
+
+### Adicionado
+
+- **rides:** Free notes on a ride and a fare per stop
+- **importing:** Read the price of each stop out of the message
+- **web:** Notes and a price per stop in the form, the card and the detail
+
+### Documentação
+
+- Record D-131, price per stop, in the same short step as the notes
+- Record the notes and the price per stop step
+
 ## [0.10.0] - 2026-09-24
 
 ### Adicionado
