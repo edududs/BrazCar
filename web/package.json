@@ -16,7 +16,10 @@
     "gen:api": "openapi-typescript ../contract/openapi.json -o src/shared/adapters/api/schema.d.ts",
     "fix": "prettier --write . && eslint --fix . && tsc --noEmit",
     "check": "prettier --check . && eslint . && tsc --noEmit && yarn gen:api --check && yarn test",
-    "check:heavy": "yarn run check && yarn build"
+    "check:heavy": "yarn run check && yarn build",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "screens": "node ../scripts/screens.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -28,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/router-plugin": "^1.168.40",
     "@testing-library/dom": "^10.4.2",

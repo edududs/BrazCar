@@ -34,3 +34,9 @@ web/.yarn/*
 
 # TanStack Router plugin scratch
 web/.tanstack/
+
+# Playwright: manifesto da semente, relatório, traces e as notas do catálogo são do momento.
+# As imagens de docs/screens/ e o docs/screens/README.md, esses sim, são versionados (D-133).
+web/e2e/.state/
+web/playwright-report/
+web/test-results/

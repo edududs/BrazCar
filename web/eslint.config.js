@@ -21,6 +21,13 @@ export default defineConfig(
     },
   },
   {
+    // The end to end suite runs in Node, not in the browser: it reads files and the environment.
+    // Playwright's fixtures take a callback named `use`, which is not a React hook.
+    files: ["e2e/**", "playwright.config.ts"],
+    languageOptions: { globals: globals.node },
+    rules: { "react-hooks/rules-of-hooks": "off" },
+  },
+  {
     // Route files export a `Route` object next to their component, by TanStack Router's design.
     files: ["src/routes/**"],
     rules: { "react-refresh/only-export-components": "off" },

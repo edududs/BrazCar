@@ -1,0 +1,41 @@
+name: e2e
+
+# A suíte de ponta a ponta (D-133): sobe a API com a semente de demonstração e o front construído,
+# e percorre as jornadas. Só chromium, e nenhuma imagem é commitada aqui: no GitHub isto vale como
+# teste, não como fotógrafo. O catálogo é refeito à mão, com `yarn screens` (runbooks/screens.md).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["web/**", "backend/**", "contract/**", ".github/workflows/e2e.yml"]
+  pull_request:
+    paths: ["web/**", "backend/**", "contract/**", ".github/workflows/e2e.yml"]
+
+jobs:
+  journeys:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          working-directory: backend
+      - run: uv sync --locked
+        working-directory: backend
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: yarn install --immutable
+        working-directory: web
+      - run: yarn playwright install --with-deps chromium
+        working-directory: web
+      - run: yarn e2e
+        working-directory: web
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-report
+          path: web/e2e/.state/report
+          retention-days: 7

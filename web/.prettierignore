@@ -1,4 +1,6 @@
 .yarn
 dist
+coverage
+e2e/.state
 src/routeTree.gen.ts
 src/shared/adapters/api/schema.d.ts

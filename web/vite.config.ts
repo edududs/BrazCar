@@ -64,6 +64,9 @@ export default defineConfig({
     proxy: { "/api": devApiOrigin },
   },
   test: {
+    // Só os testes de unidade e de componente: `web/e2e/**` é do Playwright (D-133), que sobe
+    // servidores de verdade e não roda aqui dentro.
+    include: ["src/**/*.test.{ts,tsx}"],
     setupFiles: ["src/shared/testing/setup.ts"],
     coverage: {
       provider: "v8",
