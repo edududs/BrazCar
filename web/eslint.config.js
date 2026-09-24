@@ -8,7 +8,17 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  { ignores: ["dist", ".yarn", "src/routeTree.gen.ts", "src/shared/adapters/api/schema.d.ts"] },
+  // e2e/.state holds the Playwright run: database, results and traces. An interrupted run leaves
+  // JavaScript there that ESLint would otherwise try to parse.
+  {
+    ignores: [
+      "dist",
+      ".yarn",
+      "e2e/.state",
+      "src/routeTree.gen.ts",
+      "src/shared/adapters/api/schema.d.ts",
+    ],
+  },
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
