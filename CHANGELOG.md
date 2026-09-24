@@ -6,6 +6,42 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.9.0] - 2026-09-24
+
+### Adicionado
+
+- **rides:** Driver and origin as sum types, imported rides on the board and in the contract
+- **importing:** Candidates, judgement, acceptance and the Ollama interpreter (7b backend)
+- **importing:** Thinking off at the interpreter, pairs split at the resolver, qwen3.5:4b by default
+
+### Corrigido
+
+- **importing:** A seat count outside a car is not said, and the golden runner survives a bad answer
+
+### Documentação
+
+- Descrever como o projeto é conduzido em docs/method.md
+- Reescrever o README como vitrine para leitor externo
+- Alinhar arquitetura e STATE com o que existe hoje
+- Registrar D-108, repositório público e de portfólio
+- Tirar a marca da ferramenta e os vícios de texto do README e do method
+- Adotar a licença MIT
+- Registrar D-109, política de testes do projeto
+- Tirar os travessões de ritmo da linha D-108
+- Alinhar a entrega com a main depois do rebase
+- Record the v0.8.0 deploy
+- Close step 7b in STATE, ROADMAP and the parser measurements
+
+### Testes
+
+- **importing:** Make the worker interval test wait on an event instead of the clock
+- **importing:** The golden set of 120 real messages, and the docs of 7b
+
+### Infraestrutura
+
+- Medir cobertura no portão do GitHub, sem serviço de terceiros
+- Medir a cobertura do front sobre o src inteiro
+
 ## [0.8.0] - 2026-09-23
 
 ### Adicionado
