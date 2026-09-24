@@ -42,5 +42,7 @@ Este arquivo é o único sempre carregado. Todo o resto é sob demanda: comece p
 | Como o projeto é conduzido, para leitor de fora | `docs/method.md` |
 | Fechar um passo: versão, changelog, release | `docs/runbooks/close-step.md` |
 | Como publicar e o que já deu errado no deploy | `docs/runbooks/deploy.md` |
+| Banco de demonstração, teste de ponta a ponta e prints | `docs/runbooks/screens.md` |
+| Como cada tela está hoje, uma imagem por situação | `docs/screens/README.md` (gerado) |
 
 Regras por área carregam sozinhas ao tocar os arquivos: `.claude/rules/`.

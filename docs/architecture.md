@@ -151,5 +151,11 @@ enviado para serviço de terceiros (D-008); o piso fica em `backend/poe_tasks.to
 `web/vite.config.ts`.
 
 Verificação feita à mão durante um passo vira teste automatizado no mesmo passo, e bugfix entra com
-o teste que o reproduz (D-126). De D-065 ainda não existem Schemathesis sobre o OpenAPI nem E2E com
-Playwright; eles entram num passo próprio de qualidade, o primeiro depois do 7a (`v0.8.0`).
+o teste que o reproduz (D-126). De D-065 falta o Schemathesis sobre o OpenAPI.
+
+**Ponta a ponta e telas** (D-132, D-133). `manage.py seed_demo` enche um banco com uma carona de
+cada situação, passando pelos casos de uso; o Playwright sobe a API com essa semente e o front
+construído, percorre as jornadas e fotografa cada estado por um helper único. As imagens ficam em
+`docs/screens/` e o [catálogo](screens/README.md) é gerado delas. A suíte é task própria
+(`yarn e2e`), fora dos dois portões, e roda também no workflow `e2e.yml`; como se opera está em
+[runbooks/screens.md](runbooks/screens.md).

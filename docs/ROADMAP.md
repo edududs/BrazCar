@@ -26,6 +26,9 @@ Plataforma que funciona sozinha, sem extrator.
 - **Passo de qualidade**, o primeiro depois do 7a, que fechou na `v0.8.0`: testes de componente e
   comportamento no front até a cobertura empatar com a do backend, Schemathesis sobre o contrato
   OpenAPI e E2E com Playwright nas jornadas críticas, com screenshots como evidência (D-126).
+  A parte de ponta a ponta está **feita**: semente de demonstração, suíte do Playwright nas jornadas
+  e [catálogo de telas](screens/README.md) (D-132, D-133). Faltam o Schemathesis e a cobertura do
+  front chegar à do backend.
 - **Observações e preço por parada** (`notes`, D-129; `fare` por parada, D-131). **Feito, tag
   `v0.11.0`**: domínio, contrato, formulário, card e detalhe, e o interpretador lendo o preço de
   cada parada.

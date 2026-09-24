@@ -19,6 +19,8 @@ Uma linha por documento. Abra só o que a tarefa pede.
 | [method.md](method.md) | Como o projeto é conduzido: desenho, passos, portões, encerramento. Escrito para leitor de fora. | O processo de trabalho muda |
 | [runbooks/deploy.md](runbooks/deploy.md) | Como a API e o front são publicados, e as armadilhas já pagas. | O procedimento de deploy muda |
 | [runbooks/close-step.md](runbooks/close-step.md) | Ritual para fechar um passo: verificação, documentos, versão, changelog, release, memória. | O ritual muda |
+| [runbooks/screens.md](runbooks/screens.md) | Semente de demonstração, suíte de ponta a ponta e como refazer o catálogo de telas. | A semente, a suíte ou o catálogo mudam |
+| [screens/README.md](screens/README.md) | Uma imagem por tela e por situação, com a rota e a jornada. **Gerado**, não se edita. | `yarn screens`, a cada mudança de tela |
 
 `docs/specs/<feature>/` é efêmero: spec, design e tarefas da feature em andamento, apagado após o merge.
 

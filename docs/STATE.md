@@ -4,7 +4,9 @@ Atualizado em 2026-09-24.
 
 ## Onde estamos
 
-Versão `v0.11.0`: passo curto de observações e preço por parada concluído no repo. Antes:
+Sobre a `v0.11.0`, o passo de coleta: semente de demonstração, suíte de ponta a ponta com o
+Playwright e [catálogo de telas](screens/README.md), para a etapa de design (D-103) ter o que
+olhar. Antes: passo curto de observações e preço por parada. Antes disso:
 `v0.10.0` (reprocessamento manual e rota de até 15 paradas), `v0.9.0` (passo 7b, importação no
 mural), extrator embutido (`v0.8.0`), tempo real e PWA (`v0.7.0`), esqueleto (`v0.1.0`),
 SSE confirmado pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerramento corrigido
@@ -91,6 +93,20 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 - Tempo real (D-104, D-107): rajada ao acordar vale uma busca, qualquer que seja o sorteio; busca
   ao focar e ao voltar a rede é explícita; ao reconectar o primeiro quadro do stream é a comparação
   de revisão; vigia de silêncio do mural em 35s.
+- `demo` (D-132): pacote `backend/src/brazcar/demo/`, só com `adapters/`, e o comando
+  `manage.py seed_demo`. Sete contas (motorista com um carro, com dois, sem carro, só passageiro,
+  nome social longo, conta nova, e a dona de uma carona importada), quinze caronas cobrindo toda
+  situação calculada em três dias, com e sem tarifas, com e sem observações (uma no limite de 500),
+  paradas do catálogo e texto livre, até quinze paradas, repetida e com histórico de edição; três
+  importadas (externa, com tarifas, e a vinculada a conta); doze mensagens-fonte em dois grupos,
+  onze candidatas com um veredito de cada tipo, um remetente bloqueado; e pedidos de contato,
+  inclusive uma conta com a cota do dia inteira gasta. Determinístico dado o momento em que roda,
+  recusa-se fora de `DEBUG`, apaga o que criou antes de recriar, e grava um manifesto.
+- Ponta a ponta (D-133): `web/e2e/` com o Playwright em dois projetos, celular e desktop, 94 testes
+  cobrindo visitante, cadastro e conta, motorista, passageiro, importadas e tempo real. Cada estado
+  relevante é fotografado pelo helper `snap`; 127 imagens em `docs/screens/` (4,9 MB) e o
+  `docs/screens/README.md` gerado por `scripts/screens-catalog.mjs`. Tasks `yarn e2e` e
+  `yarn screens`; workflow `e2e.yml` no GitHub. Runbook em [runbooks/screens.md](runbooks/screens.md).
 - Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
   (`poe coverage`), 88,58% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
   (`yarn coverage`), piso de 15%, com meta de paridade (D-126). O resumo
@@ -125,8 +141,22 @@ tarifa na primeira parada recusada. No front, por teste de componente: o contado
 preço sumindo quando uma parada tem tarifa, o "a partir de" no card e as tarifas ao lado das paradas
 no detalhe.
 
+**Verificado de verdade no passo de coleta:** portão rápido e portão pesado dos dois lados, e a
+suíte de ponta a ponta verde nos dois projetos (94 casos, 1 pulado: a dica de instalação só existe
+no celular). A semente roda duas vezes sem duplicar, recusa fora de `DEBUG` e, com `--forget`, não
+deixa linha nenhuma — coberto por teste. Pelo navegador, de verdade e com o banco de verdade:
+mural com e sem filtro, filtro de dia e de vaga na URL, "passa por" achando pelo apelido ("SCS") e
+pelo lugar acima ("Plano Piloto"); cadastro recusando senha curta e entrando no mural; login com
+senha errada; recuperação de senha até a tela do e-mail; carros cadastrados e removidos; publicar
+simples, com muitas paradas e tarifas, com parada em texto livre, e a observação com telefone
+recusada com a frase do botão; editar dentro do mesmo dia e a recusa de outro dia; vagas fechando e
+reabrindo; cancelar com diálogo; repetir; pedir contato com a placa, sem placa na importada, e a
+recusa com a cota do dia gasta; a mensagem original redigida; e o mural aprendendo, sem recarregar,
+a carona que outro contexto acabou de publicar (SSE).
+
 **Não verificado:** a cobertura do front nesta máquina (`@vitest/coverage-v8` não está instalado
-aqui; roda no fluxo do GitHub); o interpretador lendo preços por parada contra um Ollama de verdade
+aqui; roda no fluxo do GitHub); as telas no WebKit e num iPhone de verdade (a suíte roda os dois
+projetos no Chromium, D-133); o interpretador lendo preços por parada contra um Ollama de verdade
 (o golden set não mede `fares`, e as 120 mensagens não trazem o julgamento esperado desse campo);
 as telas novas num celular. Ainda de antes: o front publicado mostrando o selo e a mensagem
 original, no celular; o job do `pg_cron` apagando uma carona importada que partiu; o worker
@@ -137,18 +167,27 @@ no Android; `login` e `password-reset` estourados pelo navegador; e-mail de verd
 **Pendências de design (D-103), para a etapa de design:** ícones provisórios (quadrado azul com
 círculo branco); o aviso de build novo e a dica de instalação são uma faixa simples sob a barra; a
 tela "Sem internet" e a de atualização obrigatória são texto puro; o rodapé com a versão é texto
-pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisório.
+pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisório. A dica de
+instalação aparece em toda imagem do projeto celular, porque é o que um iPhone em aba mostra até
+alguém dispensá-la: ela come a primeira dobra de toda tela, e isso é matéria de design, não defeito.
+O primitivo `shared/ui/availability-badge.tsx` não é usado por ninguém.
 
 ## Próximo passo
 
-1. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
-   e as telas novas de observações e preço por parada.
-2. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
+1. Etapa de design (D-103), com o [catálogo de telas](screens/README.md) na mão.
+2. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
+   e as telas de observações e preço por parada.
+3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
    mensagens que trazem lista de preços (as de número 25, 31, 34 e 41).
-3. Passo de qualidade (Playwright, Schemathesis, cobertura do front) e a etapa de design (D-103),
-   na ordem que o Eduardo decidir.
+4. O que falta do passo de qualidade: Schemathesis sobre o contrato e a cobertura do front subindo
+   até a do backend.
 
 ## Pendências abertas
+
+- **Não há como excluir a conta pela interface.** O backend tem `DELETE /api/accounts/me` e o front
+  tem a mutação `deleteAccount` em `useSession`, mas nenhum botão a chama: o `AccountPanel` nem a
+  recebe. D-033 põe a exclusão no MVP, então isso é buraco, não escopo adiado. Achado ao fotografar
+  as telas; a jornada correspondente não existe no catálogo.
 
 - Texto dos termos de uso e de privacidade ainda não foi escrito (D-033); o cadastro já grava o
   aceite e a tela já mostra a frase, sem link.
