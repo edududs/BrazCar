@@ -38,7 +38,7 @@ os limites de `rides` (`RIDE_*`) têm padrão no código. Em 2026-09-23 (v0.7.0)
 ## Worker do WhatsApp (passo 7a)
 
 O serviço `worker` roda `manage.py run_extractor` na imagem da API, um processo para uma conta (D-108).
-Ordem na primeira vez, cada passo com ok do Eduardo:
+Feito assim em 2026-09-24 (v0.8.0), cada passo com ok do Eduardo:
 
 ```bash
 ssh trovva@trovva-internal && cd ~/brazcar
@@ -48,6 +48,8 @@ docker compose exec -T postgres psql -U brazcar -d brazcar -v password='<senha>'
 # 2. api.env: WHATSAPP_SESSION_DSN (com ?sslmode=disable), IMPORT_PURGE=pg_cron, IMPORT_RAW_RETENTION_HOURS.
 #    WHATSAPP_ACCOUNT e WHATSAPP_GROUPS ficam vazios até os passos 3 e 4.
 # 3. Pareamento: o QR aparece no terminal; ler com WhatsApp > Aparelhos conectados. Depois, WHATSAPP_ACCOUNT=<telefone>.
+#    Num terminal de verdade, monoespaçado, com uns 70x40: dentro de outra ferramenta o QR sai desproporcional.
+#    Um `run` abandonado fica vivo esperando o QR: `docker ps` e `docker rm -f` antes de tentar de novo.
 docker compose run --rm worker python manage.py pair_whatsapp
 # 4. Grupos: copiar os JIDs aprovados para WHATSAPP_GROUPS=jid=rótulo;jid=rótulo (D-109).
 docker compose run --rm worker python manage.py list_whatsapp_groups
@@ -80,6 +82,10 @@ volume: é a mesma base, `18-alpine`, com a extensão copiada para dentro.
   túnel (Trovva, JayceFinance): escolher a hora e conferir depois que voltaram.
 - **DNS do túnel.** `cloudflared tunnel route dns` não funciona na máquina (não há `cert.pem`).
   O CNAME se cria no painel ou pela API do Cloudflare.
+- **`scp` com dois pares origem e destino.** `scp a host:a b host:b` manda `a`, `host:a` e `b` para
+  `host:b`, que vira um diretório com cópias dentro. Um `scp a b host:dir/` por vez.
+- **Aviso de `ffmpeg` no worker.** O neonize avisa que não há `ffmpeg` no PATH; só importa para mídia,
+  que o `DjangoStore` descarta (D-111). Ignorar.
 - **DSN do neonize sem `sslmode`.** O driver Go exige TLS por padrão e falha com um erro opaco
   (`not enough values to unpack`) contra o Postgres interno, que não tem TLS. `?sslmode=disable` na
   `WHATSAPP_SESSION_DSN` resolve; a API, por `psycopg`, não tem esse problema.

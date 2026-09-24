@@ -10,7 +10,7 @@ SSE confirmado pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerrament
 (`v0.2.1`), `places` (`v0.3.0`), `accounts` (`v0.4.0`), `rides` (`v0.5.0`) e os ajustes do teste
 no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 `brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.7.0` desde
-2026-09-23; a `v0.8.0` ainda não foi publicada na máquina.
+2026-09-23; a API e o worker na `v0.8.0` desde 2026-09-24.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -77,10 +77,15 @@ D-040 fez o neonize criar as 17 tabelas `whatsmeow_*` no schema `whatsapp`, nenh
 `install_purge_schedule` criou o job e o `pg_cron` o executou sozinho (`succeeded`, `DELETE 0`);
 os comandos do worker recusam com mensagem clara a falta de grupos, de conta e de pareamento.
 
-**Não verificado:** tudo o que exige a máquina de teste e o telefone: pareamento real, mensagens
-reais chegando na tabela, restart do worker, o job do `pg_cron` em produção, o pull das duas
-imagens do GHCR. É o passo T8 da spec, depois do push da tag e com ok em cada passo. Ainda de
-passos anteriores: o mural atualizando sozinho ao voltar do segundo plano no app instalado, o
+Publicado e conferido em 2026-09-24, com ok em cada passo: as duas imagens `0.8.0` puxadas do GHCR;
+Postgres recriado com `pg_cron` sobre o mesmo volume; migração `importing.0001` aplicada; papel e
+schema de D-040 criados; pareamento do número pessoal (D-110) num terminal limpo; seis grupos
+listados com nome e aprovados (D-109); job de poda instalado e executando a cada cinco minutos;
+worker autenticado, recebendo mensagens reais (as duas primeiras, do mesmo remetente em dois
+grupos, dez minutos depois de subir) e voltando sozinho de um `restart` pela sessão gravada.
+
+**Não verificado:** o worker sobrevivendo a um panic do Go e a um reinício do Postgres; a poda
+apagando de fato (ainda não há mensagem com mais de 24h). Ainda de passos anteriores: o mural atualizando sozinho ao voltar do segundo plano no app instalado, o
 aviso de build novo e a tela de piso num iPhone, o vigia de 35s em produção, ícone maskable no
 Android, a página de edição com adiamento depois da partida, `login` e `password-reset` estourados
 pelo navegador, e-mail de verdade pelo Resend.
@@ -92,12 +97,9 @@ pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisó
 
 ## Próximo passo
 
-1. Publicar a `v0.8.0` na máquina (T8 da spec, [runbooks/deploy.md](runbooks/deploy.md)): papel de
-   D-040, env, pareamento com o número pessoal (D-110), lista de grupos aprovada, `up -d`, mensagens
-   reais na tabela. Depois, um commit `docs:` registrando o deploy.
-2. Passo 7b (T10 a T19 da spec): `rides` com motorista e origem como tipos-soma, catálogo com os
+1. Passo 7b (T10 a T19 da spec): `rides` com motorista e origem como tipos-soma, catálogo com os
    bairros, `importing` com candidata, parser Ollama e regras, golden set, front com o selo.
-3. Etapa de design do produto (D-103), só com ordem do Eduardo.
+2. Etapa de design do produto (D-103), só com ordem do Eduardo.
 
 ## Pendências abertas
 
