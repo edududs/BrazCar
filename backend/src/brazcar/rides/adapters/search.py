@@ -32,6 +32,9 @@ class IndexedRideSearch:
                 texts.append(stop.text)
         await self._index.put(SearchDocument(id=str(ride.id), texts=tuple(texts)))
 
+    async def forget(self, ride_id: RideId) -> None:
+        await self._index.remove(str(ride_id))
+
     async def matching(self, text: str, among: Collection[RideId]) -> frozenset[RideId]:
         found = await self._index.search(text, among=[str(ride_id) for ride_id in among])
         return frozenset(UUID(ride_id) for ride_id in found)

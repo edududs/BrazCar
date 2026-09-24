@@ -21,12 +21,31 @@ export interface RideActions {
   readonly delayUntil: string | null;
 }
 
+/** Model and color only: enough to spot the car, never enough to find it (D-031). */
+export interface Car {
+  readonly model: string;
+  readonly color: string;
+}
+
+/** Where the ride came from: published here, or read from a WhatsApp group (ADR-0015). */
+export type RideOrigin = "published" | "whatsapp";
+
+/** The original words of an imported ride, for the passenger's own judgement (D-117). */
+export interface OriginMessage {
+  readonly text: string;
+  readonly groupLabel: string;
+  /** ISO instant with offset. */
+  readonly sentAt: string;
+}
+
 /** A card of the board. Never the phone, never the plate (ADR-0006). */
 export interface Ride {
   readonly id: string;
   readonly driverName: string;
-  readonly carModel: string;
-  readonly carColor: string;
+  /** `null` when the platform never saw the car: a ride read from WhatsApp. */
+  readonly car: Car | null;
+  readonly origin: RideOrigin;
+  readonly originMessage: OriginMessage | null;
   readonly stops: readonly Stop[];
   /** ISO instant with offset. */
   readonly departureAt: string;
@@ -66,7 +85,8 @@ export interface RideChanges {
 /** The only way the phone and the plate reach the screen (ADR-0006). */
 export interface Contact {
   readonly whatsappUrl: string;
-  readonly plate: string;
+  /** `null` for a driver the platform only knows by phone. */
+  readonly plate: string | null;
 }
 
 /** What the API refused, in words the screen can show. */

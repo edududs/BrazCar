@@ -4,20 +4,20 @@ from enum import StrEnum
 from typing import Annotated, Self
 from uuid import UUID, uuid4
 
-from pydantic import Field, StringConstraints, model_validator
+from pydantic import Field, model_validator
 
 from brazcar.shared.domain.model import FrozenModel
 
+from .driver import AccountId, CarSnapshot, Driver, RegisteredDriver
 from .errors import DepartureChangeError, RideCancelledError, RideLockedError
 from .events import RideCancelled, RideEdited, RideEvent, RidePublished, RideReopened, SeatsChanged
+from .origin import PublishedOrigin, RideOrigin, WhatsAppOrigin
 from .route import Route
 
 DEFAULT_PRICE = Decimal("7.00")
 DELAY_LIMIT = timedelta(hours=2)  # counted from the original departure, always (ADR-0004)
 
 type RideId = UUID
-type AccountId = UUID
-type ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
 type Seats = Annotated[int, Field(ge=0, le=8)]
 type Price = Annotated[Decimal, Field(gt=0, max_digits=6, decimal_places=2)]
 
@@ -35,19 +35,10 @@ class RideStatus(StrEnum):
     CANCELLED = "cancelled"
 
 
-class CarSnapshot(FrozenModel):
-    """The car as it was when the ride was published (D-023). The plate never leaves by a list."""
-
-    car_id: UUID
-    model: ShortText
-    color: ShortText
-    plate: ShortText
-
-
 class RideOffer(FrozenModel):
     id: RideId
-    driver_id: AccountId
-    car: CarSnapshot
+    driver: Driver  # an account with a car, or a WhatsApp phone (ADR-0015)
+    origin: RideOrigin = PublishedOrigin()
     route: Route
     departure_at: datetime
     original_departure_at: datetime  # written once, never changed (ADR-0004)
@@ -64,7 +55,26 @@ class RideOffer(FrozenModel):
             if getattr(self, name).tzinfo is None:
                 message = f"{name} must be timezone-aware"
                 raise ValueError(message)
+        if isinstance(self.origin, PublishedOrigin) and self.car is None:
+            message = "a ride published here always has an account and a car; only an imported one may not"
+            raise ValueError(message)
         return self
+
+    @property
+    def driver_id(self) -> AccountId | None:
+        """The owning account; none for an external driver, who owns nothing here."""
+        return self.driver.account_id if isinstance(self.driver, RegisteredDriver) else None
+
+    @property
+    def car(self) -> CarSnapshot | None:
+        return self.driver.car if isinstance(self.driver, RegisteredDriver) else None
+
+    @property
+    def is_imported(self) -> bool:
+        return isinstance(self.origin, WhatsAppOrigin)
+
+    def is_owned_by(self, viewer: AccountId | None) -> bool:
+        return viewer is not None and viewer == self.driver_id
 
     # --- publishing -------------------------------------------------------------------------
 
@@ -83,8 +93,36 @@ class RideOffer(FrozenModel):
     ) -> Change:
         ride = cls(
             id=uuid4(),
-            driver_id=driver_id,
-            car=car,
+            driver=RegisteredDriver(account_id=driver_id, car=car),
+            route=route,
+            departure_at=departure_at,
+            original_departure_at=departure_at,
+            seats_available=seats_available,
+            price=price,
+            payment_methods=payment_methods,
+            published_at=now,
+        )
+        return Change(ride=ride, events=(RidePublished(ride_id=ride.id, at=now),))
+
+    @classmethod
+    def import_offer(  # noqa: PLR0913 - every field of a new ride comes from the message at once
+        cls,
+        *,
+        driver: Driver,
+        origin: WhatsAppOrigin,
+        route: Route,
+        departure_at: datetime,
+        seats_available: int,
+        price: Decimal,
+        payment_methods: frozenset[PaymentMethod],
+        now: datetime,
+    ) -> Change:
+        """A ride read from a group (ADR-0015): the account with that phone if there is one, else
+        an external driver; no car either way; the original words kept."""
+        ride = cls(
+            id=uuid4(),
+            driver=driver,
+            origin=origin,
             route=route,
             departure_at=departure_at,
             original_departure_at=departure_at,
@@ -97,8 +135,11 @@ class RideOffer(FrozenModel):
 
     def repeat(self, *, departure_at: datetime, car: CarSnapshot, now: datetime) -> Change:
         """A new ride with this one's route, seats, price and payment; the car as it is today."""
+        if not isinstance(self.driver, RegisteredDriver):
+            message = "only a registered driver repeats a ride"
+            raise TypeError(message)
         return RideOffer.publish(
-            driver_id=self.driver_id,
+            driver_id=self.driver.account_id,
             car=car,
             route=self.route,
             departure_at=departure_at,

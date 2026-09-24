@@ -6,13 +6,22 @@ from django.db import models
 
 class RideModel(models.Model):
     id = models.UUIDField(primary_key=True, editable=False)
-    # The account row is erased in place, never deleted (D-090), so the history keeps its driver.
-    driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="rides")
-    # The car as it was when published (D-023): a copy, plus the reference.
-    car_id = models.UUIDField()
-    car_model = models.CharField(max_length=60)
-    car_color = models.CharField(max_length=60)
-    car_plate = models.CharField(max_length=7)  # never in a list payload (D-031)
+    # The driver is one of two shapes (ADR-0015): an account, erased in place and never deleted
+    # (D-090), with the car as it was when published (D-023); or a WhatsApp phone and name.
+    driver = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="rides", null=True, blank=True
+    )
+    driver_phone = models.CharField(max_length=15, blank=True)  # never in a list payload (D-031)
+    driver_name = models.CharField(max_length=60, blank=True)
+    car_id = models.UUIDField(null=True, blank=True)
+    car_model = models.CharField(max_length=60, blank=True)
+    car_color = models.CharField(max_length=60, blank=True)
+    car_plate = models.CharField(max_length=7, blank=True)  # never in a list payload (D-031)
+    # Where the ride came from (D-117): the original words stay with it and go with it (D-119).
+    origin_kind = models.CharField(max_length=8, default="published")
+    origin_text = models.TextField(blank=True)
+    origin_group_label = models.CharField(max_length=60, blank=True)
+    origin_sent_at = models.DateTimeField(null=True, blank=True)
     departure_at = models.DateTimeField()
     original_departure_at = models.DateTimeField()
     seats_available = models.PositiveSmallIntegerField()
@@ -28,7 +37,10 @@ class RideModel(models.Model):
 
     class Meta:
         db_table = "rides_ride"
-        indexes = (models.Index(fields=("cancelled_at", "departure_at"), name="rides_board"),)
+        indexes = (
+            models.Index(fields=("cancelled_at", "departure_at"), name="rides_board"),
+            models.Index(fields=("driver_phone", "departure_at"), name="rides_external_departure"),
+        )
 
     def __str__(self) -> str:
         return f"{self.id} @ {self.departure_at.isoformat()}"

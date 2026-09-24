@@ -24,10 +24,13 @@ from brazcar.rides.application import (
     BoardRide,
     BoardSignal,
     CancelRide,
+    CarView,
     ChangeSeats,
     EditRide,
     ListBoard,
     MyRides,
+    OriginKind,
+    OriginMessageView,
     PublishRide,
     RepeatRide,
     RequestContact,
@@ -72,6 +75,29 @@ class StopOut(Schema):
         return cls(place_id=stop.place_id, label=stop.label)
 
 
+class RideCarOut(Schema):
+    """Model and color, as the card shows them; `accounts` has its own car schema with the plate."""
+
+    model: str
+    color: str
+
+    @classmethod
+    def of(cls, car: CarView) -> Self:
+        return cls(model=car.model, color=car.color)
+
+
+class OriginMessageOut(Schema):
+    """The original WhatsApp words of an imported ride, personal data already redacted (D-117)."""
+
+    text: str
+    group_label: str
+    sent_at: datetime
+
+    @classmethod
+    def of(cls, message: OriginMessageView) -> Self:
+        return cls(text=message.text, group_label=message.group_label, sent_at=message.sent_at)
+
+
 class ActionsOut(Schema):
     """What the viewer may do. The front only draws these (ADR-0011)."""
 
@@ -99,8 +125,9 @@ class RideOut(Schema):
 
     id: UUID
     driver_name: str
-    car_model: str
-    car_color: str
+    car: RideCarOut | None  # none when the ride was read from WhatsApp (ADR-0015)
+    origin: OriginKind
+    origin_message: OriginMessageOut | None
     stops: list[StopOut]
     departure_at: datetime
     seats_available: int
@@ -115,8 +142,9 @@ class RideOut(Schema):
         return cls(
             id=ride.id,
             driver_name=ride.driver_name,
-            car_model=ride.car_model,
-            car_color=ride.car_color,
+            car=None if ride.car is None else RideCarOut.of(ride.car),
+            origin=ride.origin,
+            origin_message=None if ride.origin_message is None else OriginMessageOut.of(ride.origin_message),
             stops=[StopOut.of(stop) for stop in ride.stops],
             departure_at=ride.departure_at,
             seats_available=ride.seats_available,
@@ -130,7 +158,7 @@ class RideOut(Schema):
 
 class ContactOut(Schema):
     whatsapp_url: str
-    plate: str
+    plate: str | None  # none for a driver the platform only knows by phone
 
 
 class RevisionOut(Schema):

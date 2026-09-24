@@ -465,7 +465,7 @@ export interface components {
         /** ContactOut */
         ContactOut: {
             /** Plate */
-            plate: string;
+            plate: string | null;
             /** Whatsapp Url */
             whatsapp_url: string;
         };
@@ -505,6 +505,23 @@ export interface components {
             password: string;
             /** Phone */
             phone: string;
+        };
+        /** @enum {string} */
+        OriginKind: "published" | "whatsapp";
+        /**
+         * OriginMessageOut
+         * @description The original WhatsApp words of an imported ride, personal data already redacted (D-117).
+         */
+        OriginMessageOut: {
+            /** Group Label */
+            group_label: string;
+            /**
+             * Sent At
+             * Format: date-time
+             */
+            sent_at: string;
+            /** Text */
+            text: string;
         };
         /** PasswordResetConfirmIn */
         PasswordResetConfirmIn: {
@@ -600,15 +617,22 @@ export interface components {
             revision: number;
         };
         /**
+         * RideCarOut
+         * @description Model and color, as the card shows them; `accounts` has its own car schema with the plate.
+         */
+        RideCarOut: {
+            /** Color */
+            color: string;
+            /** Model */
+            model: string;
+        };
+        /**
          * RideOut
          * @description The card. Never the phone, never the plate (D-031).
          */
         RideOut: {
             actions: components["schemas"]["ActionsOut"];
-            /** Car Color */
-            car_color: string;
-            /** Car Model */
-            car_model: string;
+            car: components["schemas"]["RideCarOut"] | null;
             /**
              * Departure At
              * Format: date-time
@@ -623,6 +647,8 @@ export interface components {
             id: string;
             /** Is Mine */
             is_mine: boolean;
+            origin: components["schemas"]["OriginKind"];
+            origin_message: components["schemas"]["OriginMessageOut"] | null;
             /** Payment Methods */
             payment_methods: components["schemas"]["PaymentMethod"][];
             /** Price */

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { Badge } from "@/shared/ui/badge";
 import { Card } from "@/shared/ui/card";
 
 import type { Ride } from "../domain/ride";
@@ -35,9 +36,13 @@ export function RideCard({ ride }: RideCardProps) {
           {formatPrice(ride.price)} · {formatSeats(ride.seatsAvailable)} ·{" "}
           {ride.paymentMethods.map((method) => paymentLabel[method]).join(" ou ")}
         </p>
-        <p className="text-sm opacity-70">
-          {ride.driverName} · {ride.carModel}, {ride.carColor}
-          {ride.isMine ? " · sua carona" : ""}
+        <p className="flex flex-wrap items-center gap-2 text-sm opacity-70">
+          <span>
+            {ride.driverName}
+            {ride.car === null ? "" : ` · ${ride.car.model}, ${ride.car.color}`}
+            {ride.isMine ? " · sua carona" : ""}
+          </span>
+          {ride.origin === "whatsapp" ? <Badge tone="accent">via WhatsApp</Badge> : null}
         </p>
       </Card>
     </Link>

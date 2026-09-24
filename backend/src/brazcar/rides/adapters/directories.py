@@ -1,28 +1,35 @@
 """What `rides` asks the other contexts, through their own ports (D-006): never their tables."""
 
 from brazcar.accounts.application import AccountRepository
+from brazcar.accounts.domain import Account
 from brazcar.places.application import CatalogRepository
-from brazcar.rides.application import Driver, DriverCar
-from brazcar.rides.domain import AccountId, PlaceId
+from brazcar.rides.application import DriverAccount, DriverCar
+from brazcar.rides.domain import AccountId, Phone, PlaceId
 
 
 class AccountDriverDirectory:
     def __init__(self, accounts: AccountRepository) -> None:
         self._accounts = accounts
 
-    async def get(self, account_id: AccountId) -> Driver | None:
+    async def get(self, account_id: AccountId) -> DriverAccount | None:
         account = await self._accounts.get(account_id)
-        if account is None:
-            return None
-        return Driver(
-            id=account.id,
-            display_name=account.display_name,
-            phone=account.phone,
-            cars=tuple(
-                DriverCar(car_id=car.id, model=car.model, color=car.color, plate=car.plate)
-                for car in account.cars
-            ),
-        )
+        return None if account is None else _driver_account(account)
+
+    async def by_phone(self, phone: Phone) -> DriverAccount | None:
+        account = await self._accounts.by_phone(f"+{phone}")  # accounts keep E.164 (D-089)
+        return None if account is None else _driver_account(account)
+
+
+def _driver_account(account: Account) -> DriverAccount:
+    return DriverAccount(
+        id=account.id,
+        display_name=account.display_name,
+        phone=account.phone,
+        cars=tuple(
+            DriverCar(car_id=car.id, model=car.model, color=car.color, plate=car.plate)
+            for car in account.cars
+        ),
+    )
 
 
 class CatalogPlaceDirectory:

@@ -20,7 +20,7 @@ def allowed_actions(
     ride: RideOffer, viewer: AccountId | None, now: datetime, tolerance: timedelta
 ) -> Actions:
     status = ride.status(now, tolerance)
-    if viewer != ride.driver_id:
+    if not ride.is_owned_by(viewer):  # an external driver's ride is nobody's (ADR-0015)
         can_contact = viewer is not None and status in (RideStatus.OPEN, RideStatus.REOPENED)
         return Actions(can_contact=can_contact)
     if status is RideStatus.CANCELLED:

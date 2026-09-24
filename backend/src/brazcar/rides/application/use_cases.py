@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -10,9 +11,12 @@ from brazcar.rides.domain import (
     CarSnapshot,
     CatalogStop,
     ContactLimitError,
+    ExternalDriver,
     NoCarError,
     NotTheDriverError,
     PaymentMethod,
+    Phone,
+    RegisteredDriver,
     RideId,
     RideNotFoundError,
     RideNotOpenError,
@@ -20,13 +24,14 @@ from brazcar.rides.domain import (
     RideStatus,
     Route,
     UnknownPlaceError,
+    WhatsAppOrigin,
 )
 from brazcar.shared.application.ports import Clock, RateLimiter
 from brazcar.shared.domain.model import FrozenModel
 
 from .ports import (
     ContactRequests,
-    Driver,
+    DriverAccount,
     DriverDirectory,
     PlaceDirectory,
     RideRepository,
@@ -39,7 +44,7 @@ from .read_model import BoardFilter, BoardRide, to_board_ride
 class RideRules:
     """The knobs of the context, from configuration."""
 
-    departure_tolerance: timedelta = timedelta(minutes=20)  # "already left" after this (D-017)
+    departure_tolerance: timedelta = timedelta(minutes=10)  # "already left" after this (D-017, D-121)
     contact_limit: int = 20  # contact requests per account per window (D-031, D-064)
     contact_window: timedelta = timedelta(hours=24)
 
@@ -148,11 +153,88 @@ class RepeatRide:
     async def __call__(self, driver_id: AccountId, ride_id: RideId, *, departure_at: datetime) -> RideOffer:
         ride = await _own_ride(self.rides, driver_id, ride_id)
         driver = await _require_driver(self.drivers, driver_id)
-        car = _snapshot(driver, ride.car.car_id, fallback=True)
+        car = _snapshot(driver, None if ride.car is None else ride.car.car_id, fallback=True)
         change = ride.repeat(departure_at=departure_at, car=car, now=self.clock.now())
         await self.rides.save(change.ride, change.events)
         await self.search.index(change.ride)
         return change.ride
+
+
+class Imported(FrozenModel):
+    ride: RideOffer
+    created: bool  # false when the same driver already had a ride at that departure (D-113)
+
+
+@dataclass(frozen=True, slots=True)
+class ImportRide:
+    """A ride read from a WhatsApp group by `importing` (ADR-0015).
+
+    The sender's phone decides the driver: the account registered with it, without a car (D-127),
+    or an external driver. A second post for the same departure joins the first ride instead of
+    making another (D-113)."""
+
+    rides: RideRepository
+    drivers: DriverDirectory
+    places: PlaceDirectory
+    search: RideSearch
+    clock: Clock
+
+    async def __call__(  # noqa: PLR0913 - the whole ride comes in at once
+        self,
+        *,
+        sender_phone: Phone,
+        sender_name: str,
+        origin: WhatsAppOrigin,
+        route: Route,
+        departure_at: datetime,
+        seats_available: int,
+        price: Decimal,
+        payment_methods: frozenset[PaymentMethod],
+    ) -> Imported:
+        account = await self.drivers.by_phone(sender_phone)
+        driver: RegisteredDriver | ExternalDriver = (
+            RegisteredDriver(account_id=account.id, car=None)
+            if account is not None
+            else ExternalDriver(phone=sender_phone, display_name=sender_name)
+        )
+        existing = await self.rides.find_imported(
+            account.id if account is not None else sender_phone, departure_at
+        )
+        if existing is not None:
+            return Imported(ride=existing, created=False)
+        await _require_known_places(self.places, route)
+        change = RideOffer.import_offer(
+            driver=driver,
+            origin=origin,
+            route=route,
+            departure_at=departure_at,
+            seats_available=seats_available,
+            price=price,
+            payment_methods=payment_methods,
+            now=self.clock.now(),
+        )
+        await self.rides.save(change.ride, change.events)
+        await self.search.index(change.ride)
+        return Imported(ride=change.ride, created=True)
+
+
+@dataclass(frozen=True, slots=True)
+class ForgetRides:
+    """Delete imported rides for good (D-119). A registered driver's ride is never forgotten here."""
+
+    rides: RideRepository
+    search: RideSearch
+
+    async def __call__(self, ride_ids: Collection[RideId]) -> int:
+        forgotten = 0
+        for ride_id in ride_ids:
+            ride = await self.rides.get(ride_id)
+            if ride is None or ride.driver_id is not None:
+                continue
+            await self.rides.delete(ride_id)
+            await self.search.forget(ride_id)
+            forgotten += 1
+        return forgotten
 
 
 @dataclass(frozen=True, slots=True)
@@ -211,7 +293,7 @@ class Contact(FrozenModel):
     """What the contact route hands back: the only way the phone and the plate leave (ADR-0006)."""
 
     whatsapp_url: str
-    plate: str
+    plate: str | None  # none for an external driver: the platform never saw a car
 
 
 @dataclass(frozen=True, slots=True)
@@ -230,20 +312,25 @@ class RequestContact:
         now = self.clock.now()
         if ride.status(now, self.rules.departure_tolerance) not in (RideStatus.OPEN, RideStatus.REOPENED):
             raise RideNotOpenError
-        driver = await _require_driver(self.drivers, ride.driver_id)
+        if isinstance(ride.driver, ExternalDriver):
+            name, phone, plate = ride.driver.display_name, ride.driver.phone, None
+        else:
+            driver = await _require_driver(self.drivers, ride.driver.account_id)
+            car = ride.driver.car
+            name, phone, plate = driver.display_name, driver.phone, None if car is None else car.plate
         allowed = await self.limiter.acquire(
             f"contact:{requester_id}", limit=self.rules.contact_limit, window=self.rules.contact_window
         )
         if not allowed:
             raise ContactLimitError
         await self.contacts.record(requester_id=requester_id, ride_id=ride.id, at=now)
-        return Contact(whatsapp_url=_whatsapp_link(driver, ride), plate=ride.car.plate)
+        return Contact(whatsapp_url=_whatsapp_link(name, phone, ride), plate=plate)
 
 
 # --- helpers -------------------------------------------------------------------------------------
 
 
-async def _require_driver(drivers: DriverDirectory, driver_id: AccountId) -> Driver:
+async def _require_driver(drivers: DriverDirectory, driver_id: AccountId) -> DriverAccount:
     driver = await drivers.get(driver_id)
     if driver is None:
         raise NotTheDriverError
@@ -254,7 +341,7 @@ async def _own_ride(rides: RideRepository, driver_id: AccountId, ride_id: RideId
     ride = await rides.get(ride_id)
     if ride is None:
         raise RideNotFoundError(ride_id)
-    if ride.driver_id != driver_id:
+    if not ride.is_owned_by(driver_id):
         raise NotTheDriverError
     return ride
 
@@ -267,7 +354,7 @@ async def _require_known_places(places: PlaceDirectory, route: Route) -> None:
             raise UnknownPlaceError(stop.place_id)
 
 
-def _snapshot(driver: Driver, car_id: UUID, *, fallback: bool = False) -> CarSnapshot:
+def _snapshot(driver: DriverAccount, car_id: UUID | None, *, fallback: bool = False) -> CarSnapshot:
     """The driver's car as it is now (D-023). With `fallback`, any car of theirs will do."""
     cars = [car for car in driver.cars if car.car_id == car_id] or (list(driver.cars) if fallback else [])
     if not cars:
@@ -294,13 +381,14 @@ async def _project(
     labels = await lister.places.labels()
     names: dict[AccountId, str] = {}
     for ride in rides:
-        if ride.driver_id not in names:
-            driver = await lister.drivers.get(ride.driver_id)
-            names[ride.driver_id] = driver.display_name if driver else "Motorista"
+        account_id = ride.driver_id
+        if account_id is not None and account_id not in names:
+            driver = await lister.drivers.get(account_id)
+            names[account_id] = driver.display_name if driver else "Motorista"
     return tuple(
         to_board_ride(
             ride,
-            driver_name=names[ride.driver_id],
+            driver_name=_driver_name(ride, names),
             labels=labels,
             viewer=viewer,
             now=now,
@@ -310,7 +398,13 @@ async def _project(
     )
 
 
-def _whatsapp_link(driver: Driver, ride: RideOffer) -> str:
+def _driver_name(ride: RideOffer, names: dict[AccountId, str]) -> str:
+    if isinstance(ride.driver, ExternalDriver):
+        return ride.driver.display_name
+    return names[ride.driver.account_id]
+
+
+def _whatsapp_link(name: str, phone: str, ride: RideOffer) -> str:
     when = ride.departure_at.strftime("%H:%M")
-    text = f"Oi, {driver.display_name}! Vi sua carona das {when} no BrazCar. Ainda tem vaga?"
-    return f"https://wa.me/{driver.phone.lstrip('+')}?text={quote(text)}"
+    text = f"Oi, {name}! Vi sua carona das {when} no BrazCar. Ainda tem vaga?"
+    return f"https://wa.me/{phone.lstrip('+')}?text={quote(text)}"

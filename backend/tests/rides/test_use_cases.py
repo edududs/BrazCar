@@ -8,7 +8,7 @@ from brazcar.rides.application import (
     BoardFilter,
     CancelRide,
     ChangeSeats,
-    Driver,
+    DriverAccount,
     DriverCar,
     EditRide,
     ListBoard,
@@ -42,13 +42,13 @@ from .fakes import (
 )
 from .strategies import BRASILIA, EPOCH
 
-ANA = Driver(
+ANA = DriverAccount(
     id=uuid4(),
     display_name="Ana",
     phone="+5561999990001",
     cars=(DriverCar(car_id=uuid4(), model="Gol", color="prata", plate="ABC1234"),),
 )
-BIA = Driver(id=uuid4(), display_name="Bia", phone="+5561999990002", cars=())
+BIA = DriverAccount(id=uuid4(), display_name="Bia", phone="+5561999990002", cars=())
 ROUTE = (CatalogStop(place_id="esplanada"), FreeTextStop(text="Incra 8"), CatalogStop(place_id="brazlandia"))
 RULES = RideRules(contact_limit=2, contact_window=timedelta(hours=1))
 
@@ -71,7 +71,7 @@ class Context:
             self.rides, self.drivers, self.contacts, self.limiter, self.clock, RULES
         )
 
-    async def published(self, driver: Driver = ANA, hours: int = 13, seats: int = 3) -> RideOffer:
+    async def published(self, driver: DriverAccount = ANA, hours: int = 13, seats: int = 3) -> RideOffer:
         return await self.publish(
             driver.id,
             car_id=driver.cars[0].car_id if driver.cars else uuid4(),
@@ -90,6 +90,7 @@ def ctx() -> Context:
 async def test_publishing_needs_a_car_and_bumps_the_board(ctx: Context) -> None:
     ride = await ctx.published()
 
+    assert ride.car is not None
     assert ride.car.plate == "ABC1234"
     assert ctx.rides.revision == 1
     assert [type(e).__name__ for e in await ctx.rides.history(ride.id)] == ["RidePublished"]

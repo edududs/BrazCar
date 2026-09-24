@@ -136,7 +136,9 @@ async def test_the_card_shows_the_driver_and_the_car_but_never_the_phone_or_the_
     revision = await Browser().get("/api/rides/revision")
 
     assert card["driver_name"] == "Ana"
-    assert card["car_model"] == "Gol"
+    assert card["car"] == {"model": "Gol", "color": "prata"}
+    assert card["origin"] == "published"
+    assert card["origin_message"] is None
     assert [stop["label"] for stop in card["stops"]] == ["Brazlândia", "Incra 8", "Esplanada"]
     assert card["status"] == "open"
     assert card["is_mine"] is True

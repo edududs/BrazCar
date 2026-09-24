@@ -3,12 +3,13 @@ import { useState } from "react";
 
 import type { Session } from "@/features/accounts/domain/session";
 import { ActionButton } from "@/shared/ui/action-button";
+import { Badge } from "@/shared/ui/badge";
 import { Card } from "@/shared/ui/card";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { TextField } from "@/shared/ui/text-field";
 
 import type { RideActions } from "../app/use-ride";
-import type { Ride } from "../domain/ride";
+import type { OriginMessage, Ride } from "../domain/ride";
 import { ContactButton } from "./contact-button";
 import {
   formatDay,
@@ -60,10 +61,16 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
           {formatPrice(ride.price)} · {formatSeats(ride.seatsAvailable)} ·{" "}
           {ride.paymentMethods.map((method) => paymentLabel[method]).join(" ou ")}
         </p>
-        <p className="text-sm opacity-70">
-          {ride.driverName} · {ride.carModel}, {ride.carColor}
+        <p className="flex flex-wrap items-center gap-2 text-sm opacity-70">
+          <span>
+            {ride.driverName}
+            {ride.car === null ? "" : ` · ${ride.car.model}, ${ride.car.color}`}
+          </span>
+          {ride.origin === "whatsapp" ? <Badge tone="accent">via WhatsApp</Badge> : null}
         </p>
       </Card>
+
+      {ride.originMessage === null ? null : <OriginMessageCard message={ride.originMessage} />}
 
       {allowed.canContact ? <ContactButton rideId={ride.id} /> : null}
       {!ride.isMine &&
@@ -125,6 +132,23 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
         </section>
       ) : null}
     </div>
+  );
+}
+
+interface OriginMessageCardProps {
+  readonly message: OriginMessage;
+}
+
+/** The words this record came from, as posted (personal data already redacted, D-128). */
+function OriginMessageCard({ message }: OriginMessageCardProps) {
+  return (
+    <Card>
+      <h2 className="text-sm font-semibold">Mensagem original</h2>
+      <blockquote className="text-sm whitespace-pre-line">{message.text}</blockquote>
+      <p className="text-xs opacity-70">
+        {message.groupLabel} · {formatDay(message.sentAt)} {formatTime(message.sentAt)}
+      </p>
+    </Card>
   );
 }
 

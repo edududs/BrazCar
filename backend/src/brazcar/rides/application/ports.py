@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
-from brazcar.rides.domain import AccountId, PlaceId, RideEvent, RideId, RideOffer
+from brazcar.rides.domain import AccountId, Phone, PlaceId, RideEvent, RideId, RideOffer
 from brazcar.shared.application.ports import BoardRevision, BoardSignal
 from brazcar.shared.domain.model import FrozenModel
 
@@ -11,7 +11,7 @@ __all__ = [
     "BoardRevision",
     "BoardSignal",
     "ContactRequests",
-    "Driver",
+    "DriverAccount",
     "DriverCar",
     "DriverDirectory",
     "PlaceDirectory",
@@ -30,12 +30,23 @@ class RideRepository(Protocol):
         """
         ...
 
+    async def delete(self, ride_id: RideId) -> None:
+        """Forget the ride with its stops, history and contact requests, and bump the revision (D-119).
+
+        Missing is fine: nothing happens, nothing is bumped.
+        """
+        ...
+
     async def upcoming(self, since: datetime) -> tuple[RideOffer, ...]:
         """Not cancelled, departing at or after `since`, earliest first. The board's raw material."""
         ...
 
     async def by_driver(self, driver_id: AccountId) -> tuple[RideOffer, ...]:
-        """Every ride of one driver, latest departure first."""
+        """Every ride of one registered driver, latest departure first."""
+        ...
+
+    async def find_imported(self, driver: AccountId | Phone, departure_at: datetime) -> RideOffer | None:
+        """The not cancelled imported ride of this account or phone leaving exactly then (D-113)."""
         ...
 
     async def history(self, ride_id: RideId) -> tuple[RideEvent, ...]:
@@ -50,7 +61,7 @@ class DriverCar(FrozenModel):
     plate: str
 
 
-class Driver(FrozenModel):
+class DriverAccount(FrozenModel):
     """What `rides` needs to know about an account, by identifier only (D-006)."""
 
     id: AccountId
@@ -60,7 +71,11 @@ class Driver(FrozenModel):
 
 
 class DriverDirectory(Protocol):
-    async def get(self, account_id: AccountId) -> Driver | None: ...
+    async def get(self, account_id: AccountId) -> DriverAccount | None: ...
+
+    async def by_phone(self, phone: Phone) -> DriverAccount | None:
+        """The account with this WhatsApp phone (digits, no `+`), if someone registered it (D-127)."""
+        ...
 
 
 class PlaceDirectory(Protocol):
@@ -77,6 +92,10 @@ class RideSearch(Protocol):
     """
 
     async def index(self, ride: RideOffer) -> None: ...
+
+    async def forget(self, ride_id: RideId) -> None:
+        """Drop the ride from the index. Missing is fine."""
+        ...
 
     async def matching(self, text: str, among: Collection[RideId]) -> frozenset[RideId]:
         """The rides of `among` whose stops match `text`. A blank text matches all of them."""

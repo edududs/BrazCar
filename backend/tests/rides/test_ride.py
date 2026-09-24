@@ -28,7 +28,7 @@ from brazcar.rides.domain import (
 
 from .strategies import BRASILIA, EPOCH, car, moments, rides
 
-TOLERANCE = timedelta(minutes=20)
+TOLERANCE = timedelta(minutes=10)
 ROUTE = (CatalogStop(place_id="esplanada"), CatalogStop(place_id="estrutural"), FreeTextStop(text="Incra 8"))
 DRIVER = uuid4()
 

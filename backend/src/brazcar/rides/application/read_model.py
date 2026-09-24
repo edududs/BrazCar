@@ -2,6 +2,7 @@
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Literal
 
 from brazcar.rides.domain import (
     AccountId,
@@ -11,9 +12,12 @@ from brazcar.rides.domain import (
     RideId,
     RideOffer,
     RideStatus,
+    WhatsAppOrigin,
     allowed_actions,
 )
 from brazcar.shared.domain.model import FrozenModel
+
+type OriginKind = Literal["published", "whatsapp"]
 
 
 class StopView(FrozenModel):
@@ -21,11 +25,27 @@ class StopView(FrozenModel):
     label: str
 
 
+class CarView(FrozenModel):
+    """Model and color only: enough to spot the car, never enough to find it (D-031)."""
+
+    model: str
+    color: str
+
+
+class OriginMessageView(FrozenModel):
+    """The original words, for the passenger's own judgement (D-117)."""
+
+    text: str
+    group_label: str
+    sent_at: datetime
+
+
 class BoardRide(FrozenModel):
     id: RideId
     driver_name: str
-    car_model: str
-    car_color: str
+    car: CarView | None  # none for a ride read from WhatsApp (ADR-0015)
+    origin: OriginKind
+    origin_message: OriginMessageView | None
     stops: tuple[StopView, ...]
     departure_at: datetime
     seats_available: int
@@ -54,11 +74,20 @@ def to_board_ride(  # noqa: PLR0913 - a projection joins several sources by desi
     now: datetime,
     tolerance: timedelta,
 ) -> BoardRide:
+    car = ride.car
+    origin = ride.origin
     return BoardRide(
         id=ride.id,
         driver_name=driver_name,
-        car_model=ride.car.model,
-        car_color=ride.car.color,
+        car=None if car is None else CarView(model=car.model, color=car.color),
+        origin=origin.kind,
+        origin_message=(
+            OriginMessageView(
+                text=origin.message_text, group_label=origin.group_label, sent_at=origin.sent_at
+            )
+            if isinstance(origin, WhatsAppOrigin)
+            else None
+        ),
         stops=tuple(
             StopView(place_id=stop.place_id, label=labels.get(stop.place_id, stop.place_id))
             if isinstance(stop, CatalogStop)
@@ -71,5 +100,5 @@ def to_board_ride(  # noqa: PLR0913 - a projection joins several sources by desi
         payment_methods=tuple(sorted(ride.payment_methods)),
         status=ride.status(now, tolerance),
         actions=allowed_actions(ride, viewer, now, tolerance),
-        is_mine=viewer == ride.driver_id,
+        is_mine=ride.is_owned_by(viewer),
     )

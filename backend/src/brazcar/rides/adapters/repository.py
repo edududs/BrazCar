@@ -10,12 +10,19 @@ from brazcar.rides.domain import (
     AccountId,
     CarSnapshot,
     CatalogStop,
+    Driver,
+    ExternalDriver,
     FreeTextStop,
     PaymentMethod,
+    Phone,
+    PublishedOrigin,
+    RegisteredDriver,
     RideEvent,
     RideId,
     RideOffer,
+    RideOrigin,
     Stop,
+    WhatsAppOrigin,
 )
 from brazcar.shared.adapters.board_revision import bump_board_revision
 
@@ -33,11 +40,17 @@ class DjangoRideRepository:
     async def save(self, ride: RideOffer, events: tuple[RideEvent, ...]) -> None:
         await sync_to_async(_save)(ride, events)
 
+    async def delete(self, ride_id: RideId) -> None:
+        await sync_to_async(_delete)(ride_id)
+
     async def upcoming(self, since: datetime) -> tuple[RideOffer, ...]:
         return await sync_to_async(_upcoming)(since)
 
     async def by_driver(self, driver_id: AccountId) -> tuple[RideOffer, ...]:
         return await sync_to_async(_by_driver)(driver_id)
+
+    async def find_imported(self, driver: AccountId | Phone, departure_at: datetime) -> RideOffer | None:
+        return await sync_to_async(_find_imported)(driver, departure_at)
 
     async def history(self, ride_id: RideId) -> tuple[RideEvent, ...]:
         return await sync_to_async(_history)(ride_id)
@@ -65,6 +78,22 @@ def _upcoming(since: datetime) -> tuple[RideOffer, ...]:
 def _by_driver(driver_id: AccountId) -> tuple[RideOffer, ...]:
     rows = RideModel.objects.filter(driver_id=driver_id).order_by("-departure_at").prefetch_related("stops")
     return tuple(_to_entity(row) for row in rows)
+
+
+def _find_imported(driver: AccountId | Phone, departure_at: datetime) -> RideOffer | None:
+    rows = RideModel.objects.filter(origin_kind="whatsapp", departure_at=departure_at, cancelled_at=None)
+    rows = rows.filter(driver_id=driver) if isinstance(driver, UUID) else rows.filter(driver_phone=driver)
+    row = rows.prefetch_related("stops").first()
+    return None if row is None else _to_entity(row)
+
+
+@transaction.atomic
+def _delete(ride_id: RideId) -> None:
+    """Stops and events cascade; contact requests are removed by hand, and the board is bumped."""
+    ContactRequestModel.objects.filter(ride_id=ride_id).delete()
+    deleted, _ = RideModel.objects.filter(id=ride_id).delete()
+    if deleted:
+        bump_board_revision()
 
 
 def _history(ride_id: RideId) -> tuple[RideEvent, ...]:
@@ -95,11 +124,8 @@ def _save(ride: RideOffer, events: tuple[RideEvent, ...]) -> None:
 
 def _fields(ride: RideOffer) -> dict[str, object]:
     return {
-        "driver_id": ride.driver_id,
-        "car_id": ride.car.car_id,
-        "car_model": ride.car.model,
-        "car_color": ride.car.color,
-        "car_plate": ride.car.plate,
+        **_driver_fields(ride.driver),
+        **_origin_fields(ride.origin),
         "departure_at": ride.departure_at,
         "original_departure_at": ride.original_departure_at,
         "seats_available": ride.seats_available,
@@ -111,6 +137,40 @@ def _fields(ride: RideOffer) -> dict[str, object]:
     }
 
 
+def _driver_fields(driver: Driver) -> dict[str, object]:
+    if isinstance(driver, RegisteredDriver):
+        car = driver.car
+        return {
+            "driver_id": driver.account_id,
+            "driver_phone": "",
+            "driver_name": "",
+            "car_id": None if car is None else car.car_id,
+            "car_model": "" if car is None else car.model,
+            "car_color": "" if car is None else car.color,
+            "car_plate": "" if car is None else car.plate,
+        }
+    return {
+        "driver_id": None,
+        "driver_phone": driver.phone,
+        "driver_name": driver.display_name,
+        "car_id": None,
+        "car_model": "",
+        "car_color": "",
+        "car_plate": "",
+    }
+
+
+def _origin_fields(origin: RideOrigin) -> dict[str, object]:
+    if isinstance(origin, WhatsAppOrigin):
+        return {
+            "origin_kind": origin.kind,
+            "origin_text": origin.message_text,
+            "origin_group_label": origin.group_label,
+            "origin_sent_at": origin.sent_at,
+        }
+    return {"origin_kind": origin.kind, "origin_text": "", "origin_group_label": "", "origin_sent_at": None}
+
+
 def _stop_row(ride_id: RideId, position: int, stop: Stop) -> StopModel:
     if isinstance(stop, CatalogStop):
         return StopModel(ride_id=ride_id, position=position, kind=stop.kind, place_id=stop.place_id)
@@ -118,11 +178,10 @@ def _stop_row(ride_id: RideId, position: int, stop: Stop) -> StopModel:
 
 
 def _to_entity(row: RideModel) -> RideOffer:
-    assert isinstance(row.driver_id, UUID)  # noqa: S101 - the user's key is the account's UUID (D-090)
     return RideOffer(
         id=row.id,
-        driver_id=row.driver_id,
-        car=CarSnapshot(car_id=row.car_id, model=row.car_model, color=row.car_color, plate=row.car_plate),
+        driver=_to_driver(row),
+        origin=_to_origin(row),
         route=tuple(_to_stop(stop) for stop in row.stops.all()),
         departure_at=_local(row.departure_at),
         original_departure_at=_local(row.original_departure_at),
@@ -133,6 +192,30 @@ def _to_entity(row: RideModel) -> RideOffer:
         reopened_at=None if row.reopened_at is None else _local(row.reopened_at),
         cancelled_at=None if row.cancelled_at is None else _local(row.cancelled_at),
     )
+
+
+def _to_driver(row: RideModel) -> Driver:
+    """One shape or the other (ADR-0015); a row with both or neither is bad data, not a state."""
+    if row.driver_id is None:
+        return ExternalDriver(phone=row.driver_phone, display_name=row.driver_name)
+    assert isinstance(row.driver_id, UUID)  # noqa: S101 - the user's key is the account's UUID (D-090)
+    if row.car_id is None:  # linked by phone to the account, car unknown (D-127)
+        return RegisteredDriver(account_id=row.driver_id, car=None)
+    return RegisteredDriver(
+        account_id=row.driver_id,
+        car=CarSnapshot(car_id=row.car_id, model=row.car_model, color=row.car_color, plate=row.car_plate),
+    )
+
+
+def _to_origin(row: RideModel) -> RideOrigin:
+    if row.origin_kind == "whatsapp":
+        assert row.origin_sent_at is not None  # noqa: S101 - written together with the kind
+        return WhatsAppOrigin(
+            message_text=row.origin_text,
+            group_label=row.origin_group_label,
+            sent_at=_local(row.origin_sent_at),
+        )
+    return PublishedOrigin()
 
 
 def _to_stop(row: StopModel) -> Stop:

@@ -19,8 +19,16 @@ function toRide(out: RideOut): Ride {
   return {
     id: out.id,
     driverName: out.driver_name,
-    carModel: out.car_model,
-    carColor: out.car_color,
+    car: out.car === null ? null : { model: out.car.model, color: out.car.color },
+    origin: out.origin,
+    originMessage:
+      out.origin_message === null
+        ? null
+        : {
+            text: out.origin_message.text,
+            groupLabel: out.origin_message.group_label,
+            sentAt: out.origin_message.sent_at,
+          },
     stops: out.stops.map((stop) => ({ placeId: stop.place_id, label: stop.label })),
     departureAt: out.departure_at,
     seatsAvailable: out.seats_available,

@@ -5,8 +5,8 @@ from datetime import datetime
 from brazcar.places.domain import Catalog, Place
 from brazcar.rides.adapters.directories import CatalogPlaceDirectory
 from brazcar.rides.adapters.search import IndexedRideSearch
-from brazcar.rides.application import Driver
-from brazcar.rides.domain import AccountId, RideEvent, RideId, RideOffer
+from brazcar.rides.application import DriverAccount
+from brazcar.rides.domain import AccountId, ExternalDriver, RideEvent, RideId, RideOffer
 from tests.places.fakes import InMemoryCatalogRepository
 from tests.search.fakes import InMemorySearchIndex
 from tests.shared.fakes import InMemoryRateLimiter
@@ -40,6 +40,11 @@ class InMemoryRideRepository:
         if events:
             self.revision += 1
 
+    async def delete(self, ride_id: RideId) -> None:
+        if self.rides.pop(ride_id, None) is not None:
+            self.events.pop(ride_id, None)
+            self.revision += 1
+
     async def upcoming(self, since: datetime) -> tuple[RideOffer, ...]:
         rides = [r for r in self.rides.values() if r.cancelled_at is None and r.departure_at >= since]
         return tuple(sorted(rides, key=lambda r: (r.departure_at, r.published_at)))
@@ -47,6 +52,15 @@ class InMemoryRideRepository:
     async def by_driver(self, driver_id: AccountId) -> tuple[RideOffer, ...]:
         mine = [r for r in self.rides.values() if r.driver_id == driver_id]
         return tuple(sorted(mine, key=lambda r: r.departure_at, reverse=True))
+
+    async def find_imported(self, driver: AccountId | str, departure_at: datetime) -> RideOffer | None:
+        for ride in self.rides.values():
+            if not ride.is_imported or ride.cancelled_at is not None or ride.departure_at != departure_at:
+                continue
+            key = ride.driver.phone if isinstance(ride.driver, ExternalDriver) else ride.driver.account_id
+            if key == driver:
+                return ride
+        return None
 
     async def history(self, ride_id: RideId) -> tuple[RideEvent, ...]:
         return tuple(self.events.get(ride_id, []))
@@ -57,11 +71,14 @@ class InMemoryRideRepository:
 
 
 class InMemoryDrivers:
-    def __init__(self, *drivers: Driver) -> None:
+    def __init__(self, *drivers: DriverAccount) -> None:
         self.by_id = {d.id: d for d in drivers}
 
-    async def get(self, account_id: AccountId) -> Driver | None:
+    async def get(self, account_id: AccountId) -> DriverAccount | None:
         return self.by_id.get(account_id)
+
+    async def by_phone(self, phone: str) -> DriverAccount | None:
+        return next((d for d in self.by_id.values() if d.phone.lstrip("+") == phone), None)
 
 
 CATALOG = Catalog(

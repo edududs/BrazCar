@@ -4,8 +4,9 @@ import type { Ride } from "../domain/ride";
 export const openRide: Ride = {
   id: "r1",
   driverName: "Ana",
-  carModel: "Gol",
-  carColor: "prata",
+  car: { model: "Gol", color: "prata" },
+  origin: "published",
+  originMessage: null,
   stops: [
     { placeId: "brazlandia", label: "Brazlândia" },
     { placeId: null, label: "Incra 8" },
@@ -24,4 +25,18 @@ export const openRide: Ride = {
     delayUntil: null,
   },
   isMine: false,
+};
+
+/** A ride read from a WhatsApp group (ADR-0015): no car, nobody's, the original words attached. */
+export const importedRide: Ride = {
+  ...openRide,
+  id: "r2",
+  driverName: "Zé do grupo",
+  car: null,
+  origin: "whatsapp",
+  originMessage: {
+    text: "03 VAGAS\nSaindo às 07:00\nBrazlândia\nIncra 8\n7,00 Dinheiro ou PIX",
+    groupLabel: "Rota Plano Piloto",
+    sentAt: "2026-09-22T21:15:00-03:00",
+  },
 };
