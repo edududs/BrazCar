@@ -21,7 +21,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-008 | Mínimo de serviços de terceiros. Aceitos: Vercel, Resend e Cloudflare | decidido | |
 | D-069 | Monorepo com `backend/` e `web/` como pastas irmãs, cada uma dona do seu tooling; contrato em `contract/openapi.json`; a raiz guarda só o que é do repo inteiro | decidido | |
 | D-070 | Python 3.14. Descer para 3.13 só se aparecer incompatibilidade real, em especial ao embutir o extrator | decidido | |
-| D-108 | O repositório é público e faz parte do portfólio do dono. O `README.md` da raiz e [method.md](../method.md) são escritos para leitor externo — alguém que nunca viu o projeto e decide em minutos se vale ler o resto — e toda afirmação neles aponta para a prova dentro do repo; nada de número, funcionalidade ou garantia sem lastro. Os outros documentos continuam sendo ferramenta de trabalho, escritos para quem constrói. A metodologia é descrita em documento próprio, em tom factual; commits e documentação seguem sem citar ferramenta de autoria (regra 9 do `AGENTS.md`) | decidido | |
+| D-108 | O repositório é público e faz parte do portfólio do dono. O `README.md` da raiz e [method.md](../method.md) são escritos para quem nunca viu o projeto e decide em poucos minutos se vale ler o resto. Toda afirmação neles aponta para a prova dentro do repo; nada de número, funcionalidade ou garantia sem lastro. Os outros documentos continuam sendo ferramenta de trabalho, escritos para quem constrói. A metodologia é descrita em documento próprio, em tom factual; commits e documentação seguem sem citar ferramenta de autoria (regra 9 do `AGENTS.md`) | decidido | |
 
 ## Caronas
 
