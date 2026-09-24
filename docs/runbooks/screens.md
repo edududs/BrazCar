@@ -27,7 +27,8 @@ SQLite próprio (`backend/e2e.sqlite3`), a API em `localhost:8100` e o front con
 `SameSite=Lax` (ADR-0012) e porta não conta como site, então front e API ficam do mesmo site ali,
 como são subdomínios irmãos em produção. Trocar um dos dois por `127.0.0.1` derruba a sessão.
 
-Só rodar a suíte, sem mexer nas imagens já commitadas:
+Só rodar a suíte: sem a variável que o `yarn screens` liga, os prints vão para
+`web/e2e/.state/screens-preview/` e `docs/screens/` não é tocado.
 
 ```bash
 cd web && yarn e2e

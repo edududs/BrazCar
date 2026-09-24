@@ -10,14 +10,20 @@ import { apiOrigin, webOrigin } from "./origins";
 /**
  * The one screenshot helper (D-134) and the fixtures every suite shares.
  *
- * `snap(page, "journey/state")` writes `docs/screens/<project>/journey/state.png` and nothing else
- * in the suite ever calls `page.screenshot`: one place decides the name, the size and the waiting,
- * so the catalogue can be generated from the files.
+ * `snap(page, "journey/state")` writes `<project>/journey/state.png` and nothing else in the suite
+ * ever calls `page.screenshot`: one place decides the name, the size and the waiting, so the
+ * catalogue can be generated from the files.
+ *
+ * Only `yarn screens` writes into the versioned `docs/screens/`. A plain `yarn e2e`, here or on
+ * GitHub, drops its pictures in the throwaway folder, so running the suite never dirties the
+ * catalogue and the workflow has nothing to commit.
  */
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const capturing = process.env.BRAZCAR_SCREENS === "1";
 export const screensDir = path.join(here, "..", "..", "..", "docs", "screens");
 export const notesDir = path.join(here, "..", ".state", "screens");
+const outputDir = capturing ? screensDir : path.join(here, "..", ".state", "screens-preview");
 
 export type Snap = (page: Page, name: string) => Promise<void>;
 export type SignIn = (page: Page, slug: string) => Promise<void>;
@@ -64,7 +70,7 @@ export const test = base.extend<Fixtures>({
         await document.fonts.ready;
       });
       await page.screenshot({
-        path: path.join(screensDir, project, `${name}.png`),
+        path: path.join(outputDir, project, `${name}.png`),
         fullPage: isMobile, // on the phone the page scrolls; on the desktop the viewport is the frame
         animations: "disabled",
         caret: "hide",
