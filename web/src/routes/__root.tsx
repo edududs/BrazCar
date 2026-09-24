@@ -9,8 +9,9 @@ import { AppFooter } from "@/shared/ui/app-footer";
 import { AppNav, navLinkClass } from "@/shared/ui/app-nav";
 import { AppShellNotices } from "@/shared/ui/app-shell-notices";
 import { NoticeScreen } from "@/shared/ui/notice-screen";
+import { RouteNotFound } from "@/shared/ui/route-not-found";
 
-export const Route = createRootRoute({ component: RootLayout });
+export const Route = createRootRoute({ component: RootLayout, notFoundComponent: RouteNotFound });
 
 function RootLayout() {
   const { session } = useSession();

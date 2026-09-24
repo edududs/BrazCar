@@ -148,11 +148,18 @@ test("endereço de carona que não existe explica o que houve", async ({ page, s
   await snap(page, "ride/not-found");
 });
 
-test("endereço que não é rota nenhuma", async ({ page, snap }) => {
+test("endereço que não é rota nenhuma explica em português e leva ao mural", async ({
+  page,
+  snap,
+}) => {
   await page.goto("/uma-pagina-que-nao-existe");
 
-  await expect(page.locator("body")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Página não encontrada" })).toBeVisible();
+  await expect(page.getByText("Este endereço não existe no BrazCar.")).toBeVisible();
   await snap(page, "shell/route-not-found");
+
+  await page.getByRole("link", { name: "Voltar ao mural" }).click();
+  await expect(page).toHaveURL(/\/$/);
 });
 
 test("sem internet o app avisa por cima da página", async ({ page, context, snap }) => {
