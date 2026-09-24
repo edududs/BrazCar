@@ -64,8 +64,8 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   ao focar e ao voltar a rede é explícita; ao reconectar o primeiro quadro do stream é a comparação
   de revisão; vigia de silêncio do mural em 35s.
 - Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
-  (`poe coverage`), 96% medidos sobre `src/brazcar` e piso de 92%; front com `@vitest/coverage-v8`
-  (`yarn coverage`), 20% medidos sobre `src` e piso de 15%, com meta de paridade (D-109). O resumo
+  (`poe coverage`), 92% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
+  (`yarn coverage`), 20% medidos sobre `src` e piso de 15%, com meta de paridade (D-126). O resumo
   fica no log do passo e nada é enviado para serviço de terceiros (D-008).
 
 **Verificado de verdade no passo 7a:** portão rápido (276 testes) e o contrato no Postgres do

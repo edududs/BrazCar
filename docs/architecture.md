@@ -128,12 +128,12 @@ rápido, mais o contrato de repositório repetido no Postgres do compose e o bui
 
 Cobertura é medida só nos fluxos do GitHub, depois do portão rápido: os mesmos testes rápidos com
 `pytest-cov` no backend e `@vitest/coverage-v8` no front, resumo impresso no log e falha abaixo do
-piso. Os dois lados medem o pacote inteiro: 96% medidos sobre `src/brazcar`, com piso de 92%, e 20%
+piso. Os dois lados medem o pacote inteiro: 92% medidos sobre `src/brazcar`, com piso de 87%, e 20%
 medidos sobre `src` do front, com piso de 15%. O front está baixo porque só os hooks headless têm
-teste; a meta é paridade com o backend, cobrindo componentes e comportamento (D-109). Nada é
+teste; a meta é paridade com o backend, cobrindo componentes e comportamento (D-126). Nada é
 enviado para serviço de terceiros (D-008); o piso fica em `backend/poe_tasks.toml` e em
 `web/vite.config.ts`.
 
 Verificação feita à mão durante um passo vira teste automatizado no mesmo passo, e bugfix entra com
-o teste que o reproduz (D-109). De D-065 ainda não existem Schemathesis sobre o OpenAPI nem E2E com
-Playwright; eles entram num passo próprio de qualidade, o primeiro depois do 7a.
+o teste que o reproduz (D-126). De D-065 ainda não existem Schemathesis sobre o OpenAPI nem E2E com
+Playwright; eles entram num passo próprio de qualidade, o primeiro depois do 7a (`v0.8.0`).

@@ -32,7 +32,7 @@ achar uma carona compatível com o horário e a rota de quem procura.
 
 ## O produto
 
-No ar, na versão `v0.7.0`:
+No ar na `v0.7.0`; a `v0.8.0` está cortada e ainda não foi publicada na máquina:
 
 - **App:** [brazcar.elj-labs.org](https://brazcar.elj-labs.org). PWA instalável em Android e iPhone,
   feito para uso com uma mão, em pé, com pressa e 4G instável.
@@ -54,7 +54,8 @@ flowchart LR
     A --> DB[(Banco único<br/>SQLite ou Postgres)]
     A -->|SMTP| R[Resend]
     W -.wa.me.-> WA[WhatsApp]
-    X[Worker do extrator<br/>futuro] --> DB
+    X[Worker do extrator<br/>mesma imagem da API] --> DB
+    X -.lê.-> WA
 ```
 
 **Hexagonal com DDD.** O backend é Python 3.14 com Django 6 ASGI e django-ninja, e o Django entra
@@ -66,9 +67,9 @@ ou a camada de baixo. O arquivo tem dois testes que exercitam o próprio guarda,
 deliberadas e outro com os imports permitidos
 ([ADR-0001](docs/decisions/0001-hexagonal-ddd-django-in-adapters.md)).
 
-**Contextos com fronteira.** `rides`, `accounts`, `places` e `search` são pacotes com as três
-camadas dentro, cada um com seu app Django em `adapters/`; `shared` guarda a infraestrutura que não
-é de nenhum contexto. Referência entre contextos é por identificador, e o mesmo teste de arquitetura
+**Contextos com fronteira.** `rides`, `accounts`, `places`, `search` e `importing` são pacotes com
+as três camadas dentro, cada um com seu app Django em `adapters/`; `shared` guarda a infraestrutura
+que não é de nenhum contexto. Referência entre contextos é por identificador, e o teste de arquitetura
 recusa `rides.domain` importando `places.domain`. O núcleo de `search` importa só a stdlib, nem
 `shared`, para poder sair do projeto. Cada contexto tem um glossário em
 `docs/domain/`, que fixa um nome único para cada conceito no negócio e no código.
@@ -98,7 +99,7 @@ Cada item indica onde conferir.
   [`backend/tests/test_architecture.py`](backend/tests/test_architecture.py).
 - **Contrato de porta rodando nas duas implementações e nos dois bancos**:
   [`backend/tests/contracts/`](backend/tests/contracts/) e a task `poe test-postgres`.
-- **Decisões registradas com as alternativas descartadas.** 107 linhas com status e 14 registros
+- **Decisões registradas com as alternativas descartadas.** 126 linhas com status e 16 registros
   completos. Decisão antiga não é editada: entra uma linha nova e a antiga passa a "substituída
   por". [`docs/decisions/README.md`](docs/decisions/README.md).
 - **Medição antes de construção.** O SSE atravessando o túnel do Cloudflare e o ciclo de vida do iOS
@@ -110,9 +111,9 @@ Cada item indica onde conferir.
   tipo gerado do OpenAPI fica confinado aos adaptadores, e o CI falha se
   [`contract/openapi.json`](contract/openapi.json) divergir do código.
 - **Cobertura medida no próprio CI**, sem serviço de terceiros, com o resumo impresso no log do
-  fluxo. Backend: 96% medidos sobre `src/brazcar`, mínimo exigido de 92%. Front: 20% medidos sobre
+  fluxo. Backend: 92% medidos sobre `src/brazcar`, mínimo exigido de 87%. Front: 20% medidos sobre
   `src`, mínimo exigido de 15%, porque hoje só os hooks headless têm teste. A meta do front é
-  paridade com o backend, cobrindo componentes e comportamento (D-109).
+  paridade com o backend, cobrindo componentes e comportamento (D-126).
 - **Versão calculada dos commits.** [`scripts/release.sh`](scripts/release.sh) lê os Conventional
   Commits com git-cliff, calcula o próximo SemVer, gera o `CHANGELOG.md` no formato Keep a
   Changelog, alinha backend e front e cria a tag anotada. A tag vira GitHub Release e imagem no

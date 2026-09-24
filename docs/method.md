@@ -20,7 +20,7 @@ O resultado vira duas coisas em [decisions/README.md](decisions/README.md):
 - **Um registro numerado** (`decisions/NNNN-*.md`) quando o motivo não é evidente, com contexto,
   decisão, **alternativas descartadas** e consequências. A seção de alternativas é obrigatória:
   ela evita que a mesma discussão seja refeita mais tarde e registra por que o caminho óbvio foi
-  recusado. Hoje são 14 registros para 107 linhas de decisão.
+  recusado. Hoje são 16 registros para 126 linhas de decisão.
 
 Decisão não se edita. Quando a realidade muda, cria-se outra linha e a antiga passa a `substituída
 por D-NNN`. `D-002` desenhava o monorepo com `src/` na raiz e foi substituída por `D-069`, que o
@@ -59,8 +59,8 @@ instalado continua sem teste.
 
 Contexto de agente é limitado, e todo arquivo sempre carregado ocupa espaço em todas as sessões.
 
-- [AGENTS.md](../AGENTS.md) é o único arquivo sempre carregado: onze regras invioláveis e uma
-  tabela de "onde está cada coisa", em 44 linhas.
+- [AGENTS.md](../AGENTS.md) é o único arquivo sempre carregado: doze regras invioláveis e uma
+  tabela de "onde está cada coisa", em 46 linhas.
 - `.claude/rules/*.md` são regras por área, com os caminhos que as ativam declarados no cabeçalho.
   A regra de domínio entra quando um arquivo de `domain/` ou `application/` é tocado; a do front,
   quando um `.ts`, `.tsx` ou `.css` de `web/` é tocado. Quem está mexendo em documentação não
@@ -108,16 +108,16 @@ cerca de 40 no front.
 
 A cobertura é medida dentro do fluxo do GitHub: o resumo vai para o log do passo e o passo falha
 abaixo do piso. Nenhum serviço externo lê o código ou recebe relatório (`D-008`). Os dois lados
-medem o pacote inteiro, o que hoje dá 96% no backend e 20% no front, com pisos de 92% e 15%. O
+medem o pacote inteiro, o que hoje dá 92% no backend e 20% no front, com pisos de 87% e 15%. O
 número do front é baixo porque só os hooks headless têm teste, e ele é medido assim de propósito,
 para que a lacuna apareça; a meta é a paridade com o backend.
 
 A lacuna se fecha por regra permanente: verificação feita à mão durante um passo vira teste
-automatizado no mesmo passo, e bugfix entra com o teste que o reproduz (`D-109`). Um agente
+automatizado no mesmo passo, e bugfix entra com o teste que o reproduz (`D-126`). Um agente
 que conferiu um fluxo no navegador ou uma rota por `curl` deixa esse caminho coberto antes de
 fechar o passo, para que o passo seguinte não o quebre em silêncio. Duas peças decididas em `D-065`
 continuam sem existir, o Schemathesis sobre o OpenAPI e o E2E com Playwright nas jornadas críticas;
-elas entram num passo próprio de qualidade, o primeiro depois do 7a.
+elas entram num passo próprio de qualidade, o primeiro depois do 7a, que fechou na `v0.8.0`.
 
 ## Encerrar um passo
 

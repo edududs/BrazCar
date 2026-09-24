@@ -13,9 +13,6 @@ Plataforma que funciona sozinha, sem extrator.
 - Front e PWA instalável, online-only. **Feito, tag `v0.7.0`** (D-105, D-106).
 - **Etapa de design do produto**, depois de todas as peças acima existirem: identidade visual,
   layout e fluxo pensados de verdade. Até lá as telas são funcionais e sem polimento (D-103).
-- **Passo de qualidade**, o primeiro depois do 7a: testes de componente e comportamento no front
-  até a cobertura empatar com a do backend, Schemathesis sobre o contrato OpenAPI e E2E com
-  Playwright nas jornadas críticas, com screenshots como evidência (D-109).
 - Deploy na máquina de teste e front no Vercel.
 
 ## Depois
@@ -25,6 +22,9 @@ Plataforma que funciona sozinha, sem extrator.
   `v0.8.0`**, mensagens cruas fluindo em produção depois do deploy; **7b** transforma mensagem em carona no mural (candidata,
   parser com LLM local e regras, golden set, carona de motorista externo, ADR-0015 e ADR-0016).
   A carona importada não tem dono com conta, então só expira pelo horário e é apagada ao partir.
+- **Passo de qualidade**, o primeiro depois do 7a, que fechou na `v0.8.0`: testes de componente e
+  comportamento no front até a cobertura empatar com a do backend, Schemathesis sobre o contrato
+  OpenAPI e E2E com Playwright nas jornadas críticas, com screenshots como evidência (D-126).
 - **Atualização de carona importada por mensagem posterior** ("lotou", "só 1 vaga", "cancelei"),
   amarrada por remetente e horário. No passo 7 só é classificada e guardada (D-118).
 - **Reivindicação da carona importada** pelo motorista que se cadastra com o mesmo telefone. Só

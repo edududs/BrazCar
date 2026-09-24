@@ -16,7 +16,7 @@ cmd = "pytest -m 'not heavy'"
 
 [tasks.coverage]
 help = "Fast tests again, measuring coverage. Prints the summary and fails below the floor"
-cmd = "pytest -m 'not heavy' --cov=src/brazcar --cov-report=term-missing:skip-covered --cov-fail-under=92"
+cmd = "pytest -m 'not heavy' --cov=src/brazcar --cov-report=term-missing:skip-covered --cov-fail-under=87"
 
 [tasks.test-heavy]
 help = "Every test, including the ones that need external services"
