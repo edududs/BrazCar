@@ -10,7 +10,7 @@ SSE confirmado pelo túnel e num iPhone (`v0.2.0`, D-076), ritual de encerrament
 (`v0.2.1`), `places` (`v0.3.0`), `accounts` (`v0.4.0`), `rides` (`v0.5.0`) e os ajustes do teste
 no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 `brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.7.0` desde
-2026-09-23; a API e o worker na `v0.8.0` desde 2026-09-24; a `v0.9.0` ainda não foi publicada.
+2026-09-23; a API e o worker na `v0.9.0` desde 2026-09-24.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -85,10 +85,16 @@ Golden set medido no notebook (RTX 4050): `qwen3.5:4b` tipo 95%, campos 92%, med
 pelo túnel: `qwen3.5:4b` 94%, 91%, mediana 4,3 s; `gemma3:4b` 92%, 83%, 4,0 s (tabela completa em
 [parser-models.md](parser-models.md)); o container do worker alcança o Ollama por `host.docker.internal`.
 
-**Não verificado:** a importação de ponta a ponta em produção (mensagem real virando carona no mural
-publicado e no celular), o job do `pg_cron` com a regra nova, o worker judgeando com o Ollama da
-máquina, e o front publicado com o selo. É o T18 da spec, depois do push da tag e com ok em cada
-passo. Ainda de passos anteriores: o worker sobrevivendo a panic do Go ou reinício do Postgres; o
+Publicado e conferido em 2026-09-24: imagens `0.9.0` no GHCR e na máquina, migrações `importing.0002`
+e `rides.0002` aplicadas, 43 lugares no catálogo, job de poda reinstalado com a regra inteira, worker
+autenticado e julgando com o `qwen3.5:4b` da máquina. A primeira varredura tomou 7 mensagens em 4
+candidatas (uma repostada em 3 grupos, outra em 2) e criou 3 caronas; a quarta foi rejeitada como
+não oferta. As 3 aparecem no mural público pela API, sem carro, sem ação de dono e sem telefone no
+payload.
+
+**Não verificado:** o front publicado mostrando o selo e a mensagem original, no celular; o job do
+`pg_cron` apagando uma carona importada que partiu; o worker sobrevivendo a panic do Go ou a
+reinício do Postgres. Ainda de passos anteriores: o worker sobrevivendo a panic do Go ou reinício do Postgres; o
 mural atualizando sozinho ao voltar do segundo plano no app instalado; o aviso de build novo e a
 tela de piso num iPhone; ícone maskable no Android; `login` e `password-reset` estourados pelo
 navegador; e-mail de verdade pelo Resend.
@@ -100,10 +106,7 @@ pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisó
 
 ## Próximo passo
 
-1. Publicar a `v0.9.0` na máquina (T18 da spec, [runbooks/deploy.md](runbooks/deploy.md)):
-   `OLLAMA_BASE_URL`, `RIDE_PARSER_MODEL`, `IMPORT_ACCEPT_THRESHOLD` no `api.env`,
-   `install_purge_schedule` de novo (a regra mudou), `up -d`, e a primeira carona importada no mural.
-   Depois, um commit `docs:` registrando o deploy e apagando `docs/specs/importing/`.
+1. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato.
 2. Passo curto de observações na carona publicada (`notes`, D-129).
 3. Passo de qualidade (Playwright, Schemathesis, cobertura do front) e a etapa de design (D-103),
    na ordem que o Eduardo decidir.

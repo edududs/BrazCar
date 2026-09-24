@@ -17,11 +17,11 @@ Plataforma que funciona sozinha, sem extrator.
 
 ## Depois
 
-- **Passo 7, `importing`.** Em andamento, em dois releases (spec em `docs/specs/importing/`):
+- **Passo 7, `importing`.** Em andamento, em dois releases:
   **7a** embute o extrator (worker no compose, `DjangoStore`, pareamento, D-040 testado): **feito, tag
   `v0.8.0`**, mensagens cruas fluindo em produção; **7b** transforma mensagem em carona no mural (candidata,
   parser com LLM local e regras, golden set, carona de motorista externo, ADR-0015 e ADR-0016):
-  **feito no repo, tag `v0.9.0`**, deploy pendente.
+  **feito, tag `v0.9.0`**, publicado e importando caronas reais.
   A carona importada não tem dono com conta, então só expira pelo horário e é apagada ao partir.
 - **Passo de qualidade**, o primeiro depois do 7a, que fechou na `v0.8.0`: testes de componente e
   comportamento no front até a cobertura empatar com a do backend, Schemathesis sobre o contrato

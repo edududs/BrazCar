@@ -62,7 +62,7 @@ docker compose run --rm worker python manage.py source_messages --last 5
 docker compose exec postgres psql -U brazcar -d brazcar -c "select jobname, schedule from cron.job"
 ```
 
-Da v0.9.0 (7b) em diante o worker também julga: `OLLAMA_BASE_URL=http://host.docker.internal:11434`,
+Feito assim em 2026-09-24 (v0.9.0), com `api.env.bak-v0.8.0` guardando o anterior. Da v0.9.0 (7b) em diante o worker também julga: `OLLAMA_BASE_URL=http://host.docker.internal:11434`,
 `RIDE_PARSER_MODEL` (o que passou no golden set) e `IMPORT_ACCEPT_THRESHOLD` no `api.env`; o job
 de poda ganhou a regra inteira, então `install_purge_schedule` roda de novo na troca de versão.
 Para olhar: `manage.py candidates` (julgamentos e motivos), `manage.py import_rides` (uma varredura
