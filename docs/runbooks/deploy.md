@@ -42,6 +42,10 @@ As migrações `importing.0003` e `rides.0004` (D-138) põem o nono dígito nos 
 o endereço antigo do WhatsApp; rodam no entrypoint da API com `RUN_MIGRATIONS=1`, e o operador
 confere no log uma linha `ninth digit (D-138)` por coluna, com zero ilegíveis
 (`docker compose logs api --since 3m | grep "ninth digit"`).
+Em 2026-09-24 (v0.13.0) nada entrou no `api.env`; as migrações de dados `importing.0003` e
+`rides.0004` (D-138) rodaram no `up` com 0 ilegíveis, corrigindo 20 telefones em
+`importing_candidate.sender_phone`, 20 em `importing_source_message.sender_phone`, 1 em
+`importing_source_message.account` e 6 em `rides_ride.driver_phone`.
 
 ## Worker do WhatsApp (passo 7a)
 
