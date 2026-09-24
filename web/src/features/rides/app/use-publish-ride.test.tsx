@@ -17,13 +17,14 @@ const mocked = vi.mocked(gateway);
 const draft: RideDraft = {
   carId: "c1",
   stops: [
-    { placeId: "brazlandia", text: "" },
-    { placeId: null, text: "Incra 8" },
+    { placeId: "brazlandia", text: "", fare: "" },
+    { placeId: null, text: "Incra 8", fare: "" },
   ],
   departureAt: "2026-09-23T10:00:00.000Z",
   seatsAvailable: 3,
   price: "7.00",
   paymentMethods: ["pix"],
+  notes: "",
 };
 
 describe("usePublishRide", () => {

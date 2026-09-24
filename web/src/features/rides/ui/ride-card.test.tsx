@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { renderRouted } from "@/shared/testing/render-routed";
 
-import { importedRide, openRide } from "../app/ride.fixture";
+import { faredRide, importedRide, openRide } from "../app/ride.fixture";
 import { RideCard } from "./ride-card";
 
 describe("RideCard", () => {
@@ -26,5 +26,24 @@ describe("RideCard", () => {
     });
     expect(screen.getByText("Zé do grupo")).toBeDefined();
     expect(screen.queryByText(/Gol/)).toBeNull();
+  });
+
+  it("says the price is a starting one and shows the notes on one line", async () => {
+    renderRouted(<RideCard ride={faredRide} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/a partir de R\$\s?7,00/)).toBeDefined();
+    });
+    const notes = screen.getByText("Levo mala pequena e aviso no grupo se atrasar.");
+    expect(notes.className).toContain("truncate");
+  });
+
+  it("shows a plain price and no notes line when the ride has neither", async () => {
+    renderRouted(<RideCard ride={openRide} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/R\$\s?7,00/)).toBeDefined();
+    });
+    expect(screen.queryByText(/a partir de/)).toBeNull();
   });
 });

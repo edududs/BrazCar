@@ -29,10 +29,16 @@ function toRide(out: RideOut): Ride {
             groupLabel: out.origin_message.group_label,
             sentAt: out.origin_message.sent_at,
           },
-    stops: out.stops.map((stop) => ({ placeId: stop.place_id, label: stop.label })),
+    stops: out.stops.map((stop) => ({
+      placeId: stop.place_id,
+      label: stop.label,
+      fare: stop.fare,
+    })),
+    notes: out.notes,
     departureAt: out.departure_at,
     seatsAvailable: out.seats_available,
     price: out.price,
+    hasFares: out.has_fares,
     paymentMethods: out.payment_methods,
     status: out.status,
     actions: {
@@ -48,7 +54,8 @@ function toRide(out: RideOut): Ride {
 }
 
 function toStopIn(stop: StopDraft): StopIn {
-  return stop.placeId === null ? { text: stop.text } : { place_id: stop.placeId };
+  const fare = stop.fare.trim() === "" ? null : stop.fare.trim();
+  return stop.placeId === null ? { text: stop.text, fare } : { place_id: stop.placeId, fare };
 }
 
 function detailOf(error: unknown): string | null {
@@ -110,6 +117,7 @@ export async function publishRide(draft: RideDraft): Promise<Ride> {
       seats_available: draft.seatsAvailable,
       price: draft.price,
       payment_methods: [...draft.paymentMethods],
+      notes: draft.notes.trim() === "" ? null : draft.notes,
     },
   });
   if (data === undefined) throw refused(response.status, error);
@@ -122,6 +130,7 @@ export async function editRide(rideId: string, changes: RideChanges): Promise<Ri
   if (changes.departureAt !== undefined) body.departure_at = changes.departureAt;
   if (changes.price !== undefined) body.price = changes.price;
   if (changes.paymentMethods !== undefined) body.payment_methods = [...changes.paymentMethods];
+  if (changes.notes !== undefined) body.notes = changes.notes; // empty text erases them (D-129)
   const { data, error, response } = await apiClient.PATCH("/api/rides/{ride_id}", {
     params: { path: { ride_id: rideId } },
     body,

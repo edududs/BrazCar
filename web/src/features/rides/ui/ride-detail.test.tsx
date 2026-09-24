@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderRouted } from "@/shared/testing/render-routed";
 
 import type { RideActions } from "../app/use-ride";
-import { importedRide, openRide } from "../app/ride.fixture";
+import { faredRide, importedRide, openRide } from "../app/ride.fixture";
 import type { Ride } from "../domain/ride";
 import { RideDetail } from "./ride-detail";
 
@@ -57,5 +57,19 @@ describe("RideDetail", () => {
     });
     expect(screen.queryByText("Mensagem original")).toBeNull();
     expect(screen.queryByText("via WhatsApp")).toBeNull();
+  });
+
+  it("lists the fare beside each stop and the notes in full", async () => {
+    show(faredRide);
+
+    await waitFor(() => {
+      expect(screen.getByText("2. Incra 8")).toBeDefined();
+    });
+    const stops = screen
+      .getAllByRole("listitem")
+      .map((item) => item.textContent.replace(/\s+/g, " "));
+    expect(stops).toEqual(["1. Brazlândia", "2. Incra 8R$ 9,00", "3. EsplanadaR$ 7,00"]);
+    expect(screen.getByText(/a partir de R\$\s?7,00/)).toBeDefined();
+    expect(screen.getByText("Levo mala pequena e aviso no grupo se atrasar.")).toBeDefined();
   });
 });

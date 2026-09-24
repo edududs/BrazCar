@@ -20,6 +20,8 @@ export interface RouteDraft {
   /** Only waypoints go; origin and destination are the least a ride has (D-013). */
   readonly remove: (key: number) => void;
   readonly value: () => StopDraft[];
+  /** Some stop says its own price, so the ride's price comes from the fares (D-131). */
+  readonly hasFares: boolean;
 }
 
 interface Entry {
@@ -27,7 +29,7 @@ interface Entry {
   readonly stop: StopDraft;
 }
 
-const blank: StopDraft = { placeId: null, text: "" };
+const blank: StopDraft = { placeId: null, text: "", fare: "" };
 
 function roleAt(index: number, count: number): StopRole {
   if (index === 0) return "origin";
@@ -59,5 +61,6 @@ export function useRouteDraft(initial: readonly StopDraft[]): RouteDraft {
       );
     },
     value: () => entries.map((entry) => entry.stop),
+    hasFares: entries.some((entry, index) => index > 0 && entry.stop.fare.trim() !== ""),
   };
 }

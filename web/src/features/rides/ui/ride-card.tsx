@@ -6,7 +6,7 @@ import { Card } from "@/shared/ui/card";
 import type { Ride } from "../domain/ride";
 import {
   formatDay,
-  formatPrice,
+  formatRidePrice,
   formatRoute,
   formatSeats,
   formatTime,
@@ -33,9 +33,10 @@ export function RideCard({ ride }: RideCardProps) {
         </div>
         <p className="text-sm">{formatRoute(ride.stops)}</p>
         <p className="text-sm opacity-80">
-          {formatPrice(ride.price)} · {formatSeats(ride.seatsAvailable)} ·{" "}
+          {formatRidePrice(ride.price, ride.hasFares)} · {formatSeats(ride.seatsAvailable)} ·{" "}
           {ride.paymentMethods.map((method) => paymentLabel[method]).join(" ou ")}
         </p>
+        {ride.notes === null ? null : <p className="truncate text-sm opacity-80">{ride.notes}</p>}
         <p className="flex flex-wrap items-center gap-2 text-sm opacity-70">
           <span>
             {ride.driverName}

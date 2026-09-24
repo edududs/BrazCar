@@ -14,6 +14,7 @@ import { ContactButton } from "./contact-button";
 import {
   formatDay,
   formatPrice,
+  formatRidePrice,
   formatSeats,
   formatTime,
   fromLocalInput,
@@ -52,15 +53,21 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
         </div>
         <ol className="flex flex-col gap-1 text-sm">
           {ride.stops.map((stop, index) => (
-            <li key={`${String(index)}-${stop.label}`}>
-              {index + 1}. {stop.label}
+            <li key={`${String(index)}-${stop.label}`} className="flex justify-between gap-3">
+              <span>
+                {index + 1}. {stop.label}
+              </span>
+              {stop.fare === null ? null : (
+                <span className="opacity-70">{formatPrice(stop.fare)}</span>
+              )}
             </li>
           ))}
         </ol>
         <p className="text-sm">
-          {formatPrice(ride.price)} · {formatSeats(ride.seatsAvailable)} ·{" "}
+          {formatRidePrice(ride.price, ride.hasFares)} · {formatSeats(ride.seatsAvailable)} ·{" "}
           {ride.paymentMethods.map((method) => paymentLabel[method]).join(" ou ")}
         </p>
+        {ride.notes === null ? null : <p className="text-sm whitespace-pre-line">{ride.notes}</p>}
         <p className="flex flex-wrap items-center gap-2 text-sm opacity-70">
           <span>
             {ride.driverName}

@@ -2,11 +2,12 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import type { StopDraft } from "../domain/ride";
 import { useRouteDraft } from "./use-route-draft";
 
-const braz = { placeId: "brazlandia", text: "" };
-const incra = { placeId: null, text: "Incra 8" };
-const esplanada = { placeId: "esplanada", text: "" };
+const braz: StopDraft = { placeId: "brazlandia", text: "", fare: "" };
+const incra: StopDraft = { placeId: null, text: "Incra 8", fare: "" };
+const esplanada: StopDraft = { placeId: "esplanada", text: "", fare: "" };
 
 describe("useRouteDraft", () => {
   it("starts with an origin and a destination, and nothing in between", () => {
@@ -49,5 +50,22 @@ describe("useRouteDraft", () => {
       result.current.remove(keys[1] ?? -1);
     });
     expect(result.current.value()).toEqual([braz, esplanada]);
+  });
+
+  it("reports a fare on any stop but the origin, so the price stops being typed (D-131)", () => {
+    const { result } = renderHook(() => useRouteDraft([braz, incra, esplanada]));
+    const keys = result.current.stops.map((s) => s.key);
+
+    expect(result.current.hasFares).toBe(false);
+
+    act(() => {
+      result.current.change(keys[1] ?? -1, { ...incra, fare: "9.00" });
+    });
+    expect(result.current.hasFares).toBe(true);
+
+    act(() => {
+      result.current.change(keys[1] ?? -1, { ...incra, fare: "  " });
+    });
+    expect(result.current.hasFares).toBe(false);
   });
 });

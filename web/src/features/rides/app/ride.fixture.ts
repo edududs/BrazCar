@@ -8,12 +8,14 @@ export const openRide: Ride = {
   origin: "published",
   originMessage: null,
   stops: [
-    { placeId: "brazlandia", label: "Brazlândia" },
-    { placeId: null, label: "Incra 8" },
+    { placeId: "brazlandia", label: "Brazlândia", fare: null },
+    { placeId: null, label: "Incra 8", fare: null },
   ],
+  notes: null,
   departureAt: "2026-09-23T07:00:00-03:00",
   seatsAvailable: 3,
   price: "7.00",
+  hasFares: false,
   paymentMethods: ["pix"],
   status: "open",
   actions: {
@@ -39,4 +41,18 @@ export const importedRide: Ride = {
     groupLabel: "Rota Plano Piloto",
     sentAt: "2026-09-22T21:15:00-03:00",
   },
+};
+
+/** A ride whose stops carry their own price, so the board shows a "from" price (D-131). */
+export const faredRide: Ride = {
+  ...openRide,
+  id: "r3",
+  stops: [
+    { placeId: "brazlandia", label: "Brazlândia", fare: null },
+    { placeId: null, label: "Incra 8", fare: "9.00" },
+    { placeId: "esplanada", label: "Esplanada", fare: "7.00" },
+  ],
+  notes: "Levo mala pequena e aviso no grupo se atrasar.",
+  price: "7.00",
+  hasFares: true,
 };

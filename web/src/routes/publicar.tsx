@@ -15,13 +15,14 @@ function blankDraft(carId: string): RideDraft {
   return {
     carId,
     stops: [
-      { placeId: null, text: "" },
-      { placeId: null, text: "" },
+      { placeId: null, text: "", fare: "" },
+      { placeId: null, text: "", fare: "" },
     ],
     departureAt: departure.toISOString(),
     seatsAvailable: 3,
     price: "7.00",
     paymentMethods: ["pix", "cash"],
+    notes: "",
   };
 }
 

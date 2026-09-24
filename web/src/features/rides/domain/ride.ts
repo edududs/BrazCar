@@ -8,6 +8,8 @@ export interface Stop {
   /** `null` for a free-text stop ("other", D-013). */
   readonly placeId: string | null;
   readonly label: string;
+  /** What it costs to come this far from the origin, as text; `null` when unpriced (D-131). */
+  readonly fare: string | null;
 }
 
 /** What the viewer may do, decided by the API (ADR-0011). The screens only draw these. */
@@ -47,11 +49,15 @@ export interface Ride {
   readonly origin: RideOrigin;
   readonly originMessage: OriginMessage | null;
   readonly stops: readonly Stop[];
+  /** Plain words the driver wanted said, `null` when there are none (D-129). */
+  readonly notes: string | null;
   /** ISO instant with offset. */
   readonly departureAt: string;
   readonly seatsAvailable: number;
   /** Decimal as text, "7.00": money never goes through a float. */
   readonly price: string;
+  /** The price is the cheapest fare, so the screen shows it as "a partir de" (D-131). */
+  readonly hasFares: boolean;
   readonly paymentMethods: readonly PaymentMethod[];
   readonly status: RideStatus;
   readonly actions: RideActions;
@@ -62,6 +68,8 @@ export interface Ride {
 export interface StopDraft {
   readonly placeId: string | null;
   readonly text: string;
+  /** Decimal as text; empty when this stop carries no fare. The first stop never has one (D-131). */
+  readonly fare: string;
 }
 
 export interface RideDraft {
@@ -72,7 +80,12 @@ export interface RideDraft {
   readonly seatsAvailable: number;
   readonly price: string;
   readonly paymentMethods: readonly PaymentMethod[];
+  /** Empty means no notes; empty also erases the ones a ride had. */
+  readonly notes: string;
 }
+
+/** The longest notes the API takes (D-129); the form counts against it. */
+export const NOTES_LIMIT = 500;
 
 /** What an edit changes. Absent means unchanged. */
 export interface RideChanges {
@@ -80,6 +93,7 @@ export interface RideChanges {
   readonly departureAt?: string;
   readonly price?: string;
   readonly paymentMethods?: readonly PaymentMethod[];
+  readonly notes?: string;
 }
 
 /** The only way the phone and the plate reach the screen (ADR-0006). */

@@ -14,6 +14,11 @@ export function formatPrice(price: string): string {
   return currency.format(Number(price));
 }
 
+/** The ride's price, said as a "from" price when the stops carry their own fares (D-131). */
+export function formatRidePrice(price: string, hasFares: boolean): string {
+  return hasFares ? `a partir de ${formatPrice(price)}` : formatPrice(price);
+}
+
 export function formatTime(iso: string): string {
   return time.format(new Date(iso));
 }

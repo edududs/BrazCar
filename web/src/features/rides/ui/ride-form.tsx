@@ -8,10 +8,11 @@ import { ActionButton } from "@/shared/ui/action-button";
 import { CheckboxField } from "@/shared/ui/checkbox-field";
 import { Form } from "@/shared/ui/form";
 import { SelectField } from "@/shared/ui/select-field";
+import { TextAreaField } from "@/shared/ui/textarea-field";
 import { TextField } from "@/shared/ui/text-field";
 
 import { type StopRole, useRouteDraft } from "../app/use-route-draft";
-import type { PaymentMethod, RideDraft, StopDraft } from "../domain/ride";
+import { NOTES_LIMIT, type PaymentMethod, type RideDraft, type StopDraft } from "../domain/ride";
 import { fromLocalInput, paymentLabel, toLocalInput } from "./format";
 import { reasonOf } from "./reason";
 
@@ -84,6 +85,10 @@ export function RideForm({
           />
         ))}
         <ActionButton onPress={route.addWaypoint}>Adicionar parada no caminho</ActionButton>
+        <p className="text-xs font-normal opacity-70">
+          Se cada parada tem um preço, preencha o preço de cada uma. A carona passa a valer “a
+          partir de” o menor deles.
+        </p>
       </fieldset>
       <TextField
         label="Saída"
@@ -108,18 +113,20 @@ export function RideForm({
             required
           />
         )}
-        <TextField
-          label="Preço"
-          type="number"
-          inputMode="decimal"
-          min="0.01"
-          step="0.01"
-          value={draft.price}
-          onChange={(price) => {
-            set("price", price);
-          }}
-          required
-        />
+        {route.hasFares ? null : ( // with fares, the price is the cheapest of them (D-131)
+          <TextField
+            label="Preço"
+            type="number"
+            inputMode="decimal"
+            min="0.01"
+            step="0.01"
+            value={draft.price}
+            onChange={(price) => {
+              set("price", price);
+            }}
+            required
+          />
+        )}
       </div>
       <fieldset className="flex flex-col">
         <legend className="text-sm font-medium">Pagamento</legend>
@@ -140,6 +147,16 @@ export function RideForm({
           </CheckboxField>
         ))}
       </fieldset>
+      <TextAreaField
+        label="Observações"
+        value={draft.notes}
+        onChange={(notes) => {
+          set("notes", notes);
+        }}
+        maxLength={NOTES_LIMIT}
+        placeholder="Ex.: levo mala pequena, aviso no grupo se atrasar."
+        hint="Sem telefone, e-mail ou placa: o contato sai pelo botão."
+      />
       <ActionButton submit emphasis="primary" disabled={busy}>
         {submitLabel}
       </ActionButton>
@@ -160,7 +177,9 @@ const roleLabel = {
   destination: "Vai para",
 } as const satisfies Record<StopRole, string>;
 
-/** One stop: a place of the catalog, or "other" as text. The switch between the two is the checkbox. */
+/** One stop: a place of the catalog, or "other" as text. The switch between the two is the checkbox.
+ *
+ * Every stop but the first may say what it costs to get there from the origin (D-131). */
 function StopField({ role, stop, onChange, onRemove }: StopFieldProps) {
   const [other, setOther] = useState(stop.placeId === null && stop.text !== "");
   const place = usePlace(stop.placeId);
@@ -172,7 +191,7 @@ function StopField({ role, stop, onChange, onRemove }: StopFieldProps) {
           label={label}
           value={stop.text}
           onChange={(text) => {
-            onChange({ placeId: null, text });
+            onChange({ ...stop, placeId: null, text });
           }}
           placeholder="Ex.: Incra 8, portão da escola"
           required
@@ -182,7 +201,20 @@ function StopField({ role, stop, onChange, onRemove }: StopFieldProps) {
           label={label}
           value={place}
           onChange={(chosen) => {
-            onChange({ placeId: chosen?.id ?? null, text: "" });
+            onChange({ ...stop, placeId: chosen?.id ?? null, text: "" });
+          }}
+        />
+      )}
+      {role === "origin" ? null : (
+        <TextField
+          label="Preço até aqui"
+          type="number"
+          inputMode="decimal"
+          min="0.01"
+          step="0.01"
+          value={stop.fare}
+          onChange={(fare) => {
+            onChange({ ...stop, fare });
           }}
         />
       )}
@@ -191,7 +223,7 @@ function StopField({ role, stop, onChange, onRemove }: StopFieldProps) {
           checked={other}
           onChange={(checked) => {
             setOther(checked);
-            onChange({ placeId: null, text: "" });
+            onChange({ ...stop, placeId: null, text: "" });
           }}
         >
           Outro lugar
