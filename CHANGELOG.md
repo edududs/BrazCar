@@ -6,6 +6,12 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.20.2] - 2026-09-25
+
+### Testes
+
+- **e2e:** Survive a retry and match role names exactly
+
 ## [0.20.1] - 2026-09-25
 
 ### Testes
