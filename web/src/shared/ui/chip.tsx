@@ -45,7 +45,7 @@ export function Chip({
 /** The row the chips scroll in, bleeding into the gutters. */
 export function ChipRow({ children }: { readonly children: ReactNode }) {
   return (
-    <div className="-mx-gutter flex gap-2 overflow-x-auto px-gutter py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-gutter flex shrink-0 gap-2 overflow-x-auto px-gutter py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {children}
     </div>
   );

@@ -22,13 +22,9 @@ function AccountPage() {
   const { changePassword, busy: passwordBusy } = useChangePassword();
   const navigate = useNavigate();
   const { version } = useVersionFloor();
-  const everyone = (
-    <>
-      <ThemeControl />
-      {/* The build's version, for support (D-105): it lives here since the footer went. */}
-      <p className="text-center text-caption text-ink-3">BrazCar {version}</p>
-    </>
-  );
+  const appearance = <ThemeControl />;
+  // The build's version, for support (D-105): it lives here since the footer went.
+  const footer = <p className="text-center text-caption text-ink-3">BrazCar {version}</p>;
   return (
     <PageShell title="Minha conta">
       {session.status === "checking" ? (
@@ -52,7 +48,8 @@ function AccountPage() {
               </div>
             </div>
           </Card>
-          {everyone}
+          {appearance}
+          {footer}
         </>
       ) : (
         <AccountPanel
@@ -78,9 +75,9 @@ function AccountPage() {
               },
             });
           }}
-        >
-          {everyone}
-        </AccountPanel>
+          appearance={appearance}
+          footer={footer}
+        />
       )}
     </PageShell>
   );

@@ -140,7 +140,7 @@ function DateTimePicker({ initial, now, dayLocked, onDone }: DateTimePickerProps
 
   return (
     <>
-      <div className="-mx-gutter flex gap-2 overflow-x-auto px-gutter py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="-mx-gutter flex shrink-0 gap-2 overflow-x-auto px-gutter py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {cards.map((card) => {
           const on = card.day === draft.day;
           return (

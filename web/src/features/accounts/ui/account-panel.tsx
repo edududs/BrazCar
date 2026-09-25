@@ -29,8 +29,10 @@ interface AccountPanelProps {
   readonly deleteAccount: () => Promise<void>;
   /** Where the account goes once it is gone: the board, with a way to notice it. */
   readonly onDeleted: () => void;
-  /** The groups that belong to everyone, signed in or not: appearance, and the version. */
-  readonly children?: React.ReactNode;
+  /** The group that belongs to everyone, signed in or not: appearance. */
+  readonly appearance?: React.ReactNode;
+  /** The last line of the page: the build's version. */
+  readonly footer?: React.ReactNode;
 }
 
 type Open = "profile" | "password" | "car" | "delete" | null;
@@ -50,7 +52,8 @@ export function AccountPanel({
   logOut,
   deleteAccount,
   onDeleted,
-  children,
+  appearance,
+  footer,
 }: AccountPanelProps) {
   const [open, setOpen] = useState<Open>(null);
   const [error, setError] = useState<string | null>(null);
@@ -147,7 +150,7 @@ export function AccountPanel({
         />
       </ListGroup>
 
-      {children}
+      {appearance}
 
       <SectionHeading>BrazCar</SectionHeading>
       <ListGroup>
@@ -175,6 +178,7 @@ export function AccountPanel({
           {error}
         </NoticeBar>
       )}
+      {footer}
       {done === null ? null : <Toast icon={<Icon name="check" size={16} />}>{done}</Toast>}
 
       <Sheet
