@@ -248,6 +248,22 @@ carona que outro contexto acabou de publicar (SSE); excluir a conta pelo diálog
 telefone dela deixando de servir para entrar, e a página em português para todo endereço que não é
 rota nenhuma.
 
+**Verificado de verdade no passo 3 do design:** portão rápido a cada commit (472 no backend, 155 no
+front, 22 novos: céu do horário, selo "Nova", seções e chips de dia, rascunho de hora, filtros como
+chips, detalhe com o contato revelado), portão pesado do front, a suíte de ponta a ponta verde nos
+três projetos (155 casos, 1 pulado) depois de dois ajustes: os localizadores de situação passaram a
+ser exatos ("Lotada" também aparece na frase do passo de vagas) e o dono voltou a ver as próprias
+observações, que a primeira versão do detalhe só mostrava ao passageiro. Catálogo refeito duas vezes
+(143 imagens): a primeira rodada mostrou o selo "Nova" em todo card do primeiro carregamento, um
+defeito do hook, corrigido com teste antes da segunda. Conferidas por amostra: mural cheio, busca
+por apelido com a parada marcada e a linha do apelido, só com vaga, tempo real com uma "Nova",
+minhas caronas em duas seções, contato revelado, dono, cancelada, importada.
+
+**Não verificado:** a folha de horário e a de preço num toque de verdade (a suíte aplica o filtro
+pela URL; a folha tem teste de componente do rascunho de hora, não de gesto); o arrastar para
+fechar a folha (Drawer do Base UI) num iPhone; o céu do horário e o vidro da barra de ação no
+aparelho; a paralaxe não existe ainda (passo 5).
+
 **Verificado de verdade no passo 2 do design:** portão rápido a cada commit (472 no backend, 133 no
 front, 5 novos: abas, toast, cartão de instalar, vazio), portão pesado do front, a suíte de ponta a
 ponta verde nos três projetos (155 casos, 1 pulado) e o catálogo refeito com 143 imagens, conferidas
