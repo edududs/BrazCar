@@ -259,6 +259,16 @@ def test_an_offer_with_time_and_two_stops_above_the_threshold_becomes_a_draft_wi
     )
 
 
+def test_an_offer_with_more_seats_than_a_ride_allows_is_clamped() -> None:
+    """A passenger car has no fifth seat (D-142); the message may still say more."""
+    six_seats = FULL.evolve(seats=6)
+
+    decision = decide(six_seats, departure_at=DEPARTURE, stops=STOPS, checks=SURE, threshold=0.7)
+
+    assert isinstance(decision, Accept)
+    assert decision.draft.seats == 4
+
+
 @pytest.mark.parametrize(
     ("judgement", "departure", "stops", "checks", "reason"),
     [

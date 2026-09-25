@@ -14,7 +14,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from brazcar.importing.domain import Day, Judgement, Offer, OfferFare, Other, Request, Update
 
 MAX_STOPS = 15  # a long route is real ("Brazlândia 🔁 Aeroporto" has ten); past this, the middle goes
-MAX_SEATS = 8  # a car; more than that is a misreading ("26" is a quadra), so not said
+MAX_SEATS = 8  # a van at most; more than that is a misreading ("26" is a quadra), so not said.
+# The ride itself caps lower, at RIDE_SEAT_CAP in the acceptance domain (D-142): a number the
+# message plausibly said is still read here, and the accepted ride clamps to what it becomes.
 MAX_FARES = MAX_STOPS  # one price per stop at most; the rest is noise
 
 

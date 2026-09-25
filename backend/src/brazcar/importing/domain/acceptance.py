@@ -15,6 +15,8 @@ from .judgement import Judgement, Offer, Payment
 DEFAULT_SEATS = 2
 DEFAULT_PRICE = Decimal("7.00")
 DEFAULT_PAYMENT: frozenset[Payment] = frozenset({"cash", "pix"})
+RIDE_SEAT_CAP = 4  # mirrors `rides.domain.ride.MAX_SEATS` (D-142). Duplicated, not imported: a
+# context only imports `shared` (D-075); a message may still say more, so the accepted ride clamps.
 
 type PlaceId = Annotated[str, StringConstraints(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$", max_length=64)]
 type StopText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
@@ -37,7 +39,7 @@ class RideDraft(FrozenModel):
 
     stops: Annotated[tuple[ResolvedStop, ...], Field(min_length=2)]
     departure_at: datetime
-    seats: Annotated[int, Field(ge=1, le=8)]
+    seats: Annotated[int, Field(ge=1, le=RIDE_SEAT_CAP)]
     price: Annotated[Decimal, Field(gt=0)]
     payment_methods: Annotated[frozenset[Payment], Field(min_length=1)]
 
@@ -71,11 +73,12 @@ def decide(
         return Rejected(reason=RejectReason.FEW_STOPS, confidence=confidence)
     if confidence < threshold:
         return Rejected(reason=RejectReason.LOW_CONFIDENCE, confidence=confidence)
+    seats = judgement.seats if judgement.seats is not None else DEFAULT_SEATS
     return Accept(
         draft=RideDraft(
             stops=stops,
             departure_at=departure_at,
-            seats=judgement.seats if judgement.seats is not None else DEFAULT_SEATS,
+            seats=min(seats, RIDE_SEAT_CAP),  # a passenger car has no fifth seat (D-142)
             price=_price(stops, judgement.price),
             payment_methods=judgement.payment_methods or DEFAULT_PAYMENT,
         ),

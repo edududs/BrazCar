@@ -27,9 +27,10 @@ Depende do extrator embutido (ADR-0009) e entrega para `rides` por porta (ADR-00
 | conferências | `Checks` | Determinísticas, ancoradas no texto: a hora aparece nos dígitos, as vagas aparecem, o preço aparece, que fração das paradas aparece, quantas o catálogo conhece. Campo que a mensagem não deu conta como conferido. |
 | confiança | `Checks.confidence` | Número de 0 a 1 com pesos fixos no domínio (hora 0,35; paradas 0,35; vagas 0,15; preço 0,15), nunca declarado pelo modelo. |
 | limiar de aceite | `IMPORT_ACCEPT_THRESHOLD` | Abaixo dele a oferta é rejeitada por `low_confidence` (D-116). Padrão 0,7. |
-| regra de aceite | `decide` | Função pura: oferta, com hora resolvida, vagas diferentes de zero, duas paradas e confiança acima do limiar vira `Accept(RideDraft)`; senão `Rejected(reason)`. |
+| regra de aceite | `decide` | Função pura: oferta, com hora resolvida, vagas diferentes de zero, duas paradas e confiança acima do limiar vira `Accept(RideDraft)`; senão `Rejected(reason)`. As vagas que a mensagem disse são presas em `RIDE_SEAT_CAP` (4, D-142) antes de entrar no rascunho. |
 | padrões de ausência | `DEFAULT_SEATS`, `DEFAULT_PRICE`, `DEFAULT_PAYMENT` | Vagas 2, R$ 7,00, dinheiro e PIX, quando a oferta não diz (D-116). |
-| rascunho de carona | `RideDraft` | O que `importing` entrega a `rides`: paradas resolvidas com as tarifas que casaram, partida, vagas, preço, pagamento. `RidesBridge` o traduz para os tipos daquele contexto e chama `ImportRide`. |
+| teto de vagas da carona | `RIDE_SEAT_CAP` | 4, o mesmo teto de `rides` (`MAX_SEATS`, D-142), duplicado aqui porque um contexto só importa `shared` (D-075). O interpretador ainda lê até 8 como plausível (`parser_output.MAX_SEATS`); é `decide` quem prende no que a carona aceita. |
+| rascunho de carona | `RideDraft` | O que `importing` entrega a `rides`: paradas resolvidas com as tarifas que casaram, partida, vagas (já presas em `RIDE_SEAT_CAP`), preço, pagamento. `RidesBridge` o traduz para os tipos daquele contexto e chama `ImportRide`. |
 | carona importada | em `rides`: `RideOrigin` WhatsApp | A `RideOffer` criada a partir de uma candidata: da conta com o telefone do remetente, sem carro, ou de motorista externo (ADR-0015, D-127). |
 | junção por partida | `ImportRide` | Mesmo motorista e mesma partida é a mesma carona: a candidata nova é aceita como `joined` (D-113). |
 | redação | `redact_personal_data` | Em `shared/domain`: telefone, e-mail, CPF e placa viram `[…]` antes de o texto original chegar à carona (D-128). |

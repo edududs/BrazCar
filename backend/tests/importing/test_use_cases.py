@@ -165,6 +165,19 @@ async def test_an_offer_becomes_a_ride_with_the_departure_resolved_and_the_words
     assert await ctx.judge() == ()  # judged once, never again
 
 
+async def test_an_offer_with_more_seats_than_a_ride_allows_becomes_a_ride_with_four() -> None:
+    """A passenger car has no fifth seat (D-142); the message may still say more."""
+    six_seats = "*06 VAGAS as 05:45*\n🚘 Veredas\n🚘 Rodeador\n🚘 Rodoviária\n💵 7,00 Pix 61 98888-7777"
+    ctx = Context((six_seats, OFFER_READ.model_copy(update={"seats": 6})))
+    await ctx.arriving(message(six_seats))
+
+    (judged,) = await ctx.judge()
+
+    assert judged.created_ride is True
+    (*_, draft) = next(iter(ctx.rides.created.values()))
+    assert draft.seats == 4
+
+
 async def test_a_second_candidate_for_the_same_departure_joins_the_ride(ctx: Context) -> None:
     await ctx.arriving(message(message_id="a"), message(message_id="b", sent_at=EVENING + timedelta(hours=7)))
 
