@@ -22,6 +22,10 @@ export interface RouteDraft {
   readonly value: () => StopDraft[];
   /** Some stop says its own price, so the ride's price comes from the fares (D-131). */
   readonly hasFares: boolean;
+  /** The lowest fare typed so far, as text, or null: what the board will say "a partir de". */
+  readonly cheapestFare: string | null;
+  /** Some stop is text the driver wrote, not a place of the catalog (D-123). */
+  readonly hasFreeText: boolean;
 }
 
 interface Entry {
@@ -62,5 +66,16 @@ export function useRouteDraft(initial: readonly StopDraft[]): RouteDraft {
     },
     value: () => entries.map((entry) => entry.stop),
     hasFares: entries.some((entry, index) => index > 0 && entry.stop.fare.trim() !== ""),
+    cheapestFare: cheapestOf(entries),
+    hasFreeText: entries.some((entry) => entry.stop.placeId === null && entry.stop.text !== ""),
   };
+}
+
+function cheapestOf(entries: readonly Entry[]): string | null {
+  const fares = entries
+    .slice(1)
+    .map((entry) => entry.stop.fare.trim().replace(",", "."))
+    .filter((fare) => fare !== "" && !Number.isNaN(Number(fare)));
+  if (fares.length === 0) return null;
+  return fares.reduce((low, fare) => (Number(fare) < Number(low) ? fare : low));
 }

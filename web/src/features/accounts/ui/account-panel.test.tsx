@@ -119,7 +119,8 @@ describe("AccountPanel profile", () => {
     await show();
 
     expect(screen.getByText("(61) 99999-0001")).toBeDefined();
-    expect(screen.getByText("O telefone não muda por aqui.")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /^Editar dados/ }));
+    expect(await screen.findByText("O telefone não muda por aqui.")).toBeDefined();
   });
 
   it("warns when there is no e-mail", async () => {
@@ -133,7 +134,10 @@ describe("AccountPanel profile", () => {
     const updateProfile = vi.fn(() => Promise.resolve(updated));
     await show({ updateProfile });
 
-    fireEvent.change(screen.getByLabelText("Nome social"), { target: { value: "Ana Paula" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Editar dados/ }));
+    fireEvent.change(await screen.findByLabelText("Nome social"), {
+      target: { value: "Ana Paula" },
+    });
     fireEvent.change(screen.getByLabelText(/^E-mail/), { target: { value: "ana@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar dados" }));
 
@@ -152,7 +156,8 @@ describe("AccountPanel profile", () => {
     const updateProfile = vi.fn(() => Promise.resolve(updated));
     await show({ account: withEmail, updateProfile });
 
-    fireEvent.change(screen.getByLabelText(/^E-mail/), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Editar dados/ }));
+    fireEvent.change(await screen.findByLabelText(/^E-mail/), { target: { value: "" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar dados" }));
 
     await waitFor(() => {
@@ -166,7 +171,10 @@ describe("AccountPanel profile", () => {
     );
     await show({ updateProfile });
 
-    fireEvent.change(screen.getByLabelText(/^E-mail/), { target: { value: "not-an-email" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Editar dados/ }));
+    fireEvent.change(await screen.findByLabelText(/^E-mail/), {
+      target: { value: "not-an-email" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Salvar dados" }));
 
     await waitFor(() => {
@@ -180,7 +188,10 @@ describe("AccountPanel password", () => {
     const changePassword = vi.fn(() => Promise.resolve());
     await show({ changePassword });
 
-    fireEvent.change(screen.getByLabelText(/^Senha atual/), { target: { value: "senha-antiga" } });
+    fireEvent.click(screen.getByRole("button", { name: "Trocar senha" }));
+    fireEvent.change(await screen.findByLabelText(/^Senha atual/), {
+      target: { value: "senha-antiga" },
+    });
     fireEvent.change(screen.getByLabelText(/^Nova senha/), { target: { value: "senha-nova-boa" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar senha" }));
 
@@ -199,7 +210,8 @@ describe("AccountPanel password", () => {
     );
     await show({ changePassword });
 
-    fireEvent.change(screen.getByLabelText(/^Senha atual/), { target: { value: "errada" } });
+    fireEvent.click(screen.getByRole("button", { name: "Trocar senha" }));
+    fireEvent.change(await screen.findByLabelText(/^Senha atual/), { target: { value: "errada" } });
     fireEvent.change(screen.getByLabelText(/^Nova senha/), { target: { value: "senha-nova-boa" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar senha" }));
 
@@ -214,7 +226,10 @@ describe("AccountPanel password", () => {
     );
     await show({ changePassword });
 
-    fireEvent.change(screen.getByLabelText(/^Senha atual/), { target: { value: "senha-antiga" } });
+    fireEvent.click(screen.getByRole("button", { name: "Trocar senha" }));
+    fireEvent.change(await screen.findByLabelText(/^Senha atual/), {
+      target: { value: "senha-antiga" },
+    });
     fireEvent.change(screen.getByLabelText(/^Nova senha/), { target: { value: "123" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar senha" }));
 

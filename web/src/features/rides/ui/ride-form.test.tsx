@@ -41,15 +41,16 @@ const draft: RideDraft = {
 };
 
 const car: Car = { id: "c1", model: "Gol", color: "prata", plate: "ABC1234" };
+const now = new Date("2026-09-23T06:00:00");
 
 function show(onSubmit: (draft: RideDraft) => Promise<unknown>) {
   return renderRouted(
-    <RideForm initial={draft} busy={false} submitLabel="Salvar" onSubmit={onSubmit} />,
+    <RideForm initial={draft} busy={false} submitLabel="Salvar" onSubmit={onSubmit} now={now} />,
   );
 }
 
 describe("RideForm", () => {
-  it("caps the seats field at four, a passenger car's usual seats (D-142)", async () => {
+  it("caps the seats at four, a passenger car's usual seats (D-142)", async () => {
     renderRouted(
       <RideForm
         initial={draft}
@@ -57,12 +58,14 @@ describe("RideForm", () => {
         busy={false}
         submitLabel="Publicar"
         onSubmit={() => Promise.resolve()}
+        now={now}
       />,
     );
 
-    const seats = await screen.findByLabelText("Vagas");
-
-    expect(seats.getAttribute("max")).toBe("4");
+    const more = await screen.findByRole("button", { name: "Pôr uma vaga" });
+    fireEvent.click(more);
+    expect(screen.getByRole("status", { name: "Vagas" }).textContent).toBe("4");
+    expect(more).toHaveProperty("disabled", true);
   });
 
   it("counts the notes against the limit and sends them", async () => {
@@ -83,10 +86,12 @@ describe("RideForm", () => {
     expect(onSubmit.mock.calls[0]?.[0].notes).toBe("Levo mala");
   });
 
-  it("asks no fare for the stop the ride leaves from", async () => {
+  it("asks no fare for the stop the ride leaves from, once fares are switched on", async () => {
     show(() => Promise.resolve());
 
     await screen.findByLabelText(/^Observações/);
+    expect(screen.queryByLabelText("Preço até aqui")).toBeNull();
+    fireEvent.click(screen.getByRole("switch", { name: "Preço diferente por parada" }));
 
     expect(screen.getAllByLabelText("Preço até aqui")).toHaveLength(1);
   });
@@ -95,14 +100,12 @@ describe("RideForm", () => {
     const onSubmit = vi.fn<(draft: RideDraft) => Promise<unknown>>(() => Promise.resolve());
     show(onSubmit);
 
+    await screen.findByLabelText("Preço");
+    fireEvent.click(screen.getByRole("switch", { name: "Preço diferente por parada" }));
     const fare = await screen.findByLabelText("Preço até aqui");
-    expect(screen.getByLabelText("Preço")).toBeDefined();
+    expect(screen.queryByLabelText("Preço")).toBeNull();
 
     fireEvent.change(fare, { target: { value: "9.00" } });
-
-    await waitFor(() => {
-      expect(screen.queryByLabelText("Preço")).toBeNull();
-    });
 
     fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
 

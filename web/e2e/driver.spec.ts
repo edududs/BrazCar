@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { chooseDeparture } from "./support/departure";
 import { expect, openRide, test } from "./support/fixtures";
 import { instant, localInput } from "./support/time";
 
@@ -24,8 +25,10 @@ test("sem carro, publicar manda cadastrar um", async ({ page, signIn, snap }) =>
   await signIn(page, "driver_no_car");
   await page.goto("/publicar");
 
-  await expect(page.getByText("Para publicar, cadastre um carro em")).toBeVisible();
-  await expect(page.getByRole("link", { name: "sua conta" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Cadastre um carro para publicar" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Cadastrar um carro" })).toBeVisible();
   await snap(page, "publish/without-a-car");
 });
 
@@ -40,8 +43,8 @@ test("publicar uma carona simples", async ({ page, demo, signIn, snap }) => {
   await page.getByLabel("Carro").selectOption({ index: 1 });
   await pickPlace(page, 0, "Sai de", "Veredas");
   await pickPlace(page, 1, "Vai para", "Ceasa");
-  await page.getByLabel("Saída").fill(localInput(demo.anchor, 8 * 60));
-  await page.getByLabel("Vagas").fill("4");
+  await chooseDeparture(page, localInput(demo.anchor, 8 * 60));
+  await page.getByRole("button", { name: "Pôr uma vaga" }).click();
   await page.getByLabel("Preço", { exact: true }).fill("8.00");
   await page.getByLabel("Observações").fill(notes);
   await expect(page.getByText(`${String(notes.length)}/500`)).toBeVisible();
@@ -69,7 +72,7 @@ test("observação com telefone é recusada com a frase do botão", async ({
   await page.getByLabel("Carro").selectOption({ index: 1 });
   await pickPlace(page, 0, "Sai de", "Rodeador");
   await pickPlace(page, 1, "Vai para", "SAAN");
-  await page.getByLabel("Saída").fill(localInput(demo.anchor, 9 * 60));
+  await chooseDeparture(page, localInput(demo.anchor, 9 * 60));
   await page.getByLabel("Observações").fill("Chama no 61 99999-0000 que eu confirmo a vaga");
   await page.getByRole("button", { name: "Publicar" }).click();
 
@@ -90,7 +93,8 @@ test("com preço por parada, o preço da carona some do formulário", async ({
   await page.getByRole("button", { name: "Adicionar parada no caminho" }).click();
   await page.getByRole("button", { name: "Adicionar parada no caminho" }).click();
   await expect(stops(page)).toHaveCount(4);
-  await expect(stops(page).nth(1).getByRole("button", { name: "Remover" })).toBeVisible();
+  await expect(stops(page).nth(1).getByRole("button", { name: "Remover parada" })).toBeVisible();
+  await page.getByRole("switch", { name: "Preço diferente por parada" }).click();
 
   await pickPlace(page, 0, "Sai de", "Fassincra");
   await pickPlace(page, 1, "Parada no caminho", "Estrutural");
@@ -101,8 +105,7 @@ test("com preço por parada, o preço da carona some do formulário", async ({
   await stops(page).nth(3).getByLabel("Preço até aqui").fill("12.00");
 
   await expect(page.getByLabel("Preço", { exact: true })).toHaveCount(0);
-  await page.getByLabel("Saída").fill(localInput(demo.anchor, 10 * 60));
-  await page.getByLabel("Vagas").fill("3");
+  await chooseDeparture(page, localInput(demo.anchor, 10 * 60));
   await snap(page, "publish/fares-per-stop");
 
   await page.getByRole("button", { name: "Publicar" }).click();
@@ -120,7 +123,13 @@ test("uma parada em texto livre entra na rota", async ({ page, demo, signIn, sna
   await pickPlace(page, 0, "Sai de", "Vendinha");
   await stops(page).nth(1).getByLabel("Vai para").fill("Portão da escola, quadra 12");
   await expect(page.getByText(/vale como você escreveu/)).toBeVisible();
-  await page.getByLabel("Saída").fill(localInput(demo.anchor, 11 * 60));
+  // Tapping elsewhere keeps the typed text as the stop (D-123) and closes the list. While the list
+  // is open the rest of the page is aria-hidden, so the tap goes by CSS, not by role.
+  await page.locator("h1").click();
+  await expect(stops(page).nth(1).getByLabel("Vai para")).toHaveValue(
+    "Portão da escola, quadra 12",
+  );
+  await chooseDeparture(page, localInput(demo.anchor, 11 * 60));
   await snap(page, "publish/free-text-stop");
 
   await page.getByRole("button", { name: "Publicar" }).click();
@@ -202,12 +211,15 @@ test("editar: o mesmo dia passa, outro dia é recusado", async ({
   await expect(page.getByLabel("Vagas")).toHaveCount(0);
   await snap(page, "edit/form");
 
-  await page.getByLabel("Saída").fill(localInput(demo.anchor, 72 * 60));
-  await page.getByRole("button", { name: "Salvar" }).click();
-  await expect(page.getByRole("alert")).toContainText("dentro do mesmo dia");
+  // Outro dia é outra carona: a folha já vem com os outros dias apagados e a frase explica (F7).
+  await page.getByRole("button", { name: /^Dia:/ }).click();
+  const sheet = page.getByRole("dialog");
+  await expect(sheet.getByRole("button", { name: /^Amanhã/ })).toBeDisabled();
+  await expect(sheet.getByText("Para outro dia, use Repetir.")).toBeVisible();
   await snap(page, "edit/other-day-refused");
+  await sheet.getByRole("button", { name: "Fechar" }).click();
 
-  await page.getByLabel("Saída").fill(localInput(demo.anchor, 13 * 60 + 30));
+  await chooseDeparture(page, localInput(demo.anchor, 13 * 60 + 30));
   await page.getByLabel("Observações").fill("Mudei o horário: saio meia hora depois.");
   await page.getByRole("button", { name: "Salvar" }).click();
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { ActionButton } from "@/shared/ui/action-button";
 import { Form } from "@/shared/ui/form";
-import { TextField } from "@/shared/ui/text-field";
+import { PasswordField } from "@/shared/ui/password-field";
 
 import { confirmPasswordReset } from "../adapters/accounts-gateway";
 import { reasonOf } from "./reason";
@@ -28,16 +28,14 @@ export function PasswordResetForm({ token, onDone }: PasswordResetFormProps) {
 
   return (
     <Form onSubmit={submit} error={error}>
-      <TextField
+      <PasswordField
         label="Nova senha"
         value={password}
         onChange={setPassword}
-        type="password"
         autoComplete="new-password"
         hint="Pelo menos 8 caracteres."
-        required
       />
-      <ActionButton submit emphasis="primary" disabled={busy}>
+      <ActionButton submit emphasis="primary" busy={busy}>
         Salvar senha
       </ActionButton>
     </Form>

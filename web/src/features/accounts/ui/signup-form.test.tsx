@@ -18,7 +18,7 @@ const ana: Account = {
 };
 
 function fill(phone: string): void {
-  fireEvent.change(screen.getByLabelText(/^Telefone/), { target: { value: phone } });
+  fireEvent.change(screen.getByLabelText(/^Celular/), { target: { value: phone } });
   fireEvent.change(screen.getByLabelText(/^Nome/), { target: { value: "Ana" } });
   fireEvent.change(screen.getByLabelText(/^Senha/), { target: { value: "uma-senha-boa" } });
   fireEvent.click(screen.getByLabelText(/Li e aceito os termos/));

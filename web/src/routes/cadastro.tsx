@@ -1,24 +1,22 @@
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { useSession } from "@/features/accounts/app/use-session";
 import { SignupForm } from "@/features/accounts/ui/signup-form";
 import { PageShell } from "@/shared/ui/page-shell";
-import { inlineLinkClass } from "@/shared/ui/link-class";
 
 export const Route = createFileRoute("/cadastro")({ component: SignupPage });
 
+/** Four fields and the terms; every hint says what the data is for (S12). */
 function SignupPage() {
   const { signUp, busy } = useSession();
   const navigate = useNavigate();
   return (
-    <PageShell title="Criar conta">
+    <PageShell
+      title="Criar conta"
+      back={{ to: "/entrar", icon: "back", label: "Voltar" }}
+      intro="Para pedir contato e publicar caronas."
+    >
       <SignupForm signUp={signUp} busy={busy} onDone={() => void navigate({ to: "/" })} />
-      <p className="text-sm">
-        Já tem conta?{" "}
-        <Link to="/entrar" className={inlineLinkClass}>
-          Entrar
-        </Link>
-      </p>
     </PageShell>
   );
 }

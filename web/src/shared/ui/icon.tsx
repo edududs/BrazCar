@@ -37,6 +37,11 @@ const paths = {
   car: "M4 17v-5l2.2-5.2A1.5 1.5 0 0 1 7.6 6h8.8a1.5 1.5 0 0 1 1.4.8L20 12v5M3 12h18M4 17h16v2H4zM7.5 14.5h.01M16.5 14.5h.01",
   edit: "M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4",
   repeat: "m17 2 3 3-3 3M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3M20 13v2a4 4 0 0 1-4 4H4",
+  cal: "M3 5h18v16H3zM3 10h18M8 3v4M16 3v4",
+  key: "M8 11a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM11 12l9-9M17 6l3 3M14 9l2 2",
+  mail: "M3 5h18v14H3zM4 7l8 6 8-6",
+  link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
+  logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
 } as const;
 
 export type IconName = keyof typeof paths;

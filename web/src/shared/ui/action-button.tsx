@@ -15,6 +15,8 @@ interface ActionButtonProps {
   /** Working: disabled, with a spinner before the label the caller already put in the gerund. */
   readonly busy?: boolean;
   readonly icon?: ReactNode;
+  /** The id of the form a `submit` button outside it submits, like one on a fixed bar. */
+  readonly form?: string;
   readonly children: ReactNode;
 }
 
@@ -41,11 +43,13 @@ export function ActionButton({
   size = "default",
   busy = false,
   icon,
+  form,
   children,
 }: ActionButtonProps) {
   return (
     <button
       type={submit ? "submit" : "button"}
+      form={form}
       onClick={onPress}
       disabled={disabled || busy}
       aria-busy={busy || undefined}

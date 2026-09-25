@@ -4,6 +4,7 @@ import { usePhoneInput } from "@/shared/app/use-phone-input";
 import { ActionButton } from "@/shared/ui/action-button";
 import { CheckboxField } from "@/shared/ui/checkbox-field";
 import { Form } from "@/shared/ui/form";
+import { PasswordField } from "@/shared/ui/password-field";
 import { PhoneField } from "@/shared/ui/phone-field";
 import { TextField } from "@/shared/ui/text-field";
 
@@ -42,37 +43,42 @@ export function SignupForm({ signUp, busy, onDone }: SignupFormProps) {
 
   return (
     <Form onSubmit={submit} error={error}>
-      <PhoneField {...phone.field} hint="É o celular que vai receber as mensagens no WhatsApp." />
       <TextField
-        label="Nome"
+        label="Nome social"
         value={data.displayName}
         onChange={set("displayName")}
         autoComplete="name"
+        placeholder="Como quer ser chamado"
         hint="É o único nome que aparece no mural."
         required
       />
-      <TextField
-        label="Senha"
-        value={data.password}
-        onChange={set("password")}
-        type="password"
-        autoComplete="new-password"
-        hint="Pelo menos 8 caracteres."
-        required
+      <PhoneField
+        {...phone.field}
+        label="Celular com WhatsApp"
+        hint="É o celular que vai receber as mensagens no WhatsApp."
       />
       <TextField
-        label="E-mail (opcional)"
+        label="E-mail"
+        optional
         value={data.email}
         onChange={set("email")}
         type="email"
         inputMode="email"
         autoComplete="email"
+        placeholder="voce@exemplo.com"
         hint="Só para recuperar a senha."
+      />
+      <PasswordField
+        value={data.password}
+        onChange={set("password")}
+        autoComplete="new-password"
+        placeholder="Crie uma senha"
+        hint="Pelo menos 8 caracteres."
       />
       <CheckboxField checked={data.acceptsTerms} onChange={set("acceptsTerms")}>
         Li e aceito os termos de uso e a política de privacidade.
       </CheckboxField>
-      <ActionButton submit emphasis="primary" disabled={busy || !data.acceptsTerms}>
+      <ActionButton submit emphasis="primary" busy={busy} disabled={!data.acceptsTerms}>
         Criar conta
       </ActionButton>
     </Form>

@@ -17,7 +17,7 @@ type RowTone = "default" | "brand" | "critical";
 interface RowBodyProps {
   readonly icon: ReactNode;
   readonly title: string;
-  readonly subtitle?: string;
+  readonly subtitle?: string | undefined;
   readonly tone?: RowTone;
   /** A chevron at the end says the row leads somewhere. */
   readonly leads?: boolean;

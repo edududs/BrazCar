@@ -14,7 +14,7 @@ test("criar conta: os erros aparecem e a conta entra direto no mural", async ({
   await expect(page.getByRole("heading", { name: "Criar conta", level: 1 })).toBeVisible();
   await snap(page, "signup/empty");
 
-  await page.getByLabel("Telefone").fill("61 9");
+  await page.getByLabel("Celular").fill("61 9");
   await page.getByLabel("Nome").fill("Visitante de Demonstração");
   await page.getByLabel(/^Senha/).fill("123");
   await page.getByLabel("Li e aceito os termos").check();
@@ -24,7 +24,7 @@ test("criar conta: os erros aparecem e a conta entra direto no mural", async ({
 
   // Digitado como se digita: com país, parênteses, o nove solto e hífen; o campo arruma sozinho.
   const [area, rest] = [phone.slice(3, 5), phone.slice(5)];
-  const field = page.getByLabel("Telefone");
+  const field = page.getByLabel("Celular");
   await field.clear();
   await field.pressSequentially(
     `+55 (${area}) ${rest.slice(0, 1)} ${rest.slice(1, 5)}-${rest.slice(5)}`,
@@ -48,7 +48,7 @@ test("entrar: senha errada é recusada e a certa leva ao mural", async ({ page, 
   await expect(page.getByRole("heading", { name: "Entrar", level: 1 })).toBeVisible();
   await snap(page, "login/empty");
 
-  await page.getByLabel("Telefone").fill(driver.phone);
+  await page.getByLabel("Celular").fill(driver.phone);
   await page.getByLabel(/^Senha/).fill("senha-que-nao-e-a-dela");
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page.getByText("telefone ou senha incorretos")).toBeVisible();
@@ -69,19 +69,17 @@ test("esqueci a senha: a resposta é a mesma para qualquer telefone", async ({
   await expect(page.getByRole("heading", { name: "Esqueci a senha", level: 1 })).toBeVisible();
   await snap(page, "password-reset/request");
 
-  await page.getByLabel("Telefone").fill(demo.account("driver_one_car").phone);
+  await page.getByLabel("Celular").fill(demo.account("driver_one_car").phone);
   await page.getByRole("button", { name: "Enviar link" }).click();
 
-  await expect(
-    page.getByText("Se este telefone tiver conta com e-mail, o link para redefinir a senha já foi"),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Confira seu e-mail" })).toBeVisible();
   await snap(page, "password-reset/sent");
 });
 
 test("link de redefinir sem token pede outro", async ({ page, snap }) => {
   await page.goto("/redefinir-senha");
 
-  await expect(page.getByText("Este link está incompleto.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Este link está incompleto" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Pedir outro" })).toBeVisible();
   await snap(page, "password-reset/incomplete-link");
 });
@@ -89,7 +87,9 @@ test("link de redefinir sem token pede outro", async ({ page, snap }) => {
 test("a conta sem sessão manda entrar", async ({ page, snap }) => {
   await page.goto("/conta");
 
-  await expect(page.getByText("Você não está conectado.")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Entre para publicar e pedir contato" }),
+  ).toBeVisible();
   await snap(page, "account/anonymous");
 });
 
@@ -107,7 +107,7 @@ test("nome social longo cabe na conta", async ({ page, demo, signIn, snap }) => 
   await signIn(page, "long_name");
   await page.goto("/conta");
 
-  await expect(page.getByLabel("Nome social")).toHaveValue(demo.account("long_name").displayName);
+  await expect(page.getByText(demo.account("long_name").displayName)).toBeVisible();
   await snap(page, "account/long-name");
 });
 
@@ -122,7 +122,7 @@ test("editar dados: quem não tem e-mail pode adicionar um, e ele fica depois de
   const phone = demo.suitePhoneAt(sparePhone(3));
   const password = "uma-senha-de-demonstracao";
   await page.goto("/cadastro");
-  await page.getByLabel("Telefone").fill(phone);
+  await page.getByLabel("Celular").fill(phone);
   await page.getByLabel("Nome").fill("Conta Para Editar Dados");
   await page.getByLabel(/^Senha/).fill(password);
   await page.getByLabel("Li e aceito os termos").check();
@@ -131,6 +131,7 @@ test("editar dados: quem não tem e-mail pode adicionar um, e ele fica depois de
 
   await page.goto("/conta");
   await expect(page.getByText("Sem e-mail você não recupera a senha.")).toBeVisible();
+  await page.getByRole("button", { name: /^Editar dados/ }).click();
   await snap(page, "account/profile-edit");
 
   await page.getByLabel("E-mail").fill("conta-para-editar@example.org");
@@ -139,7 +140,7 @@ test("editar dados: quem não tem e-mail pode adicionar um, e ele fica depois de
   await snap(page, "account/profile-saved");
 
   await page.reload();
-  await expect(page.getByLabel("E-mail")).toHaveValue("conta-para-editar@example.org");
+  await expect(page.getByText("conta-para-editar@example.org")).toBeVisible();
   await expect(page.getByText("Sem e-mail você não recupera a senha.")).toBeHidden();
 });
 
@@ -155,7 +156,7 @@ test("trocar a senha: a nova senha funciona depois de sair e entrar de novo", as
   const oldPassword = "uma-senha-de-demonstracao";
   const newPassword = "outra-senha-de-demonstracao";
   await page.goto("/cadastro");
-  await page.getByLabel("Telefone").fill(phone);
+  await page.getByLabel("Celular").fill(phone);
   await page.getByLabel("Nome").fill("Conta Para Trocar Senha");
   await page.getByLabel(/^Senha/).fill(oldPassword);
   await page.getByLabel("Li e aceito os termos").check();
@@ -163,6 +164,7 @@ test("trocar a senha: a nova senha funciona depois de sair e entrar de novo", as
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/conta");
+  await page.getByRole("button", { name: "Trocar senha" }).click();
   await page.getByLabel("Senha atual").fill(oldPassword);
   await page.getByLabel("Nova senha").fill(newPassword);
   await page.getByRole("button", { name: "Salvar senha" }).click();
@@ -170,10 +172,12 @@ test("trocar a senha: a nova senha funciona depois de sair e entrar de novo", as
   await snap(page, "account/password-changed");
 
   await page.getByRole("button", { name: "Sair da conta" }).click();
-  await expect(page.getByText("Você não está conectado.")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Entre para publicar e pedir contato" }),
+  ).toBeVisible();
 
   await page.goto("/entrar");
-  await page.getByLabel("Telefone").fill(phone);
+  await page.getByLabel("Celular").fill(phone);
   await page.getByLabel(/^Senha/).fill(newPassword);
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page).toHaveURL(/\/$/);
@@ -197,7 +201,8 @@ test("carros: cadastrar, ver na lista e remover", async ({ page, signIn, snap })
   await page.getByRole("button", { name: "Salvar carro" }).click();
 
   await expect(page.getByRole("button", { name: "Remover" })).toHaveCount(3);
-  await expect(page.getByText("Fiesta, azul · DEM7X77")).toBeVisible();
+  await expect(page.getByText("Fiesta azul")).toBeVisible();
+  await expect(page.getByText("DEM7X77")).toBeVisible();
   await snap(page, "account/car-added");
 
   await page.getByRole("button", { name: "Remover" }).last().click();
@@ -209,7 +214,9 @@ test("sair da conta devolve o visitante ao mural público", async ({ page, signI
   await page.goto("/conta");
 
   await page.getByRole("button", { name: "Sair da conta" }).click();
-  await expect(page.getByText("Você não está conectado.")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Entre para publicar e pedir contato" }),
+  ).toBeVisible();
   await snap(page, "account/signed-out");
 });
 
@@ -224,7 +231,7 @@ test("excluir conta: o diálogo explica, confirma, e o telefone deixa de servir 
   const phone = demo.suitePhoneAt(sparePhone(1));
   const password = "uma-senha-de-demonstracao";
   await page.goto("/cadastro");
-  await page.getByLabel("Telefone").fill(phone);
+  await page.getByLabel("Celular").fill(phone);
   await page.getByLabel("Nome").fill("Conta Para Excluir");
   await page.getByLabel(/^Senha/).fill(password);
   await page.getByLabel("Li e aceito os termos").check();
@@ -246,7 +253,7 @@ test("excluir conta: o diálogo explica, confirma, e o telefone deixa de servir 
   await snap(page, "account/deleted");
 
   await page.goto("/entrar");
-  await page.getByLabel("Telefone").fill(phone);
+  await page.getByLabel("Celular").fill(phone);
   await page.getByLabel(/^Senha/).fill(password);
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page.getByText("telefone ou senha incorretos")).toBeVisible();

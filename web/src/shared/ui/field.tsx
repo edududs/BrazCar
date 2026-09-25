@@ -22,10 +22,22 @@ export interface FieldFrameProps {
   readonly error?: string | null | undefined;
   /** Something at the end of the hint line, like a character counter. */
   readonly aside?: ReactNode;
+  /** Says the field may stay empty, beside the label. */
+  readonly optional?: boolean;
+  /** Something at the other end of the label line, like "Esqueci a senha". */
+  readonly labelAside?: ReactNode;
   readonly children: (control: FieldControl) => ReactNode;
 }
 
-export function FieldFrame({ label, hint, error = null, aside, children }: FieldFrameProps) {
+export function FieldFrame({
+  label,
+  hint,
+  error = null,
+  aside,
+  optional = false,
+  labelAside,
+  children,
+}: FieldFrameProps) {
   const id = useId();
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
@@ -35,7 +47,13 @@ export function FieldFrame({ label, hint, error = null, aside, children }: Field
       .join(" ") || undefined;
   return (
     <div className="flex flex-col gap-2 text-secondary font-semibold text-ink">
-      <label htmlFor={id}>{label}</label>
+      <span className="flex items-baseline justify-between gap-2">
+        <span className="flex items-baseline gap-1.5">
+          <label htmlFor={id}>{label}</label>
+          {optional ? <span className="text-sm font-medium text-ink-3">opcional</span> : null}
+        </span>
+        {labelAside}
+      </span>
       {children({
         id,
         "aria-describedby": describedBy,

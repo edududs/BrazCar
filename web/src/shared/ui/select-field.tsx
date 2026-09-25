@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { Box, FieldFrame, controlClass } from "./field";
 import { Icon } from "./icon";
 
@@ -15,6 +17,8 @@ interface SelectFieldProps {
   readonly placeholder?: string;
   readonly required?: boolean;
   readonly hint?: string;
+  /** Before the choice: an icon. */
+  readonly prefix?: ReactNode;
 }
 
 /** One choice among a few: the native control, which every phone renders as a picker. */
@@ -26,11 +30,12 @@ export function SelectField({
   placeholder,
   required = false,
   hint,
+  prefix,
 }: SelectFieldProps) {
   return (
     <FieldFrame label={label} hint={hint}>
       {(control) => (
-        <Box suffix={<Icon name="chevron-down" />}>
+        <Box prefix={prefix} suffix={<Icon name="chevron-down" />}>
           <select
             {...control}
             value={value}

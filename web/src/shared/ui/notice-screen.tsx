@@ -7,14 +7,29 @@ interface NoticeScreenProps {
   readonly action?: ReactNode;
   /** A glyph above the title: an icon on a tile, or a drawing. */
   readonly glyph?: ReactNode;
+  readonly glyphTone?: "neutral" | "brand" | "critical";
 }
 
+const glyphTones = {
+  neutral: "bg-surface-2 text-ink-2",
+  brand: "bg-brand-soft text-brand-ink",
+  critical: "bg-critical-soft text-critical",
+} as const;
+
 /** A whole screen that says one thing: no network, update required, nothing here. */
-export function NoticeScreen({ title, children, action, glyph }: NoticeScreenProps) {
+export function NoticeScreen({
+  title,
+  children,
+  action,
+  glyph,
+  glyphTone = "neutral",
+}: NoticeScreenProps) {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center gap-3.5 px-gutter pt-16 pb-6 text-center">
       {glyph === undefined ? null : (
-        <span className="mb-1.5 grid size-[76px] place-items-center rounded-dialog bg-surface-2 text-ink-2">
+        <span
+          className={`mb-1.5 grid size-[76px] place-items-center rounded-dialog ${glyphTones[glyphTone]}`}
+        >
           {glyph}
         </span>
       )}

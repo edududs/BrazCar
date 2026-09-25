@@ -1,10 +1,12 @@
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { usePhoneInput } from "@/shared/app/use-phone-input";
 import { ActionButton } from "@/shared/ui/action-button";
 import { Form } from "@/shared/ui/form";
+import { inlineLinkClass } from "@/shared/ui/link-class";
+import { PasswordField } from "@/shared/ui/password-field";
 import { PhoneField } from "@/shared/ui/phone-field";
-import { TextField } from "@/shared/ui/text-field";
 
 import type { Account, LoginData } from "../domain/account";
 import { reasonOf } from "./reason";
@@ -31,16 +33,19 @@ export function LoginForm({ logIn, busy, onDone }: LoginFormProps) {
 
   return (
     <Form onSubmit={submit} error={error}>
-      <PhoneField {...phone.field} />
-      <TextField
-        label="Senha"
+      <PhoneField {...phone.field} label="Celular" />
+      <PasswordField
         value={password}
         onChange={setPassword}
-        type="password"
         autoComplete="current-password"
-        required
+        placeholder="Sua senha"
+        labelAside={
+          <Link to="/esqueci-senha" className={`${inlineLinkClass} text-sm`}>
+            Esqueci a senha
+          </Link>
+        }
       />
-      <ActionButton submit emphasis="primary" disabled={busy}>
+      <ActionButton submit emphasis="primary" busy={busy}>
         Entrar
       </ActionButton>
     </Form>

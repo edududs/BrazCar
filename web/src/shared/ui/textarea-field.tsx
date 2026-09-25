@@ -9,6 +9,9 @@ interface TextAreaFieldProps {
   /** With a limit, the field shows how much is left and stops accepting more. */
   readonly maxLength?: number;
   readonly hint?: string | undefined;
+  readonly optional?: boolean;
+  /** Why the value is refused; shown under the field and announced. */
+  readonly error?: string | null;
 }
 
 /** A multi-line text field. With `maxLength` it counts what is typed, right under the box. */
@@ -20,13 +23,15 @@ export function TextAreaField({
   rows = 3,
   maxLength,
   hint,
+  optional = false,
+  error = null,
 }: TextAreaFieldProps) {
   const counter =
     maxLength === undefined ? undefined : `${String(value.length)}/${String(maxLength)}`;
   return (
-    <FieldFrame label={label} hint={hint} aside={counter}>
+    <FieldFrame label={label} hint={hint} aside={counter} optional={optional} error={error}>
       {(control) => (
-        <Box multiline>
+        <Box multiline invalid={error !== null}>
           <textarea
             {...control}
             value={value}

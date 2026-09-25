@@ -19,6 +19,8 @@ interface TextFieldProps {
   readonly prefix?: ReactNode;
   /** After the text: an icon, a button. */
   readonly suffix?: ReactNode;
+  readonly optional?: boolean;
+  readonly labelAside?: ReactNode;
   /** For `number`, `date` and `datetime-local` inputs. */
   readonly min?: string | number;
   readonly max?: string | number;
@@ -39,12 +41,14 @@ export function TextField({
   error = null,
   prefix,
   suffix,
+  optional = false,
+  labelAside,
   min,
   max,
   step,
 }: TextFieldProps) {
   return (
-    <FieldFrame label={label} hint={hint} error={error}>
+    <FieldFrame label={label} hint={hint} error={error} optional={optional} labelAside={labelAside}>
       {(control) => (
         <Box prefix={prefix} suffix={suffix} invalid={error !== null} readOnly={readOnly}>
           <input

@@ -19,9 +19,10 @@ function RootLayout() {
   const { session } = useSession();
   const network = useNetworkStatus();
   const floor = useVersionFloor();
-  // A ride's own page has one goal and its own action under the thumb: no tabs there (S03).
+  // Only the three places have tabs. A ride, a form or the way in has one goal and its own action
+  // under the thumb: the tabs stay away there (S03, S07, S12).
   const stacked = useRouterState({
-    select: (state) => state.location.pathname.startsWith("/caronas/"),
+    select: (state) => !["/", "/minhas-caronas", "/conta"].includes(state.location.pathname),
   });
   useForgetBoardOffline();
 

@@ -1,8 +1,11 @@
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { usePhoneInput } from "@/shared/app/use-phone-input";
 import { ActionButton } from "@/shared/ui/action-button";
 import { Form } from "@/shared/ui/form";
+import { Icon } from "@/shared/ui/icon";
+import { NoticeScreen } from "@/shared/ui/notice-screen";
 import { PhoneField } from "@/shared/ui/phone-field";
 
 import { requestPasswordReset } from "../adapters/accounts-gateway";
@@ -32,15 +35,28 @@ export function PasswordResetRequestForm() {
 
   if (state === "sent") {
     return (
-      <p className="text-sm">
-        Se este telefone tiver conta com e-mail, o link para redefinir a senha já foi enviado.
-      </p>
+      <NoticeScreen
+        title="Confira seu e-mail"
+        glyph={<Icon name="mail" size={32} />}
+        glyphTone="brand"
+        action={
+          <Link
+            to="/entrar"
+            className="inline-flex min-h-target w-full items-center justify-center rounded-button bg-surface-2 px-5 text-body font-semibold text-ink"
+          >
+            Voltar para entrar
+          </Link>
+        }
+      >
+        Enviamos o link para o e-mail cadastrado na conta. Não chegou em alguns minutos? Veja a
+        caixa de spam. Se a conta não tem e-mail, nada é enviado.
+      </NoticeScreen>
     );
   }
   return (
     <Form onSubmit={submit} error={error}>
-      <PhoneField {...phone.field} hint="Enviamos o link para o e-mail cadastrado na conta." />
-      <ActionButton submit emphasis="primary" disabled={state === "busy"}>
+      <PhoneField {...phone.field} label="Celular" />
+      <ActionButton submit emphasis="primary" busy={state === "busy"}>
         Enviar link
       </ActionButton>
     </Form>
