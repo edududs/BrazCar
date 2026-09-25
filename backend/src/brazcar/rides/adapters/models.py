@@ -87,13 +87,26 @@ class RideEventModel(models.Model):
 
 
 class ContactRequestModel(models.Model):
-    """Who asked for whose contact, when (D-022). The only metric of conversion there is (ADR-0006)."""
+    """Who asked for whose contact, when (D-022). The only metric of conversion there is (ADR-0006).
+
+    Survives the ride (D-140): an imported ride is deleted once it departs (D-119), and the record
+    of who saw its number would otherwise go with it. `ride` is nullable and `SET_NULL` on purpose.
+    """
 
     requester = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="contact_requests"
     )
-    ride = models.ForeignKey(RideModel, on_delete=models.PROTECT, related_name="contact_requests")
+    ride = models.ForeignKey(
+        RideModel, on_delete=models.SET_NULL, null=True, blank=True, related_name="contact_requests"
+    )
+    phone_revealed = models.CharField(max_length=20, blank=True)  # E.164, as `accounts` stores it (D-089)
+    driver_kind = models.CharField(max_length=12, blank=True)  # "registered" or "external" (ADR-0015)
+    driver_account_id = models.UUIDField(null=True, blank=True)  # the driver's own account, when it has one
     at = models.DateTimeField()
+
+    # What Django adds at runtime, declared for the type checker.
+    requester_id: object
+    ride_id: object
 
     class Meta:
         db_table = "rides_contact_request"

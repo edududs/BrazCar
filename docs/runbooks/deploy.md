@@ -47,6 +47,8 @@ Em 2026-09-24 (v0.13.0) nada entrou no `api.env`; as migrações de dados `impor
 `importing_candidate.sender_phone`, 20 em `importing_source_message.sender_phone`, 1 em
 `importing_source_message.account` e 6 em `rides_ride.driver_phone`.
 Em 2026-09-24 (v0.14.0) nada entrou no `api.env`; sem migração.
+A migração `rides.0005` (D-140) preenche os registros de `ContactRequest` já existentes a partir
+da carona ainda gravada; o operador confere no log a linha `rides_contact_request: filled N row(s)`.
 
 ## Worker do WhatsApp (passo 7a)
 

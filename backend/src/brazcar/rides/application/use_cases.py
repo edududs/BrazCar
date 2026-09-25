@@ -319,16 +319,25 @@ class RequestContact:
             raise RideNotOpenError
         if isinstance(ride.driver, ExternalDriver):
             name, phone, plate = ride.driver.display_name, ride.driver.phone, None
+            driver_account_id = None
         else:
             driver = await _require_driver(self.drivers, ride.driver.account_id)
             car = ride.driver.car
             name, phone, plate = driver.display_name, driver.phone, None if car is None else car.plate
+            driver_account_id = driver.id
         allowed = await self.limiter.acquire(
             f"contact:{requester_id}", limit=self.rules.contact_limit, window=self.rules.contact_window
         )
         if not allowed:
             raise ContactLimitError
-        await self.contacts.record(requester_id=requester_id, ride_id=ride.id, at=now)
+        await self.contacts.record(
+            requester_id=requester_id,
+            ride_id=ride.id,
+            phone_revealed=phone,
+            driver_kind=ride.driver.kind,
+            driver_account_id=driver_account_id,
+            at=now,
+        )
         return Contact(whatsapp_url=_whatsapp_link(name, phone, ride), phone=phone, plate=plate)
 
 

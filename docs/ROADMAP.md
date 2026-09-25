@@ -38,8 +38,9 @@ Plataforma que funciona sozinha, sem extrator.
   consertado para os endereços de WhatsApp sem o nono dígito.
 - **Painel de administração no front**, num caminho próprio e protegido por papel de administrador,
   no lugar do admin do Django (D-124): ver mensagens, candidatas e caronas importadas, disparar o
-  reprocessamento (D-130), bloquear remetente. Visual cuidado, como os temas de admin costumam dar,
-  dentro da etapa de design ou depois dela.
+  reprocessamento (D-130), bloquear remetente, pedidos de contato por conta e alerta de raspagem
+  (D-140). Visual cuidado, como os temas de admin costumam dar, dentro da etapa de design ou depois
+  dela.
 - **Atualização de carona importada por mensagem posterior** ("lotou", "só 1 vaga", "cancelei"),
   amarrada por remetente e horário. No passo 7 só é classificada e guardada (D-118).
 - **Reivindicação da carona importada** pelo motorista que se cadastra com o mesmo telefone. Só

@@ -6,6 +6,7 @@ from django.db import transaction
 from django.utils import timezone
 from pydantic import TypeAdapter
 
+from brazcar.rides.application import ContactRequestRecord, DriverKind
 from brazcar.rides.domain import (
     AccountId,
     CarSnapshot,
@@ -64,8 +65,35 @@ class DjangoRideRepository:
 
 
 class DjangoContactRequests:
-    async def record(self, *, requester_id: AccountId, ride_id: RideId, at: datetime) -> None:
-        await ContactRequestModel.objects.acreate(requester_id=requester_id, ride_id=ride_id, at=at)
+    async def record(  # noqa: PLR0913 - one row, every fact of the request at once
+        self,
+        *,
+        requester_id: AccountId,
+        ride_id: RideId,
+        phone_revealed: PhoneNumber,
+        driver_kind: DriverKind,
+        driver_account_id: AccountId | None,
+        at: datetime,
+    ) -> None:
+        await ContactRequestModel.objects.acreate(
+            requester_id=requester_id,
+            ride_id=ride_id,
+            phone_revealed=phone_revealed.e164(),
+            driver_kind=driver_kind,
+            driver_account_id=driver_account_id,
+            at=at,
+        )
+
+    async def by_account(
+        self, requester_id: AccountId, *, since: datetime
+    ) -> tuple[ContactRequestRecord, ...]:
+        return await sync_to_async(_contacts_by_account)(requester_id, since)
+
+    async def by_phone(self, phone: PhoneNumber, *, since: datetime) -> tuple[ContactRequestRecord, ...]:
+        return await sync_to_async(_contacts_by_phone)(phone, since)
+
+    async def count_by_account(self, requester_id: AccountId, *, since: datetime) -> int:
+        return await sync_to_async(_count_contacts_by_account)(requester_id, since)
 
 
 def _get(ride_id: RideId) -> RideOffer | None:
@@ -109,8 +137,7 @@ def _external_rides(departed_before: datetime | None, phone: PhoneNumber | None)
 
 @transaction.atomic
 def _delete(ride_id: RideId) -> None:
-    """Stops and events cascade; contact requests are removed by hand, and the board is bumped."""
-    ContactRequestModel.objects.filter(ride_id=ride_id).delete()
+    """Stops and events cascade; contact requests keep their history, `ride` set to null (D-140)."""
     deleted, _ = RideModel.objects.filter(id=ride_id).delete()
     if deleted:
         bump_board_revision()
@@ -254,3 +281,31 @@ def _to_stop(row: StopModel) -> Stop:
 def _local(moment: datetime) -> datetime:
     """The database keeps UTC; the rules about "the same day" need the board's own zone (ADR-0004)."""
     return timezone.localtime(moment)
+
+
+def _contacts_by_account(requester_id: AccountId, since: datetime) -> tuple[ContactRequestRecord, ...]:
+    rows = ContactRequestModel.objects.filter(requester_id=requester_id, at__gte=since).order_by("-at")
+    return tuple(_to_contact_record(row) for row in rows)
+
+
+def _contacts_by_phone(phone: PhoneNumber, since: datetime) -> tuple[ContactRequestRecord, ...]:
+    rows = ContactRequestModel.objects.filter(phone_revealed=phone.e164(), at__gte=since).order_by("-at")
+    return tuple(_to_contact_record(row) for row in rows)
+
+
+def _count_contacts_by_account(requester_id: AccountId, since: datetime) -> int:
+    return ContactRequestModel.objects.filter(requester_id=requester_id, at__gte=since).count()
+
+
+def _to_contact_record(row: ContactRequestModel) -> ContactRequestRecord:
+    assert isinstance(row.requester_id, UUID)  # noqa: S101 - the requester's key is the account's UUID
+    assert row.ride_id is None or isinstance(row.ride_id, UUID)  # noqa: S101 - null once the ride is gone
+    assert row.driver_kind in ("registered", "external")  # noqa: S101 - only these two are ever written
+    return ContactRequestRecord(
+        requester_id=row.requester_id,
+        ride_id=row.ride_id,
+        phone_revealed=PhoneNumber.parse(row.phone_revealed),
+        driver_kind=row.driver_kind,
+        driver_account_id=row.driver_account_id,
+        at=_local(row.at),
+    )

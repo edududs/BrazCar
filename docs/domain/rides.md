@@ -28,7 +28,7 @@
 | card do mural | `BoardRide` | O que a lista mostra: nome, carro (modelo e cor, quando há), origem, mensagem original (quando importada), paradas com nome e tarifa, observações, situação e ações. Nunca telefone nem placa. |
 | filtros do mural | `BoardFilter` | Dia, "passa por" em texto livre, só com vaga, preço máximo. Vivem na URL do front. |
 | busca de caronas | `RideSearch` | Acha caronas pelo texto das paradas: nome, apelidos e lugares acima de cada parada do catálogo, e o texto das paradas "outro" (D-101). Observações ficam de fora do índice. |
-| pedido de contato | `ContactRequest` | Registro de quem pediu o contato de qual carona. Tabela própria. |
+| pedido de contato | `ContactRequest` | Registro de quem pediu o contato de qual carona, com o número revelado, o tipo de motorista e o momento (D-140). Tabela própria, sobrevive à carona. |
 | histórico | `RideEvent` | Tabela só de acréscimo com os eventos do agregado. |
 | revisão do mural | `BoardRevision` | Contador único, em `shared`, incrementado por toda escrita que muda o mural. |
 | sinal do mural | `BoardSignal` | Porta de saída "mudou, revisão N"; o adaptador lê a revisão uma vez por segundo e serve por SSE. |
@@ -83,6 +83,11 @@ rota de contato, que exige login, tem limite por conta e grava um `ContactReques
 aberta ou reaberta aceita pedido de contato; o motorista nunca vê o botão na própria carona.
 Na carona importada o contato vai ao telefone do remetente (ou da conta achada por ele) e volta
 sem placa; o texto original que o detalhe mostra já passou pela redação de dados pessoais (D-128).
+
+O `ContactRequest` guarda o número revelado, se o motorista é `registered` ou `external` e a conta
+dele quando tem uma (D-140). Sobrevive à carona: `ForgetRides` apaga a carona importada ao partir
+(D-119), mas o pedido de contato fica, com a referência à carona nula. `manage.py contact_requests`
+consulta por conta ou pelo número revelado, numa janela de horas.
 
 ## Fora do MVP
 

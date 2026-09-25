@@ -5,7 +5,7 @@ from datetime import datetime
 from brazcar.places.domain import Catalog, Place
 from brazcar.rides.adapters.directories import CatalogPlaceDirectory
 from brazcar.rides.adapters.search import IndexedRideSearch
-from brazcar.rides.application import DriverAccount
+from brazcar.rides.application import ContactRequestRecord, DriverAccount, DriverKind
 from brazcar.rides.domain import AccountId, ExternalDriver, RideEvent, RideId, RideOffer
 from brazcar.shared.domain.phone import PhoneNumber
 from tests.places.fakes import InMemoryCatalogRepository
@@ -115,10 +115,41 @@ def indexed_search() -> IndexedRideSearch:
 
 class RecordingContacts:
     def __init__(self) -> None:
-        self.recorded: list[tuple[AccountId, RideId, datetime]] = []
+        self.recorded: list[ContactRequestRecord] = []
 
-    async def record(self, *, requester_id: AccountId, ride_id: RideId, at: datetime) -> None:
-        self.recorded.append((requester_id, ride_id, at))
+    async def record(  # noqa: PLR0913 - one row, every fact of the request at once
+        self,
+        *,
+        requester_id: AccountId,
+        ride_id: RideId,
+        phone_revealed: PhoneNumber,
+        driver_kind: DriverKind,
+        driver_account_id: AccountId | None,
+        at: datetime,
+    ) -> None:
+        self.recorded.append(
+            ContactRequestRecord(
+                requester_id=requester_id,
+                ride_id=ride_id,
+                phone_revealed=phone_revealed,
+                driver_kind=driver_kind,
+                driver_account_id=driver_account_id,
+                at=at,
+            )
+        )
+
+    async def by_account(
+        self, requester_id: AccountId, *, since: datetime
+    ) -> tuple[ContactRequestRecord, ...]:
+        matches = [r for r in self.recorded if r.requester_id == requester_id and r.at >= since]
+        return tuple(sorted(matches, key=lambda r: r.at, reverse=True))
+
+    async def by_phone(self, phone: PhoneNumber, *, since: datetime) -> tuple[ContactRequestRecord, ...]:
+        matches = [r for r in self.recorded if r.phone_revealed == phone and r.at >= since]
+        return tuple(sorted(matches, key=lambda r: r.at, reverse=True))
+
+    async def count_by_account(self, requester_id: AccountId, *, since: datetime) -> int:
+        return len(await self.by_account(requester_id, since=since))
 
 
 class FixedClock:

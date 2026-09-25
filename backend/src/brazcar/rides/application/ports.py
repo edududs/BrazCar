@@ -1,6 +1,6 @@
 from collections.abc import Collection
 from datetime import datetime
-from typing import Protocol
+from typing import Literal, Protocol
 from uuid import UUID
 
 from brazcar.rides.domain import AccountId, PlaceId, RideEvent, RideId, RideOffer
@@ -11,14 +11,18 @@ from brazcar.shared.domain.phone import PhoneNumber
 __all__ = [
     "BoardRevision",
     "BoardSignal",
+    "ContactRequestRecord",
     "ContactRequests",
     "DriverAccount",
     "DriverCar",
     "DriverDirectory",
+    "DriverKind",
     "PlaceDirectory",
     "RideRepository",
     "RideSearch",
 ]
+
+type DriverKind = Literal["registered", "external"]  # the shape of `Driver.kind` (ADR-0015)
 
 
 class RideRepository(Protocol):
@@ -32,9 +36,10 @@ class RideRepository(Protocol):
         ...
 
     async def delete(self, ride_id: RideId) -> None:
-        """Forget the ride with its stops, history and contact requests, and bump the revision (D-119).
+        """Forget the ride with its stops and history, and bump the revision (D-119).
 
-        Missing is fine: nothing happens, nothing is bumped.
+        Its contact requests survive, `ride_id` turned null (D-140). Missing is fine: nothing
+        happens, nothing is bumped.
         """
         ...
 
@@ -111,7 +116,45 @@ class RideSearch(Protocol):
         ...
 
 
+class ContactRequestRecord(FrozenModel):
+    """One row of the history: who saw which number, of what kind of driver, and when (D-140).
+
+    It survives the ride: an imported ride is deleted when it departs (D-119), and the record would
+    otherwise go with it and lose which account saw which number. `ride_id` is then `None`.
+    """
+
+    requester_id: AccountId
+    ride_id: RideId | None
+    phone_revealed: PhoneNumber
+    driver_kind: DriverKind
+    driver_account_id: AccountId | None  # the driver's own account, when the driver has one
+    at: datetime
+
+
 class ContactRequests(Protocol):
-    async def record(self, *, requester_id: AccountId, ride_id: RideId, at: datetime) -> None:
+    async def record(  # noqa: PLR0913 - one row, every fact of the request at once
+        self,
+        *,
+        requester_id: AccountId,
+        ride_id: RideId,
+        phone_revealed: PhoneNumber,
+        driver_kind: DriverKind,
+        driver_account_id: AccountId | None,
+        at: datetime,
+    ) -> None:
         """One row per request, in a table of its own (D-022). The limit is the `RateLimiter`'s."""
+        ...
+
+    async def by_account(
+        self, requester_id: AccountId, *, since: datetime
+    ) -> tuple[ContactRequestRecord, ...]:
+        """What one account asked for, latest first: the base of the conversion metric (D-140)."""
+        ...
+
+    async def by_phone(self, phone: PhoneNumber, *, since: datetime) -> tuple[ContactRequestRecord, ...]:
+        """Who asked to see this number, latest first: traces a number back to its requesters."""
+        ...
+
+    async def count_by_account(self, requester_id: AccountId, *, since: datetime) -> int:
+        """How many times one account asked, in the window: what a scraping alert would watch."""
         ...
