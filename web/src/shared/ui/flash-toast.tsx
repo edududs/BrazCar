@@ -1,13 +1,11 @@
 import { Link } from "@tanstack/react-router";
 
-import { useFlash } from "../app/use-flash";
+import type { Flash } from "../domain/flash";
 import { Icon } from "./icon";
 import { Toast } from "./toast";
 
 /** The line the previous screen left for this one, as a toast that goes away by itself. */
-export function FlashToast() {
-  const flash = useFlash();
-  if (flash === null) return null;
+export function FlashToast({ flash }: { readonly flash: Flash }) {
   return (
     <Toast
       icon={<Icon name="check" size={16} />}

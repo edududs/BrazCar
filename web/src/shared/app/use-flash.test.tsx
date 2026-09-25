@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Flash } from "../domain/flash";
 import { FlashToast } from "../ui/flash-toast";
+import { useFlash } from "./use-flash";
 
 /** Two pages: the first navigates to the second with a flash; the second shows the toast. */
 function Sender() {
@@ -31,12 +32,18 @@ function Sender() {
   );
 }
 
+/** The toast while the flash lasts, as the shell shows it. */
+function Shown() {
+  const flash = useFlash();
+  return flash === null ? null : <FlashToast flash={flash} />;
+}
+
 function mount() {
   const root = createRootRoute({
     component: () => (
       <>
         <Outlet />
-        <FlashToast />
+        <Shown />
       </>
     ),
   });
