@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as gateway from "../adapters/rides-gateway";
+import { noFilters } from "../domain/board";
 import type { RideDraft } from "../domain/ride";
 import { rideKeys } from "./keys";
 import { openRide } from "./ride.fixture";
@@ -36,10 +37,7 @@ describe("usePublishRide", () => {
     const mine = { ...openRide, isMine: true };
     mocked.publishRide.mockResolvedValue(mine);
     const client = new QueryClient();
-    client.setQueryData(
-      rideKeys.board({ day: null, text: null, withSeats: false, maxPrice: null }),
-      [],
-    );
+    client.setQueryData(rideKeys.board(noFilters), []);
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     );

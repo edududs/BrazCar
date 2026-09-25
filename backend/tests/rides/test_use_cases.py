@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, time, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -189,6 +189,22 @@ async def test_board_filters_by_day_text_of_any_stop_seats_and_price(ctx: Contex
     assert [r.id for r in with_seats] == [tomorrow.id]
     assert [r.id for r in today] == [ride.id]
     assert cheap == ()
+
+
+async def test_from_time_keeps_each_days_rides_from_that_local_hour_on(ctx: Context) -> None:
+    """Without `day`, the same clock applies to every day of the list (D-141)."""
+    early_today = await ctx.published(hours=11)  # 17:00 local
+    late_today = await ctx.published(hours=12)  # 18:00 local
+    early_tomorrow = await ctx.published(hours=11 + 24)  # 17:00 local, tomorrow
+    late_tomorrow = await ctx.published(hours=13 + 24)  # 19:00 local, tomorrow
+
+    from_18 = await ctx.board(BoardFilter(from_time=time(18, 0)), viewer=None)
+    with_day = await ctx.board(BoardFilter(day=date(2026, 9, 22), from_time=time(18, 0)), viewer=None)
+
+    assert {r.id for r in from_18} == {late_today.id, late_tomorrow.id}
+    assert {r.id for r in with_day} == {late_today.id}
+    assert early_today.id not in {r.id for r in from_18}
+    assert early_tomorrow.id not in {r.id for r in from_18}
 
 
 async def test_departed_and_cancelled_rides_leave_the_board_but_not_my_rides(ctx: Context) -> None:

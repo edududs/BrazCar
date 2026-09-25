@@ -1,6 +1,6 @@
 """What the board shows. Never the phone, never the plate (ADR-0006); status and actions ready (ADR-0011)."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from typing import Literal
 
@@ -66,6 +66,9 @@ class BoardFilter(FrozenModel):
     text: str | None = None  # "passa por": any stop, catalog place or "other" (D-101)
     with_seats: bool = False
     max_price: Decimal | None = None
+    # The departure's local hour of the day, at or after it (D-141). Without `day`, judges every
+    # day of the list by its own local hour; with `day`, only that day passes at all.
+    from_time: time | None = None
 
 
 def to_board_ride(  # noqa: PLR0913 - a projection joins several sources by design

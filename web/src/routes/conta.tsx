@@ -41,6 +41,7 @@ function AccountPage() {
                 day: null,
                 withSeats: false,
                 maxPrice: null,
+                from: null,
                 accountDeleted: true,
               },
             });

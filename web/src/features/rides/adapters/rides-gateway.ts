@@ -79,6 +79,7 @@ export async function fetchBoard(filters: BoardFilters, signal: AbortSignal): Pr
         q: filters.text,
         with_seats: filters.withSeats,
         max_price: filters.maxPrice,
+        from: filters.fromTime,
       },
     },
     signal,

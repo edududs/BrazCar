@@ -1,13 +1,20 @@
-from datetime import timedelta
+from datetime import UTC, datetime, time, timedelta
 from uuid import uuid4
 
 from hypothesis import given
 from hypothesis import strategies as st
 
 from brazcar.rides.application import BoardRevision, RideRepository
-from brazcar.rides.domain import AccountId, ExternalDriver, RideOffer
+from brazcar.rides.domain import (
+    AccountId,
+    CatalogStop,
+    ExternalDriver,
+    PaymentMethod,
+    RegisteredDriver,
+    RideOffer,
+)
 from brazcar.shared.domain.phone import PhoneNumber
-from tests.rides.strategies import imported_rides, published, registered, rides
+from tests.rides.strategies import BRASILIA, car, imported_rides, published, registered, rides
 
 from . import contract_settings
 
@@ -175,3 +182,41 @@ class RideRepositoryContract:
         assert loaded is not None
         assert loaded.car is None
         assert await repository.find_imported(account, ride.departure_at) == ride
+
+    async def test_from_time_keeps_only_rides_whose_local_hour_is_at_or_after_it(self) -> None:
+        """The boundary of D-141: 17:59 local out, 18:00 local in, whichever database answers.
+
+        `since` is pinned a minute before UTC midnight, so the query's own absolute lower bound
+        crosses a UTC day right where the two rides sit — a wrong implementation that extracted the
+        hour from the *UTC* instant, instead of the ride's local one (D-094), would see this.
+        """
+        repository = self.make_repository()
+        driver = registered(await self.driver())
+        day = datetime(2026, 9, 22, tzinfo=BRASILIA).date()
+        before_bound = datetime.combine(day, time(17, 59), tzinfo=BRASILIA)
+        at_bound = datetime.combine(day, time(18, 0), tzinfo=BRASILIA)
+        since = before_bound.astimezone(UTC).replace(hour=23, minute=59, second=0, microsecond=0)
+        since -= timedelta(days=1)  # a minute short of UTC midnight, the day before both rides
+        early = _ride_at(driver, before_bound)
+        late = _ride_at(driver, at_bound)
+        await repository.save(early, (published(early),))
+        await repository.save(late, (published(late),))
+
+        found = await repository.upcoming(since, from_time=time(18, 0))
+
+        found_ids = {ride.id for ride in found}
+        assert early.id not in found_ids
+        assert late.id in found_ids
+
+
+def _ride_at(driver: RegisteredDriver, departure_at: datetime) -> RideOffer:
+    """A minimal, valid, published ride, for the from-time boundary test."""
+    return RideOffer.publish(
+        driver_id=driver.account_id,
+        car=car() if driver.car is None else driver.car,
+        route=(CatalogStop(place_id="brazlandia"), CatalogStop(place_id="esplanada")),
+        departure_at=departure_at,
+        seats_available=1,
+        payment_methods=frozenset({PaymentMethod.PIX}),
+        now=departure_at - timedelta(hours=1),
+    ).ride

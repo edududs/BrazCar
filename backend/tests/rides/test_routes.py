@@ -253,6 +253,25 @@ async def test_the_board_filters_by_text_of_any_stop_day_seats_and_price() -> No
     assert [r["id"] for r in under_ten] == [cheap["id"]]
 
 
+async def test_from_time_keeps_rides_at_or_after_that_local_hour() -> None:
+    ana, car_id = await driver()
+    seventeen_fifty_nine = (
+        (timezone.now().astimezone(BRASILIA) + timedelta(days=1))
+        .replace(hour=17, minute=59, second=0, microsecond=0)
+        .isoformat()
+    )
+    early = await publish(ana, car_id, departure_at=seventeen_fifty_nine)
+    late = await publish(ana, car_id, departure_at=tomorrow(18))
+    board = Browser()
+
+    from_18 = body(await board.get("/api/rides", {"from": "18:00"}))
+    malformed = await board.get("/api/rides", {"from": "not-a-time"})
+
+    assert [r["id"] for r in from_18] == [late["id"]]
+    assert early["id"] not in [r["id"] for r in from_18]
+    assert malformed.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+
+
 async def test_seats_close_and_reopen_cancel_is_final_and_repeat_makes_a_new_ride() -> None:
     ana, car_id = await driver()
     ride = await publish(ana, car_id)

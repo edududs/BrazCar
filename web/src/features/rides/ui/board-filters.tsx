@@ -8,10 +8,22 @@ interface BoardFiltersFormProps {
   readonly onChange: (filters: BoardFilters) => void;
 }
 
-/** The board's filters. Every change goes straight to the caller, which keeps them in the URL. */
+/** The board's filters. Every change goes straight to the caller, which keeps them in the URL.
+ *
+ * "A partir de" comes first: it will be the first chip once the design gives filters that shape.
+ */
 export function BoardFiltersForm({ filters, onChange }: BoardFiltersFormProps) {
   return (
     <section className="flex flex-col gap-3">
+      <TextField
+        label="A partir de"
+        type="time"
+        value={filters.fromTime ?? ""}
+        onChange={(fromTime) => {
+          onChange({ ...filters, fromTime: fromTime === "" ? null : fromTime });
+        }}
+        hint="Hora da partida, no dia ou em cada dia da lista."
+      />
       <TextField
         label="Passa por"
         type="search"

@@ -1,6 +1,6 @@
 """In-memory adapters for the use-case tests. The repository is held to the port contract."""
 
-from datetime import datetime
+from datetime import datetime, time
 
 from brazcar.places.domain import Catalog, Place
 from brazcar.rides.adapters.directories import CatalogPlaceDirectory
@@ -46,8 +46,14 @@ class InMemoryRideRepository:
             self.events.pop(ride_id, None)
             self.revision += 1
 
-    async def upcoming(self, since: datetime) -> tuple[RideOffer, ...]:
-        rides = [r for r in self.rides.values() if r.cancelled_at is None and r.departure_at >= since]
+    async def upcoming(self, since: datetime, *, from_time: time | None = None) -> tuple[RideOffer, ...]:
+        rides = [
+            r
+            for r in self.rides.values()
+            if r.cancelled_at is None
+            and r.departure_at >= since
+            and (from_time is None or r.departure_at.time() >= from_time)
+        ]
         return tuple(sorted(rides, key=lambda r: (r.departure_at, r.published_at)))
 
     async def by_driver(self, driver_id: AccountId) -> tuple[RideOffer, ...]:

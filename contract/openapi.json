@@ -124,6 +124,18 @@
             ],
             "title": "Day"
           },
+          "from": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From"
+          },
           "max_price": {
             "anyOf": [
               {
@@ -1470,6 +1482,23 @@
                 }
               ],
               "title": "Max Price"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
             }
           }
         ],

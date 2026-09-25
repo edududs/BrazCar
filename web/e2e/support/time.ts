@@ -17,6 +17,13 @@ const localParts = new Intl.DateTimeFormat("sv-SE", {
   hour12: false,
 });
 
+const clockParts = new Intl.DateTimeFormat("sv-SE", {
+  timeZone: zone,
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
 function shifted(anchor: string, minutes: number): Date {
   return new Date(new Date(anchor).getTime() + minutes * 60_000);
 }
@@ -29,4 +36,9 @@ export function localInput(anchor: string, minutes: number): string {
 /** What the API expects: an instant, with its offset. */
 export function instant(anchor: string, minutes: number): string {
   return shifted(anchor, minutes).toISOString();
+}
+
+/** `HH:MM` of an instant, in the board's zone (D-141): what the "a partir de" filter compares. */
+export function clockOf(instantIso: string): string {
+  return clockParts.format(new Date(instantIso));
 }

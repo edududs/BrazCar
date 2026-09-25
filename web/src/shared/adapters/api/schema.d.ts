@@ -455,6 +455,8 @@ export interface components {
         BoardQuery: {
             /** Day */
             day?: string | null;
+            /** From */
+            from?: string | null;
             /** Max Price */
             max_price?: number | string | null;
             /** Q */
@@ -1080,6 +1082,7 @@ export interface operations {
                 q?: string | null;
                 with_seats?: boolean;
                 max_price?: number | string | null;
+                from?: string | null;
             };
             header?: never;
             path?: never;

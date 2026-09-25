@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { expect, openBoard, openRide, test } from "./support/fixtures";
+import { clockOf } from "./support/time";
 
 /**
  * Quem chega sem conta: o mural, os filtros, uma carona e os becos sem saída.
@@ -38,6 +39,58 @@ test("o filtro de dia vive na URL e recorta o mural", async ({ page, demo, snap 
     await expect(cardFor(page, ride.id), ride.slug).toHaveCount(ride.day === today ? 1 : 0);
   }
   await snap(page, "board/filtered-by-day");
+});
+
+/** One minute after `clock` ("HH:MM"), capped at the last minute of the day. */
+function afterClock(clock: string): string {
+  const [hour = 0, minute = 0] = clock.split(":").map(Number);
+  const total = Math.min(hour * 60 + minute + 1, 23 * 60 + 59);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+test('o filtro "a partir de" recorta o mural pelo horário local, sem dia e com dia', async ({
+  page,
+  demo,
+  snap,
+}) => {
+  await openBoard(page, "?from=18:00");
+
+  for (const ride of demo.rides.filter((each) => each.onBoard)) {
+    const expected = clockOf(ride.departureAt) >= "18:00";
+    await expect(cardFor(page, ride.id), ride.slug).toHaveCount(expected ? 1 : 0);
+  }
+  await expect(page).toHaveURL(/from=18%3A00/);
+  await snap(page, "board/from-time");
+
+  const today = demo.dayAt(0);
+  await page.getByLabel("Dia").fill(today);
+  await expect(page).toHaveURL(new RegExp(`day=${today}`));
+
+  for (const ride of demo.rides.filter((each) => each.onBoard)) {
+    const expected = ride.day === today && clockOf(ride.departureAt) >= "18:00";
+    await expect(cardFor(page, ride.id), ride.slug).toHaveCount(expected ? 1 : 0);
+  }
+});
+
+test('o filtro "a partir de" sem carona no horário mostra o estado vazio', async ({
+  page,
+  demo,
+  snap,
+}) => {
+  const today = demo.dayAt(0);
+  const todays = demo.rides.filter((ride) => ride.onBoard && ride.day === today);
+  const latest =
+    todays
+      .map((ride) => clockOf(ride.departureAt))
+      .sort()
+      .at(-1) ?? "00:00";
+  const from = afterClock(latest);
+
+  await openBoard(page, `?day=${today}&from=${from}`);
+
+  await expect(page.getByText("Nenhuma carona com esses filtros.")).toBeVisible();
+  await expect(page.locator(cards)).toHaveCount(0);
+  await snap(page, "board/from-time-empty");
 });
 
 test("só com vaga tira a lotada do mural", async ({ page, demo, snap }) => {

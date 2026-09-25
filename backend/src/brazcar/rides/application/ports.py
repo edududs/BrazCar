@@ -1,5 +1,5 @@
 from collections.abc import Collection
-from datetime import datetime
+from datetime import datetime, time
 from typing import Literal, Protocol
 from uuid import UUID
 
@@ -43,8 +43,13 @@ class RideRepository(Protocol):
         """
         ...
 
-    async def upcoming(self, since: datetime) -> tuple[RideOffer, ...]:
-        """Not cancelled, departing at or after `since`, earliest first. The board's raw material."""
+    async def upcoming(self, since: datetime, *, from_time: time | None = None) -> tuple[RideOffer, ...]:
+        """Not cancelled, departing at or after `since`, earliest first. The board's raw material.
+
+        `from_time` keeps only rides whose *local* time of day (D-094) is at or after it, whatever
+        the day: the board's "a partir de" filter (D-141), pushed to the query so every day of the
+        list is judged by its own local hour, never by an absolute instant.
+        """
         ...
 
     async def by_driver(self, driver_id: AccountId) -> tuple[RideOffer, ...]:

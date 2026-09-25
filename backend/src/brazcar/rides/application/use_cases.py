@@ -254,7 +254,9 @@ class ListBoard:
 
     async def __call__(self, filters: BoardFilter, viewer: AccountId | None) -> tuple[BoardRide, ...]:
         now = self.clock.now()
-        candidates = await self.rides.upcoming(now - self.rules.departure_tolerance)
+        candidates = await self.rides.upcoming(
+            now - self.rules.departure_tolerance, from_time=filters.from_time
+        )
         selected = [ride for ride in candidates if _matches(ride, filters)]
         if filters.text and filters.text.strip():
             found = await self.search.matching(filters.text, [ride.id for ride in selected])

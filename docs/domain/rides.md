@@ -26,7 +26,7 @@
 | esquecer caronas | `ForgetRides` | Apaga caronas de motorista externo, para a poda (D-119). Nunca as de conta. |
 | ações permitidas | `Actions` | O que quem vê pode fazer com a carona, calculado no servidor: editar, mudar vagas, cancelar, repetir, pedir contato e até quando pode adiar. |
 | card do mural | `BoardRide` | O que a lista mostra: nome, carro (modelo e cor, quando há), origem, mensagem original (quando importada), paradas com nome e tarifa, observações, situação e ações. Nunca telefone nem placa. |
-| filtros do mural | `BoardFilter` | Dia, "passa por" em texto livre, só com vaga, preço máximo. Vivem na URL do front. |
+| filtros do mural | `BoardFilter` | A partir de qual hora local (`from_time`, D-141), dia, "passa por" em texto livre, só com vaga, preço máximo. Vivem na URL do front. |
 | busca de caronas | `RideSearch` | Acha caronas pelo texto das paradas: nome, apelidos e lugares acima de cada parada do catálogo, e o texto das paradas "outro" (D-101). Observações ficam de fora do índice. |
 | pedido de contato | `ContactRequest` | Registro de quem pediu o contato de qual carona, com o número revelado, o tipo de motorista e o momento (D-140). Tabela própria, sobrevive à carona. |
 | histórico | `RideEvent` | Tabela só de acréscimo com os eventos do agregado. |

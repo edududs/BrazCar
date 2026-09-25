@@ -6,7 +6,7 @@ import json
 from collections.abc import AsyncIterator, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, time
 from decimal import Decimal
 from http import HTTPStatus
 from typing import Self
@@ -184,6 +184,8 @@ class BoardQuery(Schema):
     q: str | None = Field(default=None, max_length=80)  # "passa por": any stop, by text
     with_seats: bool = False
     max_price: Decimal | None = Field(default=None, gt=0)
+    # "from" is a keyword, so the field is named after what it holds; the wire name stays "from" (D-141).
+    from_: time | None = Field(default=None, alias="from")
 
 
 class StopIn(Schema):
@@ -260,6 +262,7 @@ def _add_board_routes(router: Router, use_cases: RideUseCases) -> None:
             text=filters.q or None,
             with_seats=filters.with_seats,
             max_price=filters.max_price,
+            from_time=filters.from_,
         )
         return [RideOut.of(ride) for ride in await use_cases.board(wanted, viewer)]
 

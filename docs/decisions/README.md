@@ -49,6 +49,7 @@ Origem das linhas até D-068: entrevista de design de 18 a 20/09/2026. As seguin
 | D-101 | O filtro "passa por" do mural é texto livre (`?q=`), não identificador de lugar: casa com qualquer parada, do catálogo ou "outro", sem acento nem caixa, todos os termos presentes. Parada do catálogo é achada pelo nome, pelos apelidos e pelos nomes dos lugares acima dela ("Plano Piloto" acha a Esplanada). O casamento é da porta `RideSearch`, sobre o índice do contexto `search` (D-100) | decidido | |
 | D-096 | O card do mural e toda resposta de escrita são o mesmo schema `RideOut`, com situação e ações calculadas para quem pede (ADR-0011); a rota de escrita relê a carona pelo `ShowRide` em vez de serializar a entidade | decidido | |
 | D-121 | Tolerância de "já saiu" (D-017) passa a 10 minutos por padrão (`RIDE_DEPARTURE_TOLERANCE_MINUTES`); vale para toda carona, publicada ou importada | decidido | |
+| D-141 | Filtro "a partir de" no mural: `?from=HH:MM`, hora do dia da partida ≥ hora informada, na hora local do mural; sem dia vale para cada dia da lista, com dia só naquele dia. É filtro de `BoardFilter` e da busca, não de tela | decidido | |
 
 ## Lugares
 

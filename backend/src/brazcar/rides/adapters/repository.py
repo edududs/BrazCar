@@ -1,8 +1,10 @@
-from datetime import datetime
+from datetime import datetime, time
 from uuid import UUID
 
 from asgiref.sync import sync_to_async
 from django.db import transaction
+from django.db.models import Q, QuerySet
+from django.db.models.functions import ExtractHour, ExtractMinute
 from django.utils import timezone
 from pydantic import TypeAdapter
 
@@ -44,8 +46,8 @@ class DjangoRideRepository:
     async def delete(self, ride_id: RideId) -> None:
         await sync_to_async(_delete)(ride_id)
 
-    async def upcoming(self, since: datetime) -> tuple[RideOffer, ...]:
-        return await sync_to_async(_upcoming)(since)
+    async def upcoming(self, since: datetime, *, from_time: time | None = None) -> tuple[RideOffer, ...]:
+        return await sync_to_async(_upcoming)(since, from_time)
 
     async def by_driver(self, driver_id: AccountId) -> tuple[RideOffer, ...]:
         return await sync_to_async(_by_driver)(driver_id)
@@ -101,13 +103,28 @@ def _get(ride_id: RideId) -> RideOffer | None:
     return None if row is None else _to_entity(row)
 
 
-def _upcoming(since: datetime) -> tuple[RideOffer, ...]:
-    rows = (
-        RideModel.objects.filter(cancelled_at=None, departure_at__gte=since)
-        .order_by("departure_at", "published_at")
-        .prefetch_related("stops")
-    )
+def _upcoming(since: datetime, from_time: time | None) -> tuple[RideOffer, ...]:
+    rows = RideModel.objects.filter(cancelled_at=None, departure_at__gte=since)
+    if from_time is not None:
+        rows = _from_local_time(rows, from_time)
+    rows = rows.order_by("departure_at", "published_at").prefetch_related("stops")
     return tuple(_to_entity(row) for row in rows)
+
+
+def _from_local_time(rows: QuerySet[RideModel], from_time: time) -> QuerySet[RideModel]:
+    """Rides whose *local* hour of departure (D-094) is at or after `from_time` (D-141).
+
+    Compared by the local hour and minute, extracted in the board's own zone, never by the UTC
+    instant: two rides on the same local evening must agree, whichever side of UTC midnight they fall.
+    """
+    zone = timezone.get_default_timezone()
+    return rows.annotate(
+        _departure_hour=ExtractHour("departure_at", tzinfo=zone),
+        _departure_minute=ExtractMinute("departure_at", tzinfo=zone),
+    ).filter(
+        Q(_departure_hour__gt=from_time.hour)
+        | Q(_departure_hour=from_time.hour, _departure_minute__gte=from_time.minute)
+    )
 
 
 def _by_driver(driver_id: AccountId) -> tuple[RideOffer, ...]:
