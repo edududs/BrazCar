@@ -68,6 +68,10 @@ export default defineConfig({
     // servidores de verdade e não roda aqui dentro.
     include: ["src/**/*.test.{ts,tsx}"],
     setupFiles: ["src/shared/testing/setup.ts"],
+    // Pinned away from the board's own zone (America/Sao_Paulo, D-094) on purpose: a test that
+    // only passes because the machine running it happens to sit in that zone would hide a screen
+    // reading the device's clock instead of the board's. UTC is what the CI runner already uses.
+    env: { TZ: "UTC" },
     // Each file gets its own jsdom worker; by default one per core ran at once, which starved
     // memory on a 16-core laptop and made user-event tests time out. Four finish as fast.
     maxWorkers: 4,

@@ -2,11 +2,13 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { BOARD_UTC_OFFSET } from "@/shared/domain/board-time-zone";
+
 import { noFilters } from "../domain/board";
 import { BoardFiltersForm } from "./board-filters";
 
-/** Thursday, 24 September 2026, 14:52 local. */
-const now = new Date("2026-09-24T14:52:00");
+/** Thursday, 24 September 2026, 14:52 on the board's own clock (D-094), not the runner's. */
+const now = new Date(`2026-09-24T14:52:00${BOARD_UTC_OFFSET}`);
 
 describe("BoardFiltersForm", () => {
   it("offers 'A partir de' first, then the days, seats and price", () => {

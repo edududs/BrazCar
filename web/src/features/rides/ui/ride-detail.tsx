@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import type { Session } from "@/features/accounts/domain/session";
+import { addDays } from "@/shared/app/calendar";
 import { ActionBar } from "@/shared/ui/action-bar";
 import { ActionButton } from "@/shared/ui/action-button";
 import { Avatar } from "@/shared/ui/avatar";
@@ -560,8 +561,9 @@ interface RepeatSheetProps {
 
 /** One field: the new departure; the rest comes from the ride (S05). */
 function RepeatSheet({ ride, open, onOpenChange, busy, onRepeat }: RepeatSheetProps) {
-  const nextDay = new Date(ride.departureAt);
-  nextDay.setDate(nextDay.getDate() + 1);
+  // A day later on the board's own calendar (D-094), not the device's: the default offered here
+  // must still land on tomorrow's board day for someone whose device is in another zone.
+  const nextDay = addDays(new Date(ride.departureAt), 1);
   const [departure, setDeparture] = useState(toLocalInput(nextDay.toISOString()));
   return (
     <Sheet

@@ -6,6 +6,7 @@ import {
   localDay,
   longWeekday,
 } from "@/shared/app/calendar";
+import { BOARD_TIME_ZONE } from "@/shared/domain/board-time-zone";
 
 import type { Ride } from "../domain/ride";
 
@@ -15,7 +16,7 @@ import type { Ride } from "../domain/ride";
  */
 
 export interface DaySection {
-  /** "YYYY-MM-DD" in the device's zone, the same the `day` filter carries. */
+  /** "YYYY-MM-DD" in the board's zone (D-094), the same the `day` filter carries. */
   readonly day: string;
   /** "Hoje · quinta, 24", "Amanhã · sexta, 25", "Sábado, 26 de setembro". */
   readonly title: string;
@@ -26,15 +27,20 @@ export interface DaySection {
 
 export type DayChip = Pick<DayCard, "day" | "label">;
 
-const dayMonthLong = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long" });
+const dayMonthLong = new Intl.DateTimeFormat("pt-BR", {
+  day: "numeric",
+  month: "long",
+  timeZone: BOARD_TIME_ZONE,
+});
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /** "Hoje · quinta, 24" for today and tomorrow; "Sábado, 26 de setembro" for any other day. */
 export function dayTitle(day: string, now: Date): string {
   const date = dateOf(day);
   const weekday = longWeekday(date);
-  if (day === localDay(now)) return `Hoje · ${weekday}, ${String(date.getDate())}`;
-  if (day === localDay(addDays(now, 1))) return `Amanhã · ${weekday}, ${String(date.getDate())}`;
+  const number = String(Number(day.slice(8, 10)));
+  if (day === localDay(now)) return `Hoje · ${weekday}, ${number}`;
+  if (day === localDay(addDays(now, 1))) return `Amanhã · ${weekday}, ${number}`;
   return `${capitalize(weekday)}, ${dayMonthLong.format(date)}`;
 }
 
@@ -61,9 +67,13 @@ export function dayChips(now: Date, count = 4): readonly DayChip[] {
   return dayCards(now, count).map(({ day, label }) => ({ day, label }));
 }
 
-const clock = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
+const clock = new Intl.DateTimeFormat("pt-BR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: BOARD_TIME_ZONE,
+});
 
-/** "Agora · 14:52". */
+/** "Agora · 14:52", the board's own clock (D-094). */
 export function nowLabel(now: Date): string {
   return `Agora · ${clock.format(now)}`;
 }

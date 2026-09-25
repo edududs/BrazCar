@@ -14,6 +14,10 @@ jobs:
     defaults:
       run:
         working-directory: web
+    env:
+      # Away from the board's own zone (America/Sao_Paulo, D-094) on purpose, so a screen that
+      # reads the device's clock instead of the board's fails here, not just on a phone abroad.
+      TZ: UTC
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5

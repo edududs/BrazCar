@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest";
 
+import { BOARD_UTC_OFFSET } from "@/shared/domain/board-time-zone";
+
 import type { Ride } from "../domain/ride";
 import { dayChips, dayTitle, groupByDay, nowLabel } from "./board-days";
 import { openRide } from "./ride.fixture";
 
-/** Thursday, 24 September 2026, 14:52 local. */
-const now = new Date("2026-09-24T14:52:00");
-const rideAt = (id: string, local: string): Ride => ({
+/** Thursday, 24 September 2026, 14:52 on the board's own clock (D-094), not the runner's. */
+const now = new Date(`2026-09-24T14:52:00${BOARD_UTC_OFFSET}`);
+const rideAt = (id: string, boardClock: string): Ride => ({
   ...openRide,
   id,
-  departureAt: new Date(local).toISOString(),
+  departureAt: new Date(`${boardClock}${BOARD_UTC_OFFSET}`).toISOString(),
 });
 
 describe("dayTitle", () => {

@@ -93,10 +93,10 @@ describe("formatSeats", () => {
 });
 
 describe("toLocalInput and fromLocalInput", () => {
-  it("round-trips through the browser's own zone", () => {
-    const local = toLocalInput("2026-09-24T07:05:00-03:00");
-    expect(local).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
-    const back = fromLocalInput(local);
-    expect(new Date(back).getTime()).toBe(new Date(`${local}:00`).getTime());
+  it("round-trips through the board's own zone (D-094), not the runner's", () => {
+    const iso = "2026-09-24T07:05:00-03:00";
+    const local = toLocalInput(iso);
+    expect(local).toBe("2026-09-24T07:05");
+    expect(fromLocalInput(local)).toBe(new Date(iso).toISOString());
   });
 });

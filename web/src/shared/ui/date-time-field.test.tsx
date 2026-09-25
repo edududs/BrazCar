@@ -4,11 +4,13 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
+import { BOARD_UTC_OFFSET } from "@/shared/domain/board-time-zone";
+
 import { DateTimeField } from "./date-time-field";
 
-/** Thursday, 24 September 2026, 14:52 local. */
-const now = new Date("2026-09-24T14:52:00");
-const at = (local: string) => new Date(local).toISOString();
+/** Thursday, 24 September 2026, 14:52 on the board's own clock (D-094), not the runner's. */
+const now = new Date(`2026-09-24T14:52:00${BOARD_UTC_OFFSET}`);
+const at = (boardClock: string) => new Date(`${boardClock}${BOARD_UTC_OFFSET}`).toISOString();
 
 function Harness({
   initial = at("2026-09-24T19:00:00"),

@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { BOARD_UTC_OFFSET } from "@/shared/domain/board-time-zone";
+
 import { dayCards, formatDayShort, localDay, monthGrid, relativeDay, shiftMonth } from "./calendar";
 
-/** Thursday, 24 September 2026, 14:52 local. */
-const now = new Date("2026-09-24T14:52:00");
+/** Thursday, 24 September 2026, 14:52 on the board's own clock (D-094), not the runner's. */
+const now = new Date(`2026-09-24T14:52:00${BOARD_UTC_OFFSET}`);
 
 describe("dayCards", () => {
   it("offers today, tomorrow and the days after, by weekday", () => {
@@ -51,6 +53,6 @@ describe("monthGrid", () => {
   it("moves across the year end", () => {
     expect(shiftMonth(2026, 12, 1)).toEqual({ year: 2027, month: 1 });
     expect(shiftMonth(2026, 1, -1)).toEqual({ year: 2025, month: 12 });
-    expect(localDay(new Date(2026, 0, 5))).toBe("2026-01-05");
+    expect(localDay(new Date(`2026-01-05T12:00:00${BOARD_UTC_OFFSET}`))).toBe("2026-01-05");
   });
 });

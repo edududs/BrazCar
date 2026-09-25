@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { boardWallClock } from "@/shared/app/calendar";
 import { formatClock } from "@/shared/app/use-time-draft";
 import { Chip, ChipRow } from "@/shared/ui/chip";
 import { Icon } from "@/shared/ui/icon";
@@ -27,6 +28,7 @@ interface BoardFiltersFormProps {
 export function BoardFiltersForm({ filters, onChange, now, note = null }: BoardFiltersFormProps) {
   const [timeOpen, setTimeOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
+  const nowOnBoard = boardWallClock(now);
   const set = (patch: Partial<BoardFilters>) => {
     onChange({ ...filters, ...patch });
   };
@@ -120,7 +122,7 @@ export function BoardFiltersForm({ filters, onChange, now, note = null }: BoardF
         open={timeOpen}
         onOpenChange={setTimeOpen}
         value={filters.fromTime}
-        now={formatClock(now.getHours(), now.getMinutes())}
+        now={formatClock(nowOnBoard.hour, nowOnBoard.minute)}
         onApply={(fromTime) => {
           set({ fromTime });
         }}

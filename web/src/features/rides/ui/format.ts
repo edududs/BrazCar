@@ -1,20 +1,43 @@
+import { BOARD_TIME_ZONE, BOARD_UTC_OFFSET } from "@/shared/domain/board-time-zone";
+
 import type { PaymentMethod, RideStatus, Stop } from "../domain/ride";
 
 /** Presentation only: words and formats. No rule lives here (ADR-0011). */
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const time = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
+// Every clock and calendar below reads the board's own zone (D-094), never the device's: a
+// passenger abroad, or with the wrong clock, must still see the ride at its real board time.
+const time = new Intl.DateTimeFormat("pt-BR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: BOARD_TIME_ZONE,
+});
 const day = new Intl.DateTimeFormat("pt-BR", {
   weekday: "short",
   day: "2-digit",
   month: "2-digit",
+  timeZone: BOARD_TIME_ZONE,
 });
 const dayLong = new Intl.DateTimeFormat("pt-BR", {
   weekday: "long",
   day: "numeric",
   month: "long",
+  timeZone: BOARD_TIME_ZONE,
 });
-const dayChip = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "numeric" });
+const dayChip = new Intl.DateTimeFormat("pt-BR", {
+  weekday: "short",
+  day: "numeric",
+  timeZone: BOARD_TIME_ZONE,
+});
+const localInputParts = new Intl.DateTimeFormat("sv-SE", {
+  timeZone: BOARD_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
 
 export function formatPrice(price: string): string {
   return currency.format(Number(price));
@@ -80,14 +103,16 @@ export function formatSeats(seats: number): string {
   return seats === 1 ? "1 vaga" : `${String(seats)} vagas`;
 }
 
-/** "YYYY-MM-DDTHH:mm" in the browser's zone, what a `datetime-local` input takes. */
+/**
+ * "YYYY-MM-DDTHH:mm" for a `datetime-local` input, in the board's own zone (D-094): the native
+ * control shows whatever digits it is given, so those digits must already be the board's clock,
+ * not the device's, or a driver abroad would repeat a ride at the wrong real time.
+ */
 export function toLocalInput(iso: string): string {
-  const at = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${String(at.getFullYear())}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}T${pad(at.getHours())}:${pad(at.getMinutes())}`;
+  return localInputParts.format(new Date(iso)).replace(" ", "T");
 }
 
-/** The instant a `datetime-local` value names, as ISO; the API brings it back in the board's zone. */
+/** The instant a `datetime-local` value names, read as the board's own wall clock (D-094). */
 export function fromLocalInput(local: string): string {
-  return new Date(local).toISOString();
+  return new Date(`${local}:00${BOARD_UTC_OFFSET}`).toISOString();
 }

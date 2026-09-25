@@ -4,6 +4,7 @@ import { useSession } from "@/features/accounts/app/use-session";
 import { usePublishRide } from "@/features/rides/app/use-publish-ride";
 import type { RideDraft } from "@/features/rides/domain/ride";
 import { RideForm } from "@/features/rides/ui/ride-form";
+import { boardWallClock } from "@/shared/app/calendar";
 import { useClock } from "@/shared/app/use-clock";
 import { Icon } from "@/shared/ui/icon";
 import { NoticeScreen } from "@/shared/ui/notice-screen";
@@ -11,10 +12,17 @@ import { PageShell } from "@/shared/ui/page-shell";
 
 export const Route = createFileRoute("/publicar")({ component: PublishPage });
 
-/** A blank ride: two stops, the next round half hour, three seats, the default price (D-014). */
+/**
+ * A blank ride: two stops, the next round half hour, three seats, the default price (D-014). The
+ * half hour is the board's own clock (D-094): rounding on the device's would offer a driver
+ * abroad a departure that is not actually the next round half hour on the board.
+ */
 function blankDraft(carId: string, now: Date): RideDraft {
-  const departure = new Date(now);
-  departure.setMinutes(departure.getMinutes() >= 30 ? 60 : 30, 0, 0);
+  const wall = boardWallClock(now);
+  const minutesToRound = (wall.minute >= 30 ? 60 : 30) - wall.minute;
+  const departure = new Date(
+    now.getTime() + minutesToRound * 60_000 - now.getSeconds() * 1000 - now.getMilliseconds(),
+  );
   return {
     carId,
     stops: [

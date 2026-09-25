@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Car } from "@/features/accounts/domain/account";
 import { fetchPlace, searchPlaces } from "@/features/places/adapters/places-gateway";
 import type { Place } from "@/features/places/domain/place";
+import { BOARD_UTC_OFFSET } from "@/shared/domain/board-time-zone";
 import { renderRouted } from "@/shared/testing/render-routed";
 
 import type { RideDraft } from "../domain/ride";
@@ -41,7 +42,7 @@ const draft: RideDraft = {
 };
 
 const car: Car = { id: "c1", model: "Gol", color: "prata", plate: "ABC1234" };
-const now = new Date("2026-09-23T06:00:00");
+const now = new Date(`2026-09-23T06:00:00${BOARD_UTC_OFFSET}`);
 
 function show(onSubmit: (draft: RideDraft) => Promise<unknown>) {
   return renderRouted(

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Car } from "@/features/accounts/domain/account";
 import { fetchPlace, searchPlaces } from "@/features/places/adapters/places-gateway";
+import { BOARD_UTC_OFFSET } from "@/shared/domain/board-time-zone";
 import { renderRouted } from "@/shared/testing/render-routed";
 
 import type { RideDraft } from "../domain/ride";
@@ -17,8 +18,8 @@ beforeEach(() => {
   vi.mocked(fetchPlace).mockResolvedValue(null);
 });
 
-/** Thursday, 24 September 2026, 14:52 local. */
-const now = new Date("2026-09-24T14:52:00");
+/** Thursday, 24 September 2026, 14:52 on the board's own clock (D-094), not the runner's. */
+const now = new Date(`2026-09-24T14:52:00${BOARD_UTC_OFFSET}`);
 const car: Car = { id: "c1", model: "Gol", color: "prata", plate: "ABC1234" };
 const blank: RideDraft = {
   carId: "c1",
@@ -26,7 +27,7 @@ const blank: RideDraft = {
     { placeId: null, text: "Brazlândia", fare: "" },
     { placeId: null, text: "Esplanada", fare: "" },
   ],
-  departureAt: new Date("2026-09-24T15:00:00").toISOString(),
+  departureAt: new Date(`2026-09-24T15:00:00${BOARD_UTC_OFFSET}`).toISOString(),
   seatsAvailable: 3,
   price: "7.00",
   paymentMethods: ["pix", "cash"],
@@ -63,7 +64,9 @@ describe("RideForm, as a driver uses it", () => {
     await user.click(screen.getByRole("button", { name: "Publicar carona" }));
 
     await waitFor(() => {
-      expect(sent(onSubmit)?.departureAt).toBe(new Date("2026-09-24T19:30:00").toISOString());
+      expect(sent(onSubmit)?.departureAt).toBe(
+        new Date(`2026-09-24T19:30:00${BOARD_UTC_OFFSET}`).toISOString(),
+      );
     });
   });
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import {
   type LocalDay,
+  boardWallClock,
   dayCards,
   formatDayShort,
   localDay,
@@ -131,7 +132,8 @@ function DateTimePicker({ initial, now, dayLocked, onDone }: DateTimePickerProps
       : { year: Number(draft.day.slice(0, 4)), month: Number(draft.day.slice(5, 7)) },
   );
   const today = localDay(now);
-  const nowClock = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  const nowOnBoard = boardWallClock(now);
+  const nowClock = `${String(nowOnBoard.hour).padStart(2, "0")}:${String(nowOnBoard.minute).padStart(2, "0")}`;
   const past = draft.day === today && draft.time.value < nowClock;
   const pastQuick = (clock: string) => draft.day === today && clock < nowClock;
   const lockedDay = splitInstant(initial).day;
