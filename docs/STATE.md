@@ -302,7 +302,13 @@ digitada tecla a tecla e os 6 casos novos de layout. O teste de uso do relógio 
 versão da `v0.19.0`: 5 dos 7 casos falham nela (todos os de digitação) e passam na corrigida. Dois
 achados da bateria que não eram defeito de uso, anotados nos próprios testes: o `user-event` não
 faz o envio implícito com o botão fora do `<form>` (o navegador faz, pelo dono do formulário; o
-teste prova a ligação), e o jsdom não termina a animação de fechamento do Base UI.
+teste prova a ligação), e o jsdom não termina a animação de fechamento do Base UI. O catálogo mostrou
+um terceiro defeito, corrigido com teste antes de fechar: ao sair da conta num iPhone em aba, o aviso
+"Você saiu da conta." e a dica de instalar ocupavam o mesmo lugar; a casca agora mostra um de cada
+vez (versão nova, depois o aviso, depois a dica). Uma rodada do catálogo teve uma falha isolada no
+detalhe com tarifas ("a partir de" não apareceu em 10 s, só no celular); repetida cinco vezes em
+seguida passou todas, e a rodada seguinte do catálogo inteiro também. A causa não foi achada: o
+contexto da falha se perdeu na repetição.
 
 **Não verificado:** as View Transitions e a paralaxe num Safari 26 ou iPhone de verdade (a suíte
 não mede animação); o teclado numérico do iPhone na hora e nos minutos, e o salto automático para os
