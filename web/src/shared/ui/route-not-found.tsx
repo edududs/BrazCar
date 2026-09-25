@@ -1,22 +1,25 @@
 import { Link } from "@tanstack/react-router";
 
-import { NoticeScreen } from "./notice-screen";
+import { EmptyState } from "./empty-state";
 
 /** What the app shows for any address that matches no route (D-007): in Portuguese, with a way back. */
 export function RouteNotFound() {
   return (
-    <NoticeScreen
-      title="Página não encontrada"
-      action={
-        <Link
-          to="/"
-          className="flex min-h-target items-center justify-center rounded-button bg-surface-2 px-5 text-body font-semibold text-ink"
-        >
-          Voltar ao mural
-        </Link>
-      }
-    >
-      Este endereço não existe no BrazCar.
-    </NoticeScreen>
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-gutter py-6">
+      <EmptyState
+        as="h1"
+        title="Página não encontrada"
+        action={
+          <Link
+            to="/"
+            className="inline-flex min-h-target items-center justify-center rounded-button bg-brand px-5 text-body font-semibold text-on-brand"
+          >
+            Voltar ao mural
+          </Link>
+        }
+      >
+        Este endereço não existe no BrazCar.
+      </EmptyState>
+    </main>
   );
 }

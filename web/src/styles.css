@@ -267,3 +267,49 @@
     outline-offset: 3px;
   }
 }
+
+/*
+ * The board's top (F5): the wordmark shrinks away over the first 90 px of scroll and the compact
+ * bar fades in between 70 and 130 px, both driven by the scroll position in CSS. Without
+ * scroll-driven animations, or with less motion asked for, the wordmark stays and the bar never
+ * shows: static, never without function.
+ */
+.shell-compact {
+  opacity: 0;
+}
+
+/* The page under the "no network" alert: visible, faded, out of reach (S14). */
+.shell-dimmed {
+  opacity: 0.45;
+  filter: saturate(0.6);
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .shell-title {
+      transform-origin: left center;
+      animation: shell-title-out linear both;
+      animation-timeline: scroll();
+      animation-range: 0 90px;
+    }
+  }
+
+  .shell-compact {
+    animation: shell-bar-in linear both;
+    animation-timeline: scroll();
+    animation-range: 70px 130px;
+  }
+}
+
+@keyframes shell-title-out {
+  to {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes shell-bar-in {
+  to {
+    opacity: 1;
+  }
+}

@@ -206,10 +206,11 @@ test("sem internet o app avisa por cima da página", async ({ page, context, sna
   await openBoard(page);
 
   await context.setOffline(true);
-  await expect(page.getByRole("heading", { name: "Sem internet" })).toBeVisible();
+  await expect(page.getByRole("alert")).toContainText("Sem internet");
   await snap(page, "shell/offline");
 
   await context.setOffline(false);
+  await expect(page.getByRole("alert")).toBeHidden();
   await expect(page.getByRole("heading", { name: "Caronas", level: 1 })).toBeVisible();
 });
 
@@ -232,7 +233,7 @@ test("no iPhone, a dica de instalar aparece e some quando dispensada", async ({
   test.skip(!isMobile, "a dica só existe em aba de navegador no iPhone (D-106)");
   await openBoard(page);
 
-  const hint = page.getByText("Para abrir como app: toque em Compartilhar");
+  const hint = page.getByRole("complementary", { name: "Use como app" });
   await expect(hint).toBeVisible();
   await snap(page, "shell/install-hint");
 

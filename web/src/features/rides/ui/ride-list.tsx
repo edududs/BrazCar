@@ -1,3 +1,5 @@
+import { EmptyState } from "@/shared/ui/empty-state";
+
 import type { BoardStatus } from "../domain/board";
 import type { Ride } from "../domain/ride";
 import { RideCard } from "./ride-card";
@@ -17,7 +19,7 @@ export function RideList({ rides, status, emptyText }: RideListProps) {
     return <p className="text-secondary text-ink-2">Carregando…</p>;
   }
   if (rides.length === 0) {
-    return <p className="text-secondary text-ink-2">{emptyText}</p>;
+    return <EmptyState title={emptyText} />;
   }
   return (
     <ul className="flex flex-col gap-3">

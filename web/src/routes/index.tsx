@@ -65,7 +65,7 @@ function BoardPage() {
     filters.fromTime !== null;
 
   return (
-    <PageShell title="Caronas">
+    <PageShell title="Caronas" heading="brand">
       {search.accountDeleted ? (
         <NoticeBar>Conta excluída. As caronas dela saíram do mural.</NoticeBar>
       ) : null}

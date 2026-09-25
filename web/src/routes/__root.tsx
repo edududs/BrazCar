@@ -1,15 +1,17 @@
-import { Link, Outlet, createRootRoute } from "@tanstack/react-router";
+import { Outlet, createRootRoute } from "@tanstack/react-router";
 
 import { useSession } from "@/features/accounts/app/use-session";
 import { useForgetBoardOffline } from "@/features/rides/app/use-forget-board-offline";
 import { useNetworkStatus } from "@/shared/app/use-network-status";
 import { useVersionFloor } from "@/shared/app/use-version-floor";
 import { ActionButton } from "@/shared/ui/action-button";
-import { AppFooter } from "@/shared/ui/app-footer";
-import { AppNav, brandLinkClass, navLinkClass } from "@/shared/ui/app-nav";
-import { AppShellNotices } from "@/shared/ui/app-shell-notices";
+import { BrandMark } from "@/shared/ui/brand-mark";
+import { Icon } from "@/shared/ui/icon";
 import { NoticeScreen } from "@/shared/ui/notice-screen";
 import { RouteNotFound } from "@/shared/ui/route-not-found";
+import { ShellOverlays } from "@/shared/ui/shell-overlays";
+import { type Tab, TabBar } from "@/shared/ui/tab-bar";
+import { Toast } from "@/shared/ui/toast";
 
 export const Route = createRootRoute({ component: RootLayout, notFoundComponent: RouteNotFound });
 
@@ -18,59 +20,58 @@ function RootLayout() {
   const network = useNetworkStatus();
   const floor = useVersionFloor();
   useForgetBoardOffline();
-  return (
-    <div className="flex min-h-dvh flex-col bg-bg text-ink">
-      <AppNav
-        brand={
-          <Link to="/" className={brandLinkClass}>
-            BrazCar
-          </Link>
-        }
-      >
-        <Link to="/publicar" className={navLinkClass}>
-          Publicar
-        </Link>
-        <Link to="/minhas-caronas" className={navLinkClass}>
-          Minhas
-        </Link>
-        {session.status === "signed-in" ? (
-          <Link to="/conta" className={navLinkClass}>
-            Conta
-          </Link>
-        ) : (
-          <Link to="/entrar" className={navLinkClass}>
-            Entrar
-          </Link>
-        )}
-      </AppNav>
-      {floor.status === "below-floor" ? (
+
+  if (floor.status === "below-floor") {
+    return (
+      <div className="flex min-h-dvh flex-col justify-center bg-bg text-ink">
         <NoticeScreen
           title="Atualize o BrazCar"
+          glyph={<BrandMark size={64} />}
           action={
-            <ActionButton emphasis="primary" onPress={floor.update}>
-              Atualizar
+            <ActionButton emphasis="primary" icon={<Icon name="refresh" />} onPress={floor.update}>
+              Atualizar agora
             </ActionButton>
           }
         >
-          Esta versão ({floor.version}) não funciona mais. Atualize para continuar.
+          Esta versão ({floor.version}) ficou para trás e não conversa mais com o mural. A
+          atualização leva segundos e não apaga nada.
         </NoticeScreen>
+      </div>
+    );
+  }
+
+  const offline = network === "offline";
+  const tabs: readonly Tab[] = [
+    { to: "/", label: "Caronas", icon: "board" },
+    { to: "/publicar", label: "Publicar", icon: "plus", primary: true },
+    { to: "/minhas-caronas", label: "Minhas", icon: "route" },
+    session.status === "signed-in"
+      ? { to: "/conta", label: "Conta", icon: "user" }
+      : { to: "/entrar", label: "Entrar", icon: "user" },
+  ];
+  return (
+    <div className="flex min-h-dvh flex-col bg-bg text-ink">
+      {/* Online-only (D-051): without a network the page stays mounted, so a form being typed is
+          not lost, but it is dimmed and takes no input until the connection is back. */}
+      <div
+        inert={offline}
+        className={`flex flex-1 flex-col pt-[env(safe-area-inset-top)] ${offline ? "shell-dimmed" : ""}`}
+      >
+        <Outlet />
+      </div>
+      {offline ? (
+        <Toast
+          role="alert"
+          placement="top"
+          icon={<Icon name="wifioff" size={16} />}
+          iconTone="brand"
+        >
+          Sem internet. O mural volta sozinho quando a conexão voltar.
+        </Toast>
       ) : (
-        <>
-          {network === "offline" ? (
-            // Online-only (D-051): nothing from the API is shown without a network, not even the old
-            // board. The page stays mounted under this screen, so a form being typed is not lost.
-            <NoticeScreen title="Sem internet">
-              O BrazCar precisa de internet. Assim que a conexão voltar, esta tela some sozinha.
-            </NoticeScreen>
-          ) : (
-            <AppShellNotices />
-          )}
-          <div hidden={network === "offline"} className="flex flex-1 flex-col">
-            <Outlet />
-          </div>
-        </>
+        <ShellOverlays />
       )}
-      <AppFooter>BrazCar {floor.version}</AppFooter>
+      <TabBar tabs={tabs} />
     </div>
   );
 }
