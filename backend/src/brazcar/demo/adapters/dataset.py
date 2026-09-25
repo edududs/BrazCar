@@ -99,14 +99,17 @@ SUITE_PHONES: tuple[str, ...] = (
     "+5561900000019",
     "+5561900000020",
     "+5561900000021",
+    "+5561900000022",
+    "+5561900000023",
+    "+5561900000024",
 )
 """Reserved for the accounts the end to end suite creates itself. The seed never writes them; the
 teardown forgets them, so a suite that signs up starts from an empty phone every run. One per
 project and per journey, because `mobile`, `desktop` and `mobile-dark` share the one database of a
-run (`workers: 1`): sign-up, deleting the account it just created, changing its password, and
-editing its profile, each taking the phone at `journey * projects + project`. A
-seeded account never has its password or e-mail changed by a test, so the second project to touch it
-in the same run still finds what the manifest promised."""
+run (`workers: 1`): sign-up, deleting the account it just created, changing its password,
+editing its profile, and signing in with a wrong password first, each taking the phone at
+`journey * projects + project`. A seeded account never has its password or e-mail changed by a
+test, so the second project to touch it in the same run still finds what the manifest promised."""
 
 PEOPLE: tuple[DemoPerson, ...] = (
     DRIVER_ONE_CAR,

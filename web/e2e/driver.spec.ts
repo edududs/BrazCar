@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 
 import { chooseDeparture } from "./support/departure";
 import { expect, openRide, test } from "./support/fixtures";
-import { instant, localInput } from "./support/time";
+import { instant, localInput, sameDayShift } from "./support/time";
 
 /**
  * O motorista: publicar, editar, mexer nas vagas, cancelar e repetir.
@@ -200,10 +200,14 @@ test("editar: o mesmo dia passa, outro dia é recusado", async ({
   publishFor,
   snap,
 }) => {
+  // Thirteen hours from the anchor falls today or tomorrow depending on the hour the suite runs:
+  // everything below reads the ride's own day instead of naming one.
+  const departure = 13 * 60;
+  const moved = sameDayShift(demo.anchor, departure, 30);
   await signIn(page, "driver_one_car");
   const rideId = await publishFor(page, "driver_one_car", {
     stops: ["ouro-verde", "brasil-21"],
-    departureAt: instant(demo.anchor, 13 * 60),
+    departureAt: instant(demo.anchor, departure),
   });
   await page.goto(`/caronas/${rideId}/editar`);
 
@@ -214,15 +218,24 @@ test("editar: o mesmo dia passa, outro dia é recusado", async ({
   await expect(page.getByLabel("Vagas")).toHaveCount(0);
   await snap(page, "edit/form");
 
-  // Outro dia é outra carona: a folha já vem com os outros dias apagados e a frase explica (F7).
+  // Outro dia é outra carona: na folha, só o dia da carona fica aceso; os outros cartões e o
+  // calendário ficam apagados, e a frase explica (F7).
   await page.getByRole("button", { name: /^Dia:/ }).click();
   const sheet = page.getByRole("dialog");
-  await expect(sheet.getByRole("button", { name: /^Amanhã/ })).toBeDisabled();
+  const dayCards = sheet.getByRole("button", {
+    name: /^(Hoje|Amanhã|Dom|Seg|Ter|Qua|Qui|Sex|Sáb)/,
+  });
+  await expect(dayCards).toHaveCount(4);
+  await expect(dayCards.and(sheet.getByRole("button", { pressed: true }))).toBeEnabled();
+  for (const card of await dayCards.and(sheet.getByRole("button", { pressed: false })).all()) {
+    await expect(card).toBeDisabled();
+  }
+  await expect(sheet.getByRole("button", { name: "Outro dia" })).toBeDisabled();
   await expect(sheet.getByText("Para outro dia, use Repetir.")).toBeVisible();
   await snap(page, "edit/other-day-refused");
   await sheet.getByRole("button", { name: "Fechar" }).click();
 
-  await chooseDeparture(page, localInput(demo.anchor, 13 * 60 + 30));
+  await chooseDeparture(page, localInput(demo.anchor, moved));
   await page.getByLabel("Observações").fill("Mudei o horário: saio meia hora depois.");
   await page.getByRole("button", { name: "Salvar" }).click();
 

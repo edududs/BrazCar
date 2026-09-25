@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -38,8 +38,32 @@ export interface RideToPublish {
 /** Publishes a ride for the signed-in account and hands back its identifier. */
 export type PublishFor = (page: Page, slug: string, ride: RideToPublish) => Promise<string>;
 
-/** The session cookies already obtained, by account slug. One login per account per run. */
-const sessions = new Map<string, Awaited<ReturnType<BrowserContext["cookies"]>>>();
+type Cookies = Awaited<ReturnType<BrowserContext["cookies"]>>;
+
+/**
+ * The session cookies already obtained, by account slug: one login per account per run. Kept in a
+ * file of the run too, because a failed test is retried in a fresh worker that starts with an empty
+ * memory; without the file each retry logged every account in again, spent the ten attempts a
+ * phone gets every fifteen minutes (D-097), and one failure brought down the rest in a cascade.
+ * The global setup empties the file at the start of every run.
+ */
+export const sessionsFile = path.join(here, "..", ".state", "sessions.json");
+
+function readSessions(): Record<string, Cookies> {
+  try {
+    return JSON.parse(readFileSync(sessionsFile, "utf8")) as Record<string, Cookies>;
+  } catch {
+    return {};
+  }
+}
+
+function keepSession(slug: string, cookies: Cookies | null): void {
+  const all = readSessions();
+  if (cookies === null) Reflect.deleteProperty(all, slug);
+  else all[slug] = cookies;
+  mkdirSync(path.dirname(sessionsFile), { recursive: true });
+  writeFileSync(sessionsFile, JSON.stringify(all), "utf8");
+}
 
 interface Fixtures {
   demo: DemoManifest;
@@ -114,11 +138,11 @@ export const test = base.extend<Fixtures>({
   // A session someone logged out of no longer answers, and then it is asked for anew.
   signIn: async ({ demo }, use) => {
     await use(async (page, slug) => {
-      const kept = sessions.get(slug);
+      const kept = readSessions()[slug];
       if (kept !== undefined) {
         await page.context().addCookies(kept);
         if ((await page.request.get(`${apiOrigin}/api/accounts/me`)).ok()) return;
-        sessions.delete(slug);
+        keepSession(slug, null);
       }
       const account = demo.account(slug);
       const response = await page.request.post(`${apiOrigin}/api/accounts/login`, {
@@ -126,7 +150,7 @@ export const test = base.extend<Fixtures>({
         data: { phone: account.phone, password: account.password },
       });
       expect(response.ok(), `sign in as ${slug}: ${await response.text()}`).toBe(true);
-      sessions.set(slug, await page.context().cookies());
+      keepSession(slug, await page.context().cookies());
     });
   },
 

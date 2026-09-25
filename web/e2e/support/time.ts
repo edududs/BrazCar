@@ -42,3 +42,18 @@ export function instant(anchor: string, minutes: number): string {
 export function clockOf(instantIso: string): string {
   return clockParts.format(new Date(instantIso));
 }
+
+/** `2026-09-25`: the local day of a moment counted from the anchor, in the board's zone. */
+export function localDayOf(anchor: string, minutes: number): string {
+  return localInput(anchor, minutes).slice(0, 10);
+}
+
+/**
+ * A moment on the same local day as `minutes`, `step` away from it: later when that stays on the
+ * day, earlier otherwise. The suite runs at any hour, and a ride near midnight must not be moved
+ * into the next day by a test that means "the same day".
+ */
+export function sameDayShift(anchor: string, minutes: number, step: number): number {
+  const later = minutes + step;
+  return localDayOf(anchor, later) === localDayOf(anchor, minutes) ? later : minutes - step;
+}

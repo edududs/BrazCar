@@ -42,6 +42,16 @@ suíte roda nos três; o `yarn screens` fotografa só os dois primeiros, porque 
 claro. Para ver o escuro: `yarn screens --project=mobile-dark`, que grava em
 `docs/screens/mobile-dark/` e entra no catálogo enquanto as imagens existirem.
 
+A suíte roda a qualquer hora do dia, e a semente conta tudo a partir do momento em que roda. Um
+teste que depende de "hoje" ou "amanhã" lê o dia da própria carona (`localDayOf`, `sameDayShift` em
+`e2e/support/time.ts`), nunca escreve "Amanhã" literal: às 11h em Brasília, treze horas depois já é
+amanhã. A `v0.20.0` falhou no GitHub exatamente assim, verde de manhã aqui.
+
+O login tem limite de dez tentativas por telefone a cada quinze minutos (D-097). Por isso as sessões
+obtidas ficam num arquivo da rodada (`e2e/.state/sessions.json`, zerado no início), que sobrevive à
+troca de processo de cada nova tentativa do GitHub, e teste que erra a senha de propósito usa uma
+conta própria, nunca uma da semente. Sem isso, uma falha vira cascata de "muitas tentativas".
+
 O relatório HTML e os traces ficam em `web/e2e/.state/` e não são versionados. As imagens e o
 `docs/screens/README.md`, sim.
 

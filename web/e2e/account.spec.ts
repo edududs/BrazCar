@@ -1,4 +1,5 @@
 import { expect, test } from "./support/fixtures";
+import { apiOrigin, webOrigin } from "./support/origins";
 
 /** Entrar no BrazCar: criar conta, entrar, recuperar a senha e cuidar dos carros. */
 
@@ -42,19 +43,34 @@ test("criar conta: os erros aparecem e a conta entra direto no mural", async ({
   await expect(page.getByText(`(${area}) ${rest.slice(0, 5)}-${rest.slice(5)}`)).toBeVisible();
 });
 
-test("entrar: senha errada é recusada e a certa leva ao mural", async ({ page, demo, snap }) => {
-  const driver = demo.account("driver_one_car");
+test("entrar: senha errada é recusada e a certa leva ao mural", async ({
+  page,
+  demo,
+  sparePhone,
+  snap,
+}) => {
+  // Conta própria deste teste: uma senha errada gasta tentativas do telefone (D-097), e gastar as
+  // de uma conta da semente derrubava, em cascata, todo teste seguinte que entra com ela.
+  const phone = demo.suitePhoneAt(sparePhone(4));
+  const password = "uma-senha-de-demonstracao";
+  const created = await page.request.post(`${apiOrigin}/api/accounts/register`, {
+    headers: { Origin: webOrigin },
+    data: { phone, password, display_name: "Conta Para Entrar", accepts_terms: true },
+  });
+  expect(created.ok(), await created.text()).toBe(true);
+  await page.context().clearCookies();
+
   await page.goto("/entrar");
   await expect(page.getByRole("heading", { name: "Entrar", level: 1 })).toBeVisible();
   await snap(page, "login/empty");
 
-  await page.getByLabel("Celular").fill(driver.phone);
+  await page.getByLabel("Celular").fill(phone);
   await page.getByLabel(/^Senha/).fill("senha-que-nao-e-a-dela");
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page.getByText("telefone ou senha incorretos")).toBeVisible();
   await snap(page, "login/wrong-password");
 
-  await page.getByLabel(/^Senha/).fill(driver.password);
+  await page.getByLabel(/^Senha/).fill(password);
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("link", { name: "Conta" })).toBeVisible();

@@ -295,6 +295,16 @@ carona que outro contexto acabou de publicar (SSE); excluir a conta pelo diálog
 telefone dela deixando de servir para entrar, e a página em português para todo endereço que não é
 rota nenhuma.
 
+**O workflow `e2e` da `v0.20.0` falhou no GitHub (11 falhas) e passava aqui:** teste frágil, não
+defeito de produto. O teste de editar publicava a carona em âncora + 13 h e afirmava o cartão
+"Amanhã" apagado; a rodada começou às 11:07 em Brasília, a carona caiu no dia seguinte, e o cartão
+dela, corretamente, estava aceso. Reproduzido aqui depois das 11h e corrigido: o teste lê o dia da
+própria carona. As outras falhas eram cascata do limite de login: o teste de senha errada gastava as
+tentativas da conta de motorista da semente e cada nova tentativa do GitHub, num processo novo,
+logava tudo de novo. Agora esse teste cria a própria conta (a semente reserva quinze telefones) e
+as sessões ficam num arquivo da rodada. Verificado com a suíte inteira às 12:50 em Brasília, com uma
+nova tentativa por teste como no GitHub: 161 verdes.
+
 **Verificado de verdade no passo 5 do design:** portão rápido (472 no backend, 225 no front: 58
 novos, entre eles a bateria de uso, o catálogo de movimento e o aviso por navegação), portão pesado
 do front, a suíte de ponta a ponta verde nos três projetos (161 casos, 1 pulado), com a saída
