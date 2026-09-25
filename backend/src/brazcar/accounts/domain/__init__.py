@@ -11,6 +11,7 @@ from .errors import (
     PhoneAlreadyRegisteredError,
     PlateAlreadyOnAccountError,
     TooManyAttemptsError,
+    WrongCurrentPasswordError,
 )
 from .license_plate import LicensePlate, normalize_license_plate
 
@@ -31,6 +32,7 @@ __all__ = [
     "PhoneAlreadyRegisteredError",
     "PlateAlreadyOnAccountError",
     "TooManyAttemptsError",
+    "WrongCurrentPasswordError",
     "account_phone",
     "normalize_license_plate",
 ]

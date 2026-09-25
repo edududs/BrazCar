@@ -107,8 +107,77 @@ test("nome social longo cabe na conta", async ({ page, demo, signIn, snap }) => 
   await signIn(page, "long_name");
   await page.goto("/conta");
 
-  await expect(page.getByText(demo.account("long_name").displayName)).toBeVisible();
+  await expect(page.getByLabel("Nome social")).toHaveValue(demo.account("long_name").displayName);
   await snap(page, "account/long-name");
+});
+
+test("editar dados: quem não tem e-mail pode adicionar um, e ele fica depois de recarregar", async ({
+  page,
+  demo,
+  isMobile,
+  snap,
+}) => {
+  // Conta própria deste teste, como a de excluir e a de trocar a senha: editar o e-mail de uma
+  // conta da semente afetaria a outra jornada quando os dois projetos dividem o mesmo banco.
+  const phone = demo.suitePhoneAt(isMobile ? 6 : 7);
+  const password = "uma-senha-de-demonstracao";
+  await page.goto("/cadastro");
+  await page.getByLabel("Telefone").fill(phone);
+  await page.getByLabel("Nome").fill("Conta Para Editar Dados");
+  await page.getByLabel(/^Senha/).fill(password);
+  await page.getByLabel("Li e aceito os termos").check();
+  await page.getByRole("button", { name: "Criar conta" }).click();
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/conta");
+  await expect(page.getByText("Sem e-mail você não recupera a senha.")).toBeVisible();
+  await snap(page, "account/profile-edit");
+
+  await page.getByLabel("E-mail").fill("conta-para-editar@example.org");
+  await page.getByRole("button", { name: "Salvar dados" }).click();
+  await expect(page.getByText("Dados salvos.")).toBeVisible();
+  await snap(page, "account/profile-saved");
+
+  await page.reload();
+  await expect(page.getByLabel("E-mail")).toHaveValue("conta-para-editar@example.org");
+  await expect(page.getByText("Sem e-mail você não recupera a senha.")).toBeHidden();
+});
+
+test("trocar a senha: a nova senha funciona depois de sair e entrar de novo", async ({
+  page,
+  demo,
+  isMobile,
+  snap,
+}) => {
+  // Conta própria deste teste, como a de excluir: mudar a senha de uma conta da semente afetaria
+  // as outras jornadas que dividem o mesmo banco.
+  const phone = demo.suitePhoneAt(isMobile ? 4 : 5);
+  const oldPassword = "uma-senha-de-demonstracao";
+  const newPassword = "outra-senha-de-demonstracao";
+  await page.goto("/cadastro");
+  await page.getByLabel("Telefone").fill(phone);
+  await page.getByLabel("Nome").fill("Conta Para Trocar Senha");
+  await page.getByLabel(/^Senha/).fill(oldPassword);
+  await page.getByLabel("Li e aceito os termos").check();
+  await page.getByRole("button", { name: "Criar conta" }).click();
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/conta");
+  await page.getByLabel("Senha atual").fill(oldPassword);
+  await page.getByLabel("Nova senha").fill(newPassword);
+  await page.getByRole("button", { name: "Salvar senha" }).click();
+  await expect(page.getByText("Senha alterada.")).toBeVisible();
+  await snap(page, "account/password-changed");
+
+  await page.getByRole("button", { name: "Sair da conta" }).click();
+  await expect(page.getByText("Você não está conectado.")).toBeVisible();
+
+  await page.goto("/entrar");
+  await page.getByLabel("Telefone").fill(phone);
+  await page.getByLabel(/^Senha/).fill(newPassword);
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("link", { name: "Conta" })).toBeVisible();
 });
 
 test("carros: cadastrar, ver na lista e remover", async ({ page, signIn, snap }) => {

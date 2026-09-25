@@ -37,6 +37,17 @@ export interface CarData {
   readonly plate: string;
 }
 
+/** What `PATCH /accounts/me` changes. Absent means unchanged; an empty e-mail clears it (D-139). */
+export interface ProfileChanges {
+  readonly displayName?: string;
+  readonly email?: string;
+}
+
+export interface ChangePasswordData {
+  readonly currentPassword: string;
+  readonly newPassword: string;
+}
+
 /** What the API refused, in words the screen can show. */
 export class AccountRequestError extends Error {
   constructor(

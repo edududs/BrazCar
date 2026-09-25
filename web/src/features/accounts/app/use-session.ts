@@ -8,8 +8,9 @@ import {
   logOut,
   removeCar,
   signUp,
+  updateProfile,
 } from "../adapters/accounts-gateway";
-import type { Account, CarData, LoginData, SignupData } from "../domain/account";
+import type { Account, CarData, LoginData, ProfileChanges, SignupData } from "../domain/account";
 import type { Session } from "../domain/session";
 
 export const SESSION_KEY = ["session"] as const;
@@ -20,6 +21,7 @@ export interface SessionActions {
   readonly signUp: (data: SignupData) => Promise<Account>;
   readonly logIn: (data: LoginData) => Promise<Account>;
   readonly logOut: () => Promise<void>;
+  readonly updateProfile: (changes: ProfileChanges) => Promise<Account>;
   readonly addCar: (data: CarData) => Promise<Account>;
   readonly removeCar: (carId: string) => Promise<Account>;
   readonly deleteAccount: () => Promise<void>;
@@ -47,6 +49,7 @@ export function useSession(): SessionActions {
       remember(null);
     },
   });
+  const updateProfileMutation = useMutation({ mutationFn: updateProfile, onSuccess: remember });
   const addCarMutation = useMutation({ mutationFn: addCar, onSuccess: remember });
   const removeCarMutation = useMutation({ mutationFn: removeCar, onSuccess: remember });
   const deleteMutation = useMutation({
@@ -68,6 +71,7 @@ export function useSession(): SessionActions {
     signUp: signUpMutation.mutateAsync,
     logIn: logInMutation.mutateAsync,
     logOut: logOutMutation.mutateAsync,
+    updateProfile: updateProfileMutation.mutateAsync,
     addCar: addCarMutation.mutateAsync,
     removeCar: removeCarMutation.mutateAsync,
     deleteAccount: deleteMutation.mutateAsync,
@@ -75,6 +79,7 @@ export function useSession(): SessionActions {
       signUpMutation,
       logInMutation,
       logOutMutation,
+      updateProfileMutation,
       addCarMutation,
       removeCarMutation,
       deleteMutation,

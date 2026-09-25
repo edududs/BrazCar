@@ -70,8 +70,12 @@ class Schedule:
     CANCELLED = 420
     TOMORROW_EDITED = 26 * 60
     TOMORROW_EDITED_DELAYED = 26 * 60 + 30
-    TOMORROW_MANY_STOPS = 27 * 60
-    TOMORROW_REPEATED = 28 * 60
+    # Kept under 27h on purpose: at 27h or more, an anchor already late in the evening (21h or
+    # past it) pushes the departure past a *second* midnight, so "tomorrow" becomes some third
+    # calendar day and the seed no longer covers exactly three days (D-133, seen in practice
+    # when the seed ran at 21h and both landed on the same extra day).
+    TOMORROW_MANY_STOPS = 26 * 60 + 40
+    TOMORROW_REPEATED = 26 * 60 + 50
     OTHER_DAY = 74 * 60
 
 

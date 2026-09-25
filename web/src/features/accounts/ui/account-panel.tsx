@@ -6,12 +6,15 @@ import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Form } from "@/shared/ui/form";
 import { TextField } from "@/shared/ui/text-field";
 
-import type { Account, CarData } from "../domain/account";
+import type { Account, CarData, ChangePasswordData, ProfileChanges } from "../domain/account";
 import { reasonOf } from "./reason";
 
 interface AccountPanelProps {
   readonly account: Account;
   readonly busy: boolean;
+  readonly updateProfile: (changes: ProfileChanges) => Promise<Account>;
+  readonly changePassword: (data: ChangePasswordData) => Promise<void>;
+  readonly passwordBusy: boolean;
   readonly addCar: (data: CarData) => Promise<Account>;
   readonly removeCar: (carId: string) => Promise<Account>;
   readonly logOut: () => Promise<void>;
@@ -24,6 +27,9 @@ interface AccountPanelProps {
 export function AccountPanel({
   account,
   busy,
+  updateProfile,
+  changePassword,
+  passwordBusy,
   addCar,
   removeCar,
   logOut,
@@ -39,8 +45,12 @@ export function AccountPanel({
     <div className="flex flex-col gap-4">
       <Card>
         <h2 className="text-base font-semibold">Seus dados</h2>
-        <p className="text-sm">{account.displayName}</p>
-        <p className="text-sm opacity-70">{account.phoneDisplay}</p>
+        <ProfileForm account={account} busy={busy} updateProfile={updateProfile} />
+      </Card>
+
+      <Card>
+        <h2 className="text-base font-semibold">Senha</h2>
+        <PasswordForm changePassword={changePassword} busy={passwordBusy} />
       </Card>
 
       <Card>
@@ -136,6 +146,126 @@ function DeleteAccountControl({
         }}
       />
     </>
+  );
+}
+
+interface ProfileFormProps {
+  readonly account: Account;
+  readonly busy: boolean;
+  readonly updateProfile: (changes: ProfileChanges) => Promise<Account>;
+}
+
+/** Nome social and e-mail, the only personal data the account edits by itself (D-139). The phone
+ * is shown, never edited: it is the account's identity, and nothing proves a new one is still the
+ * same owner yet (D-027). */
+function ProfileForm({ account, busy, updateProfile }: ProfileFormProps) {
+  const [displayName, setDisplayName] = useState(account.displayName);
+  const [email, setEmail] = useState(account.email ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const submit = () => {
+    setError(null);
+    setSaved(false);
+    const nameChanged = displayName !== account.displayName;
+    const emailChanged = email !== (account.email ?? "");
+    if (!nameChanged && !emailChanged) return;
+    const changes: ProfileChanges = {
+      ...(nameChanged ? { displayName } : {}),
+      ...(emailChanged ? { email } : {}),
+    };
+    updateProfile(changes).then(
+      (updated) => {
+        setDisplayName(updated.displayName);
+        setEmail(updated.email ?? "");
+        setSaved(true);
+      },
+      (reason: unknown) => {
+        setError(reasonOf(reason));
+      },
+    );
+  };
+
+  return (
+    <Form onSubmit={submit} error={error}>
+      <p className="text-sm">{account.phoneDisplay}</p>
+      <p className="text-xs opacity-70">O telefone não muda por aqui.</p>
+      <TextField label="Nome social" value={displayName} onChange={setDisplayName} required />
+      <TextField
+        label="E-mail"
+        value={email}
+        onChange={setEmail}
+        type="email"
+        inputMode="email"
+        hint={email === "" ? "Sem e-mail você não recupera a senha." : undefined}
+      />
+      <div className="flex items-center gap-3">
+        <ActionButton submit emphasis="primary" disabled={busy}>
+          Salvar dados
+        </ActionButton>
+        {saved ? <p className="text-xs text-positive">Dados salvos.</p> : null}
+      </div>
+    </Form>
+  );
+}
+
+interface PasswordFormProps {
+  readonly busy: boolean;
+  readonly changePassword: (data: ChangePasswordData) => Promise<void>;
+}
+
+const emptyPasswordChange: ChangePasswordData = { currentPassword: "", newPassword: "" };
+
+/** Its own path to a new password, separate from the personal data above (D-139). */
+function PasswordForm({ busy, changePassword }: PasswordFormProps) {
+  const [data, setData] = useState<ChangePasswordData>(emptyPasswordChange);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const submit = () => {
+    setError(null);
+    setSaved(false);
+    changePassword(data).then(
+      () => {
+        setData(emptyPasswordChange);
+        setSaved(true);
+      },
+      (reason: unknown) => {
+        setError(reasonOf(reason));
+      },
+    );
+  };
+
+  return (
+    <Form onSubmit={submit} error={error}>
+      <TextField
+        label="Senha atual"
+        value={data.currentPassword}
+        onChange={(value) => {
+          setData((current) => ({ ...current, currentPassword: value }));
+        }}
+        type="password"
+        autoComplete="current-password"
+        required
+      />
+      <TextField
+        label="Nova senha"
+        value={data.newPassword}
+        onChange={(value) => {
+          setData((current) => ({ ...current, newPassword: value }));
+        }}
+        type="password"
+        autoComplete="new-password"
+        hint="Pelo menos 8 caracteres."
+        required
+      />
+      <div className="flex items-center gap-3">
+        <ActionButton submit emphasis="primary" disabled={busy}>
+          Salvar senha
+        </ActionButton>
+        {saved ? <p className="text-xs text-positive">Senha alterada.</p> : null}
+      </div>
+    </Form>
   );
 }
 

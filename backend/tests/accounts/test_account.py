@@ -134,3 +134,41 @@ def test_cars_can_be_added_and_removed_in_any_order(plates: list[str]) -> None:
     for car in reversed(account.cars):
         account = account.remove_car(car.id)
     assert account.cars == ()
+
+
+def test_update_profile_touches_only_what_is_given() -> None:
+    account = register(email="ana@example.com")
+
+    renamed = account.update_profile(display_name="Ana Paula")
+
+    assert renamed.display_name == "Ana Paula"
+    assert renamed.email == "ana@example.com"
+    assert renamed.phone == account.phone
+
+
+def test_update_profile_with_nothing_given_is_the_same_account() -> None:
+    account = register()
+
+    assert account.update_profile() is account
+
+
+def test_update_profile_blank_email_clears_it() -> None:
+    account = register(email="ana@example.com")
+
+    cleared = account.update_profile(email="")
+
+    assert cleared.email is None
+
+
+def test_update_profile_refuses_a_blank_display_name() -> None:
+    account = register()
+
+    with pytest.raises(ValidationError):
+        account.update_profile(display_name="   ")
+
+
+def test_update_profile_refuses_an_email_that_is_not_one() -> None:
+    account = register()
+
+    with pytest.raises(ValidationError):
+        account.update_profile(email="not-an-email")

@@ -213,6 +213,24 @@
         "title": "CarOut",
         "type": "object"
       },
+      "ChangePasswordIn": {
+        "properties": {
+          "current_password": {
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordIn",
+        "type": "object"
+      },
       "ContactOut": {
         "properties": {
           "phone_display": {
@@ -483,6 +501,35 @@
           "parent_id"
         ],
         "title": "PlaceOut",
+        "type": "object"
+      },
+      "ProfileIn": {
+        "description": "Every field optional: absent means unchanged; a blank e-mail clears it (D-139).",
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "title": "ProfileIn",
         "type": "object"
       },
       "PublishIn": {
@@ -1085,6 +1132,80 @@
           }
         ],
         "summary": "Me",
+        "tags": [
+          "accounts"
+        ]
+      },
+      "patch": {
+        "description": "The display name and the e-mail only: the phone and the password have their own path.",
+        "operationId": "update_profile",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Update Profile",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/me/password": {
+      "post": {
+        "description": "The current password proves it is really the owner, session or not (D-139).",
+        "operationId": "change_password",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Done"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Change Password",
         "tags": [
           "accounts"
         ]

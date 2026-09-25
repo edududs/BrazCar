@@ -5,12 +5,14 @@ from ninja import Router
 
 from brazcar.accounts.application import (
     AddCar,
+    ChangePassword,
     DeleteAccount,
     LogIn,
     RegisterAccount,
     RemoveCar,
     RequestPasswordReset,
     ResetPassword,
+    UpdateProfile,
 )
 from brazcar.shared.adapters.clock import SystemClock
 from brazcar.shared.adapters.mail import DjangoMailer
@@ -30,6 +32,8 @@ def accounts_router() -> Router:
         accounts=accounts,
         register=RegisterAccount(accounts, credentials, SystemClock()),
         log_in=LogIn(accounts, credentials, limiter),
+        update_profile=UpdateProfile(accounts),
+        change_password=ChangePassword(accounts, credentials, limiter),
         add_car=AddCar(accounts),
         remove_car=RemoveCar(accounts),
         request_password_reset=RequestPasswordReset(

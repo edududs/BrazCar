@@ -68,6 +68,32 @@ class AccountRepositoryContract:
         assert await repository.get(one.id) == one
         assert await repository.get(other.id) is None
 
+    @contract_settings
+    @given(account=accounts())
+    async def test_updating_the_display_name_and_email_persists(self, account: Account) -> None:
+        repository = self.make_repository()
+        await self._free(repository, account.phone)
+        await repository.save(account)
+
+        changed = account.update_profile(display_name="Nome Novo", email="novo@example.com")
+        await repository.save(changed)
+
+        assert await repository.get(account.id) == changed
+
+    @contract_settings
+    @given(account=accounts())
+    async def test_clearing_the_email_persists(self, account: Account) -> None:
+        repository = self.make_repository()
+        with_email = account.update_profile(email="tinha@example.com")
+        await self._free(repository, with_email.phone)
+        await repository.save(with_email)
+
+        cleared = with_email.update_profile(email="")
+        await repository.save(cleared)
+
+        assert await repository.get(account.id) == cleared
+        assert cleared.email is None
+
     async def test_unknown_id_and_phone_load_as_none(self) -> None:
         repository = self.make_repository()
 

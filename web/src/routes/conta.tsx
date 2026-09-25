@@ -1,5 +1,6 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
+import { useChangePassword } from "@/features/accounts/app/use-change-password";
 import { useSession } from "@/features/accounts/app/use-session";
 import { AccountPanel } from "@/features/accounts/ui/account-panel";
 import { PageShell } from "@/shared/ui/page-shell";
@@ -7,7 +8,8 @@ import { PageShell } from "@/shared/ui/page-shell";
 export const Route = createFileRoute("/conta")({ component: AccountPage });
 
 function AccountPage() {
-  const { session, busy, addCar, removeCar, logOut, deleteAccount } = useSession();
+  const { session, busy, updateProfile, addCar, removeCar, logOut, deleteAccount } = useSession();
+  const { changePassword, busy: passwordBusy } = useChangePassword();
   const navigate = useNavigate();
   return (
     <PageShell title="Minha conta">
@@ -24,6 +26,9 @@ function AccountPage() {
         <AccountPanel
           account={session.account}
           busy={busy}
+          updateProfile={updateProfile}
+          changePassword={changePassword}
+          passwordBusy={passwordBusy}
           addCar={addCar}
           removeCar={removeCar}
           logOut={logOut}

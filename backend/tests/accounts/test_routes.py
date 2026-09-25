@@ -40,6 +40,10 @@ class Browser:
     async def post(self, path: str, data: object = None, *, origin: str = FRONT) -> HttpResponse:
         return await self.client.post(path, data, content_type="application/json", headers={"Origin": origin})
 
+    async def patch(self, path: str, data: object = None, *, origin: str = FRONT) -> HttpResponse:
+        headers = {"Origin": origin}
+        return await self.client.patch(path, data, content_type="application/json", headers=headers)
+
     async def delete(self, path: str, *, origin: str = FRONT) -> HttpResponse:
         return await self.client.delete(path, headers={"Origin": origin})
 
@@ -191,6 +195,107 @@ async def test_password_reset_goes_by_email_and_the_link_works_once() -> None:
     assert changed.status_code == HTTPStatus.OK
     assert reused.status_code == HTTPStatus.BAD_REQUEST
     assert login.status_code == HTTPStatus.OK
+
+
+async def test_updating_the_profile_changes_only_what_is_sent() -> None:
+    client = browser()
+    await register(client)
+
+    renamed = await client.patch("/api/accounts/me", {"display_name": "Ana Paula"})
+    me = await client.get("/api/accounts/me")
+
+    assert renamed.status_code == HTTPStatus.OK
+    assert body(renamed)["display_name"] == "Ana Paula"
+    assert body(renamed)["email"] == ANA["email"]  # untouched: it was absent from the body
+    assert body(me) == body(renamed)
+
+
+async def test_updating_the_profile_without_a_session_is_refused() -> None:
+    refused = await browser().patch("/api/accounts/me", {"display_name": "Outro Nome"})
+
+    assert refused.status_code == HTTPStatus.UNAUTHORIZED
+
+
+async def test_a_blank_display_name_is_refused() -> None:
+    client = browser()
+    await register(client)
+
+    refused = await client.patch("/api/accounts/me", {"display_name": "   "})
+
+    assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+    assert body(refused) == {"detail": "nome social não pode ficar vazio"}
+
+
+async def test_an_invalid_email_is_refused() -> None:
+    client = browser()
+    await register(client)
+
+    refused = await client.patch("/api/accounts/me", {"email": "not-an-email"})
+
+    assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+    assert body(refused) == {"detail": "e-mail inválido"}
+
+
+async def test_a_blank_email_clears_it() -> None:
+    client = browser()
+    await register(client)
+
+    cleared = await client.patch("/api/accounts/me", {"email": ""})
+
+    assert cleared.status_code == HTTPStatus.OK
+    assert body(cleared)["email"] is None
+
+
+async def test_changing_the_password_needs_the_current_one_and_then_it_works() -> None:
+    client = browser()
+    await register(client)
+
+    wrong = await client.post(
+        "/api/accounts/me/password",
+        {"current_password": "not it", "new_password": "another good one"},
+    )
+    weak = await client.post(
+        "/api/accounts/me/password",
+        {"current_password": ANA["password"], "new_password": "1234"},
+    )
+    changed = await client.post(
+        "/api/accounts/me/password",
+        {"current_password": ANA["password"], "new_password": "another good one"},
+    )
+    login = await client.post("/api/accounts/login", {"phone": ANA["phone"], "password": "another good one"})
+
+    assert wrong.status_code == HTTPStatus.FORBIDDEN
+    assert body(wrong) == {"detail": "senha atual não confere"}
+    assert weak.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+    assert changed.status_code == HTTPStatus.OK
+    assert login.status_code == HTTPStatus.OK
+
+
+async def test_changing_the_password_without_a_session_is_refused() -> None:
+    refused = await browser().post(
+        "/api/accounts/me/password",
+        {"current_password": "whatever", "new_password": "another good one"},
+    )
+
+    assert refused.status_code == HTTPStatus.UNAUTHORIZED
+
+
+async def test_changing_the_password_is_capped_like_a_login() -> None:
+    """Ten wrong attempts (`AccountLimits.login_attempts`, D-097) exhaust the very bucket login uses."""
+    client = browser()
+    await register(client)
+
+    for _ in range(10):
+        await client.post(
+            "/api/accounts/me/password",
+            {"current_password": "not it", "new_password": "another good one"},
+        )
+    capped = await client.post(
+        "/api/accounts/me/password",
+        {"current_password": ANA["password"], "new_password": "another good one"},
+    )
+
+    assert capped.status_code == HTTPStatus.TOO_MANY_REQUESTS
 
 
 async def test_deleting_the_account_erases_it_ends_the_session_and_frees_the_phone() -> None:

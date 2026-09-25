@@ -31,6 +31,15 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 - `accounts` (v0.4.0, limites na v0.5.0): `Account` com carros; `AccountId` é o UUID do usuário
   do Django (D-090); rotas em `/api/accounts`; sessão por cookie `brazcar_session`. Login estourado
   responde 429 e recuperação de senha estourada cai em silêncio (D-097).
+- `accounts` (passo curto, ainda sem tag, D-139): a própria conta edita nome social e e-mail por
+  `Account.update_profile` e o caso de uso `UpdateProfile`, atrás de `PATCH /api/accounts/me`
+  (`ProfileIn`, campos opcionais: ausente não muda, e-mail em branco limpa); e troca a senha
+  estando logada por `ChangePassword`, atrás de `POST /api/accounts/me/password`, com a senha
+  atual conferida pela porta `Credentials` e o mesmo balde de tentativas do login (`login:<telefone>`,
+  D-097), para uma sessão roubada não virar oráculo de força bruta. Telefone continua fora de
+  alcance até a verificação de posse (D-027). No front, "Seus dados" e "Senha" viraram formulários
+  na página da conta, com o telefone só mostrado; aviso "Sem e-mail você não recupera a senha"
+  perto do campo quando ele está vazio.
 - `rides` (v0.5.0): `RideOffer` com situação calculada (ADR-0003), regras de edição e atraso
   (ADR-0004), eventos gravados em tabela só de acréscimo na mesma transação (ADR-0005, ADR-0008),
   revisão do mural incrementada junto (ADR-0010). Paradas do catálogo conferidas (D-093), datas
@@ -211,7 +220,16 @@ O primitivo `shared/ui/availability-badge.tsx` não é usado por ninguém.
 - Texto dos termos de uso e de privacidade ainda não foi escrito (D-033); o cadastro já grava o
   aceite e a tela já mostra a frase, sem link.
 - Recuperação manual de senha para conta sem e-mail depende de admin, que só entra somente
-  leitura (D-087); até lá não há caminho.
+  leitura (D-087); quem se cadastrou sem e-mail agora pode acrescentar um pela edição de dados
+  pessoais (D-139) e passar a ter recuperação; sem isso, continua sem caminho.
+- `tests/demo/test_seed_demo.py::test_seeds_everything_it_promises` falhava dependendo da hora do
+  dia em que a semente rodava: `TOMORROW_MANY_STOPS` (27h da âncora) e `TOMORROW_REPEATED` (28h)
+  caíam num terceiro dia de calendário quando a âncora (truncada na hora cheia) já estava tarde da
+  noite, e `seeded.days` contava quatro dias em vez de três. Achado ao rodar o portão rápido, que o
+  `pre-commit` exige, num passo que por si não mexia em `demo/`; consertado ali mesmo, porque sem
+  isso nenhum commit deste passo passava pelo hook: os dois agora ficam a 26h40 e 26h50 da âncora,
+  a menos de uma hora de `TOMORROW_EDITED`/`TOMORROW_EDITED_DELAYED` (26h/26h30), então os quatro
+  sempre caem no mesmo dia de calendário entre si, qualquer que seja a hora cheia da âncora.
 - O `Catalog` é carregado inteiro a cada requisição de `places` e a cada listagem do mural
   (`labels`); cachear por revisão se pesar.
 - A normalização de texto existe duas vezes: `places/domain/search_key.py` e `search/domain/text.py`.

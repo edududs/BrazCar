@@ -9,6 +9,7 @@ from brazcar.accounts.domain import (
     InvalidCredentialsError,
     InvalidResetTokenError,
     TooManyAttemptsError,
+    WrongCurrentPasswordError,
     account_phone,
 )
 from brazcar.shared.application.ports import Clock, Mailer, RateLimiter
@@ -65,6 +66,52 @@ class LogIn:
         if account is None:
             raise InvalidCredentialsError
         return account
+
+
+@dataclass(frozen=True, slots=True)
+class UpdateProfile:
+    """The display name and the e-mail, the only personal data the account edits by itself (D-139).
+
+    Absent means unchanged; a blank e-mail clears it. The rule of what "absent" and "blank" mean
+    lives on `Account.update_profile`, not here.
+    """
+
+    accounts: AccountRepository
+
+    async def __call__(
+        self, account_id: AccountId, *, display_name: str | None = None, email: str | None = None
+    ) -> Account:
+        account = await _require(self.accounts, account_id)
+        changed = account.update_profile(display_name=display_name, email=email)
+        if changed is not account:
+            await self.accounts.save(changed)
+        return changed
+
+
+@dataclass(frozen=True, slots=True)
+class ChangePassword:
+    """The password's own path, separate from the profile (D-139): it needs the current one.
+
+    Goes through the same rate limit as `LogIn`, under the same key, so a stolen session cannot
+    use this route to brute-force the password once login itself is capped (D-097).
+    """
+
+    accounts: AccountRepository
+    credentials: Credentials
+    limiter: RateLimiter
+    limits: AccountLimits = AccountLimits()
+
+    async def __call__(self, account_id: AccountId, *, current_password: str, new_password: str) -> None:
+        account = await _require(self.accounts, account_id)
+        allowed = await self.limiter.acquire(
+            f"login:{account.phone.e164()}", limit=self.limits.login_attempts, window=self.limits.login_window
+        )
+        if not allowed:
+            raise TooManyAttemptsError
+        verified = await self.credentials.verify(account.phone, current_password)
+        if verified != account.id:
+            raise WrongCurrentPasswordError
+        await self.credentials.change(account.id, new_password)
 
 
 @dataclass(frozen=True, slots=True)

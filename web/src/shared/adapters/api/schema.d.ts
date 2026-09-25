@@ -87,6 +87,30 @@ export interface paths {
         delete: operations["delete_account"];
         options?: never;
         head?: never;
+        /**
+         * Update Profile
+         * @description The display name and the e-mail only: the phone and the password have their own path.
+         */
+        patch: operations["update_profile"];
+        trace?: never;
+    };
+    "/api/accounts/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change Password
+         * @description The current password proves it is really the owner, session or not (D-139).
+         */
+        post: operations["change_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -464,6 +488,13 @@ export interface components {
             /** Plate */
             plate: string;
         };
+        /** ChangePasswordIn */
+        ChangePasswordIn: {
+            /** Current Password */
+            current_password: string;
+            /** New Password */
+            new_password: string;
+        };
         /** ContactOut */
         ContactOut: {
             /** Phone Display */
@@ -565,6 +596,16 @@ export interface components {
             name: string;
             /** Parent Id */
             parent_id: string | null;
+        };
+        /**
+         * ProfileIn
+         * @description Every field optional: absent means unchanged; a blank e-mail clears it (D-139).
+         */
+        ProfileIn: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Email */
+            email?: string | null;
         };
         /** PublishIn */
         PublishIn: {
@@ -836,6 +877,54 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Done"];
+                };
+            };
+        };
+    };
+    update_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+        };
+    };
+    change_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordIn"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

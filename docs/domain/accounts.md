@@ -17,6 +17,8 @@
 | exclusão de conta | `DeleteAccount` | Caso de uso que apaga a conta no lugar (`erase`): dados pessoais somem, o identificador fica para o histórico. |
 | credenciais | `Credentials` | Porta: guarda e confere a senha. O domínio nunca a vê. |
 | aceite dos termos | `terms_accepted_at` | Quando a pessoa aceitou os termos no cadastro (D-033). |
+| editar dados pessoais | `Account.update_profile`, `UpdateProfile` | Nome social e e-mail, os únicos campos que a própria conta edita (D-139). |
+| trocar a senha | `ChangePassword` | Exige a senha atual, verificada pela porta `Credentials`; sem ela, não muda nada (D-139). |
 
 ## Invariantes
 
@@ -33,10 +35,22 @@
 existe desde a primeira migration e mora no adaptador, que reaproveita o hash de senha e a sessão
 do framework. O domínio não conhece `User`.
 
+## Edição de dados pessoais
+
+`PATCH /api/accounts/me` edita nome social e e-mail, os dois opcionais no corpo: campo ausente
+não muda, e-mail em branco (`""`) limpa o e-mail. Nome social, quando enviado, segue a mesma regra
+do cadastro (não pode ficar vazio). O telefone não está aqui: ele é a identidade da conta e a
+verificação de posse ainda não existe (D-027), então trocá-lo exigiria provar que a pessoa continua
+dona do número novo. A senha também não: ela tem o próprio caminho, `ChangePassword`
+(`POST /api/accounts/me/password`), com a senha atual conferida pela mesma porta `Credentials` que
+o login usa, e o mesmo limite de tentativas (D-097), para uma sessão roubada não virar oráculo de
+força bruta contra a senha de verdade.
+
 ## Recuperação de senha
 
-Por e-mail, quando informado (D-092). Sem e-mail, o pedido responde igual e nada é enviado;
-a recuperação manual fica para quando houver admin. Não há SMS.
+Por e-mail, quando informado (D-092). Sem e-mail, o pedido responde igual e nada é enviado; a
+pessoa pode agora adicionar um e-mail pela edição de dados pessoais e passar a ter recuperação; sem
+isso, a recuperação manual fica para quando houver admin. Não há SMS.
 
 ## Termos e privacidade
 

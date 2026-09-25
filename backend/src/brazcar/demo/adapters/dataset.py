@@ -91,10 +91,17 @@ SUITE_PHONES: tuple[str, ...] = (
     "+5561900000011",
     "+5561900000012",
     "+5561900000013",
+    "+5561900000014",
+    "+5561900000015",
+    "+5561900000016",
+    "+5561900000017",
 )
 """Reserved for the accounts the end to end suite creates itself. The seed never writes them; the
-teardown forgets them, so a suite that signs up starts from an empty phone every run. Two are spent
-on sign-up (one per project), two on deleting the account it just created (one per project)."""
+teardown forgets them, so a suite that signs up starts from an empty phone every run. Two per pair,
+one per project, because `mobile` and `desktop` share the one database of a run (`workers: 1`):
+sign-up, deleting the account it just created, changing its password, and editing its profile. A
+seeded account never has its password or e-mail changed by a test, so the second project to touch it
+in the same run still finds what the manifest promised."""
 
 PEOPLE: tuple[DemoPerson, ...] = (
     DRIVER_ONE_CAR,

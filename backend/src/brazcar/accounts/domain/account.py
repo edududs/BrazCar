@@ -74,3 +74,18 @@ class Account(FrozenModel):
         if all(car.id != car_id for car in self.cars):
             raise CarNotFoundError(car_id)
         return self.evolve(cars=tuple(car for car in self.cars if car.id != car_id))
+
+    def update_profile(self, *, display_name: str | None = None, email: str | None = None) -> Self:
+        """The only two fields the account edits about itself (D-139).
+
+        `None` leaves a field as is; an absent `display_name` never happens over HTTP, since it is
+        required, but a blank one is still refused here, by the same rule as registration. A blank
+        `email` clears it. The phone stays out of reach until there is a way to prove it is still
+        the same owner (D-027); the password has its own path (`ChangePassword`).
+        """
+        changes: dict[str, object] = {}
+        if display_name is not None:
+            changes["display_name"] = display_name
+        if email is not None:
+            changes["email"] = email or None
+        return self if not changes else self.evolve(**changes)

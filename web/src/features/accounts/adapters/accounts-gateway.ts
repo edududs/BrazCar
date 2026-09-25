@@ -5,11 +5,14 @@ import {
   type Account,
   AccountRequestError,
   type CarData,
+  type ChangePasswordData,
   type LoginData,
+  type ProfileChanges,
   type SignupData,
 } from "../domain/account";
 
 type AccountOut = components["schemas"]["AccountOut"];
+type ProfileIn = components["schemas"]["ProfileIn"];
 
 function toAccount(out: AccountOut): Account {
   return {
@@ -67,6 +70,22 @@ export async function logIn(input: LoginData): Promise<Account> {
 export async function logOut(): Promise<void> {
   const { response } = await apiClient.POST("/api/accounts/logout");
   if (!response.ok) throw new AccountRequestError(response.status, "Não foi possível sair.");
+}
+
+export async function updateProfile(changes: ProfileChanges): Promise<Account> {
+  const body: ProfileIn = {};
+  if (changes.displayName !== undefined) body.display_name = changes.displayName;
+  if (changes.email !== undefined) body.email = changes.email; // empty clears it (D-139)
+  const { data, error, response } = await apiClient.PATCH("/api/accounts/me", { body });
+  if (data === undefined) throw refused(response.status, error);
+  return toAccount(data);
+}
+
+export async function changePassword(input: ChangePasswordData): Promise<void> {
+  const { error, response } = await apiClient.POST("/api/accounts/me/password", {
+    body: { current_password: input.currentPassword, new_password: input.newPassword },
+  });
+  if (!response.ok) throw refused(response.status, error);
 }
 
 export async function addCar(input: CarData): Promise<Account> {

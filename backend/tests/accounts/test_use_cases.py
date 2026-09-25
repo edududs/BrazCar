@@ -3,12 +3,14 @@ import pytest
 from brazcar.accounts.application import (
     AccountLimits,
     AddCar,
+    ChangePassword,
     DeleteAccount,
     LogIn,
     RegisterAccount,
     RemoveCar,
     RequestPasswordReset,
     ResetPassword,
+    UpdateProfile,
 )
 from brazcar.accounts.domain import (
     AccountNotFoundError,
@@ -16,6 +18,7 @@ from brazcar.accounts.domain import (
     InvalidResetTokenError,
     PhoneAlreadyRegisteredError,
     TooManyAttemptsError,
+    WrongCurrentPasswordError,
 )
 from tests.shared.fakes import InMemoryRateLimiter
 
@@ -50,6 +53,8 @@ class Context:
             self.limits,
         )
         self.reset = ResetPassword(self.accounts, self.credentials, self.tokens)
+        self.update_profile = UpdateProfile(self.accounts)
+        self.change_password = ChangePassword(self.accounts, self.credentials, self.limiter, self.limits)
 
 
 @pytest.fixture
@@ -136,6 +141,50 @@ async def test_delete_erases_the_account(ctx: Context) -> None:
     assert await ctx.accounts.get(account.id) is None
     with pytest.raises(AccountNotFoundError):
         await DeleteAccount(ctx.accounts)(account.id)
+
+
+async def test_update_profile_saves_the_change_and_leaves_absent_fields_alone(ctx: Context) -> None:
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana", email="a@b.com")
+
+    renamed = await ctx.update_profile(account.id, display_name="Ana Paula")
+
+    assert renamed.display_name == "Ana Paula"
+    assert renamed.email == "a@b.com"
+    assert await ctx.accounts.get(account.id) == renamed
+
+
+async def test_update_profile_blank_email_clears_it(ctx: Context) -> None:
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana", email="a@b.com")
+
+    cleared = await ctx.update_profile(account.id, email="")
+
+    assert cleared.email is None
+    assert await ctx.accounts.get(account.id) == cleared
+
+
+async def test_change_password_needs_the_current_one_and_then_takes_hold(ctx: Context) -> None:
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
+
+    with pytest.raises(WrongCurrentPasswordError):
+        await ctx.change_password(account.id, current_password="wrong", new_password="a new one")
+    await ctx.change_password(account.id, current_password=PASSWORD, new_password="a new one")
+
+    # Not through `log_in` again: it shares the very bucket this change just spent from (D-097),
+    # and the point here is the change itself, not a second proof already covered below.
+    assert ctx.credentials.passwords[account.id] == "a new one"
+
+
+async def test_change_password_shares_the_login_rate_limit(ctx: Context) -> None:
+    """A wrong current password counts against the same bucket as a wrong login (D-097)."""
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
+
+    for _ in range(3):
+        with pytest.raises(WrongCurrentPasswordError):
+            await ctx.change_password(account.id, current_password="wrong", new_password="a new one")
+    with pytest.raises(TooManyAttemptsError):
+        await ctx.change_password(account.id, current_password=PASSWORD, new_password="a new one")
+    with pytest.raises(TooManyAttemptsError):  # the login bucket is the very same one, already spent
+        await ctx.log_in(phone=PHONE, password=PASSWORD)
 
 
 async def test_login_attempts_and_reset_requests_are_limited_per_phone(ctx: Context) -> None:

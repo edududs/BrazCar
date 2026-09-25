@@ -40,6 +40,14 @@ class InvalidCredentialsError(AccountError):
         super().__init__("phone or password is wrong")
 
 
+class WrongCurrentPasswordError(AccountError):
+    """`ChangePassword` needs the current password, to keep a stolen session from resetting it
+    without anyone typing it once."""
+
+    def __init__(self) -> None:
+        super().__init__("current password is wrong")
+
+
 class PlateAlreadyOnAccountError(AccountError):
     def __init__(self, plate: str) -> None:
         super().__init__(f"plate {plate} is already on this account")
