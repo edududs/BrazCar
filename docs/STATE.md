@@ -288,6 +288,9 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   (`ACCOUNT_FIELD_REFUSALS`); e `config/api.py` ganhou um manipulador de exceção, registrado uma
   vez, que responde 422 para qualquer `pydantic.ValidationError` do domínio que nenhuma rota tenha
   capturado ainda.
+- Passo de qualidade, ainda sem tag (D-159): o front passou a formatar e agrupar toda data no fuso
+  do mural (`America/Sao_Paulo`, D-094) por uma constante só, nunca no fuso do aparelho, depois que
+  o teste do CI (fuso UTC) mostrou a hora da carona errada para quem abre o mural com outro fuso.
 
 **Verificado de verdade no passo 7b:** portão rápido (343 testes no backend, 63 no front, com os
 primeiros de componente) e portão pesado dos dois lados, com 31 contratos no Postgres do compose,
