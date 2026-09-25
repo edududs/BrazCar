@@ -6,7 +6,7 @@ import { useNetworkStatus } from "@/shared/app/use-network-status";
 import { useVersionFloor } from "@/shared/app/use-version-floor";
 import { ActionButton } from "@/shared/ui/action-button";
 import { AppFooter } from "@/shared/ui/app-footer";
-import { AppNav, navLinkClass } from "@/shared/ui/app-nav";
+import { AppNav, brandLinkClass, navLinkClass } from "@/shared/ui/app-nav";
 import { AppShellNotices } from "@/shared/ui/app-shell-notices";
 import { NoticeScreen } from "@/shared/ui/notice-screen";
 import { RouteNotFound } from "@/shared/ui/route-not-found";
@@ -22,7 +22,7 @@ function RootLayout() {
     <div className="flex min-h-dvh flex-col bg-bg text-ink">
       <AppNav
         brand={
-          <Link to="/" className={navLinkClass}>
+          <Link to="/" className={brandLinkClass}>
             BrazCar
           </Link>
         }

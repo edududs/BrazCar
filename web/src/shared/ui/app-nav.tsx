@@ -23,3 +23,6 @@ export function AppNav({ brand, children }: AppNavProps) {
 /** Class of a link inside `AppNav`; the current page is marked by TanStack Router's `data-status`. */
 export const navLinkClass =
   "flex min-h-11 items-center font-semibold text-ink-3 data-[status=active]:text-ink";
+
+/** Class of the brand link: always in ink, whichever page is open. */
+export const brandLinkClass = "flex min-h-11 items-center text-ink";
