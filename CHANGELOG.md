@@ -6,6 +6,24 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.15.0] - 2026-09-25
+
+### Adicionado
+
+- **rides:** Keep the revealed phone on each contact request
+- **rides:** Filter the board from a time of day
+- **rides:** Cap the seats of a ride at four
+
+### Corrigido
+
+- **rides:** Stop the from-time hint from matching the day filter in e2e
+- **importing:** Clamp the seats of an accepted offer to the ride cap
+
+### Documentação
+
+- Record the v0.14.0 deploy
+- **screens:** Capture the from-time board states
+
 ## [0.14.0] - 2026-09-25
 
 ### Adicionado
