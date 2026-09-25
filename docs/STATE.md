@@ -4,7 +4,10 @@ Atualizado em 2026-09-25.
 
 ## Onde estamos
 
-Versão `v0.19.0`: passo 4 da etapa de design, formulários, conta e acesso (D-151, D-152): componente
+Versão `v0.20.0`: passo 5 da etapa de design, movimento (D-153), e a bateria de testes de uso dos
+componentes (D-154) com a correção de dois defeitos achados pelo Eduardo no celular: a hora não
+aceitava digitação, e o fim do formulário de publicar ficava atrás do botão fixo. Antes: `v0.19.0`,
+passo 4, formulários, conta e acesso (D-151, D-152): componente
 de data e hora da F7, trajeto desenhado com preço por parada atrás de interruptor, conta em leitura
 com edição em folhas, entrar, criar conta e recuperar senha. Antes: `v0.18.0`, passo 3, mural e
 detalhe (D-150): hora-herói, linha da rota, seções por dia com "Agora", chips com folha de horário
@@ -157,6 +160,25 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   enquanto a pessoa digita e valida antes de enviar, o primitivo `PhoneField` é usado no cadastro,
   no login e na recuperação de senha, e o card de contato mostra o número; a `libphonenumber-js`
   (`min`) fica confinada em `shared/app/phone-codec.ts` por regra do ESLint.
+- Design, passo 5, movimento e usabilidade (D-153, D-154): tokens de movimento com as entradas
+  nomeadas (`animate-rise-in`, `-list-in`, `-ride-in`, `-bump`, `-reveal`), só `transform` e
+  `opacity`, zeradas com "reduzir movimento" por `--motion-rise`/`--motion-scale`; View Transitions
+  do roteador com a hora do card e a do detalhe sob o mesmo nome; parallax do céu, hora que encolhe e
+  barra compacta no detalhe por rolagem em CSS, dentro de `@supports`; lista do mural cruzando em
+  opacidade ao trocar filtro; carona "Nova" entrando; número do passo de vagas deslizando; contato
+  revelado descendo; toast subindo. `shared/domain/flash.ts` + `useFlash` + `FlashToast`: aviso
+  carregado no estado da navegação ao publicar, editar, repetir e sair da conta (sair agora volta
+  ao mural). `motion.test.ts` lê o catálogo. Correções: `useNumberSegment` (headless, com teste)
+  faz a hora e os minutos aceitarem digitação — foco esvazia o campo com o valor como dica, cada
+  dígito válido já vale, dois dígitos pulam para os minutos, valor fora de faixa é marcado e
+  desfeito ao sair; `ActionBar` passou a `sticky` no fim do conteúdo (com `bleed` dentro de
+  `PageShell`), e o detalhe perdeu o espaço compensado à mão; a busca devolve o foco ao campo depois
+  de limpar. Bateria de uso com `user-event`: relógio, data e hora, campos de texto, senha, celular,
+  busca, observações, seleção, caixa de marcar, passo, interruptor, alternância, chip, segmentado,
+  folha, diálogo de confirmação, filtros do mural, parada (catálogo, teclado, texto livre),
+  formulário de carona e conta. Na ponta a ponta, a saída é digitada tecla a tecla e
+  `e2e/layout.spec.ts` mede que o fim do formulário e o último cartão do detalhe ficam acima da
+  barra.
 - Design, passo 4, formulários, conta e acesso (D-151, D-152): `DateTimeField` (dia · hora, folha
   com cartões de dia, calendário, `ClockPicker` com hora e minutos digitáveis, horários comuns,
   frase de resumo, "Pronto"; dia travado na edição), sobre `calendar.ts` e `useDateTimeDraft` em
@@ -273,6 +295,20 @@ carona que outro contexto acabou de publicar (SSE); excluir a conta pelo diálog
 telefone dela deixando de servir para entrar, e a página em português para todo endereço que não é
 rota nenhuma.
 
+**Verificado de verdade no passo 5 do design:** portão rápido (472 no backend, 225 no front: 58
+novos, entre eles a bateria de uso, o catálogo de movimento e o aviso por navegação), portão pesado
+do front, a suíte de ponta a ponta verde nos três projetos (161 casos, 1 pulado), com a saída
+digitada tecla a tecla e os 6 casos novos de layout. O teste de uso do relógio foi provado contra a
+versão da `v0.19.0`: 5 dos 7 casos falham nela (todos os de digitação) e passam na corrigida. Dois
+achados da bateria que não eram defeito de uso, anotados nos próprios testes: o `user-event` não
+faz o envio implícito com o botão fora do `<form>` (o navegador faz, pelo dono do formulário; o
+teste prova a ligação), e o jsdom não termina a animação de fechamento do Base UI.
+
+**Não verificado:** as View Transitions e a paralaxe num Safari 26 ou iPhone de verdade (a suíte
+não mede animação); o teclado numérico do iPhone na hora e nos minutos, e o salto automático para os
+minutos com o teclado aberto; a barra `sticky` com o teclado virtual aberto no iPhone (o Safari
+redimensiona o viewport de um jeito próprio).
+
 **Verificado de verdade no passo 4 do design:** portão rápido a cada commit (472 no backend, 161 no
 front, 6 novos: calendário, rascunho de data e hora, vagas por passo, tarifas atrás do interruptor,
 folhas da conta), portão pesado do front, a suíte de ponta a ponta verde nos três projetos (155
@@ -348,19 +384,18 @@ sobrevivendo a panic do Go ou a reinício do Postgres; o mural atualizando sozin
 segundo plano no app instalado; o aviso de build novo e a tela de piso num iPhone; ícone maskable
 no Android; `login` e `password-reset` estourados pelo navegador; e-mail de verdade pelo Resend.
 
-**Pendências de design (D-103), depois do passo 4:** o catálogo de movimento, as View Transitions
-mural → detalhe e o parallax do detalhe são do passo 5; o balão de opinião no topo do mural e na
-conta é do passo 6. Dois toasts que o canvas desenha ainda não existem porque dependem de navegação
-com estado: "Carona publicada. Já está no mural." ao chegar no detalhe e "Você saiu da conta." ao
-voltar ao mural (hoje sair fica na conta, no cartão de entrar). O "Ver amanhã a partir de HH:MM" e a
-contagem de lotadas escondidas estão no ROADMAP. O desktop usa a mesma casca do celular até o
+**Pendências de design (D-103), depois do passo 5:** o balão de opinião no topo do mural e na conta
+é do passo 6. O "Ver amanhã a partir de HH:MM" e a contagem de lotadas escondidas estão no ROADMAP.
+O Base UI marca o resto da página como fora da árvore de acessibilidade enquanto a lista de lugares
+está aberta (e, no jsdom, até o fim de uma animação que nunca termina): parece comportamento modal
+indevido num combobox; fica para o passo de qualidade. O desktop usa a mesma casca do celular até o
 canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é estático).
 
 ## Próximo passo
 
-1. Etapa de design (D-103, D-143), passo 5: movimento — o catálogo da F5 como teste (durações,
-   curvas, reduzir movimento), View Transitions mural → detalhe, parallax do detalhe. Depois: canal
-   de opinião (6).
+1. Etapa de design (D-103, D-143), passo 6: canal de opinião — contexto `feedback` no backend
+   (mensagem, conta opcional, tela de origem, versão do front, momento), rota com limite por chave,
+   comando de leitura, e o botão discreto que o canvas desenha no topo do mural e na conta.
 2. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
    e as telas de observações e preço por parada.
 3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das

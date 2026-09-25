@@ -26,6 +26,10 @@ paths:
 - Testar componente e comportamento, não só hook: o que a pessoa faz na tela (clicar, digitar,
   submeter, ver o estado mudar) precisa de teste com Testing Library. Fluxo conferido à mão vira
   teste no mesmo passo (D-126). A meta de cobertura do front é a mesma do backend.
+- Componente interativo novo ou alterado ganha teste de uso com `user-event` (D-154): tecla a tecla,
+  rótulo, Tab, Enter, Espaço, Esc, setas. `fireEvent.change` e o `fill` do Playwright não provam
+  digitação; na suíte de ponta a ponta, campo que formata se preenche com o teclado. O que depende
+  de layout (algo escondido atrás de barra fixa, rolagem) se prova em `e2e/layout.spec.ts`.
 - Primitivos sobre o Base UI (D-088), embrulhados em `shared/ui/`, com Tailwind v4 e tokens em
   variáveis CSS. Acessibilidade de diálogo, menu e sheet não se faz à mão.
 - Visual pelo canvas "Hora azul" (D-143): releia a prancha antes de tocar uma tela. Token por
