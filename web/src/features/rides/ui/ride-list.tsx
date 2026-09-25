@@ -37,7 +37,7 @@ export function RideList({
   matched,
 }: RideListProps) {
   const now = useClock();
-  const fresh = useFreshRides(rides);
+  const fresh = useFreshRides(rides, { ready: status === "ready" });
   if (status === "failed") {
     return <p className="text-secondary text-critical">Não foi possível carregar as caronas.</p>;
   }

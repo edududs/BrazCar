@@ -7,6 +7,8 @@ const FRESH_MS = 6000;
 
 interface FreshRidesOptions {
   readonly freshMs?: number;
+  /** Only a list the API has answered counts as a baseline: while loading, nothing is fresh. */
+  readonly ready?: boolean;
 }
 
 /**
@@ -16,12 +18,13 @@ interface FreshRidesOptions {
  */
 export function useFreshRides(
   rides: readonly Ride[],
-  { freshMs = FRESH_MS }: FreshRidesOptions = {},
+  { freshMs = FRESH_MS, ready = true }: FreshRidesOptions = {},
 ): ReadonlySet<string> {
   const known = useRef<ReadonlySet<string> | null>(null);
   const [fresh, setFresh] = useState<ReadonlySet<string>>(new Set());
 
   useEffect(() => {
+    if (!ready) return;
     const ids = new Set(rides.map((ride) => ride.id));
     const previous = known.current;
     known.current = ids;
@@ -35,7 +38,7 @@ export function useFreshRides(
     return () => {
       window.clearTimeout(timer);
     };
-  }, [rides, freshMs]);
+  }, [rides, freshMs, ready]);
 
   return fresh;
 }

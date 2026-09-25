@@ -40,4 +40,14 @@ describe("useFreshRides", () => {
     rerender({ rides: [ride("a")] });
     expect(result.current.size).toBe(0);
   });
+
+  it("takes no baseline while the list is still loading, so the first answer is not all new", () => {
+    const { result, rerender } = renderHook(({ rides, ready }) => useFreshRides(rides, { ready }), {
+      initialProps: { rides: [] as Ride[], ready: false },
+    });
+    rerender({ rides: [ride("a"), ride("b")], ready: true });
+    expect(result.current.size).toBe(0);
+    rerender({ rides: [ride("a"), ride("b"), ride("c")], ready: true });
+    expect([...result.current]).toEqual(["c"]);
+  });
 });
