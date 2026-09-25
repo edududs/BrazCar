@@ -1,6 +1,6 @@
 # Catálogo de telas
 
-Gerado da versão `v0.13.0` do front. **Não edite à mão:** cada imagem é um estado que a
+Gerado da versão `v0.14.0` do front. **Não edite à mão:** cada imagem é um estado que a
 suíte de ponta a ponta visita, e este arquivo sai das imagens.
 
 ```bash
@@ -34,7 +34,9 @@ existe, fotografado como está. No celular a imagem é a página inteira; no des
 | Tela | Rota | Situação | O que a jornada faz ali |
 |---|---|---|---|
 | ![empty-by-filter](mobile/board/empty-by-filter.png)<br>Caronas | `/?q=Lago+Sul` | `empty-by-filter` | filtro que não acha nada explica que é filtro |
-| ![filtered-by-day](mobile/board/filtered-by-day.png)<br>Caronas | `/?day=2026-09-24` | `filtered-by-day` | o filtro de dia vive na URL e recorta o mural |
+| ![filtered-by-day](mobile/board/filtered-by-day.png)<br>Caronas | `/?day=2026-09-25` | `filtered-by-day` | o filtro de dia vive na URL e recorta o mural |
+| ![from-time-empty](mobile/board/from-time-empty.png)<br>Caronas | `/?day=2026-09-25&from=23:59` | `from-time-empty` | o filtro "a partir de" sem carona no horário mostra o estado vazio |
+| ![from-time](mobile/board/from-time.png)<br>Caronas | `/?from=18:00` | `from-time` | o filtro "a partir de" recorta o mural pelo horário local, sem dia e com dia |
 | ![full](mobile/board/full.png)<br>Caronas | `/` | `full` | o mural lista as caronas que ainda vão sair, e só elas |
 | ![only-with-seats](mobile/board/only-with-seats.png)<br>Caronas | `/?withSeats=true` | `only-with-seats` | só com vaga tira a lotada do mural |
 | ![search-by-alias](mobile/board/search-by-alias.png)<br>Caronas | `/?q=SCS` | `search-by-alias` | "passa por" acha o lugar pelo apelido |
@@ -45,28 +47,28 @@ existe, fotografado como está. No celular a imagem é a página inteira; no des
 
 | Tela | Rota | Situação | O que a jornada faz ali |
 |---|---|---|---|
-| ![before](mobile/contact/before.png)<br>Carona | `/caronas/1c586e93-141f-4cb7-9f41-fa45e164b8b1` | `before` | pedir contato revela o WhatsApp e a placa |
-| ![limit-reached](mobile/contact/limit-reached.png)<br>Carona | `/caronas/41a02a25-cd86-4514-8a0b-5b46f5131000` | `limit-reached` | com a cota do dia gasta, o pedido é recusado na própria tela |
-| ![none-when-cancelled](mobile/contact/none-when-cancelled.png)<br>Carona | `/caronas/3fb53475-8359-40e0-b3ea-519ca01409dd` | `none-when-cancelled` | carona cancelada não oferece o botão nem para quem está logado |
-| ![none-when-full](mobile/contact/none-when-full.png)<br>Carona | `/caronas/710a3f8f-dc15-4d39-8fc0-df9694acfb66` | `none-when-full` | carona lotada não oferece o botão nem para quem está logado |
-| ![revealed](mobile/contact/revealed.png)<br>Carona | `/caronas/1c586e93-141f-4cb7-9f41-fa45e164b8b1` | `revealed` | pedir contato revela o WhatsApp e a placa |
+| ![before](mobile/contact/before.png)<br>Carona | `/caronas/6d9b3202-73de-485a-b7de-dec20fbbdeec` | `before` | pedir contato revela o WhatsApp e a placa |
+| ![limit-reached](mobile/contact/limit-reached.png)<br>Carona | `/caronas/36e0ad3d-0618-4c22-a132-db13c0e51b7d` | `limit-reached` | com a cota do dia gasta, o pedido é recusado na própria tela |
+| ![none-when-cancelled](mobile/contact/none-when-cancelled.png)<br>Carona | `/caronas/9b446828-f794-488f-b6fc-6ed6a5d210d2` | `none-when-cancelled` | carona cancelada não oferece o botão nem para quem está logado |
+| ![none-when-full](mobile/contact/none-when-full.png)<br>Carona | `/caronas/744ec65c-d35e-4f84-a131-d920cb547e63` | `none-when-full` | carona lotada não oferece o botão nem para quem está logado |
+| ![revealed](mobile/contact/revealed.png)<br>Carona | `/caronas/6d9b3202-73de-485a-b7de-dec20fbbdeec` | `revealed` | pedir contato revela o WhatsApp e a placa |
 
 ### edit
 
 | Tela | Rota | Situação | O que a jornada faz ali |
 |---|---|---|---|
-| ![form](mobile/edit/form.png)<br>Editar carona | `/caronas/f090f3bf-28cd-422c-8d91-47a070f36a18/editar` | `form` | editar: o mesmo dia passa, outro dia é recusado |
-| ![other-day-refused](mobile/edit/other-day-refused.png)<br>Editar carona | `/caronas/f090f3bf-28cd-422c-8d91-47a070f36a18/editar` | `other-day-refused` | editar: o mesmo dia passa, outro dia é recusado |
+| ![form](mobile/edit/form.png)<br>Editar carona | `/caronas/85081032-612e-4c74-b162-7c2ae6b40aaf/editar` | `form` | editar: o mesmo dia passa, outro dia é recusado |
+| ![other-day-refused](mobile/edit/other-day-refused.png)<br>Editar carona | `/caronas/85081032-612e-4c74-b162-7c2ae6b40aaf/editar` | `other-day-refused` | editar: o mesmo dia passa, outro dia é recusado |
 
 ### imported
 
 | Tela | Rota | Situação | O que a jornada faz ali |
 |---|---|---|---|
 | ![board-card](mobile/imported/board-card.png)<br>Caronas | `/?q=Setor+Tradicional` | `board-card` | o card da importada traz o selo via WhatsApp |
-| ![contact-without-plate](mobile/imported/contact-without-plate.png)<br>Carona | `/caronas/1fdf22c9-20fe-4317-bb2b-5d5b886c9bd5` | `contact-without-plate` | o contato de motorista externo vem sem placa |
-| ![detail-with-fares](mobile/imported/detail-with-fares.png)<br>Carona | `/caronas/0d2413a2-04b1-4f71-83a2-2ae8baefc4b3` | `detail-with-fares` | a importada com tarifas mostra o preço de cada parada |
-| ![detail](mobile/imported/detail.png)<br>Carona | `/caronas/1fdf22c9-20fe-4317-bb2b-5d5b886c9bd5` | `detail` | o detalhe mostra a mensagem original, já redigida |
-| ![owned-detail](mobile/imported/owned-detail.png)<br>Carona | `/caronas/5205f3af-148a-48ad-b6a8-2ae7e5c2cb98` | `owned-detail` | a importada de quem tem conta é da dona, e aparece em minhas caronas |
+| ![contact-without-plate](mobile/imported/contact-without-plate.png)<br>Carona | `/caronas/8c4520f6-2b29-4a7a-814b-5744a98e349c` | `contact-without-plate` | o contato de motorista externo vem sem placa |
+| ![detail-with-fares](mobile/imported/detail-with-fares.png)<br>Carona | `/caronas/7fbb6640-9cba-413c-9c18-3877668cfe9b` | `detail-with-fares` | a importada com tarifas mostra o preço de cada parada |
+| ![detail](mobile/imported/detail.png)<br>Carona | `/caronas/8c4520f6-2b29-4a7a-814b-5744a98e349c` | `detail` | o detalhe mostra a mensagem original, já redigida |
+| ![owned-detail](mobile/imported/owned-detail.png)<br>Carona | `/caronas/f3a9b77c-7c14-4246-bb44-0fbcebdef5f4` | `owned-detail` | a importada de quem tem conta é da dona, e aparece em minhas caronas |
 | ![owned-in-my-rides](mobile/imported/owned-in-my-rides.png)<br>Minhas caronas | `/minhas-caronas` | `owned-in-my-rides` | a importada de quem tem conta é da dona, e aparece em minhas caronas |
 
 ### login
@@ -113,22 +115,22 @@ existe, fotografado como está. No celular a imagem é a página inteira; no des
 
 | Tela | Rota | Situação | O que a jornada faz ali |
 |---|---|---|---|
-| ![cancel-dialog](mobile/ride/cancel-dialog.png)<br>Carona | `/caronas/9d32d656-94dc-470a-9064-edf8c79503d2` | `cancel-dialog` | cancelar pede confirmação e é definitivo |
-| ![cancelled](mobile/ride/cancelled.png)<br>Carona | `/caronas/3fb53475-8359-40e0-b3ea-519ca01409dd` | `cancelled` | carona cancelada continua legível pelo endereço |
-| ![departed](mobile/ride/departed.png)<br>Carona | `/caronas/7b7f4794-569f-460e-9e2b-f8dcac00a332` | `departed` | carona que já saiu não oferece contato |
-| ![fares-per-stop](mobile/ride/fares-per-stop.png)<br>Carona | `/caronas/17e1d518-cc56-43c9-a008-1937a94c5f88` | `fares-per-stop` | carona com preço por parada mostra cada tarifa |
-| ![full](mobile/ride/full.png)<br>Carona | `/caronas/710a3f8f-dc15-4d39-8fc0-df9694acfb66` | `full` | carona lotada não oferece contato |
-| ![just-published](mobile/ride/just-published.png)<br>Carona | `/caronas/72287491-f2b2-4059-a178-c9ba3a0cf1b9` | `just-published` | publicar uma carona simples |
-| ![long-notes](mobile/ride/long-notes.png)<br>Carona | `/caronas/debfb069-0bf0-4bd7-93ce-89f46cfedc3a` | `long-notes` | carona com observações longas mostra o texto inteiro |
+| ![cancel-dialog](mobile/ride/cancel-dialog.png)<br>Carona | `/caronas/353a1f9c-de71-4247-9a7c-4b2a4bcd2686` | `cancel-dialog` | cancelar pede confirmação e é definitivo |
+| ![cancelled](mobile/ride/cancelled.png)<br>Carona | `/caronas/9b446828-f794-488f-b6fc-6ed6a5d210d2` | `cancelled` | carona cancelada continua legível pelo endereço |
+| ![departed](mobile/ride/departed.png)<br>Carona | `/caronas/3917b012-2570-4514-a633-8541caebbece` | `departed` | carona que já saiu não oferece contato |
+| ![fares-per-stop](mobile/ride/fares-per-stop.png)<br>Carona | `/caronas/191bf918-edb3-491b-af64-da1d9d5d84e7` | `fares-per-stop` | carona com preço por parada mostra cada tarifa |
+| ![full](mobile/ride/full.png)<br>Carona | `/caronas/744ec65c-d35e-4f84-a131-d920cb547e63` | `full` | carona lotada não oferece contato |
+| ![just-published](mobile/ride/just-published.png)<br>Carona | `/caronas/c3d5c122-f171-4544-acf3-b7b4d29d92a9` | `just-published` | publicar uma carona simples |
+| ![long-notes](mobile/ride/long-notes.png)<br>Carona | `/caronas/59945c25-e757-40ce-b458-64c34ebf520c` | `long-notes` | carona com observações longas mostra o texto inteiro |
 | ![not-found](mobile/ride/not-found.png)<br>Carona | `/caronas/00000000-0000-4000-8000-000000000000` | `not-found` | endereço de carona que não existe explica o que houve |
-| ![open-anonymous](mobile/ride/open-anonymous.png)<br>Carona | `/caronas/1c586e93-141f-4cb7-9f41-fa45e164b8b1` | `open-anonymous` | o detalhe de uma carona aberta convida a entrar para pedir contato |
-| ![owner-cancelled](mobile/ride/owner-cancelled.png)<br>Carona | `/caronas/9d32d656-94dc-470a-9064-edf8c79503d2` | `owner-cancelled` | cancelar pede confirmação e é definitivo |
-| ![owner-edited](mobile/ride/owner-edited.png)<br>Carona | `/caronas/f090f3bf-28cd-422c-8d91-47a070f36a18` | `owner-edited` | editar: o mesmo dia passa, outro dia é recusado |
-| ![owner-full](mobile/ride/owner-full.png)<br>Carona | `/caronas/3b0226ff-7d6d-4f03-9c13-5a3dd60462e0` | `owner-full` | o dono fecha e reabre a carona pelas vagas |
-| ![owner-open](mobile/ride/owner-open.png)<br>Carona | `/caronas/3b0226ff-7d6d-4f03-9c13-5a3dd60462e0` | `owner-open` | o dono fecha e reabre a carona pelas vagas |
-| ![owner-reopened](mobile/ride/owner-reopened.png)<br>Carona | `/caronas/3b0226ff-7d6d-4f03-9c13-5a3dd60462e0` | `owner-reopened` | o dono fecha e reabre a carona pelas vagas |
-| ![repeat-ready](mobile/ride/repeat-ready.png)<br>Carona | `/caronas/0ae9e300-efba-4968-a0b3-dcfeb45dc608` | `repeat-ready` | repetir uma carona publica outra igual em outro horário |
-| ![repeated](mobile/ride/repeated.png)<br>Carona | `/caronas/72322e67-a45e-4c62-b885-62c26fd48d1d` | `repeated` | repetir uma carona publica outra igual em outro horário |
+| ![open-anonymous](mobile/ride/open-anonymous.png)<br>Carona | `/caronas/6d9b3202-73de-485a-b7de-dec20fbbdeec` | `open-anonymous` | o detalhe de uma carona aberta convida a entrar para pedir contato |
+| ![owner-cancelled](mobile/ride/owner-cancelled.png)<br>Carona | `/caronas/353a1f9c-de71-4247-9a7c-4b2a4bcd2686` | `owner-cancelled` | cancelar pede confirmação e é definitivo |
+| ![owner-edited](mobile/ride/owner-edited.png)<br>Carona | `/caronas/85081032-612e-4c74-b162-7c2ae6b40aaf` | `owner-edited` | editar: o mesmo dia passa, outro dia é recusado |
+| ![owner-full](mobile/ride/owner-full.png)<br>Carona | `/caronas/614397a2-94a9-4e14-8000-585c92d5a0e2` | `owner-full` | o dono fecha e reabre a carona pelas vagas |
+| ![owner-open](mobile/ride/owner-open.png)<br>Carona | `/caronas/614397a2-94a9-4e14-8000-585c92d5a0e2` | `owner-open` | o dono fecha e reabre a carona pelas vagas |
+| ![owner-reopened](mobile/ride/owner-reopened.png)<br>Carona | `/caronas/614397a2-94a9-4e14-8000-585c92d5a0e2` | `owner-reopened` | o dono fecha e reabre a carona pelas vagas |
+| ![repeat-ready](mobile/ride/repeat-ready.png)<br>Carona | `/caronas/11b2f1b6-49c4-40a7-bda8-eabc3bcaf4ab` | `repeat-ready` | repetir uma carona publica outra igual em outro horário |
+| ![repeated](mobile/ride/repeated.png)<br>Carona | `/caronas/de413e77-5fa7-4d47-abf6-efab8fdcd0c8` | `repeated` | repetir uma carona publica outra igual em outro horário |
 
 ### shell
 
@@ -171,7 +173,9 @@ existe, fotografado como está. No celular a imagem é a página inteira; no des
 | Tela | Rota | Situação | O que a jornada faz ali |
 |---|---|---|---|
 | ![empty-by-filter](desktop/board/empty-by-filter.png)<br>Caronas | `/?q=Lago+Sul` | `empty-by-filter` | filtro que não acha nada explica que é filtro |
-| ![filtered-by-day](desktop/board/filtered-by-day.png)<br>Caronas | `/?day=2026-09-24` | `filtered-by-day` | o filtro de dia vive na URL e recorta o mural |
+| ![filtered-by-day](desktop/board/filtered-by-day.png)<br>Caronas | `/?day=2026-09-25` | `filtered-by-day` | o filtro de dia vive na URL e recorta o mural |
+| ![from-time-empty](desktop/board/from-time-empty.png)<br>Caronas | `/?day=2026-09-25&from=23:59` | `from-time-empty` | o filtro "a partir de" sem carona no horário mostra o estado vazio |
+| ![from-time](desktop/board/from-time.png)<br>Caronas | `/?from=18:00` | `from-time` | o filtro "a partir de" recorta o mural pelo horário local, sem dia e com dia |
 | ![full](desktop/board/full.png)<br>Caronas | `/` | `full` | o mural lista as caronas que ainda vão sair, e só elas |
 | ![only-with-seats](desktop/board/only-with-seats.png)<br>Caronas | `/?withSeats=true` | `only-with-seats` | só com vaga tira a lotada do mural |
 | ![search-by-alias](desktop/board/search-by-alias.png)<br>Caronas | `/?q=SCS` | `search-by-alias` | "passa por" acha o lugar pelo apelido |
@@ -182,28 +186,28 @@ existe, fotografado como está. No celular a imagem é a página inteira; no des
 
 | Tela | Rota | Situação | O que a jornada faz ali |
 |---|---|---|---|
-| ![before](desktop/contact/before.png)<br>Carona | `/caronas/1c586e93-141f-4cb7-9f41-fa45e164b8b1` | `before` | pedir contato revela o WhatsApp e a placa |
-| ![limit-reached](desktop/contact/limit-reached.png)<br>Carona | `/caronas/41a02a25-cd86-4514-8a0b-5b46f5131000` | `limit-reached` | com a cota do dia gasta, o pedido é recusado na própria tela |
-| ![none-when-cancelled](desktop/contact/none-when-cancelled.png)<br>Carona | `/caronas/3fb53475-8359-40e0-b3ea-519ca01409dd` | `none-when-cancelled` | carona cancelada não oferece o botão nem para quem está logado |
-| ![none-when-full](desktop/contact/none-when-full.png)<br>Carona | `/caronas/710a3f8f-dc15-4d39-8fc0-df9694acfb66` | `none-when-full` | carona lotada não oferece o botão nem para quem está logado |
-| ![revealed](desktop/contact/revealed.png)<br>Carona | `/caronas/1c586e93-141f-4cb7-9f41-fa45e164b8b1` | `revealed` | pedir contato revela o WhatsApp e a placa |
+| ![before](desktop/contact/before.png)<br>Carona | `/caronas/6d9b3202-73de-485a-b7de-dec20fbbdeec` | `before` | pedir contato revela o WhatsApp e a placa |
+| ![limit-reached](desktop/contact/limit-reached.png)<br>Carona | `/caronas/36e0ad3d-0618-4c22-a132-db13c0e51b7d` | `limit-reached` | com a cota do dia gasta, o pedido é recusado na própria tela |
+| ![none-when-cancelled](desktop/contact/none-when-cancelled.png)<br>Carona | `/caronas/9b446828-f794-488f-b6fc-6ed6a5d210d2` | `none-when-cancelled` | carona cancelada não oferece o botão nem para quem está logado |
+| ![none-when-full](desktop/contact/none-when-full.png)<br>Carona | `/caronas/744ec65c-d35e-4f84-a131-d920cb547e63` | `none-when-full` | carona lotada não oferece o botão nem para quem está logado |
+| ![revealed](desktop/contact/revealed.png)<br>Carona | `/caronas/6d9b3202-73de-485a-b7de-dec20fbbdeec` | `revealed` | pedir contato revela o WhatsApp e a placa |
 
 ### edit
 
 | Tela | Rota | Situação | O que a jornada faz ali |
 |---|---|---|---|
-| ![form](desktop/edit/form.png)<br>Editar carona | `/caronas/e51a9c88-8271-4dda-bb59-a78f651251b8/editar` | `form` | editar: o mesmo dia passa, outro dia é recusado |
-| ![other-day-refused](desktop/edit/other-day-refused.png)<br>Editar carona | `/caronas/e51a9c88-8271-4dda-bb59-a78f651251b8/editar` | `other-day-refused` | editar: o mesmo dia passa, outro dia é recusado |
+| ![form](desktop/edit/form.png)<br>Editar carona | `/caronas/9b4c9719-c3c1-4f20-bed9-621c0bd4409b/editar` | `form` | editar: o mesmo dia passa, outro dia é recusado |
+| ![other-day-refused](desktop/edit/other-day-refused.png)<br>Editar carona | `/caronas/9b4c9719-c3c1-4f20-bed9-621c0bd4409b/editar` | `other-day-refused` | editar: o mesmo dia passa, outro dia é recusado |
 
 ### imported
 
 | Tela | Rota | Situação | O que a jornada faz ali |
 |---|---|---|---|
 | ![board-card](desktop/imported/board-card.png)<br>Caronas | `/?q=Setor+Tradicional` | `board-card` | o card da importada traz o selo via WhatsApp |
-| ![contact-without-plate](desktop/imported/contact-without-plate.png)<br>Carona | `/caronas/1fdf22c9-20fe-4317-bb2b-5d5b886c9bd5` | `contact-without-plate` | o contato de motorista externo vem sem placa |
-| ![detail-with-fares](desktop/imported/detail-with-fares.png)<br>Carona | `/caronas/0d2413a2-04b1-4f71-83a2-2ae8baefc4b3` | `detail-with-fares` | a importada com tarifas mostra o preço de cada parada |
-| ![detail](desktop/imported/detail.png)<br>Carona | `/caronas/1fdf22c9-20fe-4317-bb2b-5d5b886c9bd5` | `detail` | o detalhe mostra a mensagem original, já redigida |
-| ![owned-detail](desktop/imported/owned-detail.png)<br>Carona | `/caronas/5205f3af-148a-48ad-b6a8-2ae7e5c2cb98` | `owned-detail` | a importada de quem tem conta é da dona, e aparece em minhas caronas |
+| ![contact-without-plate](desktop/imported/contact-without-plate.png)<br>Carona | `/caronas/8c4520f6-2b29-4a7a-814b-5744a98e349c` | `contact-without-plate` | o contato de motorista externo vem sem placa |
+| ![detail-with-fares](desktop/imported/detail-with-fares.png)<br>Carona | `/caronas/7fbb6640-9cba-413c-9c18-3877668cfe9b` | `detail-with-fares` | a importada com tarifas mostra o preço de cada parada |
+| ![detail](desktop/imported/detail.png)<br>Carona | `/caronas/8c4520f6-2b29-4a7a-814b-5744a98e349c` | `detail` | o detalhe mostra a mensagem original, já redigida |
+| ![owned-detail](desktop/imported/owned-detail.png)<br>Carona | `/caronas/f3a9b77c-7c14-4246-bb44-0fbcebdef5f4` | `owned-detail` | a importada de quem tem conta é da dona, e aparece em minhas caronas |
 | ![owned-in-my-rides](desktop/imported/owned-in-my-rides.png)<br>Minhas caronas | `/minhas-caronas` | `owned-in-my-rides` | a importada de quem tem conta é da dona, e aparece em minhas caronas |
 
 ### login
@@ -250,22 +254,22 @@ existe, fotografado como está. No celular a imagem é a página inteira; no des
 
 | Tela | Rota | Situação | O que a jornada faz ali |
 |---|---|---|---|
-| ![cancel-dialog](desktop/ride/cancel-dialog.png)<br>Carona | `/caronas/371e1062-aa1d-4e16-9097-790f02a19609` | `cancel-dialog` | cancelar pede confirmação e é definitivo |
-| ![cancelled](desktop/ride/cancelled.png)<br>Carona | `/caronas/3fb53475-8359-40e0-b3ea-519ca01409dd` | `cancelled` | carona cancelada continua legível pelo endereço |
-| ![departed](desktop/ride/departed.png)<br>Carona | `/caronas/7b7f4794-569f-460e-9e2b-f8dcac00a332` | `departed` | carona que já saiu não oferece contato |
-| ![fares-per-stop](desktop/ride/fares-per-stop.png)<br>Carona | `/caronas/17e1d518-cc56-43c9-a008-1937a94c5f88` | `fares-per-stop` | carona com preço por parada mostra cada tarifa |
-| ![full](desktop/ride/full.png)<br>Carona | `/caronas/710a3f8f-dc15-4d39-8fc0-df9694acfb66` | `full` | carona lotada não oferece contato |
-| ![just-published](desktop/ride/just-published.png)<br>Carona | `/caronas/7eb70c1f-ed67-482e-9103-0c5317ba55a0` | `just-published` | publicar uma carona simples |
-| ![long-notes](desktop/ride/long-notes.png)<br>Carona | `/caronas/debfb069-0bf0-4bd7-93ce-89f46cfedc3a` | `long-notes` | carona com observações longas mostra o texto inteiro |
+| ![cancel-dialog](desktop/ride/cancel-dialog.png)<br>Carona | `/caronas/e77f7ec8-850c-48c7-a99a-22d1c5ef6d1d` | `cancel-dialog` | cancelar pede confirmação e é definitivo |
+| ![cancelled](desktop/ride/cancelled.png)<br>Carona | `/caronas/9b446828-f794-488f-b6fc-6ed6a5d210d2` | `cancelled` | carona cancelada continua legível pelo endereço |
+| ![departed](desktop/ride/departed.png)<br>Carona | `/caronas/3917b012-2570-4514-a633-8541caebbece` | `departed` | carona que já saiu não oferece contato |
+| ![fares-per-stop](desktop/ride/fares-per-stop.png)<br>Carona | `/caronas/191bf918-edb3-491b-af64-da1d9d5d84e7` | `fares-per-stop` | carona com preço por parada mostra cada tarifa |
+| ![full](desktop/ride/full.png)<br>Carona | `/caronas/744ec65c-d35e-4f84-a131-d920cb547e63` | `full` | carona lotada não oferece contato |
+| ![just-published](desktop/ride/just-published.png)<br>Carona | `/caronas/2dca1f03-a42c-4d1d-a71a-95683ba1df83` | `just-published` | publicar uma carona simples |
+| ![long-notes](desktop/ride/long-notes.png)<br>Carona | `/caronas/59945c25-e757-40ce-b458-64c34ebf520c` | `long-notes` | carona com observações longas mostra o texto inteiro |
 | ![not-found](desktop/ride/not-found.png)<br>Carona | `/caronas/00000000-0000-4000-8000-000000000000` | `not-found` | endereço de carona que não existe explica o que houve |
-| ![open-anonymous](desktop/ride/open-anonymous.png)<br>Carona | `/caronas/1c586e93-141f-4cb7-9f41-fa45e164b8b1` | `open-anonymous` | o detalhe de uma carona aberta convida a entrar para pedir contato |
-| ![owner-cancelled](desktop/ride/owner-cancelled.png)<br>Carona | `/caronas/371e1062-aa1d-4e16-9097-790f02a19609` | `owner-cancelled` | cancelar pede confirmação e é definitivo |
-| ![owner-edited](desktop/ride/owner-edited.png)<br>Carona | `/caronas/e51a9c88-8271-4dda-bb59-a78f651251b8` | `owner-edited` | editar: o mesmo dia passa, outro dia é recusado |
-| ![owner-full](desktop/ride/owner-full.png)<br>Carona | `/caronas/e32d0430-9e85-4172-92bb-6838052b1972` | `owner-full` | o dono fecha e reabre a carona pelas vagas |
-| ![owner-open](desktop/ride/owner-open.png)<br>Carona | `/caronas/e32d0430-9e85-4172-92bb-6838052b1972` | `owner-open` | o dono fecha e reabre a carona pelas vagas |
-| ![owner-reopened](desktop/ride/owner-reopened.png)<br>Carona | `/caronas/e32d0430-9e85-4172-92bb-6838052b1972` | `owner-reopened` | o dono fecha e reabre a carona pelas vagas |
-| ![repeat-ready](desktop/ride/repeat-ready.png)<br>Carona | `/caronas/0ae9e300-efba-4968-a0b3-dcfeb45dc608` | `repeat-ready` | repetir uma carona publica outra igual em outro horário |
-| ![repeated](desktop/ride/repeated.png)<br>Carona | `/caronas/b4648111-eded-49b8-abd6-19ea16405242` | `repeated` | repetir uma carona publica outra igual em outro horário |
+| ![open-anonymous](desktop/ride/open-anonymous.png)<br>Carona | `/caronas/6d9b3202-73de-485a-b7de-dec20fbbdeec` | `open-anonymous` | o detalhe de uma carona aberta convida a entrar para pedir contato |
+| ![owner-cancelled](desktop/ride/owner-cancelled.png)<br>Carona | `/caronas/e77f7ec8-850c-48c7-a99a-22d1c5ef6d1d` | `owner-cancelled` | cancelar pede confirmação e é definitivo |
+| ![owner-edited](desktop/ride/owner-edited.png)<br>Carona | `/caronas/9b4c9719-c3c1-4f20-bed9-621c0bd4409b` | `owner-edited` | editar: o mesmo dia passa, outro dia é recusado |
+| ![owner-full](desktop/ride/owner-full.png)<br>Carona | `/caronas/857624a7-1b3c-447b-8258-72a46569c5b9` | `owner-full` | o dono fecha e reabre a carona pelas vagas |
+| ![owner-open](desktop/ride/owner-open.png)<br>Carona | `/caronas/857624a7-1b3c-447b-8258-72a46569c5b9` | `owner-open` | o dono fecha e reabre a carona pelas vagas |
+| ![owner-reopened](desktop/ride/owner-reopened.png)<br>Carona | `/caronas/857624a7-1b3c-447b-8258-72a46569c5b9` | `owner-reopened` | o dono fecha e reabre a carona pelas vagas |
+| ![repeat-ready](desktop/ride/repeat-ready.png)<br>Carona | `/caronas/11b2f1b6-49c4-40a7-bda8-eabc3bcaf4ab` | `repeat-ready` | repetir uma carona publica outra igual em outro horário |
+| ![repeated](desktop/ride/repeated.png)<br>Carona | `/caronas/78dede73-da79-45cb-a90f-3f06df8380f7` | `repeated` | repetir uma carona publica outra igual em outro horário |
 
 ### shell
 
