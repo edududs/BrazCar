@@ -8,4 +8,5 @@ DJANGO_SETTINGS_MODULE = "tests.settings"
 markers = [
     "heavy: slow or needs external services; runs on the heavy gate (GitHub or on demand locally), never the fast gate",
     "contract: a port contract against the real database; the heavy gate repeats it on Postgres (D-039)",
+    "schemathesis: fuzzes contract/openapi.json against a live API (D-065, D-156); heavy-style, own gate",
 ]

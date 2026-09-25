@@ -41,6 +41,7 @@ from brazcar.accounts.domain import (
     TooManyAttemptsError,
     WrongCurrentPasswordError,
 )
+from brazcar.shared.adapters.api_errors import with_errors
 from brazcar.shared.adapters.phone_input import INVALID_PHONE
 from brazcar.shared.adapters.session_auth import session_auth, signed_in_account_id
 from brazcar.shared.domain.phone import InvalidPhoneNumberError
@@ -166,7 +167,11 @@ def build_router(use_cases: AccountUseCases) -> Router:
 def _add_entry_routes(router: Router, use_cases: AccountUseCases) -> None:
     """Without a session: register, log in, recover the password."""
 
-    @router.post("/register", response={HTTPStatus.CREATED: AccountOut}, operation_id="register_account")
+    @router.post(
+        "/register",
+        response=with_errors({HTTPStatus.CREATED: AccountOut}, conflict=True, validation=True),
+        operation_id="register_account",
+    )
     async def register(request: HttpRequest, data: RegisterIn) -> Status[AccountOut]:
         """Create the account and log it in. The terms must be accepted (D-033)."""
         if not data.accepts_terms:
@@ -176,7 +181,11 @@ def _add_entry_routes(router: Router, use_cases: AccountUseCases) -> None:
         await _start_session(request, account)
         return Status(HTTPStatus.CREATED, AccountOut.of(account))
 
-    @router.post("/login", response=AccountOut, operation_id="log_in")
+    @router.post(
+        "/login",
+        response=with_errors(AccountOut, unauthorized=True, too_many_requests=True, validation=True),
+        operation_id="log_in",
+    )
     async def log_in(request: HttpRequest, data: LoginIn) -> AccountOut:
         try:
             account = await use_cases.log_in(phone=data.phone, password=data.password)
@@ -187,13 +196,19 @@ def _add_entry_routes(router: Router, use_cases: AccountUseCases) -> None:
         await _start_session(request, account)
         return AccountOut.of(account)
 
-    @router.post("/password-reset", response=Done, operation_id="request_password_reset")
+    @router.post(
+        "/password-reset", response=with_errors(Done, validation=True), operation_id="request_password_reset"
+    )
     async def request_password_reset(request: HttpRequest, data: PasswordResetIn) -> Done:
         """Always `ok`: whether the phone has an account or an e-mail is not disclosed."""
         await use_cases.request_password_reset(phone=data.phone)
         return Done()
 
-    @router.post("/password-reset/confirm", response=Done, operation_id="confirm_password_reset")
+    @router.post(
+        "/password-reset/confirm",
+        response=with_errors(Done, bad_request=True, validation=True),
+        operation_id="confirm_password_reset",
+    )
     async def confirm_password_reset(request: HttpRequest, data: PasswordResetConfirmIn) -> Done:
         _check_password(data.password)
         try:
@@ -211,14 +226,21 @@ def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
         await sync_to_async(logout)(request)
         return Done()
 
-    @router.get("/me", response=AccountOut, auth=session_auth, operation_id="get_me")
+    @router.get(
+        "/me", response=with_errors(AccountOut, unauthorized=True), auth=session_auth, operation_id="get_me"
+    )
     async def me(request: HttpRequest) -> AccountOut:
         account = await use_cases.accounts.get(signed_in_account_id(request))
         if account is None:
             raise HttpError(HTTPStatus.UNAUTHORIZED, "conta não encontrada")
         return AccountOut.of(account)
 
-    @router.post("/cars", response=AccountOut, auth=session_auth, operation_id="add_car")
+    @router.post(
+        "/cars",
+        response=with_errors(AccountOut, unauthorized=True, conflict=True, validation=True),
+        auth=session_auth,
+        operation_id="add_car",
+    )
     async def add_car(request: HttpRequest, data: CarIn) -> AccountOut:
         try:
             account = await use_cases.add_car(
@@ -228,7 +250,12 @@ def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
             raise HttpError(HTTPStatus.CONFLICT, "esta placa já está na sua conta") from error
         return AccountOut.of(account)
 
-    @router.delete("/cars/{car_id}", response=AccountOut, auth=session_auth, operation_id="remove_car")
+    @router.delete(
+        "/cars/{car_id}",
+        response=with_errors(AccountOut, unauthorized=True, not_found=True, validation=True),
+        auth=session_auth,
+        operation_id="remove_car",
+    )
     async def remove_car(request: HttpRequest, car_id: UUID) -> AccountOut:
         try:
             account = await use_cases.remove_car(signed_in_account_id(request), car_id)
@@ -236,7 +263,9 @@ def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
             raise HttpError(HTTPStatus.NOT_FOUND, "carro não encontrado") from error
         return AccountOut.of(account)
 
-    @router.delete("/me", response=Done, auth=session_auth, operation_id="delete_account")
+    @router.delete(
+        "/me", response=with_errors(Done, unauthorized=True), auth=session_auth, operation_id="delete_account"
+    )
     async def delete_account(request: HttpRequest) -> Done:
         await use_cases.delete(signed_in_account_id(request))
         await sync_to_async(logout)(request)
@@ -246,7 +275,12 @@ def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
 def _add_profile_routes(router: Router, use_cases: AccountUseCases) -> None:
     """Editing the own account (D-139): the display name, the e-mail, and the password."""
 
-    @router.patch("/me", response=AccountOut, auth=session_auth, operation_id="update_profile")
+    @router.patch(
+        "/me",
+        response=with_errors(AccountOut, unauthorized=True, validation=True),
+        auth=session_auth,
+        operation_id="update_profile",
+    )
     async def update_profile(request: HttpRequest, data: ProfileIn) -> AccountOut:
         """The display name and the e-mail only: the phone and the password have their own path."""
         try:
@@ -259,7 +293,14 @@ def _add_profile_routes(router: Router, use_cases: AccountUseCases) -> None:
             raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, message) from error
         return AccountOut.of(account)
 
-    @router.post("/me/password", response=Done, auth=session_auth, operation_id="change_password")
+    @router.post(
+        "/me/password",
+        response=with_errors(
+            Done, unauthorized=True, forbidden=True, too_many_requests=True, validation=True
+        ),
+        auth=session_auth,
+        operation_id="change_password",
+    )
     async def change_password(request: HttpRequest, data: ChangePasswordIn) -> Done:
         """The current password proves it is really the owner, session or not (D-139)."""
         _check_password(data.new_password)

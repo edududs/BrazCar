@@ -60,6 +60,7 @@ from brazcar.rides.domain import (
     Stop,
     UnknownPlaceError,
 )
+from brazcar.shared.adapters.api_errors import with_errors
 from brazcar.shared.adapters.session_auth import optional_account_id, session_auth, signed_in_account_id
 from brazcar.shared.adapters.sse import event_frame, retry_frame, sse_response
 
@@ -254,7 +255,7 @@ def build_router(use_cases: RideUseCases) -> Router:
 def _add_board_routes(router: Router, use_cases: RideUseCases) -> None:
     """Public. A signed-in viewer gets their own actions; nobody gets a phone or a plate."""
 
-    @router.get("", response=list[RideOut], operation_id="list_board")
+    @router.get("", response=with_errors(list[RideOut], validation=True), operation_id="list_board")
     async def list_board(request: HttpRequest, filters: Query[BoardQuery]) -> list[RideOut]:
         """Rides still to depart, earliest first, filtered. `q` matches any stop, accents and case ignored."""
         viewer = await optional_account_id(request)
@@ -276,11 +277,18 @@ def _add_board_routes(router: Router, use_cases: RideUseCases) -> None:
         """SSE: `revision` when the board changes, `ping` every 15s (ADR-0010, D-077). No ORM held."""
         return sse_response(_signal_frames(use_cases.signal, use_cases.revision))
 
-    @router.get("/mine", response=list[RideOut], auth=session_auth, operation_id="list_my_rides")
+    @router.get(
+        "/mine",
+        response=with_errors(list[RideOut], unauthorized=True),
+        auth=session_auth,
+        operation_id="list_my_rides",
+    )
     async def list_mine(request: HttpRequest) -> list[RideOut]:
         return [RideOut.of(ride) for ride in await use_cases.mine(signed_in_account_id(request))]
 
-    @router.get("/{ride_id}", response=RideOut, operation_id="get_ride")
+    @router.get(
+        "/{ride_id}", response=with_errors(RideOut, not_found=True, validation=True), operation_id="get_ride"
+    )
     async def get_ride(request: HttpRequest, ride_id: UUID) -> RideOut:
         viewer = await optional_account_id(request)
         try:
@@ -292,7 +300,12 @@ def _add_board_routes(router: Router, use_cases: RideUseCases) -> None:
 def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
     """With a session, and only the driver's own rides."""
 
-    @router.post("", response={HTTPStatus.CREATED: RideOut}, auth=session_auth, operation_id="publish_ride")
+    @router.post(
+        "",
+        response=with_errors({HTTPStatus.CREATED: RideOut}, unauthorized=True, validation=True),
+        auth=session_auth,
+        operation_id="publish_ride",
+    )
     async def publish(request: HttpRequest, data: PublishIn) -> Status[RideOut]:
         driver_id = signed_in_account_id(request)
         with _translated():
@@ -308,7 +321,14 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
             )
         return Status(HTTPStatus.CREATED, RideOut.of(await use_cases.show(ride.id, driver_id)))
 
-    @router.patch("/{ride_id}", response=RideOut, auth=session_auth, operation_id="edit_ride")
+    @router.patch(
+        "/{ride_id}",
+        response=with_errors(
+            RideOut, unauthorized=True, forbidden=True, not_found=True, conflict=True, validation=True
+        ),
+        auth=session_auth,
+        operation_id="edit_ride",
+    )
     async def edit(request: HttpRequest, ride_id: UUID, data: EditIn) -> RideOut:
         driver_id = signed_in_account_id(request)
         with _translated():
@@ -323,7 +343,14 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
             )
         return RideOut.of(await use_cases.show(ride_id, driver_id))
 
-    @router.post("/{ride_id}/seats", response=RideOut, auth=session_auth, operation_id="change_seats")
+    @router.post(
+        "/{ride_id}/seats",
+        response=with_errors(
+            RideOut, unauthorized=True, forbidden=True, not_found=True, conflict=True, validation=True
+        ),
+        auth=session_auth,
+        operation_id="change_seats",
+    )
     async def change_seats(request: HttpRequest, ride_id: UUID, data: SeatsIn) -> RideOut:
         """Zero closes the ride; back above zero reopens it (ADR-0003)."""
         driver_id = signed_in_account_id(request)
@@ -331,7 +358,14 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
             await use_cases.change_seats(driver_id, ride_id, data.seats_available)
         return RideOut.of(await use_cases.show(ride_id, driver_id))
 
-    @router.post("/{ride_id}/cancel", response=RideOut, auth=session_auth, operation_id="cancel_ride")
+    @router.post(
+        "/{ride_id}/cancel",
+        response=with_errors(
+            RideOut, unauthorized=True, forbidden=True, not_found=True, conflict=True, validation=True
+        ),
+        auth=session_auth,
+        operation_id="cancel_ride",
+    )
     async def cancel(request: HttpRequest, ride_id: UUID) -> RideOut:
         """Final (D-019). To change one's mind, repeat."""
         driver_id = signed_in_account_id(request)
@@ -341,7 +375,14 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
 
     @router.post(
         "/{ride_id}/repeat",
-        response={HTTPStatus.CREATED: RideOut},
+        response=with_errors(
+            {HTTPStatus.CREATED: RideOut},
+            unauthorized=True,
+            forbidden=True,
+            not_found=True,
+            conflict=True,
+            validation=True,
+        ),
         auth=session_auth,
         operation_id="repeat_ride",
     )
@@ -354,7 +395,19 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
 
 
 def _add_contact_route(router: Router, use_cases: RideUseCases) -> None:
-    @router.post("/{ride_id}/contact", response=ContactOut, auth=session_auth, operation_id="request_contact")
+    @router.post(
+        "/{ride_id}/contact",
+        response=with_errors(
+            ContactOut,
+            unauthorized=True,
+            not_found=True,
+            conflict=True,
+            too_many_requests=True,
+            validation=True,
+        ),
+        auth=session_auth,
+        operation_id="request_contact",
+    )
     async def request_contact(request: HttpRequest, ride_id: UUID) -> ContactOut:
         """Login, a limit per account and a record: then the `wa.me` link and the plate (ADR-0006)."""
         with _translated():

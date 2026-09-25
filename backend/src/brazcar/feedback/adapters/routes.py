@@ -17,6 +17,7 @@ from brazcar.feedback.domain import (
     FeedbackKind,
     FeedbackLimitError,
 )
+from brazcar.shared.adapters.api_errors import with_errors
 from brazcar.shared.adapters.phone_input import INVALID_PHONE
 from brazcar.shared.adapters.session_auth import session_auth, signed_in_account_id
 from brazcar.shared.domain.phone import InvalidPhoneNumberError
@@ -32,7 +33,14 @@ class FeedbackIn(Schema):
 def build_router(send: SendFeedback) -> Router:
     router = Router(tags=["feedback"])
 
-    @router.post("", response={HTTPStatus.NO_CONTENT: None}, auth=session_auth, operation_id="send_feedback")
+    @router.post(
+        "",
+        response=with_errors(
+            {HTTPStatus.NO_CONTENT: None}, unauthorized=True, too_many_requests=True, validation=True
+        ),
+        auth=session_auth,
+        operation_id="send_feedback",
+    )
     async def send_feedback(request: HttpRequest, data: FeedbackIn) -> Status[None]:
         """Keep one opinion. A limit per account; no answer goes back to the person (D-155)."""
         try:

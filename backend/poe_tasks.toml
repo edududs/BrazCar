@@ -24,8 +24,12 @@ help = "Fast tests again, measuring coverage. Prints the summary and fails below
 cmd = "pytest -m 'not heavy' --cov=src/brazcar --cov-report=term-missing:skip-covered --cov-fail-under=87"
 
 [tasks.test-heavy]
-help = "Every test, including the ones that need external services"
-cmd = "pytest"
+help = "Every test except the contract fuzz, including the ones that need external services"
+cmd = "pytest -m 'not schemathesis'"
+
+[tasks.test-contract-fuzz]
+help = "Fuzz contract/openapi.json against a live SQLite-backed API with Schemathesis (D-065, D-156)"
+cmd = "pytest -m schemathesis -s"
 
 [tasks.test-postgres]
 help = "Port contracts again, on Postgres (D-039). Same POSTGRES_* as compose.yml, from ../.env; needs `docker compose --profile postgres up -d` locally, already a service of the runner on GitHub (D-132)"
@@ -54,8 +58,8 @@ sequence = [
 ]
 
 [tasks.check-heavy]
-help = "Heavy gate (D-132): the fast gate, every test, and the contracts on Postgres. Runs on GitHub and on demand locally"
-sequence = ["check", "test-heavy", "test-postgres"]
+help = "Heavy gate (D-132): the fast gate, every test, the contracts on Postgres, and the contract fuzz. Runs on GitHub and on demand locally"
+sequence = ["check", "test-heavy", "test-postgres", "test-contract-fuzz"]
 
 [tasks.openapi]
 help = "Regenerate the API contract consumed by web/"

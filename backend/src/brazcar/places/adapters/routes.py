@@ -9,6 +9,7 @@ from ninja.errors import HttpError
 
 from brazcar.places.application import CatalogRepository, ResolvePlace, SearchPlaces
 from brazcar.places.domain import Place, PlaceKind, PlaceNotFoundError
+from brazcar.shared.adapters.api_errors import with_errors
 
 
 class PlaceOut(Schema):
@@ -46,7 +47,11 @@ def build_router(catalog: CatalogRepository) -> Router:
         """Places whose name or alias contains `q`, accents and case ignored. Blank lists all."""
         return [PlaceOut.of(place) for place in await search_places(q)]
 
-    @router.get("/{place_id}", response=ResolvedPlaceOut, operation_id="resolve_place")
+    @router.get(
+        "/{place_id}",
+        response=with_errors(ResolvedPlaceOut, not_found=True),
+        operation_id="resolve_place",
+    )
     async def resolve(request: HttpRequest, place_id: str) -> ResolvedPlaceOut:
         """One place and everything beneath it in the hierarchy."""
         try:
