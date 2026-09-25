@@ -37,4 +37,31 @@ describe("changesBetween", () => {
     expect(written).toEqual({ notes: "Levo mala" });
     expect(erased).toEqual({ notes: "  " }); // blank is how the API is told to erase them (D-129)
   });
+  it("sends the time only when the instant changed, whatever offset it is written in", () => {
+    const draft = draftOf(openRide);
+
+    expect(changesBetween(openRide, { ...draft, departureAt: "2026-09-23T10:00:00.000Z" })).toEqual(
+      {},
+    );
+    expect(changesBetween(openRide, { ...draft, departureAt: "2026-09-23T10:30:00.000Z" })).toEqual(
+      { departureAt: "2026-09-23T10:30:00.000Z" },
+    );
+  });
+
+  it("sends the payment methods when the set changed, not when only the order did", () => {
+    const both = { ...openRide, paymentMethods: ["pix", "cash"] as const };
+    const draft = draftOf(both);
+
+    expect(changesBetween(both, { ...draft, paymentMethods: ["cash", "pix"] })).toEqual({});
+    expect(changesBetween(both, { ...draft, paymentMethods: ["cash"] })).toEqual({
+      paymentMethods: ["cash"],
+    });
+  });
+
+  it("sends the price when its value changed, not when only its writing did", () => {
+    const draft = draftOf(openRide);
+
+    expect(changesBetween(openRide, { ...draft, price: "7" })).toEqual({});
+    expect(changesBetween(openRide, { ...draft, price: "8.50" })).toEqual({ price: "8.50" });
+  });
 });
