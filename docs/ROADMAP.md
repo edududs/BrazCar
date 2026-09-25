@@ -48,7 +48,18 @@ Plataforma que funciona sozinha, sem extrator.
   **Feito, tag `v0.12.1`**: o combobox aceita o que foi digitado e não escolhido na lista como a
   própria parada.
 - **`LISTEN/NOTIFY`** como segundo adaptador da porta de revisão, quando um segundo de atraso incomodar.
-- **Pedidos de carona.** Passageiro pedindo é outro agregado, com outro ciclo de vida.
+- **Canal de feedback do usuário**, sempre disponível e discreto: consideração, reclamação, elogio.
+  Entra junto com a implementação do design novo, depois da etapa de design (D-103).
+- **Favoritar contatos** (motoristas e passageiros de confiança), depois da etapa de design (D-103).
+- **Remodelagem da conta como agregado que cresce**, depois da etapa de design (D-103). Hoje
+  `Account` é telefone, nome social, e-mail e carros; favoritos, preferências e o que mais vier
+  entram por partes, com validação própria, como foi feito com o telefone (D-135), e o modelo é
+  revisto quando esses itens entrarem.
+- **Pedidos de carona e reserva no próprio app**, depois da etapa de design (D-103). Passageiro
+  pedindo é outro agregado, com outro ciclo de vida; registrar e reservar vaga numa carona
+  publicada, no lugar de combinar por fora, é outra frente, com avaliação e ranking de motoristas e
+  passageiros depois (ver "Reputação de motorista e avaliação" em Talvez). "Levar para o WhatsApp"
+  continua sendo o caminho padrão enquanto a maioria estiver lá.
 - **Verificação de telefone por OTP reverso.** O site mostra um código, a pessoa o envia por
   `wa.me` para o número da plataforma e o extrator, que só lê, confirma a posse do número. Serve
   também para recuperar senha. Só com o extrator plugado; a plataforma não pode depender disso.
@@ -62,7 +73,8 @@ Plataforma que funciona sozinha, sem extrator.
 - **Modelagem de lugares como área.** A maioria dos lugares é uma região, não um ponto. Antes de
   modelar coordenadas, pesquisar como Uber, 99 e similares representam zonas e pontos de encontro.
 - **Web Push** para "apareceu carona no meu filtro". No iOS exige o app instalado.
-- **Reputação de motorista** e avaliação.
+- **Reputação de motorista e avaliação**, com ranking de motoristas e de passageiros, junto da
+  reserva de carona no próprio app (ver "Pedidos de carona e reserva no próprio app" em Depois).
 - **Carona recorrente** de verdade, com dias da semana. Hoje o "repetir esta carona" cobre o uso.
 - **Preço conforme o ponto de embarque.** O preço "até a parada" entra com a D-131; cobrar
   diferente conforme onde se embarca exigiria remodelar a rota, e nenhum grupo faz isso hoje.
