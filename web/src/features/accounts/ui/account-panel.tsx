@@ -33,6 +33,8 @@ interface AccountPanelProps {
   readonly appearance?: React.ReactNode;
   /** The last line of the page: the build's version. */
   readonly footer?: React.ReactNode;
+  /** Opens the opinion sheet (D-155); without it the row is not offered. */
+  readonly onFeedback?: () => void;
 }
 
 type Open = "profile" | "password" | "car" | "delete" | null;
@@ -54,6 +56,7 @@ export function AccountPanel({
   onDeleted,
   appearance,
   footer,
+  onFeedback,
 }: AccountPanelProps) {
   const [open, setOpen] = useState<Open>(null);
   const [error, setError] = useState<string | null>(null);
@@ -154,6 +157,15 @@ export function AccountPanel({
 
       <SectionHeading>BrazCar</SectionHeading>
       <ListGroup>
+        {onFeedback === undefined ? null : (
+          <ListRowButton
+            icon={<Icon name="feedback" />}
+            title="Enviar opinião"
+            subtitle="Sugestão, reclamação ou elogio sobre o app."
+            leads
+            onPress={onFeedback}
+          />
+        )}
         <ListRowButton
           icon={<Icon name="logout" />}
           title="Sair da conta"

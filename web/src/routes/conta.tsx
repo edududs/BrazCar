@@ -1,8 +1,10 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { useChangePassword } from "@/features/accounts/app/use-change-password";
 import { useSession } from "@/features/accounts/app/use-session";
 import { AccountPanel } from "@/features/accounts/ui/account-panel";
+import { FeedbackSheet } from "@/features/feedback/ui/feedback-sheet";
 import { useVersionFloor } from "@/shared/app/use-version-floor";
 import { BrandMark } from "@/shared/ui/brand-mark";
 import { Card } from "@/shared/ui/card";
@@ -22,6 +24,7 @@ function AccountPage() {
   const { changePassword, busy: passwordBusy } = useChangePassword();
   const navigate = useNavigate();
   const { version } = useVersionFloor();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const appearance = <ThemeControl />;
   // The build's version, for support (D-105): it lives here since the footer went.
   const footer = <p className="text-center text-caption text-ink-3">BrazCar {version}</p>;
@@ -90,8 +93,15 @@ function AccountPage() {
           }}
           appearance={appearance}
           footer={footer}
+          onFeedback={() => {
+            setFeedbackOpen(true);
+          }}
         />
       )}
+      {/* Only a signed-in person sends an opinion (D-155). */}
+      {session.status === "signed-in" ? (
+        <FeedbackSheet open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+      ) : null}
     </PageShell>
   );
 }

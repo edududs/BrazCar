@@ -171,6 +171,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Feedback
+         * @description Keep one opinion. A limit per account; no answer goes back to the person (D-155).
+         */
+        post: operations["send_feedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -530,6 +550,21 @@ export interface components {
             /** Stops */
             stops?: components["schemas"]["StopIn"][] | null;
         };
+        /** FeedbackIn */
+        FeedbackIn: {
+            /** About Phone */
+            about_phone?: string | null;
+            kind: components["schemas"]["FeedbackKind"];
+            /** Message */
+            message: string;
+            /** Web Version */
+            web_version: string;
+        };
+        /**
+         * FeedbackKind
+         * @enum {string}
+         */
+        FeedbackKind: "suggestion" | "complaint" | "praise";
         /** HealthStatus */
         HealthStatus: {
             /**
@@ -1008,6 +1043,28 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AccountOut"];
                 };
+            };
+        };
+    };
+    send_feedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackIn"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

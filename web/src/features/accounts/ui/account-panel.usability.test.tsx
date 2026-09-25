@@ -120,4 +120,21 @@ describe("AccountPanel, as the owner uses it", () => {
       });
     });
   });
+
+  it("offers an opinion only when the page gives a way to send one", async () => {
+    const user = userEvent.setup();
+    const onFeedback = vi.fn();
+    show({ onFeedback });
+
+    await user.click(await screen.findByRole("button", { name: /^Enviar opinião/ }));
+
+    expect(onFeedback).toHaveBeenCalledOnce();
+  });
+
+  it("without that way, there is no row", async () => {
+    show();
+
+    expect(await screen.findByText("Ana Paula")).toBeDefined();
+    expect(screen.queryByRole("button", { name: /^Enviar opinião/ })).toBeNull();
+  });
 });

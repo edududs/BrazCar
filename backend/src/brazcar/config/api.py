@@ -6,6 +6,7 @@ from django.conf import settings
 from ninja import NinjaAPI
 
 from brazcar.accounts.adapters.composition import accounts_router
+from brazcar.feedback.adapters.composition import feedback_router
 from brazcar.places.adapters.repository import DjangoCatalogRepository
 from brazcar.places.adapters.routes import build_router as build_places_router
 from brazcar.rides.adapters.composition import rides_router
@@ -23,4 +24,5 @@ api.add_router("", web_version_router)
 api.add_router("/accounts", accounts_router())
 api.add_router("/places", build_places_router(DjangoCatalogRepository()))
 api.add_router("/rides", rides_router())
+api.add_router("/feedback", feedback_router())
 api.add_router("", sse_diagnostics_router)  # diagnostic, removable: see the module docstring

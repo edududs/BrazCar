@@ -20,7 +20,8 @@ Plataforma que funciona sozinha, sem extrator.
   `v0.18.0`**; (4) publicar, editar, conta e acesso — componente de data e hora, trajeto desenhado,
   conta em leitura, acesso: **feito, tag `v0.19.0`**; (5) movimento — catálogo como teste, View
   Transitions, parallax, avisos por navegação, e a bateria de testes de uso dos componentes: **feito,
-  tag `v0.20.0`**; (6) canal de opinião. Desktop
+  tag `v0.20.0`**; (6) canal de opinião, só na Conta, lido por comando (D-155): **feito, tag
+  `v0.21.0`**. Desktop
   depois do celular aprovado. Refinamentos do mural que ficaram para depois: o vazio por horário
   oferecendo "Ver amanhã a partir de HH:MM" (S15) e a contagem de lotadas escondidas pelo "Com
   vaga" (S01), esta dependendo de a API dizer quantas escondeu.
@@ -87,6 +88,8 @@ Plataforma que funciona sozinha, sem extrator.
 - **Web Push** para "apareceu carona no meu filtro". No iOS exige o app instalado.
 - **Reputação de motorista e avaliação**, com ranking de motoristas e de passageiros, junto da
   reserva de carona no próprio app (ver "Pedidos de carona e reserva no próprio app" em Depois).
+  A reclamação do canal de opinião já guarda o celular de quem ela aponta (D-155), sem vínculo com
+  a conta; usar isso numa reputação pede decisão própria, com direito de resposta.
 - **Carona recorrente** de verdade, com dias da semana. Hoje o "repetir esta carona" cobre o uso.
 - **Preço conforme o ponto de embarque.** O preço "até a parada" entra com a D-131; cobrar
   diferente conforme onde se embarca exigiria remodelar a rota, e nenhum grupo faz isso hoje.

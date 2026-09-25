@@ -3,6 +3,7 @@
 Seeding is not cheap, so the promises are checked together on one run instead of one run apiece.
 """
 
+from datetime import UTC, datetime
 from io import StringIO
 from pathlib import Path
 
@@ -14,9 +15,13 @@ from django.core.management.base import CommandError
 from brazcar.accounts.adapters.models import User
 from brazcar.demo.adapters import dataset as data
 from brazcar.demo.adapters.seeding import DemoManifest
+from brazcar.feedback.adapters.models import FeedbackModel
+from brazcar.feedback.adapters.repository import DjangoFeedbackBox
+from brazcar.feedback.domain import Feedback, FeedbackKind
 from brazcar.importing.adapters.models import BlockedSenderModel, CandidateModel, SourceMessageModel
 from brazcar.rides.adapters.models import ContactRequestModel, RideModel
 from brazcar.rides.domain import NOTES_LIMIT, RideStatus
+from brazcar.shared.domain.phone import PhoneNumber
 
 CONTACT_LIMIT = 20  # `RideRules.contact_limit` by default (D-097)
 DAYS = 3  # hoje, amanhã e outro dia
@@ -139,3 +144,25 @@ async def test_repeats_itself_and_can_forget_everything(tmp_path: Path) -> None:
     await _run("--yes-i-know", "--forget")
 
     assert await _counts() == (0, 0, 0, 0, 0)
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.usefixtures("worker_thread_connections_closed")
+async def test_an_opinion_sent_by_a_seeded_account_does_not_block_forgetting(tmp_path: Path) -> None:
+    """The end to end suite sends one; the opinion points at the account with `PROTECT`."""
+    seeded = await _seed(tmp_path / "manifest.json")
+    author = seeded.account(data.DRIVER_ONE_CAR.slug)
+    opinion = Feedback.send(
+        author_id=author.id,
+        kind=FeedbackKind.COMPLAINT,
+        message="Não apareceu.",
+        about_phone=PhoneNumber.parse("+5561999990002"),
+        web_version="0.20.2",
+        at=datetime.now(UTC),
+    )
+    await DjangoFeedbackBox().keep(opinion)
+
+    await _run("--yes-i-know", "--forget")
+
+    assert await FeedbackModel.objects.acount() == 0
+    assert await User.objects.acount() == 0

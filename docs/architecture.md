@@ -24,7 +24,7 @@ HTTP/2 são entregues por ele, não pelo Traefik.
 ```mermaid
 flowchart TB
     subgraph web [web/ React]
-        F[features: rides, accounts, places<br/>domain / app / ui / adapters]
+        F[features: rides, accounts, places, feedback<br/>domain / app / ui / adapters]
     end
     subgraph src [backend/src/brazcar Django]
         R[rides]
@@ -33,10 +33,12 @@ flowchart TB
         SH[shared: revisão do mural, SSE,<br/>limite de requisições, e-mail]
         SE[search: índice de texto<br/>independente do projeto]
         IM[importing: mensagem-fonte,<br/>candidata, julgamento, poda]
+        FB[feedback: opinião sobre o app,<br/>lida só por comando]
     end
-    F -->|OpenAPI gerado| R & AC & PL
+    F -->|OpenAPI gerado| R & AC & PL & FB
     R -->|id de lugar| PL
     R -->|id de conta e carro| AC
+    FB -->|id de conta| AC
     R -->|texto das paradas| SE
     IM -->|rascunho de carona| R
     IM -->|texto de parada| PL

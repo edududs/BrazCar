@@ -4,8 +4,10 @@ Atualizado em 2026-09-25.
 
 ## Onde estamos
 
-Versão `v0.20.0`: passo 5 da etapa de design, movimento (D-153), e a bateria de testes de uso dos
-componentes (D-154) com a correção de dois defeitos achados pelo Eduardo no celular: a hora não
+Versão `v0.21.0`: passo 6 da etapa de design, o canal de opinião (D-155): contexto `feedback`, só
+para quem tem conta, entrada só na Conta, três tipos, e a reclamação que aponta alguém pelo celular,
+lida só pelo comando `manage.py feedback`, com o número mascarado. Antes: `v0.20.0`, passo 5,
+movimento (D-153), e a bateria de testes de uso dos componentes (D-154) com a correção de dois defeitos achados pelo Eduardo no celular: a hora não
 aceitava digitação, e o fim do formulário de publicar ficava atrás do botão fixo. Antes: `v0.19.0`,
 passo 4, formulários, conta e acesso (D-151, D-152): componente
 de data e hora da F7, trajeto desenhado com preço por parada atrás de interruptor, conta em leitura
@@ -160,6 +162,16 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   enquanto a pessoa digita e valida antes de enviar, o primitivo `PhoneField` é usado no cadastro,
   no login e na recuperação de senha, e o card de contato mostra o número; a `libphonenumber-js`
   (`min`) fica confinada em `shared/app/phone-codec.ts` por regra do ESLint.
+- Design, passo 6, canal de opinião (D-155): contexto `feedback` no backend (`Feedback`,
+  `FeedbackKind`, a porta `FeedbackBox`, `SendFeedback` com o `RateLimiter` por conta,
+  `ReadFeedback`), app Django com migração, rota `POST /api/feedback` com sessão, e o comando
+  `manage.py feedback --since/--reveal`, que mascara o celular apontado e avisa quando o texto traz
+  dado pessoal. `PhoneNumber.masked()` e `signed_in_account_id` passaram a `shared` (o comando de
+  contatos e as rotas de contas e caronas usam os mesmos), e a frase de celular inválido também
+  (`shared/adapters/phone_input.py`). A semente esquece as opiniões das contas de demonstração antes
+  de apagá-las. No front, `features/feedback` com `useFeedbackDraft` (headless, com teste) e
+  `FeedbackSheet`: tipo num segmentado, opinião com contador, e na reclamação a caixa "É sobre alguém
+  específico" que abre o campo do celular; a linha "Enviar opinião" no grupo BrazCar da Conta.
 - Design, passo 5, movimento e usabilidade (D-153, D-154): tokens de movimento com as entradas
   nomeadas (`animate-rise-in`, `-list-in`, `-ride-in`, `-bump`, `-reveal`), só `transform` e
   `opacity`, zeradas com "reduzir movimento" por `--motion-rise`/`--motion-scale`; View Transitions
@@ -400,8 +412,8 @@ sobrevivendo a panic do Go ou a reinício do Postgres; o mural atualizando sozin
 segundo plano no app instalado; o aviso de build novo e a tela de piso num iPhone; ícone maskable
 no Android; `login` e `password-reset` estourados pelo navegador; e-mail de verdade pelo Resend.
 
-**Pendências de design (D-103), depois do passo 5:** o balão de opinião no topo do mural e na conta
-é do passo 6. O "Ver amanhã a partir de HH:MM" e a contagem de lotadas escondidas estão no ROADMAP.
+**Pendências de design (D-103), depois do passo 6:** o balão de opinião no topo do mural (S14) não
+entra: por decisão do Eduardo, a opinião fica só na Conta (D-155). O "Ver amanhã a partir de HH:MM" e a contagem de lotadas escondidas estão no ROADMAP.
 O Base UI marca o resto da página como fora da árvore de acessibilidade enquanto a lista de lugares
 está aberta (e, no jsdom, até o fim de uma animação que nunca termina): parece comportamento modal
 indevido num combobox; fica para o passo de qualidade. O desktop usa a mesma casca do celular até o
@@ -409,9 +421,8 @@ canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é e
 
 ## Próximo passo
 
-1. Etapa de design (D-103, D-143), passo 6: canal de opinião — contexto `feedback` no backend
-   (mensagem, conta opcional, tela de origem, versão do front, momento), rota com limite por chave,
-   comando de leitura, e o botão discreto que o canvas desenha no topo do mural e na conta.
+1. Etapa de design (D-103, D-143): o Eduardo conferir no celular os passos 5 e 6 publicados; depois,
+   o desktop, quando o canvas tiver as pranchas.
 2. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
    e as telas de observações e preço por parada.
 3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das

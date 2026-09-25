@@ -361,6 +361,50 @@
         "title": "EditIn",
         "type": "object"
       },
+      "FeedbackIn": {
+        "properties": {
+          "about_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "About Phone"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/FeedbackKind"
+          },
+          "message": {
+            "maxLength": 1000,
+            "title": "Message",
+            "type": "string"
+          },
+          "web_version": {
+            "maxLength": 32,
+            "title": "Web Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "message",
+          "web_version"
+        ],
+        "title": "FeedbackIn",
+        "type": "object"
+      },
+      "FeedbackKind": {
+        "enum": [
+          "suggestion",
+          "complaint",
+          "praise"
+        ],
+        "title": "FeedbackKind",
+        "type": "string"
+      },
       "HealthStatus": {
         "properties": {
           "status": {
@@ -1318,6 +1362,37 @@
         "summary": "Register",
         "tags": [
           "accounts"
+        ]
+      }
+    },
+    "/api/feedback": {
+      "post": {
+        "description": "Keep one opinion. A limit per account; no answer goes back to the person (D-155).",
+        "operationId": "send_feedback",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Send Feedback",
+        "tags": [
+          "feedback"
         ]
       }
     },

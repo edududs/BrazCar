@@ -289,3 +289,32 @@ test("excluir conta: o diálogo explica, confirma, e o telefone deixa de servir 
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page.getByText("telefone ou senha incorretos")).toBeVisible();
 });
+
+test("opinião: a reclamação sobre alguém vai pelo celular e só volta um obrigado", async ({
+  page,
+  signIn,
+  snap,
+}) => {
+  await signIn(page, "fresh");
+  await page.goto("/conta");
+
+  await page.getByRole("button", { name: /^Enviar opinião/ }).click();
+  const sheet = page.getByRole("dialog", { name: "Enviar opinião", exact: true });
+  await expect(sheet.getByRole("radio", { name: "Sugestão", exact: true })).toBeChecked();
+  await snap(page, "feedback/empty");
+
+  await sheet.getByRole("radio", { name: "Reclamação", exact: true }).click();
+  await sheet.getByLabel(/^Sua opinião/).pressSequentially("Combinou e não apareceu.");
+  await sheet.getByLabel("É sobre alguém específico").check();
+  // The phone formats as it is typed, so it is typed, never filled (D-154).
+  await sheet.getByLabel(/^Celular de quem é/).pressSequentially("61999990002");
+  await expect(sheet.getByLabel(/^Celular de quem é/)).toHaveValue("(61) 99999-0002");
+  await snap(page, "feedback/complaint-about-someone");
+
+  await sheet.getByRole("button", { name: "Enviar opinião", exact: true }).click();
+  await expect(page.getByText("Recebido. Obrigado por contar.")).toBeVisible();
+  await expect(sheet).toBeHidden();
+  // Nothing of it stays on screen: no reply, no number (D-155).
+  await expect(page.getByText("(61) 99999-0002")).toHaveCount(0);
+  await snap(page, "feedback/received");
+});

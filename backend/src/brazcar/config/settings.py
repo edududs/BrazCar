@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "brazcar.accounts.adapters",
     "brazcar.rides.adapters",
     "brazcar.importing.adapters",
+    "brazcar.feedback.adapters",
     "brazcar.demo.adapters",  # no models and no routes: only `manage.py seed_demo` lives there (D-133)
 ]
 AUTH_USER_MODEL = "accounts.User"  # the custom user precedes auth's first migration (D-028)
@@ -111,6 +112,10 @@ CORS_ALLOW_CREDENTIALS = True
 RIDE_DEPARTURE_TOLERANCE_MINUTES = int(os.environ.get("RIDE_DEPARTURE_TOLERANCE_MINUTES", "10"))
 RIDE_CONTACT_LIMIT = int(os.environ.get("RIDE_CONTACT_LIMIT", "20"))
 RIDE_CONTACT_WINDOW_HOURS = int(os.environ.get("RIDE_CONTACT_WINDOW_HOURS", "24"))
+
+# The knobs of `feedback` (D-155): opinions per account in a window of hours.
+FEEDBACK_LIMIT = int(os.environ.get("FEEDBACK_LIMIT", "5"))
+FEEDBACK_WINDOW_HOURS = int(os.environ.get("FEEDBACK_WINDOW_HOURS", "24"))
 
 # The WhatsApp worker (D-108, D-109, D-119). Only `run_extractor` and its siblings read these.
 WHATSAPP_ACCOUNT = os.environ.get("WHATSAPP_ACCOUNT", "").strip()

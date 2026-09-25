@@ -6,7 +6,7 @@ delete-everything lever inside the domain, reachable from the API. The reach is 
 demonstration data itself — the phones of `dataset.py` and the paired account of its worker — so
 this can only ever hit what the seed wrote.
 
-Order matters: contact requests and rides point at users with `PROTECT`.
+Order matters: contact requests, rides and opinions point at users with `PROTECT`.
 """
 
 from dataclasses import dataclass
@@ -16,6 +16,7 @@ from django.db import transaction
 from django.db.models import Q
 
 from brazcar.accounts.adapters.models import CarModel, User
+from brazcar.feedback.adapters.models import FeedbackModel
 from brazcar.importing.adapters.models import BlockedSenderModel, CandidateModel, SourceMessageModel
 from brazcar.rides.adapters.models import ContactRequestModel, RideModel
 from brazcar.rides.adapters.search import NAMESPACE
@@ -53,6 +54,7 @@ def _forget() -> Removed:
     ContactRequestModel.objects.filter(Q(ride_id__in=ride_ids) | Q(requester_id__in=account_ids)).delete()
     SearchEntryModel.objects.filter(namespace=NAMESPACE, document_id__in=ride_ids).delete()
     rides.delete()  # the stops and the history go with each row
+    FeedbackModel.objects.filter(author_id__in=account_ids).delete()
 
     candidates = CandidateModel.objects.filter(sender_phone__in=senders)
     messages = SourceMessageModel.objects.filter(account=data.WORKER_ACCOUNT)
@@ -62,6 +64,7 @@ def _forget() -> Removed:
     BlockedSenderModel.objects.filter(phone__in=senders).delete()
 
     keys = [f"contact:{account_id}" for account_id in account_ids]
+    keys += [f"feedback:{account_id}" for account_id in account_ids]
     keys += [f"login:{phone}" for phone in phones]
     keys += [f"password-reset:{phone}" for phone in phones]
     RateLimitHitModel.objects.filter(key__in=keys).delete()
