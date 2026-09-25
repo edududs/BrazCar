@@ -6,6 +6,17 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.14.0] - 2026-09-25
+
+### Adicionado
+
+- **accounts:** Edit the display name and the email of the account
+
+### Documentação
+
+- Record the v0.13.0 deploy
+- Note what comes after the design stage
+
 ## [0.13.0] - 2026-09-24
 
 ### Adicionado
