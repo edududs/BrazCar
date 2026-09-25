@@ -147,6 +147,22 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   enquanto a pessoa digita e valida antes de enviar, o primitivo `PhoneField` é usado no cadastro,
   no login e na recuperação de senha, e o card de contato mostra o número; a `libphonenumber-js`
   (`min`) fica confinada em `shared/app/phone-codec.ts` por regra do ESLint.
+- Design, passo 1, fundação (D-143 a D-147): a identidade "Hora azul" do canvas entra pela base.
+  `styles.css` com os tokens por papel em dois temas (22 cores, sombras, raios, tipo, movimento) e
+  o `@theme inline` só nomeando; a paleta padrão do Tailwind desligada e um teste que recusa token
+  antigo, cor de paleta e `opacity-*` em componente. Tema pelo sistema com escolha manual na conta
+  (`ThemeControl` sobre o primitivo `Segmented`), aplicada antes da primeira pintura por script
+  inline; `shared/domain/theme.ts`, `shared/adapters/theme.ts` e `useTheme`, com teste. Bricolage
+  Grotesque 700 hospedada em `web/public/fonts/` (28 KiB, latino do pt-BR, gerada por
+  `scripts/subset-display-font.py`), com teto de 30 KiB testado. Pele nova dos primitivos com a API
+  de sempre e as props da prancha F4: `ActionButton` (`ink`, `outline`, `ghost`, `critical-solid`,
+  `compact`, `busy`, `icon`), `Badge` (`inverse`, `outline`, `sun`, `icon`), `Card` (`highlight`,
+  `padding`), `NoticeBar` (`tone`, `role`), `ConfirmDialog` (`icon`, botões empilhados), campos
+  sobre as peças internas `FieldFrame` e `Box` (prefixo, sufixo, só leitura), `Icon` com os SVGs do
+  canvas, `Segmented`, `inlineLinkClass`. Views só trocaram classe (token antigo → novo, opacidade →
+  `ink-2`/`ink-3`), sem redesenho: casca, mural, detalhe e formulários são dos passos 2 a 4. A
+  suíte de ponta a ponta ganhou o projeto `mobile-dark`; o catálogo fotografa só o claro por padrão.
+  Barra de status do iPhone em `black-translucent`.
 - Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
   (`poe coverage`), 88,58% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
   (`yarn coverage`), piso de 15%, com meta de paridade (D-126). O resumo
@@ -216,7 +232,10 @@ O primitivo `shared/ui/availability-badge.tsx` não é usado por ninguém.
 
 ## Próximo passo
 
-1. Etapa de design (D-103), com o [catálogo de telas](screens/README.md) na mão.
+1. Etapa de design (D-103, D-143), passo 2: casca — abas embaixo com a quinta aba prevista,
+   cabeçalho que encolhe, marca, folhas de baixo e diálogos, faixa de instalação reposicionada,
+   estados vazios com a linha tracejada. Depois: mural e detalhe (3), publicar, editar, conta e
+   acesso (4), movimento (5), canal de opinião (6).
 2. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
    e as telas de observações e preço por parada.
 3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das

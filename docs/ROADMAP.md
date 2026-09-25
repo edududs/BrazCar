@@ -13,6 +13,10 @@ Plataforma que funciona sozinha, sem extrator.
 - Front e PWA instalável, online-only. **Feito, tag `v0.7.0`** (D-105, D-106).
 - **Etapa de design do produto**, depois de todas as peças acima existirem: identidade visual,
   layout e fluxo pensados de verdade. Até lá as telas são funcionais e sem polimento (D-103).
+  **Em andamento**, pela identidade "Hora azul" (D-143), em seis passos: (1) fundação — tokens, tema,
+  fonte, pele dos primitivos: **feito, tag `v0.16.0`**; (2) casca — abas embaixo, cabeçalho, folhas
+  e diálogos; (3) mural e detalhe; (4) publicar, editar, conta e acesso; (5) movimento; (6) canal de
+  opinião. Desktop depois do celular aprovado.
 - Deploy na máquina de teste e front no Vercel.
 
 ## Depois

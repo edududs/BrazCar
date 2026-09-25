@@ -33,8 +33,14 @@ Só rodar a suíte: sem a variável que o `yarn screens` liga, os prints vão pa
 ```bash
 cd web && yarn e2e
 yarn e2e --project=mobile          # só o celular
+yarn e2e --project=mobile-dark     # o celular no tema escuro (D-146)
 yarn e2e --ui                      # modo interativo, para depurar
 ```
+
+Três projetos: `mobile`, `desktop` e `mobile-dark`, o celular com o tema escuro do sistema. A
+suíte roda nos três; o `yarn screens` fotografa só os dois primeiros, porque o catálogo é do tema
+claro. Para ver o escuro: `yarn screens --project=mobile-dark`, que grava em
+`docs/screens/mobile-dark/` e entra no catálogo enquanto as imagens existirem.
 
 O relatório HTML e os traces ficam em `web/e2e/.state/` e não são versionados. As imagens e o
 `docs/screens/README.md`, sim.

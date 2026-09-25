@@ -28,6 +28,11 @@ paths:
   teste no mesmo passo (D-126). A meta de cobertura do front é a mesma do backend.
 - Primitivos sobre o Base UI (D-088), embrulhados em `shared/ui/`, com Tailwind v4 e tokens em
   variáveis CSS. Acessibilidade de diálogo, menu e sheet não se faz à mão.
+- Visual pelo canvas "Hora azul" (D-143): releia a prancha antes de tocar uma tela. Token por
+  papel (`bg-surface`, `text-ink-2`, `rounded-card`), nunca cor nem `dark:` (D-144); texto
+  secundário é `text-ink-2`/`text-ink-3`, nunca `opacity-*`. Ícone é o primitivo `Icon` (D-147).
+  Alvo de toque 44 px, 54 na ação principal; foco visível; movimento só em `transform` e
+  `opacity`, com `prefers-reduced-motion` respeitado; sem biblioteca de animação.
 - PWA online-only (D-106): o service worker só pré-carrega a casca, sem `runtimeCaching`. Sem rede,
   tela de aviso por cima da página montada. Atualização em modo `prompt`, e tela com digitação em
   andamento chama `useUnsavedWork()`. Respeitar safe-area e detectar modo standalone num adaptador só.
