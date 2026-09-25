@@ -1,10 +1,14 @@
 # Estado do projeto
 
-Atualizado em 2026-09-24.
+Atualizado em 2026-09-25.
 
 ## Onde estamos
 
-Versão `v0.12.0`: passo de coleta concluído no repo: semente de demonstração, suíte de ponta a
+Versão `v0.16.0`: passo 1 da etapa de design, a fundação (D-143 a D-147): tokens em dois
+temas, tema com escolha manual, fonte de destaque hospedada e a pele nova dos primitivos, com o
+catálogo de telas refeito como o "depois". Antes: `v0.15.0` (contato rastreável, filtro "a partir
+de", vagas até 4), `v0.14.0` (editar conta e senha), `v0.13.0` (telefone como value object),
+`v0.12.0`, passo de coleta: semente de demonstração, suíte de ponta a
 ponta com o Playwright e [catálogo de telas](screens/README.md), para a etapa de design (D-103)
 ter o que olhar; e o portão pesado passou para o GitHub (D-132). Antes: `v0.11.0`, passo curto
 de observações e preço por parada. Antes disso:
@@ -212,7 +216,21 @@ carona que outro contexto acabou de publicar (SSE); excluir a conta pelo diálog
 telefone dela deixando de servir para entrar, e a página em português para todo endereço que não é
 rota nenhuma.
 
-**Não verificado:** a cobertura do front nesta máquina (`@vitest/coverage-v8` não está instalado
+**Verificado de verdade no passo 1 do design:** portão rápido (472 testes no backend, 128 no front,
+53 deles novos: tema, fonte, orçamento de tokens e os primitivos por comportamento), portão pesado
+do front com o build (a fonte em `dist/fonts/`, 28 KiB), a suíte de ponta a ponta verde nos três
+projetos (celular, desktop e celular no tema escuro: 155 casos, 1 pulado) e o catálogo refeito com
+143 imagens, conferidas por amostra: mural, conta com o controle de tema, entrar, publicar com a
+recusa, diálogo de cancelar, sem internet e o desktop. O tema escuro provado pela suíte inteira, não
+por print. O gate de memória: com menos de 3 GB livres o vitest não sobe os workers; `--maxWorkers=2`
+resolve na mão e o hook passou sem isso quando a máquina esvaziou.
+
+**Não verificado:** o tema escuro e a barra de status translúcida num iPhone de verdade, instalado e
+em aba (a suíte roda no Chromium e não vê a barra do Safari); a fonte carregando pelo endereço
+publicado, com o `preload` e o service worker, e o salto de layout que a `Bricolage Fallback`
+deveria zerar; LCP e CLS antes e depois pelo endereço publicado (a medição pela Performance API fica
+para o deploy, porque o build local não representa a rede do celular); o `theme-color` acompanhando a
+escolha manual na barra do Safari. Ainda de antes: a cobertura do front nesta máquina (`@vitest/coverage-v8` não está instalado
 aqui; roda no fluxo do GitHub); as telas no WebKit e num iPhone de verdade (a suíte roda os dois
 projetos no Chromium, D-134); o interpretador lendo preços por parada contra um Ollama de verdade
 (o golden set não mede `fares`, e as 120 mensagens não trazem o julgamento esperado desse campo);
@@ -222,13 +240,14 @@ sobrevivendo a panic do Go ou a reinício do Postgres; o mural atualizando sozin
 segundo plano no app instalado; o aviso de build novo e a tela de piso num iPhone; ícone maskable
 no Android; `login` e `password-reset` estourados pelo navegador; e-mail de verdade pelo Resend.
 
-**Pendências de design (D-103), para a etapa de design:** ícones provisórios (quadrado azul com
-círculo branco); o aviso de build novo e a dica de instalação são uma faixa simples sob a barra; a
-tela "Sem internet" e a de atualização obrigatória são texto puro; o rodapé com a versão é texto
-pequeno sem tratamento; cores do manifesto são as do `--color-surface` provisório. A dica de
-instalação aparece em toda imagem do projeto celular, porque é o que um iPhone em aba mostra até
-alguém dispensá-la: ela come a primeira dobra de toda tela, e isso é matéria de design, não defeito.
-O primitivo `shared/ui/availability-badge.tsx` não é usado por ninguém.
+**Pendências de design (D-103), depois do passo 1:** ícones do app ainda provisórios (quadrado azul
+com círculo branco; a marca da prancha F2 entra com a casca); o aviso de build novo e a dica de
+instalação ainda são um aviso em linha sob a barra, e a dica come a primeira dobra de toda imagem do
+celular até o passo 2 a transformar no cartão flutuante da S14; a tela "Sem internet" e a de
+atualização obrigatória já têm o tipo novo, mas o glifo é do passo 2; o rodapé com a versão sai
+para a conta no passo 2. Os formulários e o mural usam os primitivos novos sobre o mesmo layout de
+antes: chips, hora-herói, linha da rota, barrinhas de vaga e o componente de data e hora são dos
+passos 3 e 4. Manifesto com as cores do tema claro (é estático).
 
 ## Próximo passo
 
