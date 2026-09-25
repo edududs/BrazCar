@@ -54,6 +54,8 @@ pedidos de contato no `up`. Em 2026-09-25 (v0.16.0) nada entrou no `api.env`; se
 fonte hospedada responde em `/fonts/...` pelo Vercel. Em 2026-09-25 (v0.17.0) nada entrou no
 `api.env`; sem migração; ícones novos do app servidos pelo Vercel. Em 2026-09-25 (v0.18.0) nada
 entrou no `api.env`; sem migração. Em 2026-09-25 (v0.20.2) nada entrou no `api.env`; sem migração.
+Em 2026-09-25 (v0.21.0) nada entrou no `api.env`; a migração `feedback.0001` criou a tabela do
+canal de opinião no `up`.
 
 ## Worker do WhatsApp (passo 7a)
 
