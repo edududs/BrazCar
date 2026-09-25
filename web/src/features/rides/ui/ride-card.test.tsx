@@ -12,7 +12,7 @@ describe("RideCard", () => {
     renderRouted(<RideCard ride={openRide} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Ana · Gol, prata/)).toBeDefined();
+      expect(screen.getByRole("link").textContent).toContain("Ana · Gol prata");
     });
     expect(screen.queryByText("via WhatsApp")).toBeNull();
     expect(screen.getByRole("link").getAttribute("href")).toBe("/caronas/r1");
@@ -32,9 +32,10 @@ describe("RideCard", () => {
     renderRouted(<RideCard ride={faredRide} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/a partir de R\$\s?7,00/)).toBeDefined();
+      expect(screen.getByText("a partir de")).toBeDefined();
+      expect(screen.getByText("R$ 7")).toBeDefined();
     });
-    const notes = screen.getByText("Levo mala pequena e aviso no grupo se atrasar.");
+    const notes = screen.getByText("“Levo mala pequena e aviso no grupo se atrasar.”");
     expect(notes.className).toContain("truncate");
   });
 
@@ -42,7 +43,7 @@ describe("RideCard", () => {
     renderRouted(<RideCard ride={openRide} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/R\$\s?7,00/)).toBeDefined();
+      expect(screen.getByText("R$ 7")).toBeDefined();
     });
     expect(screen.queryByText(/a partir de/)).toBeNull();
   });

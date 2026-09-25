@@ -15,8 +15,8 @@ test("pedir contato revela o WhatsApp e a placa", async ({ page, demo, signIn, s
   const link = page.getByRole("link", { name: "Falar no WhatsApp" });
   await expect(link).toBeVisible();
   await expect(link).toHaveAttribute("href", /^https:\/\/wa\.me\/55/);
-  await expect(page.getByText(/^Telefone \(\d{2}\) \d{5}-\d{4}\.$/)).toBeVisible();
-  await expect(page.getByText("Placa")).toBeVisible();
+  await expect(page.getByText(/^\(\d{2}\) \d{5}-\d{4}$/)).toBeVisible();
+  await expect(page.getByLabel(/^Placa [A-Z0-9]+$/)).toBeVisible();
   await snap(page, "contact/revealed");
 });
 
@@ -45,7 +45,7 @@ test("carona lotada não oferece o botão nem para quem está logado", async ({
   await signIn(page, "passenger");
   await openRide(page, demo.ride("full_today").id);
 
-  await expect(page.getByText("lotada")).toBeVisible();
+  await expect(page.getByText("Lotada", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pedir contato" })).toHaveCount(0);
   await snap(page, "contact/none-when-full");
 });
@@ -59,7 +59,7 @@ test("carona cancelada não oferece o botão nem para quem está logado", async 
   await signIn(page, "passenger");
   await openRide(page, demo.ride("cancelled_today").id);
 
-  await expect(page.getByText("cancelada")).toBeVisible();
+  await expect(page.getByText("Cancelada", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pedir contato" })).toHaveCount(0);
   await snap(page, "contact/none-when-cancelled");
 });

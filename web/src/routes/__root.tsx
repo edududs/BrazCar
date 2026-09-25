@@ -1,4 +1,4 @@
-import { Outlet, createRootRoute } from "@tanstack/react-router";
+import { Outlet, createRootRoute, useRouterState } from "@tanstack/react-router";
 
 import { useSession } from "@/features/accounts/app/use-session";
 import { useForgetBoardOffline } from "@/features/rides/app/use-forget-board-offline";
@@ -19,6 +19,10 @@ function RootLayout() {
   const { session } = useSession();
   const network = useNetworkStatus();
   const floor = useVersionFloor();
+  // A ride's own page has one goal and its own action under the thumb: no tabs there (S03).
+  const stacked = useRouterState({
+    select: (state) => state.location.pathname.startsWith("/caronas/"),
+  });
   useForgetBoardOffline();
 
   if (floor.status === "below-floor") {
@@ -71,7 +75,7 @@ function RootLayout() {
       ) : (
         <ShellOverlays />
       )}
-      <TabBar tabs={tabs} />
+      {stacked ? null : <TabBar tabs={tabs} />}
     </div>
   );
 }

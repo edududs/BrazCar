@@ -22,8 +22,8 @@ test("o mural lista as caronas que ainda vão sair, e só elas", async ({ page, 
   for (const ride of demo.rides) {
     await expect(cardFor(page, ride.id), ride.slug).toHaveCount(ride.onBoard ? 1 : 0);
   }
-  await expect(page.getByText("já saiu")).toHaveCount(0);
-  await expect(page.getByText("cancelada")).toHaveCount(0);
+  await expect(page.getByText("Já saiu", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Cancelada", { exact: true })).toHaveCount(0);
   await expect(page.getByText("via WhatsApp").first()).toBeVisible();
   await snap(page, "board/full");
 });
@@ -32,7 +32,7 @@ test("o filtro de dia vive na URL e recorta o mural", async ({ page, demo, snap 
   const today = demo.dayAt(0);
   await openBoard(page);
 
-  await page.getByLabel("Dia").fill(today);
+  await page.getByRole("button", { name: "Hoje" }).click();
   await expect(page).toHaveURL(new RegExp(`day=${today}`));
 
   for (const ride of demo.rides.filter((each) => each.onBoard)) {
@@ -56,7 +56,7 @@ test('o filtro "a partir de" recorta o mural pelo horário local, sem dia e com 
   await snap(page, "board/from-time");
 
   const today = demo.dayAt(0);
-  await page.getByLabel("Dia", { exact: true }).fill(today);
+  await page.getByRole("button", { name: "Hoje" }).click();
   await expect(page).toHaveURL(new RegExp(`day=${today}`));
 
   for (const ride of demo.rides.filter((each) => each.onBoard)) {
@@ -84,14 +84,14 @@ test("só com vaga tira a lotada do mural", async ({ page, demo, snap }) => {
   const full = demo.ride("full_today");
   await openBoard(page);
   await expect(cardFor(page, full.id)).toHaveCount(1);
-  await expect(page.getByText("lotada").first()).toBeVisible();
+  await expect(page.getByText("Lotada", { exact: true }).first()).toBeVisible();
 
-  await page.getByLabel("Só com vaga").check();
+  await page.getByRole("button", { name: "Com vaga" }).click();
   await expect(page).toHaveURL(/withSeats=true/);
 
   await expect(cardFor(page, full.id)).toHaveCount(0);
   await expect(cardFor(page, demo.ride("open_today_simple").id)).toHaveCount(1);
-  await expect(page.getByText("lotada")).toHaveCount(0);
+  await expect(page.getByText("Lotada", { exact: true })).toHaveCount(0);
   await snap(page, "board/only-with-seats");
 });
 
@@ -137,7 +137,7 @@ test("o detalhe de uma carona aberta convida a entrar para pedir contato", async
 
   await expect(page).toHaveURL(/\/caronas\/[0-9a-f-]{36}$/);
   await expect(page.getByRole("heading", { name: "Carona", level: 1 })).toBeVisible();
-  await expect(page.getByText("para pedir o contato do motorista.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Entrar para pedir contato" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pedir contato" })).toHaveCount(0);
   await snap(page, "ride/open-anonymous");
 });
@@ -145,7 +145,7 @@ test("o detalhe de uma carona aberta convida a entrar para pedir contato", async
 test("carona lotada não oferece contato", async ({ page, demo, snap }) => {
   await openRide(page, demo.ride("full_today").id);
 
-  await expect(page.getByText("lotada")).toBeVisible();
+  await expect(page.getByText("Lotada", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pedir contato" })).toHaveCount(0);
   await snap(page, "ride/full");
 });
@@ -153,7 +153,7 @@ test("carona lotada não oferece contato", async ({ page, demo, snap }) => {
 test("carona que já saiu não oferece contato", async ({ page, demo, snap }) => {
   await openRide(page, demo.ride("departed_earlier").id);
 
-  await expect(page.getByText("já saiu")).toBeVisible();
+  await expect(page.getByText("Já saiu", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pedir contato" })).toHaveCount(0);
   await snap(page, "ride/departed");
 });
@@ -161,7 +161,7 @@ test("carona que já saiu não oferece contato", async ({ page, demo, snap }) =>
 test("carona cancelada continua legível pelo endereço", async ({ page, demo, snap }) => {
   await openRide(page, demo.ride("cancelled_today").id);
 
-  await expect(page.getByText("cancelada")).toBeVisible();
+  await expect(page.getByText("Cancelada", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pedir contato" })).toHaveCount(0);
   await snap(page, "ride/cancelled");
 });
@@ -184,7 +184,7 @@ test("carona com observações longas mostra o texto inteiro", async ({ page, de
 test("endereço de carona que não existe explica o que houve", async ({ page, snap }) => {
   await page.goto("/caronas/00000000-0000-4000-8000-000000000000");
 
-  await expect(page.getByText("Esta carona não existe.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Esta carona não existe" })).toBeVisible();
   await snap(page, "ride/not-found");
 });
 

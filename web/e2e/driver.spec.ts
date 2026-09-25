@@ -137,8 +137,8 @@ test("minhas caronas mostram também a cancelada e a que já saiu", async ({
   await page.goto("/minhas-caronas");
 
   await expect(page.getByRole("heading", { name: "Minhas caronas", level: 1 })).toBeVisible();
-  await expect(page.getByText("cancelada").first()).toBeVisible();
-  await expect(page.getByText("já saiu")).toBeVisible();
+  await expect(page.getByText("Cancelada", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Já saiu", { exact: true })).toBeVisible();
   await expect(page.getByText("sua carona").first()).toBeVisible();
   await snap(page, "my-rides/full");
 });
@@ -169,15 +169,15 @@ test("o dono fecha e reabre a carona pelas vagas", async ({
   await expect(page.getByRole("heading", { name: "Sua carona" })).toBeVisible();
   await snap(page, "ride/owner-open");
 
-  const minus = page.getByRole("button", { name: "−" });
+  const minus = page.getByRole("button", { name: "Tirar uma vaga" });
   await minus.click();
   await minus.click();
-  await expect(page.getByText("lotou")).toBeVisible();
-  await expect(page.getByText("lotada")).toBeVisible();
+  await expect(page.getByText("Ponha uma vaga para reabrir.")).toBeVisible();
+  await expect(page.getByText("Lotada", { exact: true })).toBeVisible();
   await snap(page, "ride/owner-full");
 
-  await page.getByRole("button", { name: "+" }).click();
-  await expect(page.getByText("reaberta")).toBeVisible();
+  await page.getByRole("button", { name: "Pôr uma vaga" }).click();
+  await expect(page.getByText("Reaberta", { exact: true })).toBeVisible();
   await snap(page, "ride/owner-reopened");
 });
 
@@ -235,7 +235,7 @@ test("cancelar pede confirmação e é definitivo", async ({
   await snap(page, "ride/cancel-dialog");
 
   await page.getByRole("alertdialog").getByRole("button", { name: "Cancelar carona" }).click();
-  await expect(page.getByText("cancelada")).toBeVisible();
+  await expect(page.getByText("Cancelada", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Cancelar carona" })).toHaveCount(0);
   await snap(page, "ride/owner-cancelled");
 });
@@ -251,6 +251,7 @@ test("repetir uma carona publica outra igual em outro horário", async ({
   await openRide(page, ride.id);
 
   await expect(page.getByText("Aeroporto")).toBeVisible();
+  await page.getByRole("button", { name: "Repetir Publica outra igual em outro horário" }).click();
   await page.getByLabel("Repetir esta carona em").fill(localInput(demo.anchor, 100 * 60));
   await snap(page, "ride/repeat-ready");
   await page.getByRole("button", { name: "Repetir carona" }).click();

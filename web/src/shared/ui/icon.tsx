@@ -34,6 +34,9 @@ const paths = {
   addhome: "M3 8a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5zM12 8v8M8 12h8",
   download: "M12 3v12M7 10l5 5 5-5M5 21h14",
   feedback: "M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2zM8.5 9.5h7M8.5 12.5h4",
+  car: "M4 17v-5l2.2-5.2A1.5 1.5 0 0 1 7.6 6h8.8a1.5 1.5 0 0 1 1.4.8L20 12v5M3 12h18M4 17h16v2H4zM7.5 14.5h.01M16.5 14.5h.01",
+  edit: "M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4",
+  repeat: "m17 2 3 3-3 3M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3M20 13v2a4 4 0 0 1-4 4H4",
 } as const;
 
 export type IconName = keyof typeof paths;

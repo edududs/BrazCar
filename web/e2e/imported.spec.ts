@@ -37,7 +37,7 @@ test("o contato de motorista externo vem sem placa", async ({ page, demo, signIn
   await page.getByRole("button", { name: "Pedir contato" }).click();
 
   await expect(
-    page.getByText("Sem placa cadastrada: confirme o carro com o motorista."),
+    page.getByText("Sem placa cadastrada: confirme o carro com o motorista antes de entrar."),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Falar no WhatsApp" })).toBeVisible();
   await snap(page, "imported/contact-without-plate");
@@ -58,6 +58,6 @@ test("a importada de quem tem conta é da dona, e aparece em minhas caronas", as
 
   await openRide(page, demo.ride("imported_owned").id);
   await expect(page.getByRole("heading", { name: "Sua carona" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Mensagem original" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sua mensagem no grupo" })).toBeVisible();
   await snap(page, "imported/owned-detail");
 });

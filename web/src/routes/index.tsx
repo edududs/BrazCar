@@ -6,10 +6,13 @@ import {
 } from "@tanstack/react-router";
 
 import { useBoard } from "@/features/rides/app/use-board";
+import { useBoardMatch } from "@/features/rides/app/use-board-match";
 import { useBoardSignal } from "@/features/rides/app/use-board-signal";
 import { type BoardFilters, noFilters } from "@/features/rides/domain/board";
 import { BoardFiltersForm } from "@/features/rides/ui/board-filters";
 import { RideList } from "@/features/rides/ui/ride-list";
+import { useClock } from "@/shared/app/use-clock";
+import { ActionButton } from "@/shared/ui/action-button";
 import { NoticeBar } from "@/shared/ui/notice-bar";
 import { PageShell } from "@/shared/ui/page-shell";
 
@@ -57,6 +60,8 @@ function BoardPage() {
   const filters: BoardFilters = { ...noFilters, ...search, text: search.q, fromTime: search.from };
   const board = useBoard(filters);
   useBoardSignal({ onChange: board.refresh });
+  const now = useClock();
+  const match = useBoardMatch(filters.text);
   const filtering =
     filters.day !== null ||
     filters.text !== null ||
@@ -71,6 +76,8 @@ function BoardPage() {
       ) : null}
       <BoardFiltersForm
         filters={filters}
+        now={now}
+        note={match.note}
         onChange={(next) => {
           void navigate({
             to: "/",
@@ -89,8 +96,26 @@ function BoardPage() {
       <RideList
         rides={board.rides}
         status={board.status}
+        matched={match.matches}
         emptyText={
           filtering ? "Nenhuma carona com esses filtros." : "Nenhuma carona publicada por enquanto."
+        }
+        emptyDetail={
+          filtering
+            ? "Os filtros estão escondendo as caronas. Se alguém publicar, ela aparece aqui."
+            : "O mural atualiza sozinho: se alguém publicar, aparece aqui."
+        }
+        emptyAction={
+          filtering ? (
+            <ActionButton
+              emphasis="quiet"
+              onPress={() => {
+                void navigate({ to: "/", search: { ...noSearch }, replace: true });
+              }}
+            >
+              Limpar filtros
+            </ActionButton>
+          ) : undefined
         }
       />
     </PageShell>

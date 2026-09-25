@@ -34,7 +34,17 @@ function MyRidesList() {
     <RideList
       rides={mine.rides}
       status={mine.status}
+      grouping="mine"
       emptyText="Você ainda não publicou caronas."
+      emptyDetail="Quando publicar, ela aparece aqui e no mural. Daqui dá para mudar as vagas, editar, repetir e cancelar."
+      emptyAction={
+        <Link
+          to="/publicar"
+          className="inline-flex min-h-target items-center justify-center gap-2 rounded-button bg-brand px-5 text-body font-semibold text-on-brand"
+        >
+          Publicar carona
+        </Link>
+      }
     />
   );
 }

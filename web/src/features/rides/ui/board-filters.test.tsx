@@ -5,36 +5,72 @@ import { describe, expect, it, vi } from "vitest";
 import { noFilters } from "../domain/board";
 import { BoardFiltersForm } from "./board-filters";
 
+/** Thursday, 24 September 2026, 14:52 local. */
+const now = new Date("2026-09-24T14:52:00");
+
 describe("BoardFiltersForm", () => {
-  it("shows 'A partir de' first, ahead of the other filters", () => {
-    const { container } = render(
-      <BoardFiltersForm filters={noFilters} onChange={() => undefined} />,
+  it("offers 'A partir de' first, then the days, seats and price", () => {
+    render(<BoardFiltersForm filters={noFilters} onChange={() => undefined} now={now} />);
+    const chips = screen.getAllByRole("button", { pressed: false }).map((chip) => chip.textContent);
+    expect(chips).toEqual([
+      "A partir de",
+      "Hoje",
+      "Amanhã",
+      "Sáb 26",
+      "Dom 27",
+      "Com vaga",
+      "Até R$",
+    ]);
+  });
+
+  it("sends the day a chip names, and takes it back on the second press", () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <BoardFiltersForm filters={noFilters} onChange={onChange} now={now} />,
     );
+    fireEvent.click(screen.getByRole("button", { name: "Hoje" }));
+    expect(onChange).toHaveBeenCalledWith({ ...noFilters, day: "2026-09-24" });
 
-    const text = container.textContent;
-    const fromTimeAt = text.indexOf("A partir de");
-    const passaPorAt = text.indexOf("Passa por");
-
-    expect(fromTimeAt).toBeGreaterThanOrEqual(0);
-    expect(fromTimeAt).toBeLessThan(passaPorAt);
+    rerender(
+      <BoardFiltersForm
+        filters={{ ...noFilters, day: "2026-09-24" }}
+        onChange={onChange}
+        now={now}
+      />,
+    );
+    const pressed = screen.getByRole("button", { name: "Hoje", pressed: true });
+    fireEvent.click(pressed);
+    expect(onChange).toHaveBeenLastCalledWith({ ...noFilters, day: null });
   });
 
-  it("sends the typed time (D-141)", () => {
+  it("moves an active filter to the front and clears it with an × (D-141)", () => {
     const onChange = vi.fn();
-    render(<BoardFiltersForm filters={noFilters} onChange={onChange} />);
+    render(
+      <BoardFiltersForm
+        filters={{ ...noFilters, fromTime: "18:00", withSeats: true }}
+        onChange={onChange}
+        now={now}
+      />,
+    );
+    const chips = screen.getAllByRole("button", { pressed: true }).map((chip) => chip.textContent);
+    expect(chips).toEqual(["A partir de 18:00", "Com vaga"]);
 
-    fireEvent.change(screen.getByLabelText(/^A partir de/), { target: { value: "18:00" } });
-
-    expect(onChange).toHaveBeenCalledWith({ ...noFilters, fromTime: "18:00" });
+    fireEvent.click(screen.getByRole("button", { name: "A partir de 18:00" }));
+    expect(onChange).toHaveBeenCalledWith({ ...noFilters, fromTime: null, withSeats: true });
   });
 
-  it("clearing the time sends null (D-141)", () => {
+  it("sends the typed search text, and null once it is cleared", () => {
     const onChange = vi.fn();
-    const filters = { ...noFilters, fromTime: "18:00" };
-    render(<BoardFiltersForm filters={filters} onChange={onChange} />);
+    const { rerender } = render(
+      <BoardFiltersForm filters={noFilters} onChange={onChange} now={now} />,
+    );
+    fireEvent.change(screen.getByLabelText("Passa por"), { target: { value: "SCS" } });
+    expect(onChange).toHaveBeenCalledWith({ ...noFilters, text: "SCS" });
 
-    fireEvent.change(screen.getByLabelText(/^A partir de/), { target: { value: "" } });
-
-    expect(onChange).toHaveBeenCalledWith({ ...filters, fromTime: null });
+    rerender(
+      <BoardFiltersForm filters={{ ...noFilters, text: "SCS" }} onChange={onChange} now={now} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Limpar busca" }));
+    expect(onChange).toHaveBeenLastCalledWith({ ...noFilters, text: null });
   });
 });
