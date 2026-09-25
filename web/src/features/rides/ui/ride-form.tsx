@@ -197,7 +197,7 @@ export function RideForm({
           hint="Sem telefone, e-mail ou placa: o contato sai pelo botão."
         />
       </Form>
-      <ActionBar>
+      <ActionBar bleed>
         <ActionButton submit form={formId} emphasis="primary" busy={busy}>
           {submitLabel}
         </ActionButton>

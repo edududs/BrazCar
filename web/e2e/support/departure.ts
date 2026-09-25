@@ -28,8 +28,12 @@ export async function chooseDeparture(page: Page, local: string): Promise<void> 
     await grid.getByRole("button", { name: dayNumber, exact: true }).click();
   }
 
-  await sheet.getByLabel("Hora", { exact: true }).fill(hour);
-  await sheet.getByLabel("Minutos", { exact: true }).fill(minute);
+  // Typed key by key, the way a person does: `fill` would replace the value at once and hide
+  // any trouble with typing digit by digit (that is how a broken hour field once passed).
+  await sheet.getByLabel("Hora", { exact: true }).click();
+  await page.keyboard.type(`${hour}${minute}`, { delay: 30 });
+  await expect(sheet.getByLabel("Hora", { exact: true })).toHaveValue(hour);
+  await expect(sheet.getByLabel("Minutos", { exact: true })).toHaveValue(minute);
   await sheet.getByRole("button", { name: "Pronto" }).click();
   await expect(sheet).toBeHidden();
 }

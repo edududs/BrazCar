@@ -1,4 +1,7 @@
-import type { TimeDraft } from "../app/use-time-draft";
+import { useRef } from "react";
+
+import { useNumberSegment } from "../app/use-number-segment";
+import { type TimeDraft, formatClock } from "../app/use-time-draft";
 import { Icon } from "./icon";
 
 interface ClockPickerProps {
@@ -9,13 +12,31 @@ interface ClockPickerProps {
 
 const column = "grid h-11 w-[76px] place-items-center rounded-[12px] bg-surface-2 text-ink";
 const digits =
-  "w-[92px] appearance-none bg-transparent text-center font-display text-[60px] leading-none font-bold tracking-[-0.045em] tabular-nums text-ink outline-none focus-visible:rounded-field focus-visible:bg-brand-soft focus-visible:text-brand-ink";
+  "w-[92px] appearance-none rounded-field bg-transparent text-center font-display text-[60px] leading-none font-bold tracking-[-0.045em] tabular-nums text-ink outline-none placeholder:text-ink-3 focus:bg-brand-soft focus:text-brand-ink aria-invalid:text-critical";
 
 /**
  * The hour and the minutes, big, each with a plus and a minus; a tap on a number types it (F7).
- * The draft keeps the clock valid whatever comes in.
+ * Typing goes through `useNumberSegment`: two digits for the hour, then the minutes take focus.
  */
 export function ClockPicker({ draft, minuteStep }: ClockPickerProps) {
+  const minutesRef = useRef<HTMLInputElement>(null);
+  const hour = useNumberSegment({
+    value: draft.hour,
+    max: 23,
+    onCommit: (next) => {
+      draft.set(formatClock(next, draft.minute));
+    },
+    onComplete: () => {
+      minutesRef.current?.focus();
+    },
+  });
+  const minute = useNumberSegment({
+    value: draft.minute,
+    max: 59,
+    onCommit: (next) => {
+      draft.set(formatClock(draft.hour, next));
+    },
+  });
   const minutesLabel = minuteStep === 1 ? "Um minuto" : `${String(minuteStep)} minutos`;
   return (
     <div
@@ -37,13 +58,16 @@ export function ClockPicker({ draft, minuteStep }: ClockPickerProps) {
         <input
           aria-label="Hora"
           inputMode="numeric"
-          value={String(draft.hour).padStart(2, "0")}
+          autoComplete="off"
+          enterKeyHint="next"
+          value={hour.text}
+          placeholder={hour.placeholder}
+          aria-invalid={hour.invalid || undefined}
+          onFocus={hour.onFocus}
           onChange={(event) => {
-            draft.set(`${event.target.value}:${String(draft.minute).padStart(2, "0")}`);
+            hour.onChange(event.target.value);
           }}
-          onFocus={(event) => {
-            event.target.select();
-          }}
+          onBlur={hour.onBlur}
           className={digits}
         />
         <button
@@ -72,15 +96,19 @@ export function ClockPicker({ draft, minuteStep }: ClockPickerProps) {
           <Icon name="plus" />
         </button>
         <input
+          ref={minutesRef}
           aria-label="Minutos"
           inputMode="numeric"
-          value={String(draft.minute).padStart(2, "0")}
+          autoComplete="off"
+          enterKeyHint="done"
+          value={minute.text}
+          placeholder={minute.placeholder}
+          aria-invalid={minute.invalid || undefined}
+          onFocus={minute.onFocus}
           onChange={(event) => {
-            draft.set(`${String(draft.hour).padStart(2, "0")}:${event.target.value}`);
+            minute.onChange(event.target.value);
           }}
-          onFocus={(event) => {
-            event.target.select();
-          }}
+          onBlur={minute.onBlur}
           className={digits}
         />
         <button
