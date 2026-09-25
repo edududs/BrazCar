@@ -1,3 +1,5 @@
+import { useRouterState } from "@tanstack/react-router";
+
 import { useAppUpdate } from "../app/use-app-update";
 import { useInstallHint } from "../app/use-install-hint";
 import { ConfirmDialog } from "./confirm-dialog";
@@ -12,6 +14,9 @@ import { Toast, ToastAction } from "./toast";
 export function ShellOverlays() {
   const update = useAppUpdate();
   const hint = useInstallHint();
+  // The card floats over the bottom of the page, so it shows only on the board (S14), never over
+  // the button that ends a form.
+  const onBoard = useRouterState({ select: (state) => state.location.pathname === "/" });
   return (
     <>
       {update.available ? (
@@ -22,7 +27,7 @@ export function ShellOverlays() {
         >
           Há uma versão nova do BrazCar.
         </Toast>
-      ) : hint.visible ? (
+      ) : hint.visible && onBoard ? (
         <InstallHintCard onDismiss={hint.dismiss} />
       ) : null}
       <ConfirmDialog

@@ -256,6 +256,10 @@
   html {
     background-color: var(--bg);
     color: var(--ink);
+    /* Scrolling something into view stops clear of the fixed surfaces: the compact bar on top,
+       the tab bar (and a floating notice) at the bottom. */
+    scroll-padding-top: calc(env(safe-area-inset-top) + 56px);
+    scroll-padding-bottom: calc(env(safe-area-inset-bottom) + 12rem);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
