@@ -2,6 +2,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { Car } from "@/features/accounts/domain/account";
 import { fetchPlace, searchPlaces } from "@/features/places/adapters/places-gateway";
 import type { Place } from "@/features/places/domain/place";
 import { renderRouted } from "@/shared/testing/render-routed";
@@ -39,6 +40,8 @@ const draft: RideDraft = {
   notes: "",
 };
 
+const car: Car = { id: "c1", model: "Gol", color: "prata", plate: "ABC1234" };
+
 function show(onSubmit: (draft: RideDraft) => Promise<unknown>) {
   return renderRouted(
     <RideForm initial={draft} busy={false} submitLabel="Salvar" onSubmit={onSubmit} />,
@@ -46,6 +49,22 @@ function show(onSubmit: (draft: RideDraft) => Promise<unknown>) {
 }
 
 describe("RideForm", () => {
+  it("caps the seats field at four, a passenger car's usual seats (D-142)", async () => {
+    renderRouted(
+      <RideForm
+        initial={draft}
+        cars={[car]}
+        busy={false}
+        submitLabel="Publicar"
+        onSubmit={() => Promise.resolve()}
+      />,
+    );
+
+    const seats = await screen.findByLabelText("Vagas");
+
+    expect(seats.getAttribute("max")).toBe("4");
+  });
+
   it("counts the notes against the limit and sends them", async () => {
     const onSubmit = vi.fn<(draft: RideDraft) => Promise<unknown>>(() => Promise.resolve());
     show(onSubmit);

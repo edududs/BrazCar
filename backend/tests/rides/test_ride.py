@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from brazcar.rides.domain import (
     DELAY_LIMIT,
+    MAX_SEATS,
     NOTES_LIMIT,
     Actions,
     CatalogStop,
@@ -81,7 +82,7 @@ def test_publishing_records_the_original_departure_and_one_event() -> None:
 INVALID: list[dict[str, object]] = [
     {"route": (CatalogStop(place_id="esplanada"),)},
     {"seats_available": -1},
-    {"seats_available": 9},
+    {"seats_available": MAX_SEATS + 1},  # a passenger car has no fifth seat (D-142)
     {"price": Decimal(0)},
     {"payment_methods": frozenset[PaymentMethod]()},
     {"departure_at": datetime(2026, 9, 22, 19, 30)},  # noqa: DTZ001 - the naive datetime is the point
@@ -225,6 +226,19 @@ def test_status_is_a_pure_function_of_the_four_facts(ride: RideOffer, now: datet
 
 
 # --- seats -----------------------------------------------------------------------------------
+
+
+@given(ride=rides())
+def test_the_strategy_never_generates_more_seats_than_the_ceiling(ride: RideOffer) -> None:
+    """A passenger car has at most `MAX_SEATS` seats (D-142); no example may need more."""
+    assert 0 <= ride.seats_available <= MAX_SEATS
+
+
+def test_publishing_or_changing_seats_past_the_ceiling_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        publish(seats=MAX_SEATS + 1)
+    with pytest.raises(ValidationError):
+        publish(seats=1).change_seats(MAX_SEATS + 1, EPOCH)
 
 
 def test_zeroing_seats_closes_and_raising_them_reopens() -> None:

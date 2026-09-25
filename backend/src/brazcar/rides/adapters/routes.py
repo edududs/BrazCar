@@ -38,6 +38,7 @@ from brazcar.rides.application import (
     StopView,
 )
 from brazcar.rides.domain import (
+    MAX_SEATS,
     NOTES_LIMIT,
     Actions,
     CatalogStop,
@@ -203,7 +204,7 @@ class PublishIn(Schema):
     car_id: UUID
     stops: list[StopIn] = Field(min_length=2)
     departure_at: datetime
-    seats_available: int = Field(ge=1, le=8)
+    seats_available: int = Field(ge=1, le=MAX_SEATS)
     price: Decimal = Field(default=Decimal("7.00"), gt=0)  # ignored when a stop carries a fare (D-131)
     payment_methods: list[PaymentMethod] = Field(min_length=1)
     notes: str | None = Field(default=None, max_length=NOTES_LIMIT)
@@ -220,7 +221,7 @@ class EditIn(Schema):
 
 
 class SeatsIn(Schema):
-    seats_available: int = Field(ge=0, le=8)
+    seats_available: int = Field(ge=0, le=MAX_SEATS)
 
 
 class RepeatIn(Schema):

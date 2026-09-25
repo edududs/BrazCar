@@ -12,7 +12,7 @@
 | parada | `Stop` | Um ponto da rota: `CatalogStop` (referência a um lugar do catálogo, por identificador) ou `FreeTextStop` (texto livre, "outro"). |
 | tarifa | `Stop.fare` | Opcional: quanto custa ir da origem até aquela parada (D-131). A parada de onde a carona sai nunca tem. |
 | observações | `notes` | Texto livre opcional do motorista, até 500 caracteres, sem formatação (D-129). Recusa telefone, e-mail e placa; nunca vem de importação. |
-| vagas | `seats_available` | Vagas restantes, ajustadas à mão pelo motorista. |
+| vagas | `seats_available` | Vagas restantes, ajustadas à mão pelo motorista, de 0 a `MAX_SEATS` (4, o que cabe num carro de passeio; D-142). |
 | horário de partida | `departure_at` | Horário atual, com fuso. |
 | horário original | `original_departure_at` | Gravado na publicação, nunca muda. Base da regra de atraso. |
 | situação | `RideStatus` | Calculada, nunca gravada: aberta `open`, reaberta `reopened`, lotada `full`, já saiu `departed`, cancelada `cancelled`. |
@@ -49,6 +49,9 @@ Função pura de quatro dados, lida nesta ordem:
 
 - Carona aberta tem pelo menos uma vaga. Zerar as vagas fecha. Aumentar as vagas de uma carona
   fechada reabre e grava `reopened_at`. Fechar e "lotou" são o mesmo gesto.
+- Vagas nunca passam de `MAX_SEATS` (4): publicar, mudar vagas e repetir recusam com 422 acima
+  disso (D-142); editar não mexe em vagas. É o que cabe num carro de passeio, e o que o design
+  das barrinhas de vaga assume.
 - Cancelada é definitiva. Quem muda de ideia usa repetir.
 - Publicar exige um carro cadastrado na conta, e a carona nova nasce com pelo menos uma vaga.
   Só uma carona importada pode vir sem carro (conta achada pelo telefone) ou sem conta (motorista

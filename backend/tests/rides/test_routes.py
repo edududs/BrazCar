@@ -128,6 +128,17 @@ async def test_publishing_needs_a_session_a_car_and_known_places() -> None:
     assert both.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
 
 
+async def test_more_than_four_seats_is_refused_on_publishing_and_on_changing_seats() -> None:
+    ana, car_id = await driver()
+    ride = await publish(ana, car_id)
+
+    over_publish = await ana.post("/api/rides", ride_payload(car_id=car_id, seats_available=5))
+    over_change = await ana.post(f"/api/rides/{ride['id']}/seats", {"seats_available": 5})
+
+    assert over_publish.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+    assert over_change.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+
+
 async def test_the_card_shows_the_driver_and_the_car_but_never_the_phone_or_the_plate() -> None:
     ana, car_id = await driver()
 

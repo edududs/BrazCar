@@ -9,7 +9,7 @@ import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { TextField } from "@/shared/ui/text-field";
 
 import type { RideActions } from "../app/use-ride";
-import type { OriginMessage, Ride } from "../domain/ride";
+import { MAX_SEATS, type OriginMessage, type Ride } from "../domain/ride";
 import { ContactButton } from "./contact-button";
 import {
   formatDay,
@@ -180,7 +180,7 @@ function SeatsControl({ ride, busy, onChange }: SeatsControlProps) {
       </ActionButton>
       <span className="min-w-6 text-center text-lg font-semibold">{ride.seatsAvailable}</span>
       <ActionButton
-        disabled={busy || ride.seatsAvailable >= 8}
+        disabled={busy || ride.seatsAvailable >= MAX_SEATS}
         onPress={() => {
           onChange(ride.seatsAvailable + 1);
         }}

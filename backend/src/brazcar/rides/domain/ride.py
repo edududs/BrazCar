@@ -24,9 +24,10 @@ from .route import Route, fares_of, price_from
 DEFAULT_PRICE = Decimal("7.00")
 DELAY_LIMIT = timedelta(hours=2)  # counted from the original departure, always (ADR-0004)
 NOTES_LIMIT = 500  # characters of plain text, no formatting (D-129)
+MAX_SEATS = 4  # what fits in a passenger car; the design of the seat bars assumes it too (D-142)
 
 type RideId = UUID
-type Seats = Annotated[int, Field(ge=0, le=8)]
+type Seats = Annotated[int, Field(ge=0, le=MAX_SEATS)]
 type Price = Annotated[Decimal, Field(gt=0, max_digits=6, decimal_places=2)]
 type Notes = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=NOTES_LIMIT)]
 

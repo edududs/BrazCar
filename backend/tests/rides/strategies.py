@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from hypothesis import strategies as st
 
 from brazcar.rides.domain import (
+    MAX_SEATS,
     CarSnapshot,
     CatalogStop,
     ExternalDriver,
@@ -42,7 +43,7 @@ stops = _stops(st.none())  # where the ride leaves from never has a fare (D-131)
 fared_stops = _stops(fares)
 routes = st.tuples(stops, st.lists(fared_stops, min_size=1, max_size=4)).map(lambda pair: (pair[0], *pair[1]))
 moments = st.integers(-3 * 24 * 60, 3 * 24 * 60).map(lambda minutes: EPOCH + timedelta(minutes=minutes))
-seats = st.integers(0, 8)
+seats = st.integers(0, MAX_SEATS)
 notes = st.none() | st.text("abcdefg .,", min_size=1, max_size=40).filter(str.strip)
 payment_sets = st.frozensets(st.sampled_from(PaymentMethod), min_size=1)
 

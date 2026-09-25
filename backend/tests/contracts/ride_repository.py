@@ -6,6 +6,7 @@ from hypothesis import strategies as st
 
 from brazcar.rides.application import BoardRevision, RideRepository
 from brazcar.rides.domain import (
+    MAX_SEATS,
     AccountId,
     CatalogStop,
     ExternalDriver,
@@ -54,7 +55,7 @@ class RideRepositoryContract:
         assert await revision.current() == before + 1
 
     @contract_settings
-    @given(ride=rides(), seats=st.integers(0, 8))
+    @given(ride=rides(), seats=st.integers(0, MAX_SEATS))
     async def test_saving_again_replaces_the_state_and_appends_the_events(
         self, ride: RideOffer, seats: int
     ) -> None:

@@ -87,6 +87,9 @@ export interface RideDraft {
 /** The longest notes the API takes (D-129); the form counts against it. */
 export const NOTES_LIMIT = 500;
 
+/** What fits in a passenger car (D-142); the form and the seat stepper cap against it. */
+export const MAX_SEATS = 4;
+
 /** What an edit changes. Absent means unchanged. */
 export interface RideChanges {
   readonly stops?: readonly StopDraft[];

@@ -19,6 +19,7 @@ from .origin import PublishedOrigin, RideOrigin, WhatsAppOrigin
 from .ride import (
     DEFAULT_PRICE,
     DELAY_LIMIT,
+    MAX_SEATS,
     NOTES_LIMIT,
     Change,
     PaymentMethod,
@@ -31,6 +32,7 @@ from .route import CatalogStop, Fare, FreeTextStop, PlaceId, Route, Stop, fares_
 __all__ = [
     "DEFAULT_PRICE",
     "DELAY_LIMIT",
+    "MAX_SEATS",
     "NOTES_LIMIT",
     "AccountId",
     "Actions",

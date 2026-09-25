@@ -53,6 +53,15 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   com alguma tarifa o `price` da carona é a menor delas, calculado por `price_from` (D-131). O
   read model leva `notes`, a tarifa de cada parada e `has_fares`, para a tela só desenhar. Migração
   `rides.0003`, aditiva. A busca "passa por" continua lendo só as paradas.
+- `rides` (passo curto, ainda sem tag, D-140 a D-142): `ContactRequest` guarda também o número
+  revelado, o tipo de motorista (`registered`/`external`) e a conta dele quando tem uma; sobrevive
+  à carona (`ForgetRides` não apaga mais o registro, só a FK vira nula), consultável por
+  `manage.py contact_requests --account`/`--phone`, mascarado por padrão. Migração `rides.0005`,
+  aditiva, preenche os registros existentes a partir da carona quando ela ainda existe. `BoardFilter`
+  ganha `from_time`: hora local da partida a partir de um horário (`?from=HH:MM`), sem dia vale para
+  cada dia da lista, com dia só naquele dia; comparado no banco por `ExtractHour`/`ExtractMinute` no
+  fuso do mural, nos dois bancos. `Seats` do domínio passa a `MAX_SEATS` (4, o que cabe num carro de
+  passeio); publicar, mudar vagas e repetir recusam acima disso com 422.
 - `rides` (v0.9.0): `RideOffer.driver` é tipo-soma `RegisteredDriver` (conta e carro, carro
   opcional só na importada) ou `ExternalDriver` (telefone e nome do WhatsApp); `origin` é `Published`
   ou `WhatsApp` com o texto original redigido (ADR-0015, D-127, D-128). `ImportRide` (conta pelo

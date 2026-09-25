@@ -12,7 +12,13 @@ import { TextAreaField } from "@/shared/ui/textarea-field";
 import { TextField } from "@/shared/ui/text-field";
 
 import { type StopRole, useRouteDraft } from "../app/use-route-draft";
-import { NOTES_LIMIT, type PaymentMethod, type RideDraft, type StopDraft } from "../domain/ride";
+import {
+  MAX_SEATS,
+  NOTES_LIMIT,
+  type PaymentMethod,
+  type RideDraft,
+  type StopDraft,
+} from "../domain/ride";
 import { fromLocalInput, paymentLabel, toLocalInput } from "./format";
 import { reasonOf } from "./reason";
 
@@ -105,7 +111,7 @@ export function RideForm({
             type="number"
             inputMode="numeric"
             min={1}
-            max={8}
+            max={MAX_SEATS}
             value={String(draft.seatsAvailable)}
             onChange={(seats) => {
               set("seatsAvailable", Number(seats));
