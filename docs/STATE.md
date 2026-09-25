@@ -229,6 +229,22 @@ carona que outro contexto acabou de publicar (SSE); excluir a conta pelo diálog
 telefone dela deixando de servir para entrar, e a página em português para todo endereço que não é
 rota nenhuma.
 
+**Verificado de verdade no passo 2 do design:** portão rápido a cada commit (472 no backend, 133 no
+front, 5 novos: abas, toast, cartão de instalar, vazio), portão pesado do front, a suíte de ponta a
+ponta verde nos três projetos (155 casos, 1 pulado) e o catálogo refeito com 143 imagens, conferidas
+por amostra: mural com abas e cartão, sem internet, página inexistente, piso de versão, minhas
+caronas vazia. A primeira rodada da suíte achou um defeito de verdade, não de teste: o fim de cada
+página ficava sob a barra de abas ao rolar até um controle, e o cartão de instalar tampava o botão
+que fecha um formulário; corrigido com `scroll-padding` no `html` e o cartão só no mural. Nas fotos
+de página inteira do celular, as superfícies fixas aparecem na posição do primeiro viewport, no meio
+da lista: é como o Playwright fotografa página inteira, não a tela.
+
+**Não verificado:** o cabeçalho encolhendo e a barra compacta num Safari 26 ou Chrome de verdade (a
+suíte não rola o mural para isso; o Chromium do Playwright tem `animation-timeline`, mas ninguém
+afirmou nada sobre o resultado); o vidro das abas e a área segura num iPhone instalado; os ícones
+novos na tela de início do iPhone e o maskable no Android; o `inert` da página sem internet num
+iPhone.
+
 **Verificado de verdade no passo 1 do design:** portão rápido (472 testes no backend, 128 no front,
 53 deles novos: tema, fonte, orçamento de tokens e os primitivos por comportamento), portão pesado
 do front com o build (a fonte em `dist/fonts/`, 28 KiB), a suíte de ponta a ponta verde nos três
