@@ -23,6 +23,7 @@ import {
 } from "./format";
 import { reasonOf } from "./reason";
 import { StatusBadge } from "./status-badge";
+import { inlineLinkClass } from "@/shared/ui/link-class";
 
 interface RideDetailProps {
   readonly ride: Ride;
@@ -47,7 +48,9 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-xl font-semibold">
             {formatTime(ride.departureAt)}{" "}
-            <span className="text-sm font-normal opacity-70">{formatDay(ride.departureAt)}</span>
+            <span className="text-secondary font-normal text-ink-3">
+              {formatDay(ride.departureAt)}
+            </span>
           </span>
           <StatusBadge status={ride.status} />
         </div>
@@ -58,7 +61,7 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
                 {index + 1}. {stop.label}
               </span>
               {stop.fare === null ? null : (
-                <span className="opacity-70">{formatPrice(stop.fare)}</span>
+                <span className="text-ink-2">{formatPrice(stop.fare)}</span>
               )}
             </li>
           ))}
@@ -68,7 +71,7 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
           {ride.paymentMethods.map((method) => paymentLabel[method]).join(" ou ")}
         </p>
         {ride.notes === null ? null : <p className="text-sm whitespace-pre-line">{ride.notes}</p>}
-        <p className="flex flex-wrap items-center gap-2 text-sm opacity-70">
+        <p className="flex flex-wrap items-center gap-2 text-secondary text-ink-2">
           <span>
             {ride.driverName}
             {ride.car === null ? "" : ` · ${ride.car.model}, ${ride.car.color}`}
@@ -84,7 +87,7 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
       session.status === "anonymous" &&
       (ride.status === "open" || ride.status === "reopened") ? (
         <p className="text-sm">
-          <Link to="/entrar" className="underline">
+          <Link to="/entrar" className={inlineLinkClass}>
             Entre
           </Link>{" "}
           para pedir o contato do motorista.
@@ -108,7 +111,7 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
               <Link
                 to="/caronas/$rideId/editar"
                 params={{ rideId: ride.id }}
-                className="flex min-h-11 items-center rounded-lg bg-neutral-soft px-4 text-sm font-medium"
+                className="flex min-h-11 items-center rounded-field bg-surface-2 px-4 text-sm font-medium"
               >
                 Editar
               </Link>
@@ -152,7 +155,7 @@ function OriginMessageCard({ message }: OriginMessageCardProps) {
     <Card>
       <h2 className="text-sm font-semibold">Mensagem original</h2>
       <blockquote className="text-sm whitespace-pre-line">{message.text}</blockquote>
-      <p className="text-xs opacity-70">
+      <p className="text-caption text-ink-3">
         {message.groupLabel} · {formatDay(message.sentAt)} {formatTime(message.sentAt)}
       </p>
     </Card>
@@ -187,7 +190,7 @@ function SeatsControl({ ride, busy, onChange }: SeatsControlProps) {
       >
         +
       </ActionButton>
-      {ride.seatsAvailable === 0 ? <span className="text-sm opacity-70">lotou</span> : null}
+      {ride.seatsAvailable === 0 ? <span className="text-secondary text-ink-2">lotou</span> : null}
     </div>
   );
 }
@@ -237,7 +240,7 @@ function RepeatControl({ ride, busy, onRepeat }: RepeatControlProps) {
   nextDay.setDate(nextDay.getDate() + 1);
   const [departure, setDeparture] = useState(toLocalInput(nextDay.toISOString()));
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-neutral-soft p-3">
+    <div className="flex flex-col gap-2 rounded-lg border border-line p-3">
       <TextField
         label="Repetir esta carona em"
         type="datetime-local"

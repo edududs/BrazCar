@@ -1,12 +1,14 @@
 import type { ReactNode, SyntheticEvent } from "react";
 
+import { NoticeBar } from "./notice-bar";
+
 interface FormProps {
   readonly onSubmit: () => void;
   readonly error?: string | null;
   readonly children: ReactNode;
 }
 
-/** A vertical form: fields, then an error line when there is one, then whatever comes last. */
+/** A vertical form: fields, then a refusal when there is one, then whatever comes last. */
 export function Form({ onSubmit, error = null, children }: FormProps) {
   return (
     <form
@@ -15,13 +17,13 @@ export function Form({ onSubmit, error = null, children }: FormProps) {
         event.preventDefault();
         onSubmit();
       }}
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-5"
     >
       {children}
       {error === null ? null : (
-        <p role="alert" className="rounded-lg bg-critical-soft px-3 py-2 text-sm text-critical">
+        <NoticeBar tone="critical" role="alert">
           {error}
-        </p>
+        </NoticeBar>
       )}
     </form>
   );

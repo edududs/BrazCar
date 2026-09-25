@@ -28,6 +28,7 @@ export function PhoneField({
       inputMode="tel"
       autoComplete="tel"
       placeholder="(61) 99999-9999"
+      prefix="+55"
       required={required}
     />
   );

@@ -55,7 +55,7 @@ export function AccountPanel({
 
       <Card>
         <h2 className="text-base font-semibold">Carros</h2>
-        <p className="text-sm opacity-70">
+        <p className="text-secondary text-ink-2">
           Opcional. Só precisa de carro quem vai oferecer carona; para pegar carona, não.
         </p>
         {account.cars.length === 0 ? null : (
@@ -95,7 +95,7 @@ export function AccountPanel({
         Sair da conta
       </ActionButton>
 
-      <div className="flex flex-col gap-2 border-t border-neutral-soft pt-4">
+      <div className="flex flex-col gap-2 border-t border-line pt-4">
         <DeleteAccountControl
           busy={busy}
           deleteAccount={deleteAccount}
@@ -189,7 +189,7 @@ function ProfileForm({ account, busy, updateProfile }: ProfileFormProps) {
   return (
     <Form onSubmit={submit} error={error}>
       <p className="text-sm">{account.phoneDisplay}</p>
-      <p className="text-xs opacity-70">O telefone não muda por aqui.</p>
+      <p className="text-caption text-ink-3">O telefone não muda por aqui.</p>
       <TextField label="Nome social" value={displayName} onChange={setDisplayName} required />
       <TextField
         label="E-mail"

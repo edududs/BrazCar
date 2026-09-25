@@ -11,9 +11,9 @@ interface AppNavProps {
 export function AppNav({ brand, children }: AppNavProps) {
   return (
     // Under a notch or the status bar the insets are non-zero (viewport-fit=cover); elsewhere zero.
-    <header className="border-b border-neutral-soft bg-surface pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
-      <nav className="mx-auto flex max-w-md items-center justify-between gap-3 px-6 py-3 text-sm">
-        <span className="text-base font-semibold">{brand}</span>
+    <header className="border-b border-line bg-bg pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
+      <nav className="mx-auto flex max-w-md items-center justify-between gap-3 px-gutter py-2 text-secondary">
+        <span className="font-display text-[22px] font-bold tracking-[-0.035em]">{brand}</span>
         <span className="flex items-center gap-4">{children}</span>
       </nav>
     </header>
@@ -22,4 +22,4 @@ export function AppNav({ brand, children }: AppNavProps) {
 
 /** Class of a link inside `AppNav`; the current page is marked by TanStack Router's `data-status`. */
 export const navLinkClass =
-  "flex min-h-11 items-center underline-offset-4 data-[status=active]:font-semibold data-[status=active]:underline";
+  "flex min-h-11 items-center font-semibold text-ink-3 data-[status=active]:text-ink";

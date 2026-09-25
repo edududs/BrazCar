@@ -5,6 +5,7 @@ import { usePublishRide } from "@/features/rides/app/use-publish-ride";
 import type { RideDraft } from "@/features/rides/domain/ride";
 import { RideForm } from "@/features/rides/ui/ride-form";
 import { PageShell } from "@/shared/ui/page-shell";
+import { inlineLinkClass } from "@/shared/ui/link-class";
 
 export const Route = createFileRoute("/publicar")({ component: PublishPage });
 
@@ -33,10 +34,10 @@ function PublishPage() {
   return (
     <PageShell title="Publicar carona">
       {session.status === "checking" ? (
-        <p className="text-sm opacity-70">Verificando…</p>
+        <p className="text-secondary text-ink-2">Verificando…</p>
       ) : session.status === "anonymous" ? (
         <p className="text-sm">
-          <Link to="/entrar" className="underline">
+          <Link to="/entrar" className={inlineLinkClass}>
             Entre
           </Link>{" "}
           para publicar uma carona.
@@ -44,7 +45,7 @@ function PublishPage() {
       ) : !session.account.canDrive ? (
         <p className="text-sm">
           Para publicar, cadastre um carro em{" "}
-          <Link to="/conta" className="underline">
+          <Link to="/conta" className={inlineLinkClass}>
             sua conta
           </Link>
           .

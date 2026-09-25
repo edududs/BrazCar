@@ -36,7 +36,7 @@ export function ContactButton({ rideId }: ContactButtonProps) {
           href={contact.whatsappUrl}
           target="_blank"
           rel="noreferrer"
-          className="flex min-h-11 items-center justify-center rounded-lg bg-positive px-4 text-sm font-medium text-surface"
+          className="flex min-h-11 items-center justify-center rounded-lg bg-positive px-4 text-sm font-medium text-bg"
         >
           Falar no WhatsApp
         </a>

@@ -11,20 +11,31 @@ export function AppShellNotices() {
   return (
     <>
       {update.available ? (
-        <NoticeBar actions={<ActionButton onPress={update.request}>Atualizar</ActionButton>}>
-          Há uma versão nova do BrazCar.
-        </NoticeBar>
+        <div className="mx-auto w-full max-w-md px-gutter pt-3">
+          <NoticeBar
+            actions={
+              <ActionButton size="compact" emphasis="primary" onPress={update.request}>
+                Atualizar
+              </ActionButton>
+            }
+          >
+            Há uma versão nova do BrazCar.
+          </NoticeBar>
+        </div>
       ) : null}
       {hint.visible ? (
-        <NoticeBar
-          actions={
-            <ActionButton emphasis="quiet" onPress={hint.dismiss}>
-              Agora não
-            </ActionButton>
-          }
-        >
-          Para abrir como app: toque em Compartilhar e depois em “Adicionar à Tela de Início”.
-        </NoticeBar>
+        <div className="mx-auto w-full max-w-md px-gutter pt-3">
+          <NoticeBar
+            tone="neutral"
+            actions={
+              <ActionButton size="compact" emphasis="quiet" onPress={hint.dismiss}>
+                Agora não
+              </ActionButton>
+            }
+          >
+            Para abrir como app: toque em Compartilhar e depois em “Adicionar à Tela de Início”.
+          </NoticeBar>
+        </div>
       ) : null}
       <ConfirmDialog
         open={update.confirming}

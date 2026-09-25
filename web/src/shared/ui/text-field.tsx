@@ -1,4 +1,6 @@
-import type { HTMLInputAutoCompleteAttribute, HTMLInputTypeAttribute } from "react";
+import type { HTMLInputAutoCompleteAttribute, HTMLInputTypeAttribute, ReactNode } from "react";
+
+import { Box, FieldFrame, controlClass } from "./field";
 
 interface TextFieldProps {
   readonly label: string;
@@ -9,9 +11,14 @@ interface TextFieldProps {
   readonly inputMode?: "text" | "tel" | "email" | "numeric" | "decimal";
   readonly placeholder?: string;
   readonly required?: boolean;
+  readonly readOnly?: boolean;
   readonly hint?: string | undefined;
   /** Why the value is refused; shown under the field and announced. */
   readonly error?: string | null;
+  /** Before the text: a unit or a country code, "R$", "+55". */
+  readonly prefix?: ReactNode;
+  /** After the text: an icon, a button. */
+  readonly suffix?: ReactNode;
   /** For `number`, `date` and `datetime-local` inputs. */
   readonly min?: string | number;
   readonly max?: string | number;
@@ -27,37 +34,38 @@ export function TextField({
   inputMode,
   placeholder,
   required = false,
+  readOnly = false,
   hint,
   error = null,
+  prefix,
+  suffix,
   min,
   max,
   step,
 }: TextFieldProps) {
   return (
-    <label className="flex flex-col gap-1 text-sm font-medium">
-      {label}
-      <input
-        type={type}
-        value={value}
-        onChange={(event) => {
-          onChange(event.target.value);
-        }}
-        autoComplete={autoComplete}
-        inputMode={inputMode}
-        placeholder={placeholder}
-        required={required}
-        aria-invalid={error === null ? undefined : true}
-        min={min}
-        max={max}
-        step={step}
-        className="min-h-11 rounded-lg border border-neutral-soft bg-surface px-3 text-base font-normal outline-none focus:border-accent"
-      />
-      {hint === undefined ? null : <span className="text-xs font-normal opacity-70">{hint}</span>}
-      {error === null ? null : (
-        <span role="alert" className="text-xs font-normal text-critical">
-          {error}
-        </span>
+    <FieldFrame label={label} hint={hint} error={error}>
+      {(control) => (
+        <Box prefix={prefix} suffix={suffix} invalid={error !== null} readOnly={readOnly}>
+          <input
+            {...control}
+            type={type}
+            value={value}
+            onChange={(event) => {
+              onChange(event.target.value);
+            }}
+            autoComplete={autoComplete}
+            inputMode={inputMode}
+            placeholder={placeholder}
+            required={required}
+            readOnly={readOnly}
+            min={min}
+            max={max}
+            step={step}
+            className={`${controlClass} h-[52px]`}
+          />
+        </Box>
       )}
-    </label>
+    </FieldFrame>
   );
 }

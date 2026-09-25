@@ -2,6 +2,7 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { PasswordResetForm } from "@/features/accounts/ui/password-reset-form";
 import { PageShell } from "@/shared/ui/page-shell";
+import { inlineLinkClass } from "@/shared/ui/link-class";
 
 interface ResetSearch {
   readonly token: string;
@@ -22,7 +23,7 @@ function ResetPasswordPage() {
       {token === "" ? (
         <p className="text-sm">
           Este link está incompleto.{" "}
-          <Link to="/esqueci-senha" className="underline">
+          <Link to="/esqueci-senha" className={inlineLinkClass}>
             Pedir outro
           </Link>
         </p>

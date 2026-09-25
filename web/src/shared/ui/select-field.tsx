@@ -1,3 +1,6 @@
+import { Box, FieldFrame, controlClass } from "./field";
+import { Icon } from "./icon";
+
 export interface SelectOption {
   readonly value: string;
   readonly label: string;
@@ -25,24 +28,27 @@ export function SelectField({
   hint,
 }: SelectFieldProps) {
   return (
-    <label className="flex flex-col gap-1 text-sm font-medium">
-      {label}
-      <select
-        value={value}
-        onChange={(event) => {
-          onChange(event.target.value);
-        }}
-        required={required}
-        className="min-h-11 rounded-lg border border-neutral-soft bg-surface px-3 text-base font-normal outline-none focus:border-accent"
-      >
-        {placeholder === undefined ? null : <option value="">{placeholder}</option>}
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      {hint === undefined ? null : <span className="text-xs font-normal opacity-70">{hint}</span>}
-    </label>
+    <FieldFrame label={label} hint={hint}>
+      {(control) => (
+        <Box suffix={<Icon name="chevron-down" />}>
+          <select
+            {...control}
+            value={value}
+            onChange={(event) => {
+              onChange(event.target.value);
+            }}
+            required={required}
+            className={`${controlClass} h-[52px]`}
+          >
+            {placeholder === undefined ? null : <option value="">{placeholder}</option>}
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </Box>
+      )}
+    </FieldFrame>
   );
 }

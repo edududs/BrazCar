@@ -17,8 +17,8 @@ const notesDir = path.join(root, "web", "e2e", ".state", "screens");
 const catalogue = path.join(screensDir, "README.md");
 
 // O celular primeiro: é o projeto principal (D-133). O resto entra em ordem alfabética.
-const projectTitles = { mobile: "Celular", desktop: "Desktop" };
-const projectOrder = ["mobile", "desktop"];
+const projectTitles = { mobile: "Celular", desktop: "Desktop", "mobile-dark": "Celular, tema escuro" };
+const projectOrder = ["mobile", "desktop", "mobile-dark"];
 
 function walk(dir, prefix = "") {
   const found = [];

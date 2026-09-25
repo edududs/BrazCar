@@ -1,18 +1,36 @@
 import type { ReactNode } from "react";
 
+export type ButtonEmphasis =
+  "primary" | "ink" | "quiet" | "outline" | "ghost" | "critical" | "critical-solid";
+
 interface ActionButtonProps {
   /** Omitted for a `submit` button: the form's `onSubmit` is the action. */
   readonly onPress?: () => void;
   readonly submit?: boolean;
   readonly disabled?: boolean;
-  readonly emphasis?: "primary" | "quiet" | "critical";
+  /** `primary` is the brand colour and appears once per screen; the rest are ink and surface. */
+  readonly emphasis?: ButtonEmphasis;
+  /** 54 px by default, the main touch target; `compact` is the 44 px minimum. */
+  readonly size?: "default" | "compact";
+  /** Working: disabled, with a spinner before the label the caller already put in the gerund. */
+  readonly busy?: boolean;
+  readonly icon?: ReactNode;
   readonly children: ReactNode;
 }
 
 const emphasisTone = {
-  primary: "bg-content text-surface",
-  quiet: "bg-neutral-soft text-content",
+  primary: "bg-brand text-on-brand",
+  ink: "bg-ink text-bg",
+  quiet: "bg-surface-2 text-ink",
+  outline: "bg-transparent text-ink inset-ring-[1.5px] inset-ring-line-strong",
+  ghost: "bg-transparent text-brand-ink",
   critical: "bg-critical-soft text-critical",
+  "critical-solid": "bg-critical text-surface",
+} as const satisfies Record<ButtonEmphasis, string>;
+
+const sizeClass = {
+  default: "min-h-target rounded-button px-5 text-body",
+  compact: "min-h-11 rounded-field px-4 text-secondary",
 } as const;
 
 export function ActionButton({
@@ -20,16 +38,30 @@ export function ActionButton({
   submit = false,
   disabled = false,
   emphasis = "quiet",
+  size = "default",
+  busy = false,
+  icon,
   children,
 }: ActionButtonProps) {
   return (
     <button
       type={submit ? "submit" : "button"}
       onClick={onPress}
-      disabled={disabled}
-      className={`min-h-11 rounded-lg px-4 text-sm font-medium active:opacity-70 disabled:opacity-50 ${emphasisTone[emphasis]}`}
+      disabled={disabled || busy}
+      aria-busy={busy || undefined}
+      className={`inline-flex items-center justify-center gap-2 font-semibold whitespace-nowrap transition-transform duration-(--duration-press) ease-out active:scale-[.97] disabled:opacity-[.42] disabled:active:scale-100 ${sizeClass[size]} ${emphasisTone[emphasis]}`}
     >
+      {busy ? <Spinner /> : icon}
       {children}
     </button>
+  );
+}
+
+function Spinner() {
+  return (
+    <span
+      aria-hidden
+      className="size-[18px] shrink-0 animate-spin rounded-full border-[2.5px] border-current border-r-transparent motion-reduce:animate-none"
+    />
   );
 }

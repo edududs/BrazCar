@@ -91,7 +91,7 @@ export function RideForm({
           />
         ))}
         <ActionButton onPress={route.addWaypoint}>Adicionar parada no caminho</ActionButton>
-        <p className="text-xs font-normal opacity-70">
+        <p className="text-caption font-normal text-ink-3">
           Se cada parada tem um preço, preencha o preço de cada uma. A carona passa a valer “a
           partir de” o menor deles.
         </p>
@@ -190,7 +190,7 @@ function StopField({ role, stop, onChange, onRemove }: StopFieldProps) {
   const place = usePlace(stop.placeId);
   const label = roleLabel[role];
   return (
-    <div className="flex flex-col gap-1 rounded-lg border border-neutral-soft p-3">
+    <div className="flex flex-col gap-1 rounded-lg border border-line p-3">
       <PlacePicker
         label={label}
         value={{ place, text: stop.text }}

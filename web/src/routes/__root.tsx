@@ -19,7 +19,7 @@ function RootLayout() {
   const floor = useVersionFloor();
   useForgetBoardOffline();
   return (
-    <div className="flex min-h-dvh flex-col bg-surface text-content">
+    <div className="flex min-h-dvh flex-col bg-bg text-ink">
       <AppNav
         brand={
           <Link to="/" className={navLinkClass}>

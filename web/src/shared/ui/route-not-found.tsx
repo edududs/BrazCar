@@ -10,7 +10,7 @@ export function RouteNotFound() {
       action={
         <Link
           to="/"
-          className="flex min-h-11 items-center rounded-lg bg-neutral-soft px-4 text-sm font-medium"
+          className="flex min-h-target items-center justify-center rounded-button bg-surface-2 px-5 text-body font-semibold text-ink"
         >
           Voltar ao mural
         </Link>

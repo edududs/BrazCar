@@ -15,7 +15,7 @@ function RidePage() {
   return (
     <PageShell title="Carona">
       {actions.status === "loading" ? (
-        <p className="text-sm opacity-70">Carregando…</p>
+        <p className="text-secondary text-ink-2">Carregando…</p>
       ) : actions.status === "missing" ? (
         <p className="text-sm">Esta carona não existe.</p>
       ) : actions.ride === null ? (

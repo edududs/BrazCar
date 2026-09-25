@@ -14,10 +14,10 @@ export function RideList({ rides, status, emptyText }: RideListProps) {
     return <p className="text-sm text-critical">Não foi possível carregar as caronas.</p>;
   }
   if (status === "loading" && rides.length === 0) {
-    return <p className="text-sm opacity-70">Carregando…</p>;
+    return <p className="text-secondary text-ink-2">Carregando…</p>;
   }
   if (rides.length === 0) {
-    return <p className="text-sm opacity-70">{emptyText}</p>;
+    return <p className="text-secondary text-ink-2">{emptyText}</p>;
   }
   return (
     <ul className="flex flex-col gap-3">

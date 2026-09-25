@@ -1,3 +1,5 @@
+import { Box, FieldFrame, controlClass } from "./field";
+
 interface TextAreaFieldProps {
   readonly label: string;
   readonly value: string;
@@ -19,26 +21,25 @@ export function TextAreaField({
   maxLength,
   hint,
 }: TextAreaFieldProps) {
-  const counter = maxLength === undefined ? null : `${String(value.length)}/${String(maxLength)}`;
+  const counter =
+    maxLength === undefined ? undefined : `${String(value.length)}/${String(maxLength)}`;
   return (
-    <label className="flex flex-col gap-1 text-sm font-medium">
-      {label}
-      <textarea
-        value={value}
-        onChange={(event) => {
-          onChange(event.target.value);
-        }}
-        placeholder={placeholder}
-        rows={rows}
-        maxLength={maxLength}
-        className="rounded-lg border border-neutral-soft bg-surface p-3 text-base font-normal outline-none focus:border-accent"
-      />
-      {hint === undefined && counter === null ? null : (
-        <span className="flex justify-between gap-2 text-xs font-normal opacity-70">
-          <span>{hint}</span>
-          {counter === null ? null : <span>{counter}</span>}
-        </span>
+    <FieldFrame label={label} hint={hint} aside={counter}>
+      {(control) => (
+        <Box multiline>
+          <textarea
+            {...control}
+            value={value}
+            onChange={(event) => {
+              onChange(event.target.value);
+            }}
+            placeholder={placeholder}
+            rows={rows}
+            maxLength={maxLength}
+            className={`${controlClass} resize-none leading-[1.45]`}
+          />
+        </Box>
       )}
-    </label>
+    </FieldFrame>
   );
 }

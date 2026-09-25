@@ -27,17 +27,21 @@ export function RideCard({ ride }: RideCardProps) {
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-lg font-semibold">
             {formatTime(ride.departureAt)}{" "}
-            <span className="text-sm font-normal opacity-70">{formatDay(ride.departureAt)}</span>
+            <span className="text-secondary font-normal text-ink-3">
+              {formatDay(ride.departureAt)}
+            </span>
           </span>
           <StatusBadge status={ride.status} />
         </div>
         <p className="text-sm">{formatRoute(ride.stops)}</p>
-        <p className="text-sm opacity-80">
+        <p className="text-secondary text-ink-2">
           {formatRidePrice(ride.price, ride.hasFares)} · {formatSeats(ride.seatsAvailable)} ·{" "}
           {ride.paymentMethods.map((method) => paymentLabel[method]).join(" ou ")}
         </p>
-        {ride.notes === null ? null : <p className="truncate text-sm opacity-80">{ride.notes}</p>}
-        <p className="flex flex-wrap items-center gap-2 text-sm opacity-70">
+        {ride.notes === null ? null : (
+          <p className="truncate text-secondary text-ink-2">{ride.notes}</p>
+        )}
+        <p className="flex flex-wrap items-center gap-2 text-secondary text-ink-2">
           <span>
             {ride.driverName}
             {ride.car === null ? "" : ` · ${ride.car.model}, ${ride.car.color}`}

@@ -5,6 +5,7 @@ import { useRide } from "@/features/rides/app/use-ride";
 import { formatTime } from "@/features/rides/ui/format";
 import { RideForm } from "@/features/rides/ui/ride-form";
 import { PageShell } from "@/shared/ui/page-shell";
+import { inlineLinkClass } from "@/shared/ui/link-class";
 
 export const Route = createFileRoute("/caronas/$rideId_/editar")({ component: EditRidePage });
 
@@ -17,13 +18,13 @@ function EditRidePage() {
     <PageShell
       title="Editar carona"
       actions={
-        <Link to="/caronas/$rideId" params={{ rideId }} className="underline">
+        <Link to="/caronas/$rideId" params={{ rideId }} className={inlineLinkClass}>
           Voltar
         </Link>
       }
     >
       {status === "loading" ? (
-        <p className="text-sm opacity-70">Carregando…</p>
+        <p className="text-secondary text-ink-2">Carregando…</p>
       ) : ride === null ? (
         <p className="text-sm">Esta carona não existe.</p>
       ) : !ride.actions.canEdit ? (

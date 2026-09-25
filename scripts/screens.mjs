@@ -22,5 +22,12 @@ function run(command, args, env) {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-run("yarn", ["playwright", "test", ...process.argv.slice(2)], { BRAZCAR_SCREENS: "1" });
+// O catálogo é do tema claro: os projetos que fotografam são o celular e o desktop. O tema escuro
+// só entra quando pedido (`yarn screens --project=mobile-dark`).
+const args = process.argv.slice(2);
+const projects = args.some((arg) => arg.startsWith("--project"))
+  ? []
+  : ["--project=mobile", "--project=desktop"];
+
+run("yarn", ["playwright", "test", ...projects, ...args], { BRAZCAR_SCREENS: "1" });
 run("node", [path.join(root, "scripts", "screens-catalog.mjs")], {});

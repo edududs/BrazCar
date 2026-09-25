@@ -1,6 +1,8 @@
 import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
 import type { ReactNode } from "react";
 
+import { Box, FieldFrame, controlClass } from "./field";
+
 /**
  * Searchable single choice over Base UI (D-057, D-088). Matching is not done here: the caller
  * hands in the items already filtered for `inputValue`, so the API or a hook owns the rule.
@@ -45,19 +47,23 @@ export function Combobox<T>({
       inputValue={inputValue}
       onInputValueChange={onInputValueChange}
     >
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        {label}
-        <BaseCombobox.Input
-          placeholder={placeholder}
-          onBlur={onInputBlur}
-          className="min-h-11 rounded-lg border border-neutral-soft bg-surface px-3 text-base font-normal outline-none focus:border-accent"
-        />
-      </label>
+      <FieldFrame label={label}>
+        {(control) => (
+          <Box>
+            <BaseCombobox.Input
+              {...control}
+              placeholder={placeholder}
+              onBlur={onInputBlur}
+              className={`${controlClass} h-[52px]`}
+            />
+          </Box>
+        )}
+      </FieldFrame>
       <BaseCombobox.Portal>
-        <BaseCombobox.Positioner sideOffset={4} className="z-10 w-[var(--anchor-width)]">
-          <BaseCombobox.Popup className="max-h-64 overflow-y-auto rounded-lg border border-neutral-soft bg-surface py-1 shadow-lg">
+        <BaseCombobox.Positioner sideOffset={6} className="z-10 w-[var(--anchor-width)]">
+          <BaseCombobox.Popup className="flex max-h-72 flex-col overflow-y-auto rounded-[18px] border border-line bg-surface p-1.5 shadow-3">
             {notice === undefined ? null : (
-              <BaseCombobox.Status className="px-3 py-2 text-sm opacity-70">
+              <BaseCombobox.Status className="px-3 py-2.5 text-secondary text-ink-2">
                 {notice}
               </BaseCombobox.Status>
             )}
@@ -66,7 +72,7 @@ export function Combobox<T>({
                 <BaseCombobox.Item
                   key={itemKey(item)}
                   value={item}
-                  className="flex min-h-11 items-center px-3 text-base data-highlighted:bg-accent-soft data-selected:font-semibold"
+                  className="flex min-h-[50px] items-center rounded-[12px] px-3 text-body text-ink data-highlighted:bg-brand-soft data-highlighted:text-brand-ink data-selected:font-bold"
                 >
                   {itemLabel(item)}
                 </BaseCombobox.Item>

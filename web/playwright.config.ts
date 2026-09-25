@@ -42,6 +42,13 @@ export default defineConfig({
     // Chromium de propósito: um motor só para instalar e manter verde, igual aqui e no GitHub. O
     // iPhone de verdade continua sendo conferido à mão, no endereço publicado (D-106).
     { name: "mobile", use: { ...devices["iPhone 15"], browserName: "chromium" } },
+    // O mesmo celular no tema escuro: a suíte inteira roda de novo para provar que nada some
+    // nem fica ilegível; o catálogo não o fotografa por padrão (`yarn screens --project mobile-dark`
+    // quando se quiser ver).
+    {
+      name: "mobile-dark",
+      use: { ...devices["iPhone 15"], browserName: "chromium", colorScheme: "dark" },
+    },
     {
       name: "desktop",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } },
