@@ -1,4 +1,4 @@
-from .account import Account, AccountId, Car, CarId
+from .account import Account, AccountId, Car, CarId, ShortText
 from .account_phone import AccountPhone, account_phone
 from .errors import (
     AccountError,
@@ -31,6 +31,7 @@ __all__ = [
     "NotAMobilePhoneError",
     "PhoneAlreadyRegisteredError",
     "PlateAlreadyOnAccountError",
+    "ShortText",
     "TooManyAttemptsError",
     "WrongCurrentPasswordError",
     "account_phone",

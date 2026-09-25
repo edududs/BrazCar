@@ -109,6 +109,25 @@ async def test_a_phone_that_cannot_own_an_account_is_refused_with_its_reason(
     assert body(refused) == {"detail": message}
 
 
+@pytest.mark.parametrize(
+    ("overrides", "message"),
+    [
+        ({"display_name": "   "}, "nome social não pode ficar vazio"),
+        ({"email": "not-an-email"}, "e-mail inválido"),
+    ],
+)
+async def test_a_malformed_registration_is_refused_with_its_reason(
+    overrides: dict[str, object], message: str
+) -> None:
+    """Before D-158 an empty display name or a malformed e-mail escaped `RegisterIn`, which leaves
+    both unconstrained the same way `ProfileIn` does, and answered 500 once `Account.register`
+    refused to build."""
+    refused = await browser().post("/api/accounts/register", {**ANA, **overrides})
+
+    assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+    assert body(refused) == {"detail": message}
+
+
 async def test_the_same_phone_cannot_register_twice() -> None:
     await register(browser())
 
@@ -168,6 +187,28 @@ async def test_cars_come_and_go_and_the_plate_stays_with_the_owner() -> None:
     assert twice.status_code == HTTPStatus.CONFLICT
     assert body(removed)["cars"] == []
     assert gone.status_code == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"model": ""},
+        {"color": ""},
+        {"plate": ""},
+        {"plate": "not a plate"},
+    ],
+)
+async def test_a_malformed_car_is_refused_with_422_not_500(overrides: dict[str, object]) -> None:
+    """Before D-158 `CarIn` left every field unconstrained, so a blank or malformed one reached
+    `Car`'s own construction and answered 500 instead of a refusal (Schemathesis found it)."""
+    client = browser()
+    await register(client)
+
+    refused = await client.post(
+        "/api/accounts/cars", {"model": "Gol", "color": "prata", "plate": "ABC1234", **overrides}
+    )
+
+    assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
 
 
 async def test_password_reset_goes_by_email_and_the_link_works_once() -> None:

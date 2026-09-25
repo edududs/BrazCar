@@ -174,18 +174,16 @@
         "type": "object"
       },
       "CarIn": {
+        "description": "Same restrictions `Car` itself enforces (D-158): ninja refuses malformed input with 422\nbefore `add_car` ever builds a domain object with it.",
         "properties": {
           "color": {
-            "title": "Color",
-            "type": "string"
+            "$ref": "#/components/schemas/ShortText"
           },
           "model": {
-            "title": "Model",
-            "type": "string"
+            "$ref": "#/components/schemas/ShortText"
           },
           "plate": {
-            "title": "Plate",
-            "type": "string"
+            "$ref": "#/components/schemas/LicensePlate"
           }
         },
         "required": [
@@ -432,6 +430,9 @@
         ],
         "title": "HealthStatus",
         "type": "object"
+      },
+      "LicensePlate": {
+        "type": "string"
       },
       "LoginIn": {
         "properties": {
@@ -912,6 +913,11 @@
         ],
         "title": "SeatsIn",
         "type": "object"
+      },
+      "ShortText": {
+        "maxLength": 60,
+        "minLength": 1,
+        "type": "string"
       },
       "StopIn": {
         "description": "A place of the catalog by identifier, or free text for \"other\" (D-013). One of the two.\n\n`fare` is what it costs to come this far from the origin, so the first stop never has one (D-131).",

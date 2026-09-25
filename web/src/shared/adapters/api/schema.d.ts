@@ -487,14 +487,15 @@ export interface components {
              */
             with_seats: boolean;
         };
-        /** CarIn */
+        /**
+         * CarIn
+         * @description Same restrictions `Car` itself enforces (D-158): ninja refuses malformed input with 422
+         *     before `add_car` ever builds a domain object with it.
+         */
         CarIn: {
-            /** Color */
-            color: string;
-            /** Model */
-            model: string;
-            /** Plate */
-            plate: string;
+            color: components["schemas"]["ShortText"];
+            model: components["schemas"]["ShortText"];
+            plate: components["schemas"]["LicensePlate"];
         };
         /** CarOut */
         CarOut: {
@@ -581,6 +582,7 @@ export interface components {
              */
             status: "ok";
         };
+        LicensePlate: string;
         /** LoginIn */
         LoginIn: {
             /** Password */
@@ -767,6 +769,7 @@ export interface components {
             /** Seats Available */
             seats_available: number;
         };
+        ShortText: string;
         /**
          * StopIn
          * @description A place of the catalog by identifier, or free text for "other" (D-013). One of the two.

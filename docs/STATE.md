@@ -280,6 +280,14 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   `feedback-gateway`, `board-signal-source`, `useMyRides`, `useRide`, `useBoardMatch`,
   `useChangePassword`, `useSendFeedback`, `usePlace` e os utilitários de `shared/app` e
   `shared/adapters`), subindo a cobertura de 15% para 70% de piso.
+- Passo de qualidade, ainda sem tag (D-158): o mesmo Schemathesis achou `POST /api/accounts/cars`
+  respondendo 500 com campos vazios ou placa fora do padrão, porque `CarIn` era mais frouxo que
+  `Car` e a exceção do domínio não tinha tradução; a mesma lacuna existia em `POST /api/accounts/register`
+  (nome social vazio, e-mail inválido). `CarIn` passou a reusar os tipos do domínio (`ShortText`,
+  `LicensePlate`); `register` ganhou a mesma tradução que `update_profile` já tinha
+  (`ACCOUNT_FIELD_REFUSALS`); e `config/api.py` ganhou um manipulador de exceção, registrado uma
+  vez, que responde 422 para qualquer `pydantic.ValidationError` do domínio que nenhuma rota tenha
+  capturado ainda.
 
 **Verificado de verdade no passo 7b:** portão rápido (343 testes no backend, 63 no front, com os
 primeiros de componente) e portão pesado dos dois lados, com 31 contratos no Postgres do compose,

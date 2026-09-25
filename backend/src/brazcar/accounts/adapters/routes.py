@@ -35,9 +35,11 @@ from brazcar.accounts.domain import (
     ForeignPhoneNumberError,
     InvalidCredentialsError,
     InvalidResetTokenError,
+    LicensePlate,
     NotAMobilePhoneError,
     PhoneAlreadyRegisteredError,
     PlateAlreadyOnAccountError,
+    ShortText,
     TooManyAttemptsError,
     WrongCurrentPasswordError,
 )
@@ -100,9 +102,12 @@ class LoginIn(Schema):
 
 
 class CarIn(Schema):
-    model: str
-    color: str
-    plate: str
+    """Same restrictions `Car` itself enforces (D-158): ninja refuses malformed input with 422
+    before `add_car` ever builds a domain object with it."""
+
+    model: ShortText
+    color: ShortText
+    plate: LicensePlate
 
 
 class ProfileIn(Schema):
@@ -136,10 +141,12 @@ PHONE_REFUSALS: dict[type[ValueError], str] = {  # one message per reason, in Po
     NotAMobilePhoneError: "use um número de celular: o contato é pelo WhatsApp",
 }
 
-PROFILE_REFUSALS: dict[str, str] = {  # by the field pydantic names in `Account.update_profile`
+ACCOUNT_FIELD_REFUSALS: dict[str, str] = {  # by the field pydantic names on `Account` itself
     "display_name": "nome social não pode ficar vazio",
     "email": "e-mail inválido",
 }
+"""Shared by `register` and `update_profile`: both build an `Account` from the same two fields,
+so the same domain `pydantic.ValidationError` needs the same translation in either place (D-158)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -288,9 +295,7 @@ def _add_profile_routes(router: Router, use_cases: AccountUseCases) -> None:
                 signed_in_account_id(request), display_name=data.display_name, email=data.email
             )
         except ValidationError as error:
-            field = str(error.errors()[0]["loc"][0])
-            message = PROFILE_REFUSALS.get(field, "confira os dados informados")
-            raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, message) from error
+            raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, _account_field_refusal(error)) from error
         return AccountOut.of(account)
 
     @router.post(
@@ -318,6 +323,10 @@ def _add_profile_routes(router: Router, use_cases: AccountUseCases) -> None:
 
 
 async def _register(register: RegisterAccount, data: RegisterIn) -> Account:
+    """`RegisterIn` leaves `display_name` and `email` unconstrained on purpose, the same way
+    `ProfileIn` does: a blank e-mail means "none", so the rule needs the domain's own reading of it,
+    not a schema regex (D-158). `Account.register` raises `pydantic.ValidationError` when either is
+    invalid; the message it gets is the same `update_profile` already gives that field."""
     try:
         return await register(
             phone=data.phone, password=data.password, display_name=data.display_name, email=data.email
@@ -326,6 +335,13 @@ async def _register(register: RegisterAccount, data: RegisterIn) -> Account:
         raise HttpError(HTTPStatus.CONFLICT, "este telefone já tem conta") from error
     except (InvalidPhoneNumberError, ForeignPhoneNumberError, NotAMobilePhoneError) as error:
         raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, PHONE_REFUSALS[type(error)]) from error
+    except ValidationError as error:
+        raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, _account_field_refusal(error)) from error
+
+
+def _account_field_refusal(error: ValidationError) -> str:
+    field = str(error.errors()[0]["loc"][0])
+    return ACCOUNT_FIELD_REFUSALS.get(field, "confira os dados informados")
 
 
 async def _start_session(request: HttpRequest, account: Account) -> None:
