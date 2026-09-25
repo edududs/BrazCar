@@ -6,6 +6,23 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.19.0] - 2026-09-25
+
+### Adicionado
+
+- **web:** The forms, the account and the way in as the boards draw them
+
+### Corrigido
+
+- **web:** The day cards keep their height on the sheet, the version ends the account
+
+### Documentação
+
+- Record the v0.18.0 deploy
+- Design step 4, the forms, the account and the way in
+- Screens after the forms, the account and the way in
+- State after design step 4
+
 ## [0.18.0] - 2026-09-25
 
 ### Adicionado
