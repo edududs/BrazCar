@@ -4,9 +4,10 @@ Atualizado em 2026-09-25.
 
 ## Onde estamos
 
-Versão `v0.16.0`: passo 1 da etapa de design, a fundação (D-143 a D-147): tokens em dois
-temas, tema com escolha manual, fonte de destaque hospedada e a pele nova dos primitivos, com o
-catálogo de telas refeito como o "depois". Antes: `v0.15.0` (contato rastreável, filtro "a partir
+Versão `v0.17.0`: passo 2 da etapa de design, a casca (D-148, D-149): abas embaixo, marca e
+ícones do app, cabeçalho que encolhe, avisos flutuantes e vazios com a rota tracejada. Antes:
+`v0.16.0`, passo 1, a fundação (D-143 a D-147): tokens em dois temas, tema com escolha manual,
+fonte de destaque hospedada e a pele nova dos primitivos; `v0.15.0` (contato rastreável, filtro "a partir
 de", vagas até 4), `v0.14.0` (editar conta e senha), `v0.13.0` (telefone como value object),
 `v0.12.0`, passo de coleta: semente de demonstração, suíte de ponta a
 ponta com o Playwright e [catálogo de telas](screens/README.md), para a etapa de design (D-103)
@@ -151,6 +152,18 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   enquanto a pessoa digita e valida antes de enviar, o primitivo `PhoneField` é usado no cadastro,
   no login e na recuperação de senha, e o card de contato mostra o número; a `libphonenumber-js`
   (`min`) fica confinada em `shared/app/phone-codec.ts` por regra do ESLint.
+- Design, passo 2, casca (D-148, D-149): a raiz deixa de ter barra no topo e rodapé e ganha a
+  `TabBar` embaixo (Caronas, Publicar em Anil, Minhas, Conta ou Entrar), com vidro e área segura;
+  o mural abre com a marca (`Wordmark`) no lugar do título, que fica só para leitor de tela, e a
+  `TopBar` encolhe por `animation-timeline: scroll()` com a barra compacta aparecendo entre 70 e
+  130 px, tudo em CSS e parado onde não há suporte ou com "reduzir movimento". Avisos flutuam:
+  `Toast` (versão nova, com "Atualizar"; sem internet como alerta no topo, com a página esmaecida e
+  `inert`), `InstallHintCard` (a dica do iPhone com os ícones de Compartilhar e Adicionar à Tela de
+  Início). `EmptyState` com a rota tracejada na lista vazia e na página inexistente; a tela de piso
+  de versão com o símbolo grande. `BrandMark` em SVG e os ícones do app gerados por
+  `scripts/app-icons.mjs`. A versão do build foi para a tela de conta. Saíram `AppNav`,
+  `AppFooter` e `AppShellNotices`. Os testes de ponta a ponta da casca passaram a ler o alerta e o
+  cartão pelos papéis (`alert`, `complementary`), não pelo texto antigo.
 - Design, passo 1, fundação (D-143 a D-147): a identidade "Hora azul" do canvas entra pela base.
   `styles.css` com os tokens por papel em dois temas (22 cores, sombras, raios, tipo, movimento) e
   o `@theme inline` só nomeando; a paleta padrão do Tailwind desligada e um teste que recusa token
@@ -240,21 +253,22 @@ sobrevivendo a panic do Go ou a reinício do Postgres; o mural atualizando sozin
 segundo plano no app instalado; o aviso de build novo e a tela de piso num iPhone; ícone maskable
 no Android; `login` e `password-reset` estourados pelo navegador; e-mail de verdade pelo Resend.
 
-**Pendências de design (D-103), depois do passo 1:** ícones do app ainda provisórios (quadrado azul
-com círculo branco; a marca da prancha F2 entra com a casca); o aviso de build novo e a dica de
-instalação ainda são um aviso em linha sob a barra, e a dica come a primeira dobra de toda imagem do
-celular até o passo 2 a transformar no cartão flutuante da S14; a tela "Sem internet" e a de
-atualização obrigatória já têm o tipo novo, mas o glifo é do passo 2; o rodapé com a versão sai
-para a conta no passo 2. Os formulários e o mural usam os primitivos novos sobre o mesmo layout de
-antes: chips, hora-herói, linha da rota, barrinhas de vaga e o componente de data e hora são dos
-passos 3 e 4. Manifesto com as cores do tema claro (é estático).
+**Pendências de design (D-103), depois do passo 2:** os formulários, o mural e o detalhe usam os
+primitivos novos sobre o mesmo layout de antes: chips, hora-herói, linha da rota, barrinhas de vaga,
+seções por dia com "Agora", céu do horário e contato revelado no lugar são do passo 3; o componente
+de data e hora, o campo de parada, as telas de conta (leitura com edição a pedido, como a S10),
+acesso e senha são do passo 4; o catálogo de movimento, as View Transitions e o parallax do detalhe
+são do passo 5; o balão de opinião no topo do mural e na conta é do passo 6. Nas telas que não são
+o mural, o topo ainda é o título da página sem o botão de voltar que a S12 desenha (passo 4). O
+desktop usa a mesma casca do celular, com as abas embaixo, até o canvas ganhar as pranchas de
+desktop. Manifesto com as cores do tema claro (é estático).
 
 ## Próximo passo
 
-1. Etapa de design (D-103, D-143), passo 2: casca — abas embaixo com a quinta aba prevista,
-   cabeçalho que encolhe, marca, folhas de baixo e diálogos, faixa de instalação reposicionada,
-   estados vazios com a linha tracejada. Depois: mural e detalhe (3), publicar, editar, conta e
-   acesso (4), movimento (5), canal de opinião (6).
+1. Etapa de design (D-103, D-143), passo 3: mural e detalhe — hora-herói, linha da rota, seções
+   por dia com "Agora", barrinhas de vaga, chips (o "A partir de" primeiro), céu do horário, contato
+   revelado no lugar; o selo "Nova" e o céu do horário nascem na camada headless, com teste. Depois:
+   publicar, editar, conta e acesso (4), movimento (5), canal de opinião (6).
 2. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
    e as telas de observações e preço por parada.
 3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
