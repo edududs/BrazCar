@@ -17,8 +17,11 @@ Plataforma que funciona sozinha, sem extrator.
   fonte, pele dos primitivos: **feito, tag `v0.16.0`**; (2) casca — abas embaixo, cabeçalho que
   encolhe, avisos flutuantes, vazios, ícones do app: **feito, tag `v0.17.0`**; (3) mural e detalhe —
   hora-herói, linha da rota, seções por dia, chips, céu do horário, contato no lugar: **feito, tag
-  `v0.18.0`**; (4) publicar, editar, conta e acesso; (5) movimento; (6) canal de opinião. Desktop depois do
-  celular aprovado.
+  `v0.18.0`**; (4) publicar, editar, conta e acesso — componente de data e hora, trajeto desenhado,
+  conta em leitura, acesso: **feito, tag `v0.19.0`**; (5) movimento; (6) canal de opinião. Desktop
+  depois do celular aprovado. Refinamentos do mural que ficaram para depois: o vazio por horário
+  oferecendo "Ver amanhã a partir de HH:MM" (S15) e a contagem de lotadas escondidas pelo "Com
+  vaga" (S01), esta dependendo de a API dizer quantas escondeu.
 - Deploy na máquina de teste e front no Vercel.
 
 ## Depois

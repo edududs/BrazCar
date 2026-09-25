@@ -4,9 +4,12 @@ Atualizado em 2026-09-25.
 
 ## Onde estamos
 
-Versão `v0.18.0`: passo 3 da etapa de design, mural e detalhe (D-150): hora-herói, linha da
-rota, seções por dia com "Agora", chips com folha de horário e preço, céu do horário no detalhe,
-contato revelado no cartão do motorista, painel do dono. Antes: `v0.17.0`, passo 2, a casca
+Versão `v0.19.0`: passo 4 da etapa de design, formulários, conta e acesso (D-151, D-152): componente
+de data e hora da F7, trajeto desenhado com preço por parada atrás de interruptor, conta em leitura
+com edição em folhas, entrar, criar conta e recuperar senha. Antes: `v0.18.0`, passo 3, mural e
+detalhe (D-150): hora-herói, linha da rota, seções por dia com "Agora", chips com folha de horário
+e preço, céu do horário no detalhe, contato revelado no cartão do motorista, painel do dono;
+`v0.17.0`, passo 2, a casca
 (D-148, D-149): abas embaixo, marca e ícones do app, cabeçalho que encolhe, avisos flutuantes e
 vazios com a rota tracejada; `v0.16.0`, passo 1, a fundação (D-143 a D-147): tokens em dois temas, tema com escolha manual,
 fonte de destaque hospedada e a pele nova dos primitivos; `v0.15.0` (contato rastreável, filtro "a partir
@@ -154,6 +157,28 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   enquanto a pessoa digita e valida antes de enviar, o primitivo `PhoneField` é usado no cadastro,
   no login e na recuperação de senha, e o card de contato mostra o número; a `libphonenumber-js`
   (`min`) fica confinada em `shared/app/phone-codec.ts` por regra do ESLint.
+- Design, passo 4, formulários, conta e acesso (D-151, D-152): `DateTimeField` (dia · hora, folha
+  com cartões de dia, calendário, `ClockPicker` com hora e minutos digitáveis, horários comuns,
+  frase de resumo, "Pronto"; dia travado na edição), sobre `calendar.ts` e `useDateTimeDraft` em
+  `shared/app`, com teste; o `TimeSheet` do mural passou a usar o mesmo `ClockPicker`. `RideForm`
+  reescrito: carro com ícone, trajeto como linha (`StopRow` com bolinha, `PlacePicker`, "Parada no
+  caminho" tracejado, remover), interruptor "Preço diferente por parada" (`SwitchField`, Base UI
+  Switch) que mostra o campo de tarifa por parada e o aviso do "a partir de" com a menor delas
+  (`useRouteDraft.cheapestFare`), vagas em `Stepper`, pagamento em `ToggleField`, observações
+  opcionais, botão fixo em `ActionBar` submetendo o formulário pelo atributo `form`. Publicar abre
+  por cima (X, sem abas) e sem carro mostra a tela com o glifo do carro; editar com seta de voltar
+  e a regra do dia num aviso antes do erro. Conta em leitura: perfil com avatar, grupos "Seus
+  dados" (Editar dados e Trocar senha em `Sheet`), "Carros" (linhas com placa, remover, cadastro em
+  folha), "Aparência" e "BrazCar" (sair, excluir com o celular no diálogo); toasts "Dados salvos.",
+  "Senha alterada.", "Carro cadastrado."; sem sessão, o cartão "Entre para publicar e pedir
+  contato". Entrar (voltar, marca, "Celular", `PasswordField` com mostrar, "Esqueci a senha" ao
+  lado do rótulo), criar conta (nome social, celular com WhatsApp, e-mail opcional, senha), esqueci
+  a senha (glifo da chave; enviado vira "Confira seu e-mail") e link incompleto. Abas só no mural,
+  em minhas caronas e na conta. `PageShell` ganhou `compact`, `back`, `lead` e `intro`;
+  `FieldFrame` ganhou `optional` e `labelAside`; `SelectField` ganhou `prefix`; `IconButton`,
+  `IconLink`, `SwitchField`, `ToggleField`, `PasswordField`, `ClockPicker`. A suíte de ponta a
+  ponta escolhe a saída pela folha (`e2e/support/departure.ts`) e a prevenção do outro dia na
+  edição substituiu a recusa do servidor como cenário.
 - Design, passo 3, mural e detalhe (D-150): `RideCard` com a hora em Bricolage, `RouteLine` (rota
   numa linha, paradas marcadas em Anil quando casam com a busca), preço curto ("R$ 7"), `SeatPips`
   (barrinhas, teto 4), avatar de iniciais, selos só para exceção, "Nova" com anel quando a carona
@@ -304,20 +329,19 @@ sobrevivendo a panic do Go ou a reinício do Postgres; o mural atualizando sozin
 segundo plano no app instalado; o aviso de build novo e a tela de piso num iPhone; ícone maskable
 no Android; `login` e `password-reset` estourados pelo navegador; e-mail de verdade pelo Resend.
 
-**Pendências de design (D-103), depois do passo 3:** os formulários usam os primitivos novos sobre o
-mesmo layout de antes; o componente
-de data e hora, o campo de parada, as telas de conta (leitura com edição a pedido, como a S10),
-acesso e senha são do passo 4; o catálogo de movimento, as View Transitions e o parallax do detalhe
-são do passo 5; o balão de opinião no topo do mural e na conta é do passo 6. Nas telas que não são
-o mural, o topo ainda é o título da página sem o botão de voltar que a S12 desenha (passo 4). O
-desktop usa a mesma casca do celular, com as abas embaixo, até o canvas ganhar as pranchas de
-desktop. Manifesto com as cores do tema claro (é estático).
+**Pendências de design (D-103), depois do passo 4:** o catálogo de movimento, as View Transitions
+mural → detalhe e o parallax do detalhe são do passo 5; o balão de opinião no topo do mural e na
+conta é do passo 6. Dois toasts que o canvas desenha ainda não existem porque dependem de navegação
+com estado: "Carona publicada. Já está no mural." ao chegar no detalhe e "Você saiu da conta." ao
+voltar ao mural (hoje sair fica na conta, no cartão de entrar). O "Ver amanhã a partir de HH:MM" e a
+contagem de lotadas escondidas estão no ROADMAP. O desktop usa a mesma casca do celular até o
+canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é estático).
 
 ## Próximo passo
 
-1. Etapa de design (D-103, D-143), passo 4: publicar e editar (componente de data e hora da F7,
-   campo de parada, tarifas, observações), conta (leitura com edição a pedido, S10), ações da
-   conta, acesso, senha. Depois: movimento (5), canal de opinião (6).
+1. Etapa de design (D-103, D-143), passo 5: movimento — o catálogo da F5 como teste (durações,
+   curvas, reduzir movimento), View Transitions mural → detalhe, parallax do detalhe. Depois: canal
+   de opinião (6).
 2. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
    e as telas de observações e preço por parada.
 3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
