@@ -6,6 +6,24 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.21.0] - 2026-09-25
+
+### Adicionado
+
+- **feedback:** Opinion channel on the account screen
+
+### Refatorado
+
+- **shared:** Signed-in account, masked phone and invalid-phone words in one place
+
+### Documentação
+
+- Record the v0.20.2 deploy
+
+### Infraestrutura
+
+- **web:** Cap the test workers
+
 ## [0.20.2] - 2026-09-25
 
 ### Testes
