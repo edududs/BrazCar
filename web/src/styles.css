@@ -1,14 +1,269 @@
 @import "tailwindcss";
 
-/* Design tokens as CSS variables (D-057). Components use the token names, never raw colors. */
-@theme {
-  --color-surface: #fafaf9;
-  --color-content: #1c1917;
-  --color-neutral-soft: #e7e5e4;
-  --color-positive: #166534;
-  --color-positive-soft: #dcfce7;
-  --color-critical: #991b1b;
-  --color-critical-soft: #fee2e2;
-  --color-accent: #1e40af;
-  --color-accent-soft: #dbeafe;
+/*
+ * Design tokens (D-057): names by role, values by theme. Components use the name, never a colour.
+ * The values live in `:root` and switch with the theme; `@theme inline` only gives them Tailwind
+ * names, so `bg-surface` or `text-ink-2` are right in both themes without a `dark:` class.
+ * The values come from the design boards (F3, "Hora azul"); every text-on-background pair was
+ * measured there, the lowest being 4,57:1.
+ */
+
+/* The display face: one weight, Latin only, built by scripts/subset-display-font.py. */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/bricolage-grotesque-700-latin.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-00FF, U+2013-2014, U+2018-201D, U+2026;
+}
+
+/* While the file is on its way, a system face sized to take the same room, so nothing jumps. */
+@font-face {
+  font-family: "Bricolage Fallback";
+  font-weight: 700;
+  src: local("SF Pro Display"), local("Roboto"), local("Segoe UI");
+  size-adjust: 104%;
+  ascent-override: 92%;
+  descent-override: 24%;
+}
+
+:root {
+  color-scheme: light;
+
+  --bg: #f5f6f9;
+  --surface: #ffffff;
+  --surface-2: #eef0f4;
+  --line: #e2e4eb;
+  --line-soft: #eceef2;
+  --line-strong: #c9ccd6;
+  --ink: #14151d;
+  --ink-2: #4e5263;
+  --ink-3: #686c7c;
+  --brand: #4338d8;
+  --on-brand: #ffffff;
+  --brand-soft: #ecebfe;
+  --brand-ink: #3a2fbf;
+  --brand-on-ink: #b9b5ff;
+  --ring: rgb(67 56 216 / 0.22);
+  --sun: #f29a38;
+  --sun-soft: rgb(242 154 56 / 0.22);
+  --sun-ink: #8a4b00;
+  --positive: #0b7147;
+  --positive-soft: #e2f4ea;
+  --caution: #8a4b00;
+  --caution-soft: #fdf0d8;
+  --critical: #b8231b;
+  --critical-soft: #fce8e6;
+  --critical-ring: rgb(184 35 27 / 0.18);
+  --glass: rgb(245 246 249 / 0.8);
+  --scrim: rgb(12 13 20 / 0.42);
+  --sky-dawn: rgb(242 154 56 / 0.3);
+  --sky-day: rgb(110 150 235 / 0.22);
+  --sky-dusk: rgb(214 110 150 / 0.24);
+  --sky-night: rgb(67 56 216 / 0.24);
+
+  --shadow-1: 0 1px 2px rgb(20 22 40 / 0.05), 0 2px 8px -2px rgb(20 22 40 / 0.06);
+  --shadow-2: 0 12px 28px -12px rgb(20 22 40 / 0.24);
+  --shadow-3: 0 24px 60px -16px rgb(20 22 40 / 0.38);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg: #0b0c12;
+    --surface: #14161f;
+    --surface-2: #1c1f2b;
+    --line: #262a38;
+    --line-soft: #1f2230;
+    --line-strong: #3a3f52;
+    --ink: #f1f2f7;
+    --ink-2: #b3b7c6;
+    --ink-3: #8f94a6;
+    --brand: #8e88ff;
+    --on-brand: #0b0c12;
+    --brand-soft: #24224a;
+    --brand-ink: #bdb9ff;
+    --brand-on-ink: #4338d8;
+    --ring: rgb(142 136 255 / 0.32);
+    --sun: #ffb25e;
+    --sun-soft: rgb(255 178 94 / 0.2);
+    --sun-ink: #ffc98a;
+    --positive: #4cd597;
+    --positive-soft: #11301f;
+    --caution: #ffc061;
+    --caution-soft: #33260d;
+    --critical: #ff7f73;
+    --critical-soft: #3a1714;
+    --critical-ring: rgb(255 127 115 / 0.24);
+    --glass: rgb(11 12 18 / 0.74);
+    --scrim: rgb(0 0 0 / 0.62);
+    --sky-dawn: rgb(255 160 70 / 0.22);
+    --sky-day: rgb(90 130 230 / 0.2);
+    --sky-dusk: rgb(200 90 160 / 0.24);
+    --sky-night: rgb(110 100 255 / 0.28);
+
+    --shadow-1: inset 0 1px 0 rgb(255 255 255 / 0.03);
+    --shadow-2: 0 16px 32px -12px rgb(0 0 0 / 0.65);
+    --shadow-3: 0 24px 60px -12px rgb(0 0 0 / 0.75);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0b0c12;
+  --surface: #14161f;
+  --surface-2: #1c1f2b;
+  --line: #262a38;
+  --line-soft: #1f2230;
+  --line-strong: #3a3f52;
+  --ink: #f1f2f7;
+  --ink-2: #b3b7c6;
+  --ink-3: #8f94a6;
+  --brand: #8e88ff;
+  --on-brand: #0b0c12;
+  --brand-soft: #24224a;
+  --brand-ink: #bdb9ff;
+  --brand-on-ink: #4338d8;
+  --ring: rgb(142 136 255 / 0.32);
+  --sun: #ffb25e;
+  --sun-soft: rgb(255 178 94 / 0.2);
+  --sun-ink: #ffc98a;
+  --positive: #4cd597;
+  --positive-soft: #11301f;
+  --caution: #ffc061;
+  --caution-soft: #33260d;
+  --critical: #ff7f73;
+  --critical-soft: #3a1714;
+  --critical-ring: rgb(255 127 115 / 0.24);
+  --glass: rgb(11 12 18 / 0.74);
+  --scrim: rgb(0 0 0 / 0.62);
+  --sky-dawn: rgb(255 160 70 / 0.22);
+  --sky-day: rgb(90 130 230 / 0.2);
+  --sky-dusk: rgb(200 90 160 / 0.24);
+  --sky-night: rgb(110 100 255 / 0.28);
+
+  --shadow-1: inset 0 1px 0 rgb(255 255 255 / 0.03);
+  --shadow-2: 0 16px 32px -12px rgb(0 0 0 / 0.65);
+  --shadow-3: 0 24px 60px -12px rgb(0 0 0 / 0.75);
+}
+
+@theme inline {
+  /* Only the roles above exist as colours: the default palette is switched off on purpose. */
+  --color-*: initial;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-brand: var(--brand);
+  --color-on-brand: var(--on-brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-on-ink: var(--brand-on-ink);
+  --color-ring: var(--ring);
+  --color-sun: var(--sun);
+  --color-sun-soft: var(--sun-soft);
+  --color-sun-ink: var(--sun-ink);
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-caution: var(--caution);
+  --color-caution-soft: var(--caution-soft);
+  --color-critical: var(--critical);
+  --color-critical-soft: var(--critical-soft);
+  --color-critical-ring: var(--critical-ring);
+  --color-glass: var(--glass);
+  --color-scrim: var(--scrim);
+  --color-sky-dawn: var(--sky-dawn);
+  --color-sky-day: var(--sky-day);
+  --color-sky-dusk: var(--sky-dusk);
+  --color-sky-night: var(--sky-night);
+
+  --shadow-1: var(--shadow-1);
+  --shadow-2: var(--shadow-2);
+  --shadow-3: var(--shadow-3);
+
+  /* Body text is the system face (0 kB, Dynamic Type); the display face is for times and titles. */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue",
+    system-ui, sans-serif;
+  --font-display:
+    "Bricolage Grotesque", "Bricolage Fallback", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+
+  /* Type scale: size / line height, with the tracking of the boards. */
+  --text-time-xl: 80px;
+  --text-time-xl--line-height: 72px;
+  --text-time-xl--letter-spacing: -0.05em;
+  --text-time: 30px;
+  --text-time--line-height: 30px;
+  --text-time--letter-spacing: -0.035em;
+  --text-title: 34px;
+  --text-title--line-height: 36px;
+  --text-title--letter-spacing: -0.03em;
+  --text-heading: 26px;
+  --text-heading--line-height: 29px;
+  --text-heading--letter-spacing: -0.025em;
+  --text-body: 17px;
+  --text-body--line-height: 24px;
+  --text-secondary: 15px;
+  --text-secondary--line-height: 22px;
+  --text-caption: 13px;
+  --text-caption--line-height: 18px;
+  --text-label: 12px;
+  --text-label--line-height: 12px;
+  --text-label--letter-spacing: 0.08em;
+
+  /* Radii grow with the object: field, button, card, sheet. */
+  --radius-field: 14px;
+  --radius-button: 16px;
+  --radius-card: 22px;
+  --radius-dialog: 26px;
+  --radius-sheet: 30px;
+
+  /* Side margin on a phone, and the two touch targets: 44 minimum, 54 for the main action. */
+  --spacing-gutter: 20px;
+  --spacing-target: 54px;
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: linear(0, 0.25 7%, 0.7 18%, 0.98 32%, 1.04 42%, 1.01 58%, 1);
+}
+
+:root {
+  /* Motion: press, state change, enter, exit. Not a Tailwind namespace; used as `duration-(--duration-press)`. */
+  --duration-press: 120ms;
+  --duration-state: 200ms;
+  --duration-enter: 280ms;
+  --duration-exit: 180ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-press: 0ms;
+    --duration-state: 0ms;
+    --duration-enter: 120ms;
+    --duration-exit: 120ms;
+  }
+}
+
+@layer base {
+  html {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Keyboard focus is always visible: a brand ring, set off from the element. */
+  :focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: 3px;
+  }
 }

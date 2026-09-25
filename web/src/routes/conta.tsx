@@ -3,7 +3,9 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useChangePassword } from "@/features/accounts/app/use-change-password";
 import { useSession } from "@/features/accounts/app/use-session";
 import { AccountPanel } from "@/features/accounts/ui/account-panel";
+import { inlineLinkClass } from "@/shared/ui/link-class";
 import { PageShell } from "@/shared/ui/page-shell";
+import { ThemeControl } from "@/shared/ui/theme-control";
 
 export const Route = createFileRoute("/conta")({ component: AccountPage });
 
@@ -14,11 +16,11 @@ function AccountPage() {
   return (
     <PageShell title="Minha conta">
       {session.status === "checking" ? (
-        <p className="text-sm opacity-70">Verificando…</p>
+        <p className="text-secondary text-ink-2">Verificando…</p>
       ) : session.status === "anonymous" ? (
         <p className="text-sm">
           Você não está conectado.{" "}
-          <Link to="/entrar" className="underline">
+          <Link to="/entrar" className={inlineLinkClass}>
             Entrar
           </Link>
         </p>
@@ -48,6 +50,8 @@ function AccountPage() {
           }}
         />
       )}
+      {/* Theme and opinion work for anyone, signed in or not (S10). */}
+      <ThemeControl />
     </PageShell>
   );
 }

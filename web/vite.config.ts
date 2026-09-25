@@ -11,8 +11,8 @@ import packageJson from "./package.json" with { type: "json" };
 
 const devApiOrigin = process.env.BRAZCAR_DEV_API_ORIGIN ?? "http://127.0.0.1:8000";
 
-/** Placeholder colors until the design stage (D-103); the same as `--color-surface` in styles.css. */
-const surface = "#fafaf9";
+/** The light page background, `--bg` in styles.css: the manifest is static, so it holds one theme. */
+const surface = "#F5F6F9";
 
 export default defineConfig({
   define: {

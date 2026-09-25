@@ -3,6 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- The chosen theme, before the first paint. The same key and attribute as
+         src/shared/adapters/theme.ts, which owns the rule and takes over once the app runs. -->
+    <script>
+      try {
+        var theme = localStorage.getItem("brazcar:theme");
+        if (theme === "light" || theme === "dark") {
+          document.documentElement.setAttribute("data-theme", theme);
+        }
+      } catch (error) {
+        // No storage: the device's own theme applies.
+      }
+    </script>
+    <!-- The browser's bars follow the page background; the app updates these on a manual choice. -->
+    <meta
+      name="theme-color"
+      content="#F5F6F9"
+      data-theme="light"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0B0C12"
+      data-theme="dark"
+      media="(prefers-color-scheme: dark)"
+    />
+    <link
+      rel="preload"
+      href="/fonts/bricolage-grotesque-700-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <!-- Opens standalone from the home screen. `apple-` is the legacy form; keeping both covers old
@@ -10,9 +42,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="BrazCar" />
-    <!-- An opaque status bar with dark text: the page starts below it, on a light background. -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="theme-color" content="#fafaf9" />
+    <!-- The page paints under the status bar, in its own theme; the shell keeps clear of it with
+         the safe-area inset. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="Caronas entre Brazlândia e Brasília." />
     <title>BrazCar</title>
   </head>
