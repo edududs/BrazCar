@@ -41,13 +41,6 @@ test("o filtro de dia vive na URL e recorta o mural", async ({ page, demo, snap 
   await snap(page, "board/filtered-by-day");
 });
 
-/** One minute after `clock` ("HH:MM"), capped at the last minute of the day. */
-function afterClock(clock: string): string {
-  const [hour = 0, minute = 0] = clock.split(":").map(Number);
-  const total = Math.min(hour * 60 + minute + 1, 23 * 60 + 59);
-  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
-}
-
 test('o filtro "a partir de" recorta o mural pelo horário local, sem dia e com dia', async ({
   page,
   demo,
@@ -59,11 +52,11 @@ test('o filtro "a partir de" recorta o mural pelo horário local, sem dia e com 
     const expected = clockOf(ride.departureAt) >= "18:00";
     await expect(cardFor(page, ride.id), ride.slug).toHaveCount(expected ? 1 : 0);
   }
-  await expect(page).toHaveURL(/from=18%3A00/);
+  await expect(page).toHaveURL(/from=18:00/);
   await snap(page, "board/from-time");
 
   const today = demo.dayAt(0);
-  await page.getByLabel("Dia").fill(today);
+  await page.getByLabel("Dia", { exact: true }).fill(today);
   await expect(page).toHaveURL(new RegExp(`day=${today}`));
 
   for (const ride of demo.rides.filter((each) => each.onBoard)) {
@@ -77,16 +70,10 @@ test('o filtro "a partir de" sem carona no horário mostra o estado vazio', asyn
   demo,
   snap,
 }) => {
+  // 23:59 é depois de qualquer horário que a semente ou as outras jornadas publiquem.
   const today = demo.dayAt(0);
-  const todays = demo.rides.filter((ride) => ride.onBoard && ride.day === today);
-  const latest =
-    todays
-      .map((ride) => clockOf(ride.departureAt))
-      .sort()
-      .at(-1) ?? "00:00";
-  const from = afterClock(latest);
 
-  await openBoard(page, `?day=${today}&from=${from}`);
+  await openBoard(page, `?day=${today}&from=23:59`);
 
   await expect(page.getByText("Nenhuma carona com esses filtros.")).toBeVisible();
   await expect(page.locator(cards)).toHaveCount(0);

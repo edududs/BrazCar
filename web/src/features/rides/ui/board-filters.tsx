@@ -22,7 +22,7 @@ export function BoardFiltersForm({ filters, onChange }: BoardFiltersFormProps) {
         onChange={(fromTime) => {
           onChange({ ...filters, fromTime: fromTime === "" ? null : fromTime });
         }}
-        hint="Hora da partida, no dia ou em cada dia da lista."
+        hint="Horário mínimo de partida, em cada data da lista ou só na marcada."
       />
       <TextField
         label="Passa por"
