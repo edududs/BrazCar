@@ -6,6 +6,23 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.21.1] - 2026-09-25
+
+### Corrigido
+
+- **rides:** Add the migration missing since 808f96c and gate model drift
+- **accounts:** Never let a domain validation error answer 500
+
+### Documentação
+
+- Record the v0.21.0 deploy
+- Describe the quality step's test layers and decisions
+
+### Testes
+
+- **backend:** Fuzz the contract with Schemathesis, fix what it found
+- **web:** Cover the adapters and hooks that had none, measure coverage
+
 ## [0.21.0] - 2026-09-25
 
 ### Adicionado
