@@ -81,12 +81,14 @@ export const test = base.extend<Fixtures>({
   },
 
   // The projects share one database per run, so each takes its own phone for every journey that
-  // registers one: the seed reserves `journeys * projects` of them.
+  // registers one, and so does each attempt: a retry must not find the account its failed attempt
+  // already created. The seed reserves `journeys * attempts * projects` of them.
   // eslint-disable-next-line no-empty-pattern -- Playwright reads the destructuring to find deps
   sparePhone: async ({}, use, testInfo) => {
     const projects = testInfo.config.projects;
     const slot = projects.findIndex((project) => project.name === testInfo.project.name);
-    await use((journey) => journey * projects.length + slot);
+    const attempts = testInfo.project.retries + 1;
+    await use((journey) => (journey * attempts + testInfo.retry) * projects.length + slot);
   },
 
   // The clock the front reads is the moment the seed counted from, so "hoje" and "amanhã" mean
@@ -189,7 +191,7 @@ async function headingOf(page: Page): Promise<string> {
 /** The board, once it has stopped saying "Carregando…". */
 export async function openBoard(page: Page, query = ""): Promise<void> {
   await page.goto(`/${query}`);
-  await expect(page.getByRole("heading", { name: "Caronas", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Caronas", exact: true, level: 1 })).toBeVisible();
   await expect(page.getByText("Carregando…")).toBeHidden();
 }
 

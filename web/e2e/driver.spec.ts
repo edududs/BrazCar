@@ -12,7 +12,7 @@ import { instant, localInput, sameDayShift } from "./support/time";
  */
 
 function stops(page: Page) {
-  return page.getByRole("group", { name: "Trajeto" }).locator("> div");
+  return page.getByRole("group", { name: "Trajeto", exact: true }).locator("> div");
 }
 
 /** Escolhe um lugar do catálogo numa parada, como a pessoa faz: digita e clica na lista. */
@@ -26,9 +26,9 @@ test("sem carro, publicar manda cadastrar um", async ({ page, signIn, snap }) =>
   await page.goto("/publicar");
 
   await expect(
-    page.getByRole("heading", { name: "Cadastre um carro para publicar" }),
+    page.getByRole("heading", { name: "Cadastre um carro para publicar", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Cadastrar um carro" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Cadastrar um carro", exact: true })).toBeVisible();
   await snap(page, "publish/without-a-car");
 });
 
@@ -37,20 +37,22 @@ test("publicar uma carona simples", async ({ page, demo, signIn, snap }) => {
   await signIn(page, "driver_one_car");
   await page.goto("/publicar");
 
-  await expect(page.getByRole("heading", { name: "Publicar carona", level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Publicar carona", exact: true, level: 1 }),
+  ).toBeVisible();
   await snap(page, "publish/empty");
 
   await page.getByLabel("Carro").selectOption({ index: 1 });
   await pickPlace(page, 0, "Sai de", "Veredas");
   await pickPlace(page, 1, "Vai para", "Ceasa");
   await chooseDeparture(page, localInput(demo.anchor, 8 * 60));
-  await page.getByRole("button", { name: "Pôr uma vaga" }).click();
+  await page.getByRole("button", { name: "Pôr uma vaga", exact: true }).click();
   await page.getByLabel("Preço", { exact: true }).fill("8.00");
   await page.getByLabel("Observações").fill(notes);
   await expect(page.getByText(`${String(notes.length)}/500`)).toBeVisible();
   await snap(page, "publish/filled");
 
-  await page.getByRole("button", { name: "Publicar" }).click();
+  await page.getByRole("button", { name: "Publicar carona", exact: true }).click();
 
   await expect(page).toHaveURL(/\/caronas\/[0-9a-f-]{36}$/);
   await expect(page.getByRole("listitem").filter({ hasText: "Veredas" })).toBeVisible();
@@ -75,7 +77,7 @@ test("observação com telefone é recusada com a frase do botão", async ({
   await pickPlace(page, 1, "Vai para", "SAAN");
   await chooseDeparture(page, localInput(demo.anchor, 9 * 60));
   await page.getByLabel("Observações").fill("Chama no 61 99999-0000 que eu confirmo a vaga");
-  await page.getByRole("button", { name: "Publicar" }).click();
+  await page.getByRole("button", { name: "Publicar carona", exact: true }).click();
 
   await expect(page.getByRole("alert")).toContainText("o contato sai pelo botão de contato");
   await snap(page, "publish/personal-data-refused");
@@ -91,11 +93,13 @@ test("com preço por parada, o preço da carona some do formulário", async ({
   await page.goto("/publicar");
 
   await page.getByLabel("Carro").selectOption({ index: 1 });
-  await page.getByRole("button", { name: "Adicionar parada no caminho" }).click();
-  await page.getByRole("button", { name: "Adicionar parada no caminho" }).click();
+  await page.getByRole("button", { name: "Adicionar parada no caminho", exact: true }).click();
+  await page.getByRole("button", { name: "Adicionar parada no caminho", exact: true }).click();
   await expect(stops(page)).toHaveCount(4);
-  await expect(stops(page).nth(1).getByRole("button", { name: "Remover parada" })).toBeVisible();
-  await page.getByRole("switch", { name: "Preço diferente por parada" }).click();
+  await expect(
+    stops(page).nth(1).getByRole("button", { name: "Remover parada", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("switch", { name: "Preço diferente por parada", exact: true }).click();
 
   await pickPlace(page, 0, "Sai de", "Fassincra");
   await pickPlace(page, 1, "Parada no caminho", "Estrutural");
@@ -109,7 +113,7 @@ test("com preço por parada, o preço da carona some do formulário", async ({
   await chooseDeparture(page, localInput(demo.anchor, 10 * 60));
   await snap(page, "publish/fares-per-stop");
 
-  await page.getByRole("button", { name: "Publicar" }).click();
+  await page.getByRole("button", { name: "Publicar carona", exact: true }).click();
 
   await expect(page).toHaveURL(/\/caronas\/[0-9a-f-]{36}$/);
   await expect(page.getByText("a partir de")).toBeVisible();
@@ -133,7 +137,7 @@ test("uma parada em texto livre entra na rota", async ({ page, demo, signIn, sna
   await chooseDeparture(page, localInput(demo.anchor, 11 * 60));
   await snap(page, "publish/free-text-stop");
 
-  await page.getByRole("button", { name: "Publicar" }).click();
+  await page.getByRole("button", { name: "Publicar carona", exact: true }).click();
 
   await expect(
     page.getByRole("listitem").filter({ hasText: "Portão da escola, quadra 12" }),
@@ -148,7 +152,9 @@ test("minhas caronas mostram também a cancelada e a que já saiu", async ({
   await signIn(page, "driver_one_car");
   await page.goto("/minhas-caronas");
 
-  await expect(page.getByRole("heading", { name: "Minhas caronas", level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Minhas caronas", exact: true, level: 1 }),
+  ).toBeVisible();
   await expect(page.getByText("Cancelada", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Já saiu", { exact: true })).toBeVisible();
   await expect(page.getByText("sua carona").first()).toBeVisible();
@@ -178,17 +184,17 @@ test("o dono fecha e reabre a carona pelas vagas", async ({
   });
   await openRide(page, rideId);
 
-  await expect(page.getByRole("heading", { name: "Sua carona" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sua carona", exact: true })).toBeVisible();
   await snap(page, "ride/owner-open");
 
-  const minus = page.getByRole("button", { name: "Tirar uma vaga" });
+  const minus = page.getByRole("button", { name: "Tirar uma vaga", exact: true });
   await minus.click();
   await minus.click();
   await expect(page.getByText("Ponha uma vaga para reabrir.")).toBeVisible();
   await expect(page.getByText("Lotada", { exact: true })).toBeVisible();
   await snap(page, "ride/owner-full");
 
-  await page.getByRole("button", { name: "Pôr uma vaga" }).click();
+  await page.getByRole("button", { name: "Pôr uma vaga", exact: true }).click();
   await expect(page.getByText("Reaberta", { exact: true })).toBeVisible();
   await snap(page, "ride/owner-reopened");
 });
@@ -211,7 +217,9 @@ test("editar: o mesmo dia passa, outro dia é recusado", async ({
   });
   await page.goto(`/caronas/${rideId}/editar`);
 
-  await expect(page.getByRole("heading", { name: "Editar carona", level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Editar carona", exact: true, level: 1 }),
+  ).toBeVisible();
   await expect(
     page.getByText("Antes de sair, o horário só muda dentro do mesmo dia."),
   ).toBeVisible();
@@ -230,14 +238,14 @@ test("editar: o mesmo dia passa, outro dia é recusado", async ({
   for (const card of await dayCards.and(sheet.getByRole("button", { pressed: false })).all()) {
     await expect(card).toBeDisabled();
   }
-  await expect(sheet.getByRole("button", { name: "Outro dia" })).toBeDisabled();
+  await expect(sheet.getByRole("button", { name: "Outro dia", exact: true })).toBeDisabled();
   await expect(sheet.getByText("Para outro dia, use Repetir.")).toBeVisible();
   await snap(page, "edit/other-day-refused");
-  await sheet.getByRole("button", { name: "Fechar" }).click();
+  await sheet.getByRole("button", { name: "Fechar", exact: true }).click();
 
   await chooseDeparture(page, localInput(demo.anchor, moved));
   await page.getByLabel("Observações").fill("Mudei o horário: saio meia hora depois.");
-  await page.getByRole("button", { name: "Salvar" }).click();
+  await page.getByRole("button", { name: "Salvar alterações", exact: true }).click();
 
   await expect(page).toHaveURL(new RegExp(`/caronas/${rideId}$`));
   await expect(page.getByText("Mudei o horário: saio meia hora depois.")).toBeVisible();
@@ -258,13 +266,16 @@ test("cancelar pede confirmação e é definitivo", async ({
   });
   await openRide(page, rideId);
 
-  await page.getByRole("button", { name: "Cancelar carona" }).click();
+  await page.getByRole("button", { name: "Cancelar carona", exact: true }).click();
   await expect(page.getByText("Cancelar esta carona?")).toBeVisible();
   await snap(page, "ride/cancel-dialog");
 
-  await page.getByRole("alertdialog").getByRole("button", { name: "Cancelar carona" }).click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Cancelar carona", exact: true })
+    .click();
   await expect(page.getByText("Cancelada", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Cancelar carona" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Cancelar carona", exact: true })).toHaveCount(0);
   await snap(page, "ride/owner-cancelled");
 });
 
@@ -279,10 +290,12 @@ test("repetir uma carona publica outra igual em outro horário", async ({
   await openRide(page, ride.id);
 
   await expect(page.getByRole("listitem").filter({ hasText: "Aeroporto" })).toBeVisible();
-  await page.getByRole("button", { name: "Repetir Publica outra igual em outro horário" }).click();
+  await page
+    .getByRole("button", { name: "Repetir Publica outra igual em outro horário", exact: true })
+    .click();
   await page.getByLabel("Repetir esta carona em").fill(localInput(demo.anchor, 100 * 60));
   await snap(page, "ride/repeat-ready");
-  await page.getByRole("button", { name: "Repetir carona" }).click();
+  await page.getByRole("button", { name: "Repetir carona", exact: true }).click();
 
   await expect(page).toHaveURL(/\/caronas\/[0-9a-f-]{36}$/);
   await expect(page).not.toHaveURL(new RegExp(ride.id));

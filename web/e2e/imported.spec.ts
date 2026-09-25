@@ -14,7 +14,7 @@ test("o detalhe mostra a mensagem original, já redigida", async ({ page, demo, 
   await openRide(page, demo.ride("imported_external").id);
 
   await expect(page.getByText("via WhatsApp")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Mensagem original" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mensagem original", exact: true })).toBeVisible();
   await expect(page.getByText(demo.groupLabelAt(0))).toBeVisible();
   // O telefone que estava na mensagem não sai daqui (D-128).
   await expect(page.getByRole("blockquote")).not.toContainText("98888-0001");
@@ -34,12 +34,12 @@ test("o contato de motorista externo vem sem placa", async ({ page, demo, signIn
   await signIn(page, "passenger");
   await openRide(page, demo.ride("imported_external").id);
 
-  await page.getByRole("button", { name: "Pedir contato" }).click();
+  await page.getByRole("button", { name: "Pedir contato", exact: true }).click();
 
   await expect(
     page.getByText("Sem placa cadastrada: confirme o carro com o motorista antes de entrar."),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Falar no WhatsApp" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Falar no WhatsApp", exact: true })).toBeVisible();
   await snap(page, "imported/contact-without-plate");
 });
 
@@ -57,7 +57,9 @@ test("a importada de quem tem conta é da dona, e aparece em minhas caronas", as
   await snap(page, "imported/owned-in-my-rides");
 
   await openRide(page, demo.ride("imported_owned").id);
-  await expect(page.getByRole("heading", { name: "Sua carona" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Sua mensagem no grupo" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sua carona", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Sua mensagem no grupo", exact: true }),
+  ).toBeVisible();
   await snap(page, "imported/owned-detail");
 });

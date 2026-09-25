@@ -86,30 +86,19 @@ IMPORTED_OWNER = DemoPerson(
 )
 """The account whose phone a group message carries: its imported ride is hers (D-127)."""
 
-SUITE_PHONES: tuple[str, ...] = (
-    "+5561900000010",
-    "+5561900000011",
-    "+5561900000012",
-    "+5561900000013",
-    "+5561900000014",
-    "+5561900000015",
-    "+5561900000016",
-    "+5561900000017",
-    "+5561900000018",
-    "+5561900000019",
-    "+5561900000020",
-    "+5561900000021",
-    "+5561900000022",
-    "+5561900000023",
-    "+5561900000024",
+SUITE_JOURNEYS = 5  # sign-up, deleting it, changing its password, editing it, a wrong password first
+SUITE_PROJECTS = 3  # `mobile`, `mobile-dark` and `desktop`
+SUITE_ATTEMPTS = 2  # the first run of a test and the one retry the CI allows
+SUITE_PHONES: tuple[str, ...] = tuple(
+    f"+55619000000{10 + index}" for index in range(SUITE_JOURNEYS * SUITE_PROJECTS * SUITE_ATTEMPTS)
 )
 """Reserved for the accounts the end to end suite creates itself. The seed never writes them; the
 teardown forgets them, so a suite that signs up starts from an empty phone every run. One per
-project and per journey, because `mobile`, `desktop` and `mobile-dark` share the one database of a
-run (`workers: 1`): sign-up, deleting the account it just created, changing its password,
-editing its profile, and signing in with a wrong password first, each taking the phone at
-`journey * projects + project`. A seeded account never has its password or e-mail changed by a
-test, so the second project to touch it in the same run still finds what the manifest promised."""
+journey, per attempt and per project, because `mobile`, `desktop` and `mobile-dark` share the one
+database of a run (`workers: 1`), and a retried test must not find the account its failed attempt
+already created: the phone is at `(journey * attempts + retry) * projects + project`. A seeded
+account never has its password or e-mail changed by a test, so the second project to touch it in
+the same run still finds what the manifest promised."""
 
 PEOPLE: tuple[DemoPerson, ...] = (
     DRIVER_ONE_CAR,

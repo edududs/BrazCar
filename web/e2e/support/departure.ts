@@ -16,14 +16,14 @@ export async function chooseDeparture(page: Page, local: string): Promise<void> 
 
   // The calendar reaches any day; the cards only the next four. Months roll forward as needed.
   // On an edit the day is locked and the calendar too: only the clock is set (ADR-0004).
-  const other = sheet.getByRole("button", { name: "Outro dia" });
+  const other = sheet.getByRole("button", { name: "Outro dia", exact: true });
   if (await other.isEnabled()) {
     if ((await other.getAttribute("aria-pressed")) !== "true") await other.click();
     const grid = sheet.getByRole("grid");
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const title = (await grid.getAttribute("aria-label")) ?? "";
       if (monthOf(title) === Number(day.slice(5, 7))) break;
-      await sheet.getByRole("button", { name: "Próximo mês" }).click();
+      await sheet.getByRole("button", { name: "Próximo mês", exact: true }).click();
     }
     await grid.getByRole("button", { name: dayNumber, exact: true }).click();
   }
@@ -34,7 +34,7 @@ export async function chooseDeparture(page: Page, local: string): Promise<void> 
   await page.keyboard.type(`${hour}${minute}`, { delay: 30 });
   await expect(sheet.getByLabel("Hora", { exact: true })).toHaveValue(hour);
   await expect(sheet.getByLabel("Minutos", { exact: true })).toHaveValue(minute);
-  await sheet.getByRole("button", { name: "Pronto" }).click();
+  await sheet.getByRole("button", { name: "Pronto", exact: true }).click();
   await expect(sheet).toBeHidden();
 }
 

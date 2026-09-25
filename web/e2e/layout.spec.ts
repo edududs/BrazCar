@@ -32,7 +32,7 @@ test("publicar: rolado até o fim, as observações terminam acima do botão fix
   await signIn(page, "driver_one_car");
   await page.goto("/publicar");
   const notes = page.getByLabel("Observações");
-  const publish = page.getByRole("button", { name: "Publicar carona" });
+  const publish = page.getByRole("button", { name: "Publicar carona", exact: true });
   await expect(notes).toBeVisible();
 
   await scrollToEnd(page);
@@ -45,7 +45,7 @@ test("detalhe: rolado até o fim, o último cartão termina acima da barra de a�
   demo,
 }) => {
   await openRide(page, demo.ride("open_today_long_notes").id);
-  const action = page.getByRole("link", { name: "Entrar para pedir contato" });
+  const action = page.getByRole("link", { name: "Entrar para pedir contato", exact: true });
   const lastCard = page.locator("main section").last();
   await expect(action).toBeVisible();
 

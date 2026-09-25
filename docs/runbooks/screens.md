@@ -52,6 +52,16 @@ obtidas ficam num arquivo da rodada (`e2e/.state/sessions.json`, zerado no iníc
 troca de processo de cada nova tentativa do GitHub, e teste que erra a senha de propósito usa uma
 conta própria, nunca uma da semente. Sem isso, uma falha vira cascata de "muitas tentativas".
 
+Teste que cria conta pega o telefone por `sparePhone(jornada)`, e o número depende também da
+tentativa: a retentativa do GitHub acharia "este telefone já tem conta" se usasse o mesmo da
+primeira. A semente reserva jornadas × tentativas × projetos (`SUITE_JOURNEYS`, `SUITE_ATTEMPTS` e
+`SUITE_PROJECTS` em `dataset.py`); jornada nova que registra conta aumenta `SUITE_JOURNEYS`.
+
+Localizador por papel usa o nome exato (`exact: true`). Sem isso o nome casa por trecho, e o modo
+estrito só reclama quando os dois elementos aparecem juntos: a aba "Conta" e o link "Criar conta"
+na tela de entrar derrubaram a `v0.20.1` no GitHub. Para ver o GitHub aqui:
+`yarn e2e --retries=1`.
+
 O relatório HTML e os traces ficam em `web/e2e/.state/` e não são versionados. As imagens e o
 `docs/screens/README.md`, sim.
 

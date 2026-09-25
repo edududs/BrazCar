@@ -32,7 +32,7 @@ test("o filtro de dia vive na URL e recorta o mural", async ({ page, demo, snap 
   const today = demo.dayAt(0);
   await openBoard(page);
 
-  await page.getByRole("button", { name: "Hoje" }).click();
+  await page.getByRole("button", { name: "Hoje", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`day=${today}`));
 
   for (const ride of demo.rides.filter((each) => each.onBoard)) {
@@ -56,7 +56,7 @@ test('o filtro "a partir de" recorta o mural pelo horário local, sem dia e com 
   await snap(page, "board/from-time");
 
   const today = demo.dayAt(0);
-  await page.getByRole("button", { name: "Hoje" }).click();
+  await page.getByRole("button", { name: "Hoje", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`day=${today}`));
 
   for (const ride of demo.rides.filter((each) => each.onBoard)) {
@@ -86,7 +86,7 @@ test("só com vaga tira a lotada do mural", async ({ page, demo, snap }) => {
   await expect(cardFor(page, full.id)).toHaveCount(1);
   await expect(page.getByText("Lotada", { exact: true }).first()).toBeVisible();
 
-  await page.getByRole("button", { name: "Com vaga" }).click();
+  await page.getByRole("button", { name: "Com vaga", exact: true }).click();
   await expect(page).toHaveURL(/withSeats=true/);
 
   await expect(cardFor(page, full.id)).toHaveCount(0);
@@ -136,9 +136,11 @@ test("o detalhe de uma carona aberta convida a entrar para pedir contato", async
   await page.locator(cards).first().click();
 
   await expect(page).toHaveURL(/\/caronas\/[0-9a-f-]{36}$/);
-  await expect(page.getByRole("heading", { name: "Carona", level: 1 })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Entrar para pedir contato" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Pedir contato" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Carona", exact: true, level: 1 })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Entrar para pedir contato", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pedir contato", exact: true })).toHaveCount(0);
   await snap(page, "ride/open-anonymous");
 });
 
@@ -146,7 +148,7 @@ test("carona lotada não oferece contato", async ({ page, demo, snap }) => {
   await openRide(page, demo.ride("full_today").id);
 
   await expect(page.getByText("Lotada", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Pedir contato" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Pedir contato", exact: true })).toHaveCount(0);
   await snap(page, "ride/full");
 });
 
@@ -154,7 +156,7 @@ test("carona que já saiu não oferece contato", async ({ page, demo, snap }) =>
   await openRide(page, demo.ride("departed_earlier").id);
 
   await expect(page.getByText("Já saiu", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Pedir contato" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Pedir contato", exact: true })).toHaveCount(0);
   await snap(page, "ride/departed");
 });
 
@@ -162,7 +164,7 @@ test("carona cancelada continua legível pelo endereço", async ({ page, demo, s
   await openRide(page, demo.ride("cancelled_today").id);
 
   await expect(page.getByText("Cancelada", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Pedir contato" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Pedir contato", exact: true })).toHaveCount(0);
   await snap(page, "ride/cancelled");
 });
 
@@ -184,7 +186,9 @@ test("carona com observações longas mostra o texto inteiro", async ({ page, de
 test("endereço de carona que não existe explica o que houve", async ({ page, snap }) => {
   await page.goto("/caronas/00000000-0000-4000-8000-000000000000");
 
-  await expect(page.getByRole("heading", { name: "Esta carona não existe" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Esta carona não existe", exact: true }),
+  ).toBeVisible();
   await snap(page, "ride/not-found");
 });
 
@@ -194,11 +198,13 @@ test("endereço que não é rota nenhuma explica em português e leva ao mural",
 }) => {
   await page.goto("/uma-pagina-que-nao-existe");
 
-  await expect(page.getByRole("heading", { name: "Página não encontrada" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Página não encontrada", exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("Este endereço não existe no BrazCar.")).toBeVisible();
   await snap(page, "shell/route-not-found");
 
-  await page.getByRole("link", { name: "Voltar ao mural" }).click();
+  await page.getByRole("link", { name: "Voltar ao mural", exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
 });
 
@@ -211,7 +217,7 @@ test("sem internet o app avisa por cima da página", async ({ page, context, sna
 
   await context.setOffline(false);
   await expect(page.getByRole("alert")).toBeHidden();
-  await expect(page.getByRole("heading", { name: "Caronas", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Caronas", exact: true, level: 1 })).toBeVisible();
 });
 
 test("abaixo do piso de versão o app só oferece atualizar", async ({ page, snap }) => {
@@ -220,8 +226,10 @@ test("abaixo do piso de versão o app só oferece atualizar", async ({ page, sna
   });
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Atualize o BrazCar" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Atualizar" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Atualize o BrazCar", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Atualizar agora", exact: true })).toBeVisible();
   await snap(page, "shell/version-required");
 });
 
@@ -233,10 +241,10 @@ test("no iPhone, a dica de instalar aparece e some quando dispensada", async ({
   test.skip(!isMobile, "a dica só existe em aba de navegador no iPhone (D-106)");
   await openBoard(page);
 
-  const hint = page.getByRole("complementary", { name: "Use como app" });
+  const hint = page.getByRole("complementary", { name: "Use como app", exact: true });
   await expect(hint).toBeVisible();
   await snap(page, "shell/install-hint");
 
-  await page.getByRole("button", { name: "Agora não" }).click();
+  await page.getByRole("button", { name: "Agora não", exact: true }).click();
   await expect(hint).toBeHidden();
 });
