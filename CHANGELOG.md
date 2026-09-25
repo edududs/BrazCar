@@ -6,6 +6,23 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.17.0] - 2026-09-25
+
+### Adicionado
+
+- **web:** The app shell as the boards draw it
+
+### Corrigido
+
+- **web:** Keep the end of a page reachable under the fixed surfaces
+
+### Documentação
+
+- Record the v0.16.0 deploy
+- Design step 2, the shell
+- Screens after the shell
+- State after design step 2
+
 ## [0.16.0] - 2026-09-25
 
 ### Adicionado
