@@ -4,9 +4,11 @@ Atualizado em 2026-09-25.
 
 ## Onde estamos
 
-Versão `v0.17.0`: passo 2 da etapa de design, a casca (D-148, D-149): abas embaixo, marca e
-ícones do app, cabeçalho que encolhe, avisos flutuantes e vazios com a rota tracejada. Antes:
-`v0.16.0`, passo 1, a fundação (D-143 a D-147): tokens em dois temas, tema com escolha manual,
+Versão `v0.18.0`: passo 3 da etapa de design, mural e detalhe (D-150): hora-herói, linha da
+rota, seções por dia com "Agora", chips com folha de horário e preço, céu do horário no detalhe,
+contato revelado no cartão do motorista, painel do dono. Antes: `v0.17.0`, passo 2, a casca
+(D-148, D-149): abas embaixo, marca e ícones do app, cabeçalho que encolhe, avisos flutuantes e
+vazios com a rota tracejada; `v0.16.0`, passo 1, a fundação (D-143 a D-147): tokens em dois temas, tema com escolha manual,
 fonte de destaque hospedada e a pele nova dos primitivos; `v0.15.0` (contato rastreável, filtro "a partir
 de", vagas até 4), `v0.14.0` (editar conta e senha), `v0.13.0` (telefone como value object),
 `v0.12.0`, passo de coleta: semente de demonstração, suíte de ponta a
@@ -152,6 +154,23 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   enquanto a pessoa digita e valida antes de enviar, o primitivo `PhoneField` é usado no cadastro,
   no login e na recuperação de senha, e o card de contato mostra o número; a `libphonenumber-js`
   (`min`) fica confinada em `shared/app/phone-codec.ts` por regra do ESLint.
+- Design, passo 3, mural e detalhe (D-150): `RideCard` com a hora em Bricolage, `RouteLine` (rota
+  numa linha, paradas marcadas em Anil quando casam com a busca), preço curto ("R$ 7"), `SeatPips`
+  (barrinhas, teto 4), avatar de iniciais, selos só para exceção, "Nova" com anel quando a carona
+  chega pelo sinal; `RideList` em seções por dia com o marcador "Agora" (ou "Próximas"/"Encerradas"
+  em minhas caronas); `BoardFiltersForm` como `SearchField` + chips (`Chip`, `ChipRow`), com
+  `TimeSheet` (horários rápidos, "Agora", hora e minutos em passos de 15) e `PriceSheet` sobre o
+  primitivo `Sheet` (Base UI Drawer); a linha "Mostrando caronas que passam por … (SCS)" quando um
+  apelido do catálogo fez a busca. `RideDetail` reescrito: céu do horário (`skyOf`), botão de voltar
+  em vidro, hora a 80 px (riscada se cancelada, cinza se já saiu), `RouteList` vertical com tarifas,
+  fatos (vagas, preço, paga com), observações, cartão do motorista com o contato revelado nele
+  (`Plate`), mensagem original em balão, `ActionBar` fixa com a ação certa por situação e sessão,
+  painel do dono com `Stepper` de vagas, `ListGroup`/`ListRow` (Editar, Repetir em folha, Cancelar)
+  e as frases de consequência. A página da carona não tem abas nem título visível. Headless novo,
+  com teste: `sky.ts`, `use-fresh-rides.ts`, `board-days.ts`, `use-board-match.ts`,
+  `shared/app/use-time-draft.ts`, `shared/app/use-clock.ts`. Primitivos novos: `Sheet`, `Chip`,
+  `SearchField`, `Stepper`, `Avatar`, `ActionBar`, `ListGroup`/`ListRowButton`/`ListRowLink`,
+  `SectionHeading`. `contact-button` saiu: o pedido de contato vive no detalhe.
 - Design, passo 2, casca (D-148, D-149): a raiz deixa de ter barra no topo e rodapé e ganha a
   `TabBar` embaixo (Caronas, Publicar em Anil, Minhas, Conta ou Entrar), com vidro e área segura;
   o mural abre com a marca (`Wordmark`) no lugar do título, que fica só para leitor de tela, e a
@@ -269,9 +288,8 @@ sobrevivendo a panic do Go ou a reinício do Postgres; o mural atualizando sozin
 segundo plano no app instalado; o aviso de build novo e a tela de piso num iPhone; ícone maskable
 no Android; `login` e `password-reset` estourados pelo navegador; e-mail de verdade pelo Resend.
 
-**Pendências de design (D-103), depois do passo 2:** os formulários, o mural e o detalhe usam os
-primitivos novos sobre o mesmo layout de antes: chips, hora-herói, linha da rota, barrinhas de vaga,
-seções por dia com "Agora", céu do horário e contato revelado no lugar são do passo 3; o componente
+**Pendências de design (D-103), depois do passo 3:** os formulários usam os primitivos novos sobre o
+mesmo layout de antes; o componente
 de data e hora, o campo de parada, as telas de conta (leitura com edição a pedido, como a S10),
 acesso e senha são do passo 4; o catálogo de movimento, as View Transitions e o parallax do detalhe
 são do passo 5; o balão de opinião no topo do mural e na conta é do passo 6. Nas telas que não são
@@ -281,10 +299,9 @@ desktop. Manifesto com as cores do tema claro (é estático).
 
 ## Próximo passo
 
-1. Etapa de design (D-103, D-143), passo 3: mural e detalhe — hora-herói, linha da rota, seções
-   por dia com "Agora", barrinhas de vaga, chips (o "A partir de" primeiro), céu do horário, contato
-   revelado no lugar; o selo "Nova" e o céu do horário nascem na camada headless, com teste. Depois:
-   publicar, editar, conta e acesso (4), movimento (5), canal de opinião (6).
+1. Etapa de design (D-103, D-143), passo 4: publicar e editar (componente de data e hora da F7,
+   campo de parada, tarifas, observações), conta (leitura com edição a pedido, S10), ações da
+   conta, acesso, senha. Depois: movimento (5), canal de opinião (6).
 2. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
    e as telas de observações e preço por parada.
 3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
