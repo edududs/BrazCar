@@ -50,7 +50,8 @@ Em 2026-09-24 (v0.14.0) nada entrou no `api.env`; sem migração.
 A migração `rides.0005` (D-140) preenche os registros de `ContactRequest` já existentes a partir
 da carona ainda gravada; o operador confere no log a linha `rides_contact_request: filled N row(s)`.
 Em 2026-09-25 (v0.15.0) nada entrou no `api.env`; a migração `rides.0005` (D-140) preencheu 2
-pedidos de contato no `up`.
+pedidos de contato no `up`. Em 2026-09-25 (v0.16.0) nada entrou no `api.env`; sem migração; a
+fonte hospedada responde em `/fonts/...` pelo Vercel.
 
 ## Worker do WhatsApp (passo 7a)
 
