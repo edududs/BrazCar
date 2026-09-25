@@ -68,6 +68,9 @@ export default defineConfig({
     // servidores de verdade e não roda aqui dentro.
     include: ["src/**/*.test.{ts,tsx}"],
     setupFiles: ["src/shared/testing/setup.ts"],
+    // Each file gets its own jsdom worker; by default one per core ran at once, which starved
+    // memory on a 16-core laptop and made user-event tests time out. Four finish as fast.
+    maxWorkers: 4,
     coverage: {
       provider: "v8",
       // The whole of src, like the backend measures the whole of src/brazcar (D-109). Today only
