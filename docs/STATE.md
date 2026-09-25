@@ -273,6 +273,25 @@ carona que outro contexto acabou de publicar (SSE); excluir a conta pelo diálog
 telefone dela deixando de servir para entrar, e a página em português para todo endereço que não é
 rota nenhuma.
 
+**Verificado de verdade no passo 4 do design:** portão rápido a cada commit (472 no backend, 161 no
+front, 6 novos: calendário, rascunho de data e hora, vagas por passo, tarifas atrás do interruptor,
+folhas da conta), portão pesado do front, a suíte de ponta a ponta verde nos três projetos (155
+casos, 1 pulado) depois de quatro ajustes na suíte, não no produto: as linhas do trajeto voltaram a
+ser filhas diretas do grupo (o localizador conta `> div`); "Hora" e "Minutos" exatos (os botões de
+mais e menos contêm as palavras); o helper que escolhe a saída pula o calendário quando o dia está
+travado; e, com a lista de lugares aberta, o Base UI marca o resto da página como `aria-hidden`,
+então o toque fora que confirma a parada em texto livre vai por CSS, não por papel. Catálogo
+refeito duas vezes (143 imagens): a primeira mostrou os cartões de dia esmagados na folha (a fileira
+com rolagem lateral encolhia dentro da coluna) e a versão antes do grupo "BrazCar"; corrigido antes
+da segunda. Conferidas por amostra: publicar vazio e preenchido, tarifas por parada com o aviso do
+"a partir de", editar com a folha do dia travado, conta com e sem carro, folha de carro, entrar,
+criar conta recusada.
+
+**Não verificado:** a folha de data e hora por toque num iPhone (cartões, calendário, digitar a
+hora); o interruptor e os botões de mostrar senha no aparelho; o `aria-hidden` que o Base UI põe no
+resto da página com a lista de lugares aberta, para leitor de tela (parece comportamento modal
+indevido num combobox e merece olhar no passo de qualidade).
+
 **Verificado de verdade no passo 3 do design:** portão rápido a cada commit (472 no backend, 155 no
 front, 22 novos: céu do horário, selo "Nova", seções e chips de dia, rascunho de hora, filtros como
 chips, detalhe com o contato revelado), portão pesado do front, a suíte de ponta a ponta verde nos
