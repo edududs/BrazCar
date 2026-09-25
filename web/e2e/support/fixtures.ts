@@ -43,6 +43,8 @@ const sessions = new Map<string, Awaited<ReturnType<BrowserContext["cookies"]>>>
 
 interface Fixtures {
   demo: DemoManifest;
+  /** The index of a spare phone this project may register for a journey (0, 1, 2…). */
+  sparePhone: (journey: number) => number;
   snap: Snap;
   signIn: SignIn;
   publishFor: PublishFor;
@@ -52,6 +54,15 @@ export const test = base.extend<Fixtures>({
   // eslint-disable-next-line no-empty-pattern -- Playwright reads the destructuring to find deps
   demo: async ({}, use) => {
     await use(loadManifest());
+  },
+
+  // The projects share one database per run, so each takes its own phone for every journey that
+  // registers one: the seed reserves `journeys * projects` of them.
+  // eslint-disable-next-line no-empty-pattern -- Playwright reads the destructuring to find deps
+  sparePhone: async ({}, use, testInfo) => {
+    const projects = testInfo.config.projects;
+    const slot = projects.findIndex((project) => project.name === testInfo.project.name);
+    await use((journey) => journey * projects.length + slot);
   },
 
   // The clock the front reads is the moment the seed counted from, so "hoje" and "amanhã" mean

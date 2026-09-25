@@ -5,11 +5,11 @@ import { expect, test } from "./support/fixtures";
 test("criar conta: os erros aparecem e a conta entra direto no mural", async ({
   page,
   demo,
-  isMobile,
+  sparePhone,
   snap,
 }) => {
-  // Um número por projeto: celular e desktop rodam a mesma jornada no mesmo banco.
-  const phone = demo.suitePhoneAt(isMobile ? 0 : 1);
+  // Um número por projeto: os três rodam a mesma jornada no mesmo banco.
+  const phone = demo.suitePhoneAt(sparePhone(0));
   await page.goto("/cadastro");
   await expect(page.getByRole("heading", { name: "Criar conta", level: 1 })).toBeVisible();
   await snap(page, "signup/empty");
@@ -114,12 +114,12 @@ test("nome social longo cabe na conta", async ({ page, demo, signIn, snap }) => 
 test("editar dados: quem não tem e-mail pode adicionar um, e ele fica depois de recarregar", async ({
   page,
   demo,
-  isMobile,
+  sparePhone,
   snap,
 }) => {
   // Conta própria deste teste, como a de excluir e a de trocar a senha: editar o e-mail de uma
   // conta da semente afetaria a outra jornada quando os dois projetos dividem o mesmo banco.
-  const phone = demo.suitePhoneAt(isMobile ? 6 : 7);
+  const phone = demo.suitePhoneAt(sparePhone(3));
   const password = "uma-senha-de-demonstracao";
   await page.goto("/cadastro");
   await page.getByLabel("Telefone").fill(phone);
@@ -146,12 +146,12 @@ test("editar dados: quem não tem e-mail pode adicionar um, e ele fica depois de
 test("trocar a senha: a nova senha funciona depois de sair e entrar de novo", async ({
   page,
   demo,
-  isMobile,
+  sparePhone,
   snap,
 }) => {
   // Conta própria deste teste, como a de excluir: mudar a senha de uma conta da semente afetaria
   // as outras jornadas que dividem o mesmo banco.
-  const phone = demo.suitePhoneAt(isMobile ? 4 : 5);
+  const phone = demo.suitePhoneAt(sparePhone(2));
   const oldPassword = "uma-senha-de-demonstracao";
   const newPassword = "outra-senha-de-demonstracao";
   await page.goto("/cadastro");
@@ -216,12 +216,12 @@ test("sair da conta devolve o visitante ao mural público", async ({ page, signI
 test("excluir conta: o diálogo explica, confirma, e o telefone deixa de servir para entrar", async ({
   page,
   demo,
-  isMobile,
+  sparePhone,
   snap,
 }) => {
   // Conta própria deste teste, criada aqui (não da semente), para não desligar da sessão de
   // nenhuma outra jornada que divide o mesmo banco. Um número por projeto, como o cadastro.
-  const phone = demo.suitePhoneAt(isMobile ? 2 : 3);
+  const phone = demo.suitePhoneAt(sparePhone(1));
   const password = "uma-senha-de-demonstracao";
   await page.goto("/cadastro");
   await page.getByLabel("Telefone").fill(phone);
