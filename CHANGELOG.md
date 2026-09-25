@@ -6,6 +6,29 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.16.0] - 2026-09-25
+
+### Adicionado
+
+- **web:** Design tokens, theme choice and the hosted display font
+- **web:** New skin for the shared primitives and the views on the new tokens
+
+### Corrigido
+
+- **web:** The wordmark keeps the ink colour in the top bar
+
+### Documentação
+
+- Record the v0.15.0 deploy
+- Design step 1, the foundation
+- Screens after the design foundation
+- State after design step 1
+- Cite the design canvas without the tool
+
+### Testes
+
+- **e2e:** One spare phone per project and per journey
+
 ## [0.15.0] - 2026-09-25
 
 ### Adicionado
