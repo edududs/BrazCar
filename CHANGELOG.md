@@ -6,6 +6,23 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.18.0] - 2026-09-25
+
+### Adicionado
+
+- **web:** The board and the ride as the boards draw them
+
+### Corrigido
+
+- **web:** The "Nova" badge waits for the first answered list
+
+### Documentação
+
+- Record the v0.17.0 deploy
+- Design step 3, the board and the ride
+- Screens after the board and the ride
+- State after design step 3
+
 ## [0.17.0] - 2026-09-25
 
 ### Adicionado
