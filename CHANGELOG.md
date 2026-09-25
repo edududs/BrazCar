@@ -6,6 +6,27 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.20.0] - 2026-09-25
+
+### Adicionado
+
+- **web:** Motion as the catalogue sets it, and notices carried by navigation
+
+### Corrigido
+
+- **web:** The hour takes typing, and the form ends above its button
+- **web:** The shell says one thing at a time above the tabs
+
+### Documentação
+
+- Design step 5, motion and the usability battery
+- Screens after motion and the usability fixes
+- State after design step 5
+
+### Testes
+
+- **web:** Usability of every interactive component, as a person uses it
+
 ## [0.19.0] - 2026-09-25
 
 ### Adicionado
