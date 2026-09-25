@@ -55,6 +55,10 @@ _LEGACY_BRAZILIAN_MOBILE = re.compile(r"^55([1-9]{2})([6-9][0-9]{7})$")
 """An old WhatsApp account keeps the address it had before the ninth digit (D-138)."""
 
 
+_VISIBLE_PREFIX = 5  # "+" and the country and area codes of a Brazilian mobile
+_VISIBLE_SUFFIX = 4  # the last four digits
+
+
 class PhoneNumber(FrozenModel):
     """Valid by construction: the parts together must be a number the numbering plan allows."""
 
@@ -118,6 +122,14 @@ class PhoneNumber(FrozenModel):
     def international(self) -> str:
         """`+55 61 99999-9999`."""
         return codec.international(self.e164())
+
+    def masked(self) -> str:
+        """`+5561*****0001`: country and area open, the last four closed, for lists read over ssh."""
+        e164 = self.e164()
+        hidden = len(e164) - _VISIBLE_PREFIX - _VISIBLE_SUFFIX
+        if hidden <= 0:  # too short to have a safe middle to hide
+            return e164
+        return f"{e164[:_VISIBLE_PREFIX]}{'*' * hidden}{e164[-_VISIBLE_SUFFIX:]}"
 
     def region(self) -> str | None:
         """Where the area code is: `Distrito Federal` for a mobile of 61; `None` when unknown."""

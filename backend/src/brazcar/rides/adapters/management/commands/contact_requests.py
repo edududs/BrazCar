@@ -57,7 +57,7 @@ class Command(BaseCommand):
     def _write(self, record: ContactRequestRecord, *, reveal: bool) -> None:
         when = record.at.strftime("%d/%m %H:%M")
         ride = str(record.ride_id) if record.ride_id is not None else "carona apagada"
-        phone = record.phone_revealed.e164() if reveal else _masked(record.phone_revealed.e164())
+        phone = record.phone_revealed.e164() if reveal else record.phone_revealed.masked()
         self.stdout.write(f"{when}\t{record.requester_id}\t{ride}\t{record.driver_kind}\t{phone}")
 
 
@@ -79,15 +79,3 @@ def _phone(raw: str) -> PhoneNumber:
     except InvalidPhoneNumberError as error:
         message = f"{raw!r} is not a valid phone number"
         raise CommandError(message) from error
-
-
-VISIBLE_PREFIX = 5  # "+" and the country and area codes of a Brazilian mobile
-VISIBLE_SUFFIX = 4  # the last four digits
-
-
-def _masked(e164: str) -> str:
-    """`+5561999990001` becomes `+5561*****0001`: country and area open, the last four close."""
-    hidden = len(e164) - VISIBLE_PREFIX - VISIBLE_SUFFIX
-    if hidden <= 0:  # too short to have a safe middle to hide
-        return e164
-    return f"{e164[:VISIBLE_PREFIX]}{'*' * hidden}{e164[-VISIBLE_SUFFIX:]}"

@@ -74,6 +74,17 @@ def test_every_format_the_platform_needs() -> None:
     assert phone.international() == "+55 61 99999-0001"
     assert phone.region() == "Distrito Federal"
     assert phone.is_mobile
+    assert phone.masked() == "+5561*****0001"
+
+
+@given(brazilian_mobiles)
+def test_masked_shows_country_area_and_last_four_only(phone: PhoneNumber) -> None:
+    e164, masked = phone.e164(), phone.masked()
+
+    assert len(masked) == len(e164)
+    assert masked[:5] == e164[:5]
+    assert masked[-4:] == e164[-4:]
+    assert set(masked[5:-4]) == {"*"}
 
 
 def test_a_landline_is_a_number_but_not_a_mobile() -> None:

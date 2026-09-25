@@ -60,7 +60,7 @@ from brazcar.rides.domain import (
     Stop,
     UnknownPlaceError,
 )
-from brazcar.shared.adapters.session_auth import optional_account_id, session_auth
+from brazcar.shared.adapters.session_auth import optional_account_id, session_auth, signed_in_account_id
 from brazcar.shared.adapters.sse import event_frame, retry_frame, sse_response
 
 HEARTBEAT_SECONDS = 15.0  # a `ping` event, never a comment (D-077)
@@ -278,7 +278,7 @@ def _add_board_routes(router: Router, use_cases: RideUseCases) -> None:
 
     @router.get("/mine", response=list[RideOut], auth=session_auth, operation_id="list_my_rides")
     async def list_mine(request: HttpRequest) -> list[RideOut]:
-        return [RideOut.of(ride) for ride in await use_cases.mine(_account_id(request))]
+        return [RideOut.of(ride) for ride in await use_cases.mine(signed_in_account_id(request))]
 
     @router.get("/{ride_id}", response=RideOut, operation_id="get_ride")
     async def get_ride(request: HttpRequest, ride_id: UUID) -> RideOut:
@@ -294,7 +294,7 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
 
     @router.post("", response={HTTPStatus.CREATED: RideOut}, auth=session_auth, operation_id="publish_ride")
     async def publish(request: HttpRequest, data: PublishIn) -> Status[RideOut]:
-        driver_id = _account_id(request)
+        driver_id = signed_in_account_id(request)
         with _translated():
             ride = await use_cases.publish(
                 driver_id,
@@ -310,7 +310,7 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
 
     @router.patch("/{ride_id}", response=RideOut, auth=session_auth, operation_id="edit_ride")
     async def edit(request: HttpRequest, ride_id: UUID, data: EditIn) -> RideOut:
-        driver_id = _account_id(request)
+        driver_id = signed_in_account_id(request)
         with _translated():
             await use_cases.edit(
                 driver_id,
@@ -326,7 +326,7 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
     @router.post("/{ride_id}/seats", response=RideOut, auth=session_auth, operation_id="change_seats")
     async def change_seats(request: HttpRequest, ride_id: UUID, data: SeatsIn) -> RideOut:
         """Zero closes the ride; back above zero reopens it (ADR-0003)."""
-        driver_id = _account_id(request)
+        driver_id = signed_in_account_id(request)
         with _translated():
             await use_cases.change_seats(driver_id, ride_id, data.seats_available)
         return RideOut.of(await use_cases.show(ride_id, driver_id))
@@ -334,7 +334,7 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
     @router.post("/{ride_id}/cancel", response=RideOut, auth=session_auth, operation_id="cancel_ride")
     async def cancel(request: HttpRequest, ride_id: UUID) -> RideOut:
         """Final (D-019). To change one's mind, repeat."""
-        driver_id = _account_id(request)
+        driver_id = signed_in_account_id(request)
         with _translated():
             await use_cases.cancel(driver_id, ride_id)
         return RideOut.of(await use_cases.show(ride_id, driver_id))
@@ -347,7 +347,7 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
     )
     async def repeat(request: HttpRequest, ride_id: UUID, data: RepeatIn) -> Status[RideOut]:
         """A new ride with this one's route, price and payment, on another departure (D-012)."""
-        driver_id = _account_id(request)
+        driver_id = signed_in_account_id(request)
         with _translated():
             ride = await use_cases.repeat(driver_id, ride_id, departure_at=data.departure_at)
         return Status(HTTPStatus.CREATED, RideOut.of(await use_cases.show(ride.id, driver_id)))
@@ -358,7 +358,7 @@ def _add_contact_route(router: Router, use_cases: RideUseCases) -> None:
     async def request_contact(request: HttpRequest, ride_id: UUID) -> ContactOut:
         """Login, a limit per account and a record: then the `wa.me` link and the plate (ADR-0006)."""
         with _translated():
-            contact = await use_cases.contact(_account_id(request), ride_id)
+            contact = await use_cases.contact(signed_in_account_id(request), ride_id)
         return ContactOut(
             whatsapp_url=contact.whatsapp_url, phone_display=contact.phone.display(), plate=contact.plate
         )
@@ -416,12 +416,6 @@ def _stop(stop: StopIn) -> Stop:
     if stop.text and not stop.place_id:
         return FreeTextStop(text=stop.text, fare=stop.fare)
     raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, "cada parada é um lugar do catálogo ou um texto")
-
-
-def _account_id(request: HttpRequest) -> UUID:
-    account_id: object = getattr(request, "auth", None)  # set by ninja from `session_auth`
-    assert isinstance(account_id, UUID)  # noqa: S101 - `session_auth` only ever returns a UUID
-    return account_id
 
 
 async def _signal_frames(signal: BoardSignal, revision: BoardRevision) -> AsyncIterator[str]:

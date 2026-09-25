@@ -39,3 +39,10 @@ session_auth: AuthBase = _session
 async def optional_account_id(request: HttpRequest) -> UUID | None:
     """For public routes that answer differently to a signed-in viewer (ADR-0011): no session, no error."""
     return await _session(request)
+
+
+def signed_in_account_id(request: HttpRequest) -> UUID:
+    """In a route guarded by `session_auth`: the account ninja put in `request.auth`."""
+    account_id: object = getattr(request, "auth", None)
+    assert isinstance(account_id, UUID)  # noqa: S101 - `session_auth` only ever returns a UUID
+    return account_id

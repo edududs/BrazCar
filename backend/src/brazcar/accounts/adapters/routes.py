@@ -41,7 +41,8 @@ from brazcar.accounts.domain import (
     TooManyAttemptsError,
     WrongCurrentPasswordError,
 )
-from brazcar.shared.adapters.session_auth import session_auth
+from brazcar.shared.adapters.phone_input import INVALID_PHONE
+from brazcar.shared.adapters.session_auth import session_auth, signed_in_account_id
 from brazcar.shared.domain.phone import InvalidPhoneNumberError
 
 from .models import User
@@ -129,7 +130,7 @@ class Done(Schema):
 
 
 PHONE_REFUSALS: dict[type[ValueError], str] = {  # one message per reason, in Portuguese
-    InvalidPhoneNumberError: "telefone inválido: digite o celular com DDD, como (61) 99999-9999",
+    InvalidPhoneNumberError: INVALID_PHONE,
     ForeignPhoneNumberError: "por enquanto só números do Brasil",
     NotAMobilePhoneError: "use um número de celular: o contato é pelo WhatsApp",
 }
@@ -212,7 +213,7 @@ def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
 
     @router.get("/me", response=AccountOut, auth=session_auth, operation_id="get_me")
     async def me(request: HttpRequest) -> AccountOut:
-        account = await use_cases.accounts.get(_account_id(request))
+        account = await use_cases.accounts.get(signed_in_account_id(request))
         if account is None:
             raise HttpError(HTTPStatus.UNAUTHORIZED, "conta não encontrada")
         return AccountOut.of(account)
@@ -221,7 +222,7 @@ def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
     async def add_car(request: HttpRequest, data: CarIn) -> AccountOut:
         try:
             account = await use_cases.add_car(
-                _account_id(request), model=data.model, color=data.color, plate=data.plate
+                signed_in_account_id(request), model=data.model, color=data.color, plate=data.plate
             )
         except PlateAlreadyOnAccountError as error:
             raise HttpError(HTTPStatus.CONFLICT, "esta placa já está na sua conta") from error
@@ -230,14 +231,14 @@ def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
     @router.delete("/cars/{car_id}", response=AccountOut, auth=session_auth, operation_id="remove_car")
     async def remove_car(request: HttpRequest, car_id: UUID) -> AccountOut:
         try:
-            account = await use_cases.remove_car(_account_id(request), car_id)
+            account = await use_cases.remove_car(signed_in_account_id(request), car_id)
         except CarNotFoundError as error:
             raise HttpError(HTTPStatus.NOT_FOUND, "carro não encontrado") from error
         return AccountOut.of(account)
 
     @router.delete("/me", response=Done, auth=session_auth, operation_id="delete_account")
     async def delete_account(request: HttpRequest) -> Done:
-        await use_cases.delete(_account_id(request))
+        await use_cases.delete(signed_in_account_id(request))
         await sync_to_async(logout)(request)
         return Done()
 
@@ -250,7 +251,7 @@ def _add_profile_routes(router: Router, use_cases: AccountUseCases) -> None:
         """The display name and the e-mail only: the phone and the password have their own path."""
         try:
             account = await use_cases.update_profile(
-                _account_id(request), display_name=data.display_name, email=data.email
+                signed_in_account_id(request), display_name=data.display_name, email=data.email
             )
         except ValidationError as error:
             field = str(error.errors()[0]["loc"][0])
@@ -264,7 +265,7 @@ def _add_profile_routes(router: Router, use_cases: AccountUseCases) -> None:
         _check_password(data.new_password)
         try:
             await use_cases.change_password(
-                _account_id(request),
+                signed_in_account_id(request),
                 current_password=data.current_password,
                 new_password=data.new_password,
             )
@@ -284,12 +285,6 @@ async def _register(register: RegisterAccount, data: RegisterIn) -> Account:
         raise HttpError(HTTPStatus.CONFLICT, "este telefone já tem conta") from error
     except (InvalidPhoneNumberError, ForeignPhoneNumberError, NotAMobilePhoneError) as error:
         raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, PHONE_REFUSALS[type(error)]) from error
-
-
-def _account_id(request: HttpRequest) -> UUID:
-    account_id: object = getattr(request, "auth", None)  # set by ninja from `session_auth`
-    assert isinstance(account_id, UUID)  # noqa: S101 - `session_auth` only ever returns a UUID
-    return account_id
 
 
 async def _start_session(request: HttpRequest, account: Account) -> None:

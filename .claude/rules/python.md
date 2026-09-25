@@ -19,8 +19,8 @@ paths:
   `ping` a cada 15s, nunca comentário: o navegador esconde comentários do JavaScript (ADR-0013).
   Rota SSE não segura conexão do ORM.
 - Rota que exige login usa `shared/adapters/session_auth.session_auth`; o que chega em
-  `request.auth` é só o identificador da conta. Método que altera estado passa pela checagem de
-  `Origin` do middleware (D-091); não há token de CSRF.
+  `request.auth` é só o identificador da conta, lido por `signed_in_account_id(request)`. Método
+  que altera estado passa pela checagem de `Origin` do middleware (D-091); não há token de CSRF.
 - ninja é adaptador de entrada: traduz HTTP para DTO, chama o caso de uso, traduz erro de
   domínio em resposta. Sem regra de negócio em rota.
 - O catálogo de `places` vem de `catalog.toml` pelo comando `sync_places` (D-087). O admin do
