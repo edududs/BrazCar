@@ -260,7 +260,9 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   Barra de status do iPhone em `black-translucent`.
 - Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
   (`poe coverage`), 88,58% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
-  (`yarn coverage`), piso de 15%, com meta de paridade (D-126). O resumo
+  (`yarn coverage`), 96,51% medidos sobre `src` e piso de 94% (linhas: 97% e piso de 95%), acima da
+  meta de paridade (D-126): adaptadores pelo contrato, hooks, componentes com `user-event` e as rotas
+  montadas sobre o app inteiro (`shared/testing/render-app.tsx`). O resumo
   fica no log do passo e nada é enviado para serviço de terceiros (D-008).
 - Portões (D-132): o `pre-push` saiu, nenhum hook roda teste no push. O GitHub roda o portão
   pesado (Postgres como serviço do runner, build do front); localmente ele é ato explícito do
@@ -427,8 +429,8 @@ canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é e
    e as telas de observações e preço por parada.
 3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
    mensagens que trazem lista de preços (as de número 25, 31, 34 e 41).
-4. O que falta do passo de qualidade: Schemathesis sobre o contrato e a cobertura do front subindo
-   até a do backend.
+4. O que falta do passo de qualidade: Schemathesis sobre o contrato. A cobertura do front já passou
+   a do backend (branch `feat/web-coverage`, à espera de auditoria).
 
 ## Pendências abertas
 

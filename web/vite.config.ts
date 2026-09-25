@@ -73,10 +73,11 @@ export default defineConfig({
     maxWorkers: 4,
     coverage: {
       provider: "v8",
-      // The whole of src, like the backend measures the whole of src/brazcar (D-109). Today only
-      // the headless hooks are tested, so the number is low on purpose: the target is parity with
-      // the backend, reached by testing components and behaviour too. No third-party service reads
-      // this (D-008): the summary goes to the log and the floor is right here.
+      // The whole of src, like the backend measures the whole of src/brazcar (D-109). The target is
+      // parity with the backend (D-126), reached with adapters, hooks, components and routes under
+      // test; the floor sits two points under what the suite reaches, so a step that drops
+      // coverage fails here. No third-party service reads this (D-008): the summary goes to the
+      // log and the floor is right here.
       include: ["src/**"],
       exclude: [
         ...coverageConfigDefaults.exclude,
@@ -85,7 +86,7 @@ export default defineConfig({
         "src/shared/testing/**",
       ],
       reporter: ["text", "text-summary"],
-      thresholds: { statements: 15, lines: 15 },
+      thresholds: { statements: 94, lines: 95 },
     },
   },
 });
