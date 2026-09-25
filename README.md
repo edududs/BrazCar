@@ -9,6 +9,18 @@ dos grupos de WhatsApp e os põe num mural com filtros, atualizado sem recarrega
 [![versão](https://img.shields.io/github/v/tag/edududs/BrazCar?label=vers%C3%A3o&sort=semver)](https://github.com/edududs/BrazCar/releases)
 [![licença](https://img.shields.io/badge/licen%C3%A7a-MIT-blue)](LICENSE)
 
+## Beta fechado
+
+O acesso à instância em produção é fechado: só entra quem recebe convite, para as pessoas das
+comunidades de carona de Brazlândia que hoje anunciam nos grupos de WhatsApp. O motivo é privacidade:
+o produto importa mensagem de grupo e expõe telefone de motorista que nunca se cadastrou, e cadastro
+aberto deixaria qualquer pessoa alcançar esse dado (decisões em
+[docs/decisions/README.md](docs/decisions/README.md), D-159 em diante).
+
+O repositório continua público, para quem quiser ler o código, estudar as decisões ou rodar em casa.
+Para rodar em casa, siga "Como rodar" abaixo e use `manage.py seed_demo` para povoar o banco com a
+semente de demonstração, no lugar de dado real.
+
 ## O problema
 
 Moradores de Brazlândia trabalham e estudam no centro de Brasília, a 30 ou 50 km, com transporte

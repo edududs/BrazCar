@@ -456,6 +456,9 @@ canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é e
 
 ## Pendências abertas
 
+- Beta fechado por convite (D-159 a D-164): decidido em 25/09/2026, ainda não implementado. Até lá o
+  worker de importação continua rodando por decisão do dono, com a exposição de telefone de
+  motorista não cadastrado que motivou a decisão (D-117).
 - Texto dos termos de uso e de privacidade ainda não foi escrito (D-033); o cadastro já grava o
   aceite e a tela já mostra a frase, sem link.
 - Recuperação manual de senha para conta sem e-mail depende de admin, que só entra somente

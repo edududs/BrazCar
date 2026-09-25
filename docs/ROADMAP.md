@@ -27,6 +27,20 @@ Plataforma que funciona sozinha, sem extrator.
   vaga" (S01), esta dependendo de a API dizer quantas escondeu.
 - Deploy na máquina de teste e front no Vercel.
 
+## Beta fechado
+
+Decidido em 25/09/2026 (D-159 a D-164): a instância em produção fecha para convite; o repositório
+continua público e único. Nenhum destes passos foi implementado ainda; até lá, o worker de
+importação segue rodando por decisão do dono, com a exposição de telefone que motivou a decisão
+(D-117). Ordem de implementação:
+
+- Convite de uso único, com prazo, vinculado a um telefone, e e-mail obrigatório confirmado no
+  mesmo fluxo de cadastro (D-159, D-160).
+- Porta pública de saída, para o motorista com carona importada pedir a própria remoção (D-162).
+- Página pública sem login: explicação do projeto, mural anonimizado, pedido de participação,
+  `noindex` (D-161). A semente de demonstração deixa de ir para o ar em produção (D-163).
+- Documentos de privacidade, termo de uso e segurança.
+
 ## Depois
 
 - **Passo 7, `importing`.** Em andamento, em dois releases:
@@ -67,7 +81,10 @@ Plataforma que funciona sozinha, sem extrator.
 - **Atualização de carona importada por mensagem posterior** ("lotou", "só 1 vaga", "cancelei"),
   amarrada por remetente e horário. No passo 7 só é classificada e guardada (D-118).
 - **Reivindicação da carona importada** pelo motorista que se cadastra com o mesmo telefone. Só
-  depois do OTP reverso, porque sem verificação de posse qualquer conta poderia assumi-la (ADR-0015).
+  depois de verificação de posse, porque sem ela qualquer conta poderia assumi-la (ADR-0015). O
+  convite do beta fechado (D-159) prova posse do número na entrada, mas religar isso à reivindicação
+  de carona já importada é decisão ainda em aberto; a trava de segurança do ADR-0015 continua
+  valendo até existir decisão própria.
 - **Paradas por autocomplete com texto livre** no formulário, sem select nem "outro" (D-123).
   **Feito, tag `v0.12.1`**: o combobox aceita o que foi digitado e não escolhido na lista como a
   própria parada.
@@ -87,6 +104,9 @@ Plataforma que funciona sozinha, sem extrator.
 - **Verificação de telefone por OTP reverso.** O site mostra um código, a pessoa o envia por
   `wa.me` para o número da plataforma e o extrator, que só lê, confirma a posse do número. Serve
   também para recuperar senha. Só com o extrator plugado; a plataforma não pode depender disso.
+  **Substituído como mecanismo principal pelo convite do beta fechado (D-159)**: quem entra por
+  convite já tem o número validado pelo dono. A ideia fica registrada como recurso futuro de
+  verificação automática, sem prioridade enquanto o beta durar.
 - **Limite de requisições no Traefik**, se o da aplicação não bastar.
 - **Monitoramento e alerta próprios**, se logs e endpoint de saúde não bastarem.
 
