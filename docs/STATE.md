@@ -260,12 +260,26 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   Barra de status do iPhone em `black-translucent`.
 - Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
   (`poe coverage`), 88,58% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
-  (`yarn coverage`), piso de 15%, com meta de paridade (D-126). O resumo
+  (`yarn coverage`), 72,23% de linhas de comando (72,38% de linhas) medidos sobre `src` inteiro e
+  piso de 70% (D-157, subiu de 15%), com meta de paridade (D-126). O resumo
   fica no log do passo e nada é enviado para serviço de terceiros (D-008).
 - Portões (D-132): o `pre-push` saiu, nenhum hook roda teste no push. O GitHub roda o portão
-  pesado (Postgres como serviço do runner, build do front); localmente ele é ato explícito do
-  ritual de encerramento. Um hook `commit-msg` recusa assunto fora do Conventional Commits e
-  trailer ou menção a ferramenta de IA.
+  pesado (Postgres como serviço do runner, Schemathesis, build do front); localmente ele é ato
+  explícito do ritual de encerramento. Um hook `commit-msg` recusa assunto fora do Conventional
+  Commits e trailer ou menção a ferramenta de IA.
+- Passo de qualidade, ainda sem tag: `poe migrations-check` (`makemigrations --check --dry-run`,
+  sem segredo real via `DJANGO_DEBUG`) entra no portão rápido, com a migração `rides.0006` que
+  faltava desde 808f96c (só metadado: `phone_revealed` e `driver_kind` de `ContactRequestModel`
+  perdem o `default=""` que a migração 0005 precisava só para preencher linhas existentes). O
+  Schemathesis fuzza `contract/openapi.json` contra a API real (`live_server`, D-156), marcador
+  `schemathesis`, task `poe test-contract-fuzz` dentro do portão pesado; achou quase toda rota de
+  escrita respondendo 404 ou 422 sem o contrato documentar isso, e toda rota com corpo também
+  podendo responder 400 quando o JSON nem chega a ser válido, corrigido com o helper `with_errors`
+  (`shared/adapters/api_errors.py`) em cada rota. O front ganhou testes de todo
+  adaptador e hook que faltava (`rides-gateway`, `accounts-gateway`, `places-gateway`,
+  `feedback-gateway`, `board-signal-source`, `useMyRides`, `useRide`, `useBoardMatch`,
+  `useChangePassword`, `useSendFeedback`, `usePlace` e os utilitários de `shared/app` e
+  `shared/adapters`), subindo a cobertura de 15% para 70% de piso.
 
 **Verificado de verdade no passo 7b:** portão rápido (343 testes no backend, 63 no front, com os
 primeiros de componente) e portão pesado dos dois lados, com 31 contratos no Postgres do compose,
@@ -427,8 +441,10 @@ canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é e
    e as telas de observações e preço por parada.
 3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
    mensagens que trazem lista de preços (as de número 25, 31, 34 e 41).
-4. O que falta do passo de qualidade: Schemathesis sobre o contrato e a cobertura do front subindo
-   até a do backend.
+4. O que ainda falta do passo de qualidade: a cobertura do front até empatar com a do backend
+   (rotas, telas com teste de uso, adaptadores de ciclo de vida do navegador); e, fora do escopo
+   deste passo, a semente de demonstração determinística, para `yarn screens` parar de reescrever
+   o catálogo inteiro a cada rodada (ver ROADMAP).
 
 ## Pendências abertas
 

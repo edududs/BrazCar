@@ -38,9 +38,20 @@ Plataforma que funciona sozinha, sem extrator.
 - **Passo de qualidade**, o primeiro depois do 7a, que fechou na `v0.8.0`: testes de componente e
   comportamento no front até a cobertura empatar com a do backend, Schemathesis sobre o contrato
   OpenAPI e E2E com Playwright nas jornadas críticas, com screenshots como evidência (D-126).
-  A parte de ponta a ponta está **feita**: semente de demonstração, suíte do Playwright nas jornadas
-  e [catálogo de telas](screens/README.md) (D-133, D-134). Faltam o Schemathesis e a cobertura do
-  front chegar à do backend.
+  **Feito**: a parte de ponta a ponta já vinha pronta (semente de demonstração, suíte do Playwright
+  nas jornadas e [catálogo de telas](screens/README.md), D-133, D-134); este passo fechou a
+  migração que faltava desde 808f96c com portão próprio (`poe migrations-check`), o Schemathesis
+  sobre o contrato (D-156, achou e corrigiu status não documentados em quase toda rota de escrita)
+  e mediu a cobertura real do front, subindo o piso de 15% para 70% (medido: 72,23% de linhas de
+  comando, 72,38% de linhas; D-157).
+- **Paridade de cobertura do front com o backend** (87%): passo próprio, com agente dedicado. Hoje
+  o front está em 70% de piso (medido 72%); falta cobrir as rotas (`src/routes/`), as telas com
+  teste de uso e os adaptadores de ciclo de vida do navegador (`resilient-event-source.ts`,
+  `service-worker.ts`, `stream-diagnostics-source.ts`).
+- **Semente de demonstração determinística**: `yarn screens` reescreve quase todas as 143 imagens
+  do catálogo a cada rodada mesmo sem mudança real na tela, porque a semente usa identificadores
+  aleatórios e "agora arredondado" como âncora do relógio — inchando o repo e escondendo a
+  diferença que importa. Passo próprio.
 - **Observações e preço por parada** (`notes`, D-129; `fare` por parada, D-131). **Feito, tag
   `v0.11.0`**: domínio, contrato, formulário, card e detalhe, e o interpretador lendo o preço de
   cada parada.

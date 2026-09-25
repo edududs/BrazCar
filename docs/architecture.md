@@ -141,27 +141,66 @@ repositório, na mesma imagem do deploy.
 
 ## Qualidade
 
-Rápido e a cada commit, no hook de `pre-commit` e no GitHub: formatação, lint, tipos, testes de
-domínio e de rota, teste de arquitetura, divergência do OpenAPI, links da documentação. Pesado, no
-GitHub e sob demanda local (`poe check-heavy`, `yarn check:heavy`): tudo do rápido, mais o contrato
-de repositório repetido no Postgres (serviço do runner no GitHub, compose localmente) e o build do
-front. Nenhum hook roda teste no push: o `pre-push` saiu, e um `commit-msg` de milissegundos recusa
-assunto fora do Conventional Commits ou mensagem com trailer ou menção a ferramenta de IA (D-132).
+As camadas de teste, de dentro para fora:
+
+- **Arquitetura por AST** (`backend/tests/test_architecture.py`): varre o código-fonte e recusa
+  `domain`/`application` importando Django, ninja ou qualquer SDK, e um contexto importando o
+  núcleo de outro (D-075); é o que faz o hexágono valer sem depender de disciplina.
+- **Domínio com Hypothesis**: situação da carona (ADR-0003) e regra de atraso (ADR-0004) testadas
+  por propriedade, não só por exemplo; o gerador cobre combinações que ninguém escreveria à mão.
+- **Contrato de porta nos dois bancos** (D-085): uma classe em `backend/tests/contracts/`,
+  herdada pelo fake em memória e pelo adaptador Django; o portão rápido roda em SQLite
+  (`poe test`), o pesado repete em Postgres (`poe test-postgres`, D-039).
+- **Rotas com a composição real**: ninja, sessão, casos de uso e ORM juntos, sem substituir nada.
+- **Fuzz de contrato com Schemathesis** (`poe test-contract-fuzz`, marcador `schemathesis`, D-156):
+  fecha o que D-065 previa e nunca tinha sido feito. Sobe a API com `live_server` (pytest-django)
+  sobre SQLite, carrega `contract/openapi.json` do arquivo (não busca o schema pela rede) e gera
+  dados para cada operação documentada, autenticando as que exigem sessão com uma conta registrada
+  na hora, do jeito que os testes de rota autenticam. Roda com toda verificação embutida do
+  Schemathesis exceto `positive_data_acceptance`, documentada e excluída em `test_contract_fuzz.py`
+  porque assume que corpo com os tipos certos nunca pode voltar 422 — o que não vale aqui, porque
+  `StopIn` (e o corpo de outras rotas) usa dois campos opcionais onde exatamente um deve vir
+  preenchido, uma regra que OpenAPI não expressa (sem XOR) e que o domínio, não o schema, garante.
+  Achou dois defeitos reais: quase toda rota que aceita corpo ou parâmetro de rota podia responder
+  404 ou 422 sem que `contract/openapi.json` documentasse esses status — consequência de como o
+  ninja trata `HttpError` e `pydantic.ValidationError` por fora do `response=` de cada rota; e toda
+  rota com corpo também podia responder 400 (`{"detail": "Cannot parse request body"}`) quando o
+  JSON nem chega a ser um JSON válido, antes de existir algo para o pydantic validar. Corrigido
+  declarando os status que cada rota alcança de verdade, via o helper `with_errors`
+  (`shared/adapters/api_errors.py`), com dois schemas de erro reutilizáveis (`ErrorOut` para o
+  `{"detail": "..."}` do `HttpError` e do JSON malformado, `ValidationErrorOut` para a lista do
+  `pydantic.ValidationError`, ou o mesmo texto único quando a própria rota reusa 422 como refusal).
+- **Uso com `user-event`** (D-154): componente interativo novo ou alterado ganha teste que digita
+  tecla a tecla, usa Tab, Enter, Espaço, Esc e setas — `fireEvent.change` e o `fill` do Playwright
+  não provam digitação.
+- **Ponta a ponta com catálogo** (D-133, D-134): `manage.py seed_demo` enche um banco com uma
+  carona de cada situação, passando pelos casos de uso; o Playwright sobe a API com essa semente e
+  o front construído, percorre as jornadas e fotografa cada estado por um helper único. As imagens
+  ficam em `docs/screens/` e o [catálogo](screens/README.md) é gerado delas. A suíte é task própria
+  (`yarn e2e`), fora dos dois portões, e roda também no workflow `e2e.yml`; como se opera está em
+  [runbooks/screens.md](runbooks/screens.md). A semente ainda usa ids aleatórios e "agora
+  arredondado" como âncora do relógio: `yarn screens` reescreve quase todas as 143 imagens a cada
+  rodada mesmo sem mudança real na tela, o que continua pendente (ver ROADMAP).
+
+Quem roda o quê: rápido a cada commit, no hook de `pre-commit` e no GitHub (formatação, lint,
+tipos, testes de domínio e de rota, teste de arquitetura, divergência de migração e de OpenAPI,
+links da documentação). Pesado, no GitHub e sob demanda local (`poe check-heavy`, `yarn
+check:heavy`): tudo do rápido, mais o contrato de repositório repetido no Postgres (serviço do
+runner no GitHub, compose localmente), o fuzz de contrato e o build do front. Nenhum hook roda
+teste no push: o `pre-push` saiu, e um `commit-msg` de milissegundos recusa assunto fora do
+Conventional Commits ou mensagem com trailer ou menção a ferramenta de IA (D-132).
 
 Cobertura é medida só nos fluxos do GitHub, depois do portão rápido: os mesmos testes rápidos com
 `pytest-cov` no backend e `@vitest/coverage-v8` no front, resumo impresso no log e falha abaixo do
-piso. Os dois lados medem o pacote inteiro: 92% medidos sobre `src/brazcar`, com piso de 87%, e 20%
-medidos sobre `src` do front, com piso de 15%. O front está baixo porque só os hooks headless têm
-teste; a meta é paridade com o backend, cobrindo componentes e comportamento (D-126). Nada é
-enviado para serviço de terceiros (D-008); o piso fica em `backend/poe_tasks.toml` e em
+piso. Os dois lados medem o pacote inteiro: 88,58% medidos sobre `src/brazcar`, com piso de 87%, e
+72,23% (linhas: 72,38%) medidos sobre `src` do front, com piso de 70% (D-157) — até este passo o
+piso era 15%, porque só os hooks headless tinham teste. A meta continua sendo paridade com o
+backend, cobrindo também os componentes visuais e as telas (D-126); adaptadores e hooks estão bem
+cobertos agora, a lacuna que resta está nas rotas (`src/routes/`, composição fina por design,
+D-072), nas telas que ainda não têm teste de uso e em três adaptadores de ciclo de vida do
+navegador (`resilient-event-source.ts`, `service-worker.ts`, `stream-diagnostics-source.ts`).
+Nada é enviado para serviço de terceiros (D-008); o piso fica em `backend/poe_tasks.toml` e em
 `web/vite.config.ts`.
 
 Verificação feita à mão durante um passo vira teste automatizado no mesmo passo, e bugfix entra com
-o teste que o reproduz (D-126). De D-065 falta o Schemathesis sobre o OpenAPI.
-
-**Ponta a ponta e telas** (D-133, D-134). `manage.py seed_demo` enche um banco com uma carona de
-cada situação, passando pelos casos de uso; o Playwright sobe a API com essa semente e o front
-construído, percorre as jornadas e fotografa cada estado por um helper único. As imagens ficam em
-`docs/screens/` e o [catálogo](screens/README.md) é gerado delas. A suíte é task própria
-(`yarn e2e`), fora dos dois portões, e roda também no workflow `e2e.yml`; como se opera está em
-[runbooks/screens.md](runbooks/screens.md).
+o teste que o reproduz (D-126).
