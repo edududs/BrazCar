@@ -46,6 +46,7 @@ Em 2026-09-24 (v0.13.0) nada entrou no `api.env`; as migrações de dados `impor
 `rides.0004` (D-138) rodaram no `up` com 0 ilegíveis, corrigindo 20 telefones em
 `importing_candidate.sender_phone`, 20 em `importing_source_message.sender_phone`, 1 em
 `importing_source_message.account` e 6 em `rides_ride.driver_phone`.
+Em 2026-09-24 (v0.14.0) nada entrou no `api.env`; sem migração.
 
 ## Worker do WhatsApp (passo 7a)
 
