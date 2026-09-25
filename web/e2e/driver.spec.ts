@@ -53,10 +53,11 @@ test("publicar uma carona simples", async ({ page, demo, signIn, snap }) => {
   await page.getByRole("button", { name: "Publicar" }).click();
 
   await expect(page).toHaveURL(/\/caronas\/[0-9a-f-]{36}$/);
-  await expect(page.getByText("Veredas")).toBeVisible();
-  await expect(page.getByText("Ceasa")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Veredas" })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Ceasa" })).toBeVisible();
   await expect(page.getByText("R$ 8,00")).toBeVisible();
   await expect(page.getByText(notes)).toBeVisible();
+  await expect(page.getByText("Carona publicada. Já está no mural.")).toBeVisible();
   await snap(page, "ride/just-published");
 });
 
@@ -134,7 +135,9 @@ test("uma parada em texto livre entra na rota", async ({ page, demo, signIn, sna
 
   await page.getByRole("button", { name: "Publicar" }).click();
 
-  await expect(page.getByText("Portão da escola, quadra 12")).toBeVisible();
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "Portão da escola, quadra 12" }),
+  ).toBeVisible();
 });
 
 test("minhas caronas mostram também a cancelada e a que já saiu", async ({
@@ -262,7 +265,7 @@ test("repetir uma carona publica outra igual em outro horário", async ({
   const ride = demo.ride("tomorrow_many_stops");
   await openRide(page, ride.id);
 
-  await expect(page.getByText("Aeroporto")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Aeroporto" })).toBeVisible();
   await page.getByRole("button", { name: "Repetir Publica outra igual em outro horário" }).click();
   await page.getByLabel("Repetir esta carona em").fill(localInput(demo.anchor, 100 * 60));
   await snap(page, "ride/repeat-ready");
@@ -270,6 +273,6 @@ test("repetir uma carona publica outra igual em outro horário", async ({
 
   await expect(page).toHaveURL(/\/caronas\/[0-9a-f-]{36}$/);
   await expect(page).not.toHaveURL(new RegExp(ride.id));
-  await expect(page.getByText("Aeroporto")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Aeroporto" })).toBeVisible();
   await snap(page, "ride/repeated");
 });

@@ -60,7 +60,20 @@ function AccountPage() {
           passwordBusy={passwordBusy}
           addCar={addCar}
           removeCar={removeCar}
-          logOut={logOut}
+          logOut={() =>
+            logOut().then(
+              () =>
+                void navigate({
+                  to: "/",
+                  state: {
+                    flash: {
+                      message: "Você saiu da conta.",
+                      action: { label: "Entrar", to: "/entrar" },
+                    },
+                  },
+                }),
+            )
+          }
           deleteAccount={deleteAccount}
           onDeleted={() => {
             void navigate({

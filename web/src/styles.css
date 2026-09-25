@@ -233,6 +233,13 @@
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-spring: linear(0, 0.25 7%, 0.7 18%, 0.98 32%, 1.04 42%, 1.01 58%, 1);
+
+  /* The catalogue's entrances (F5). Each moves only transform and opacity. */
+  --animate-rise-in: rise-in var(--duration-state) var(--ease-out) both;
+  --animate-list-in: list-in var(--duration-state) var(--ease-out) both;
+  --animate-ride-in: ride-in 240ms var(--ease-out) both;
+  --animate-bump: bump 160ms var(--ease-spring) both;
+  --animate-reveal: reveal 240ms var(--ease-out) both;
 }
 
 :root {
@@ -243,12 +250,26 @@
   --duration-exit: 180ms;
 }
 
+:root {
+  /* How far an entrance rises and how much a dialog grows; zero under "reduce motion". */
+  --motion-rise: 12px;
+  --motion-scale: 0.96;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-press: 0ms;
     --duration-state: 0ms;
     --duration-enter: 120ms;
     --duration-exit: 120ms;
+    --motion-rise: 0px;
+    --motion-scale: 1;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
   }
 }
 
@@ -315,5 +336,102 @@
 @keyframes shell-bar-in {
   to {
     opacity: 1;
+  }
+}
+
+/*
+ * Board to ride (F5): the time on the card becomes the big time on the page, the rest crosses in
+ * opacity. The element names are set by the components; without View Transitions (iOS < 18) the
+ * router changes the page directly.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--duration-enter);
+  animation-timing-function: var(--ease-in-out);
+}
+
+::view-transition-group(*) {
+  animation-duration: var(--duration-enter);
+  animation-timing-function: var(--ease-in-out);
+}
+
+/*
+ * The ride's top (F5): the sky moves slower than the page and fades over the first 240 px, the
+ * time shrinks away over the first 150 px, and the compact bar fades in between 70 and 130 px.
+ * Scroll-driven in CSS alone; static where unsupported or with less motion asked for.
+ */
+.ride-compact {
+  opacity: 0;
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .ride-sky {
+      animation: sky-para linear both;
+      animation-timeline: scroll();
+      animation-range: 0 240px;
+    }
+
+    .ride-time {
+      transform-origin: left bottom;
+      animation: time-dock linear both;
+      animation-timeline: scroll();
+      animation-range: 0 150px;
+    }
+  }
+
+  .ride-compact {
+    animation: shell-bar-in linear both;
+    animation-timeline: scroll();
+    animation-range: 70px 130px;
+  }
+}
+
+@keyframes sky-para {
+  to {
+    transform: translateY(96px);
+    opacity: 0.25;
+  }
+}
+
+@keyframes time-dock {
+  to {
+    transform: scale(0.55) translateY(-18px);
+    opacity: 0;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    transform: translateY(var(--motion-rise));
+    opacity: 0;
+  }
+}
+
+@keyframes list-in {
+  from {
+    transform: translateY(calc(var(--motion-rise) / 3));
+    opacity: 0;
+  }
+}
+
+@keyframes ride-in {
+  from {
+    transform: translateY(calc(var(--motion-rise) / 3));
+    opacity: 0;
+  }
+}
+
+@keyframes bump {
+  from {
+    transform: translateY(calc(var(--motion-rise) / 2));
+    opacity: 0.4;
+  }
+}
+
+@keyframes reveal {
+  from {
+    transform: translateY(calc(var(--motion-rise) * 2 / 3));
+    opacity: 0;
   }
 }

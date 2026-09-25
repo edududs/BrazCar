@@ -88,7 +88,12 @@ function PublishPage() {
           submitLabel="Publicar carona"
           onSubmit={(draft) =>
             publish(draft).then(
-              (ride) => void navigate({ to: "/caronas/$rideId", params: { rideId: ride.id } }),
+              (ride) =>
+                void navigate({
+                  to: "/caronas/$rideId",
+                  params: { rideId: ride.id },
+                  state: { flash: { message: "Carona publicada. Já está no mural." } },
+                }),
             )
           }
         />

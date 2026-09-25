@@ -8,7 +8,9 @@ import { registerServiceWorker } from "./shared/adapters/service-worker";
 import "./styles.css";
 
 const queryClient = new QueryClient();
-const router = createRouter({ routeTree });
+// Board to ride and back move as one picture where the browser can (F5); elsewhere the page just
+// changes. The reduced-motion rule in styles.css switches the animation off.
+const router = createRouter({ routeTree, defaultViewTransition: true });
 
 declare module "@tanstack/react-router" {
   interface Register {

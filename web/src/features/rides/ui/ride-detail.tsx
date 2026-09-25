@@ -61,11 +61,24 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
   const acceptsContact = ride.status === "open" || ride.status === "reopened";
 
   return (
-    <div className="relative flex flex-1 flex-col pb-44">
+    <div className="relative flex flex-1 flex-col">
       <div
         aria-hidden
-        className={`pointer-events-none absolute inset-x-0 top-0 h-[380px] bg-[radial-gradient(130%_90%_at_85%_-5%,var(--sky)_0%,transparent_68%)] ${skyClass[skyOf(ride.departureAt)]}`}
+        className={`ride-sky pointer-events-none absolute inset-x-0 top-0 h-[380px] bg-[radial-gradient(130%_90%_at_85%_-5%,var(--sky)_0%,transparent_68%)] ${skyClass[skyOf(ride.departureAt)]}`}
       />
+      <div
+        aria-hidden
+        className="ride-compact pointer-events-none fixed inset-x-0 top-0 z-10 flex items-center justify-center gap-2 border-b border-line bg-glass pt-[env(safe-area-inset-top)] pb-2.5 backdrop-blur-[22px]"
+      >
+        <span className="mt-2.5 flex items-center gap-2 text-body">
+          <span className="font-display font-bold tabular-nums">
+            {formatTime(ride.departureAt)}
+          </span>
+          <span className="font-medium text-ink-2">
+            {ride.stops[0]?.label} → {ride.stops[ride.stops.length - 1]?.label}
+          </span>
+        </span>
+      </div>
       <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-gutter pt-2 pb-5">
         <div className="flex min-h-11 items-center">
           <Link
@@ -89,7 +102,8 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
             ) : null}
           </p>
           <p
-            className={`font-display text-time-xl font-bold tabular-nums ${
+            style={{ viewTransitionName: `ride-time-${ride.id}` }}
+            className={`ride-time font-display text-time-xl font-bold tabular-nums ${
               ride.status === "cancelled"
                 ? "line-through decoration-[5px] text-ink-3"
                 : ride.status === "departed"
@@ -224,7 +238,7 @@ function DriverCard({ ride, contact, locked, signedIn }: DriverCardProps) {
       ) : (
         <>
           <div className="border-t border-line-soft" />
-          <dl className="flex flex-col">
+          <dl className="flex animate-reveal flex-col">
             <div className="flex min-h-11 items-center justify-between gap-3">
               <dt className="flex items-center gap-2 text-sm text-ink-2">
                 <Icon name="phone" size={16} />

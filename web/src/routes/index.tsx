@@ -93,31 +93,36 @@ function BoardPage() {
           });
         }}
       />
-      <RideList
-        rides={board.rides}
-        status={board.status}
-        matched={match.matches}
-        emptyText={
-          filtering ? "Nenhuma carona com esses filtros." : "Nenhuma carona publicada por enquanto."
-        }
-        emptyDetail={
-          filtering
-            ? "Os filtros estão escondendo as caronas. Se alguém publicar, ela aparece aqui."
-            : "O mural atualiza sozinho: se alguém publicar, aparece aqui."
-        }
-        emptyAction={
-          filtering ? (
-            <ActionButton
-              emphasis="quiet"
-              onPress={() => {
-                void navigate({ to: "/", search: { ...noSearch }, replace: true });
-              }}
-            >
-              Limpar filtros
-            </ActionButton>
-          ) : undefined
-        }
-      />
+      {/* A filter change crosses the list in opacity with a small rise (F5): a new key remounts it. */}
+      <div key={JSON.stringify(filters)} className="animate-list-in">
+        <RideList
+          rides={board.rides}
+          status={board.status}
+          matched={match.matches}
+          emptyText={
+            filtering
+              ? "Nenhuma carona com esses filtros."
+              : "Nenhuma carona publicada por enquanto."
+          }
+          emptyDetail={
+            filtering
+              ? "Os filtros estão escondendo as caronas. Se alguém publicar, ela aparece aqui."
+              : "O mural atualiza sozinho: se alguém publicar, aparece aqui."
+          }
+          emptyAction={
+            filtering ? (
+              <ActionButton
+                emphasis="quiet"
+                onPress={() => {
+                  void navigate({ to: "/", search: { ...noSearch }, replace: true });
+                }}
+              >
+                Limpar filtros
+              </ActionButton>
+            ) : undefined
+          }
+        />
+      </div>
     </PageShell>
   );
 }

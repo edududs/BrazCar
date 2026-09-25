@@ -46,7 +46,9 @@ export function Stepper({
         aria-label={label}
         className="min-w-[70px] text-center font-display text-time font-bold tabular-nums"
       >
-        {value}
+        <span key={value} className="inline-block animate-bump">
+          {value}
+        </span>
       </output>
       <button
         type="button"

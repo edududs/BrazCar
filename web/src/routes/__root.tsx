@@ -6,6 +6,7 @@ import { useNetworkStatus } from "@/shared/app/use-network-status";
 import { useVersionFloor } from "@/shared/app/use-version-floor";
 import { ActionButton } from "@/shared/ui/action-button";
 import { BrandMark } from "@/shared/ui/brand-mark";
+import { FlashToast } from "@/shared/ui/flash-toast";
 import { Icon } from "@/shared/ui/icon";
 import { NoticeScreen } from "@/shared/ui/notice-screen";
 import { RouteNotFound } from "@/shared/ui/route-not-found";
@@ -74,7 +75,10 @@ function RootLayout() {
           Sem internet. O mural volta sozinho quando a conexão voltar.
         </Toast>
       ) : (
-        <ShellOverlays />
+        <>
+          <ShellOverlays />
+          <FlashToast />
+        </>
       )}
       {stacked ? null : <TabBar tabs={tabs} />}
     </div>

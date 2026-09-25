@@ -16,7 +16,16 @@ function EditRidePage() {
   const { ride, status, edit, busy } = useRide(rideId);
   const navigate = useNavigate();
   const now = useClock();
-  const back = () => void navigate({ to: "/caronas/$rideId", params: { rideId } });
+  const saved = (updated: { departureAt: string }) =>
+    void navigate({
+      to: "/caronas/$rideId",
+      params: { rideId },
+      state: {
+        flash: {
+          message: `Alterações salvas. O mural já mostra ${formatTime(updated.departureAt)}.`,
+        },
+      },
+    });
   return (
     <PageShell
       title="Editar carona"
@@ -42,7 +51,7 @@ function EditRidePage() {
             now={now}
             dayLocked
             submitLabel="Salvar alterações"
-            onSubmit={(draft) => edit(changesBetween(ride, draft)).then(back)}
+            onSubmit={(draft) => edit(changesBetween(ride, draft)).then(saved)}
           />
         </>
       )}

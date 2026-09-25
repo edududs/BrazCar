@@ -172,9 +172,7 @@ test("trocar a senha: a nova senha funciona depois de sair e entrar de novo", as
   await snap(page, "account/password-changed");
 
   await page.getByRole("button", { name: "Sair da conta" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Entre para publicar e pedir contato" }),
-  ).toBeVisible();
+  await expect(page.getByText("Você saiu da conta.")).toBeVisible();
 
   await page.goto("/entrar");
   await page.getByLabel("Celular").fill(phone);
@@ -213,10 +211,11 @@ test("sair da conta devolve o visitante ao mural público", async ({ page, signI
   await signIn(page, "passenger");
   await page.goto("/conta");
 
+  // Sair devolve ao mural público e diz o que aconteceu, com o atalho para entrar de novo (S11).
   await page.getByRole("button", { name: "Sair da conta" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Entre para publicar e pedir contato" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Caronas", level: 1 })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Você saiu da conta." })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Entrar", exact: true }).first()).toBeVisible();
   await snap(page, "account/signed-out");
 });
 

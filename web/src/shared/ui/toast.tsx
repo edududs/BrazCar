@@ -34,7 +34,7 @@ export function Toast({
   return (
     <div
       role={role}
-      className={`fixed inset-x-3.5 z-30 mx-auto flex min-h-[60px] max-w-md items-center gap-3 rounded-[18px] bg-ink py-2.5 pr-2.5 pl-4 text-secondary font-semibold text-bg shadow-3 ${position}`}
+      className={`fixed inset-x-3.5 z-30 mx-auto flex min-h-[60px] max-w-md animate-rise-in items-center gap-3 rounded-[18px] bg-ink py-2.5 pr-2.5 pl-4 text-secondary font-semibold text-bg shadow-3 ${position}`}
     >
       {icon === undefined ? null : (
         <span

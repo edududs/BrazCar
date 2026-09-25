@@ -2,6 +2,7 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { useSession } from "@/features/accounts/app/use-session";
 import { useRide } from "@/features/rides/app/use-ride";
+import { localDay, relativeDay } from "@/shared/app/calendar";
 import { RideDetail } from "@/features/rides/ui/ride-detail";
 import { EmptyState } from "@/shared/ui/empty-state";
 
@@ -44,7 +45,15 @@ function RidePage() {
           session={session}
           actions={actions}
           onRepeated={(ride) =>
-            void navigate({ to: "/caronas/$rideId", params: { rideId: ride.id } })
+            void navigate({
+              to: "/caronas/$rideId",
+              params: { rideId: ride.id },
+              state: {
+                flash: {
+                  message: `Carona repetida. Esta é a nova, de ${relativeDay(localDay(new Date(ride.departureAt)), new Date())}.`,
+                },
+              },
+            })
           }
         />
       )}

@@ -31,10 +31,11 @@ export function RideCard({ ride, showDay = false, fresh = false, matched }: Ride
     <Link
       to="/caronas/$rideId"
       params={{ rideId: ride.id }}
-      className={`flex flex-col gap-3 rounded-card border border-line-soft bg-surface px-4 pt-4 pb-3.5 shadow-1 transition-transform duration-(--duration-press) ease-out active:scale-[.985] ${gone ? "text-ink-3" : "text-ink"} ${fresh ? "ring-2 ring-brand shadow-2" : ""}`}
+      className={`flex flex-col gap-3 rounded-card border border-line-soft bg-surface px-4 pt-4 pb-3.5 shadow-1 transition-transform duration-(--duration-press) ease-out active:scale-[.985] ${gone ? "text-ink-3" : "text-ink"} ${fresh ? "animate-ride-in ring-2 ring-brand shadow-2" : ""}`}
     >
       <div className="flex min-w-0 items-center gap-2.5">
         <span
+          style={{ viewTransitionName: `ride-time-${ride.id}` }}
           className={`font-display text-time font-bold tabular-nums ${cancelled ? "line-through decoration-2" : ""}`}
         >
           {formatTime(ride.departureAt)}
