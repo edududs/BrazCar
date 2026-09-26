@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Session } from "@/features/accounts/domain/session";
+import { BOARD_UTC_OFFSET } from "@/shared/domain/board-time-zone";
 import { renderRouted } from "@/shared/testing/render-routed";
 
 import { importedRide, openRide } from "../app/ride.fixture";
@@ -170,9 +171,9 @@ describe("RideDetail for the driver", () => {
 
     await user.click(screen.getByRole("button", { name: /^Repetir/ }));
     const field = await screen.findByLabelText<HTMLInputElement>("Repetir esta carona em");
-    const proposed = new Date(mine.departureAt);
-    proposed.setDate(proposed.getDate() + 1);
-    expect(new Date(field.value).getTime()).toBe(proposed.getTime());
+    // A day later, exact: the board's offset never shifts (no daylight saving), same as `addDays`.
+    const proposed = new Date(new Date(mine.departureAt).getTime() + 86_400_000);
+    expect(new Date(`${field.value}:00${BOARD_UTC_OFFSET}`).getTime()).toBe(proposed.getTime());
     await user.click(screen.getByRole("button", { name: "Repetir carona" }));
 
     expect(actions.repeat).toHaveBeenCalledWith(proposed.toISOString());
