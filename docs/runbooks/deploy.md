@@ -137,3 +137,17 @@ endereço e colar o token no campo. Ligada enquanto `SSE_DIAGNOSTICS_TOKEN` exis
 Subir só quando uma versão da API quebrar o front antigo: quem estiver abaixo vê a tela de
 atualização obrigatória. Valor malformado impede a API de subir. Depois de mudar,
 `docker compose up -d` e conferir `curl https://api-brazcar.elj-labs.org/api/web-version`.
+
+## Convites
+
+`INVITE_LINK` no `api.env` (modelo em `infra/api.env.example`) diz para onde aponta o link que o
+comando de convite imprime (D-166). Precisa entrar antes do `up -d` da versão que traz o convite:
+sem ela, o comando imprime link de `localhost`. Para convidar alguém:
+
+```bash
+docker compose exec api python manage.py invite <celular>             # vale 4 horas
+docker compose exec api python manage.py invite <celular> --hours 12  # outro prazo
+```
+
+A primeira linha da saída é o link, para colar na conversa com a pessoa; a segunda diz até quando
+ele vale, no horário de Brasília. Emitir de novo para o mesmo celular invalida o link anterior.
