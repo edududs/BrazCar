@@ -3,8 +3,8 @@ help = "Format the code"
 cmd = "ruff format"
 
 [tasks.lint]
-help = "Lint and apply safe fixes"
-cmd = "ruff check --fix"
+help = "Format check and lint, nothing else: what the pre-commit hook runs"
+sequence = [{ cmd = "ruff format --check" }, { cmd = "ruff check" }]
 
 [tasks.types]
 help = "Type check"
@@ -45,13 +45,12 @@ env = { OLLAMA_BASE_URL.default = "http://127.0.0.1:11434", RIDE_PARSER_MODEL.de
 
 [tasks.fix]
 help = "Pipeline to run before calling work done"
-sequence = ["format", "lint", "types"]
+sequence = ["format", { cmd = "ruff check --fix" }, "types"]
 
 [tasks.check]
 help = "Fast gate, changes nothing: format, lint, types, fast tests, migration drift"
 sequence = [
-    { cmd = "ruff format --check" },
-    { cmd = "ruff check" },
+    { ref = "lint" },
     { ref = "types" },
     { ref = "test" },
     { ref = "migrations-check" },

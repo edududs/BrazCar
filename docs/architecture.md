@@ -182,13 +182,14 @@ As camadas de teste, de dentro para fora:
   arredondado" como âncora do relógio: `yarn screens` reescreve quase todas as 143 imagens a cada
   rodada mesmo sem mudança real na tela, o que continua pendente (ver ROADMAP).
 
-Quem roda o quê: rápido a cada commit, no hook de `pre-commit` e no GitHub (formatação, lint,
-tipos, testes de domínio e de rota, teste de arquitetura, divergência de migração e de OpenAPI,
-links da documentação). Pesado, no GitHub e sob demanda local (`poe check-heavy`, `yarn
+Quem roda o quê: a cada commit, o hook de `pre-commit` roda só formatação e lint, em segundos
+(D-132). O portão rápido completo (formatação, lint, tipos, testes de domínio e de rota, teste de
+arquitetura, divergência de migração e de OpenAPI, links da documentação) roda no GitHub e no
+ritual de encerramento. Pesado, no GitHub e sob demanda local (`poe check-heavy`, `yarn
 check:heavy`): tudo do rápido, mais o contrato de repositório repetido no Postgres (serviço do
 runner no GitHub, compose localmente), o fuzz de contrato e o build do front. Nenhum hook roda
-teste no push: o `pre-push` saiu, e um `commit-msg` de milissegundos recusa assunto fora do
-Conventional Commits ou mensagem com trailer ou menção a ferramenta de IA (D-132).
+teste: o `pre-push` saiu, e um `commit-msg` de milissegundos recusa assunto fora do Conventional
+Commits ou mensagem com trailer ou menção a ferramenta de IA (D-132).
 
 Cobertura é medida só nos fluxos do GitHub, depois do portão rápido: os mesmos testes rápidos com
 `pytest-cov` no backend e `@vitest/coverage-v8` no front, resumo impresso no log e falha abaixo do

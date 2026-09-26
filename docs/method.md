@@ -98,15 +98,17 @@ O código passa por três portões, divididos por custo de execução (`D-066`, 
 
 | Portão | Onde roda | O que faz |
 |---|---|---|
-| Rápido | hook de `pre-commit` e GitHub | formatação, lint, tipos, testes de domínio e de rota, teste de arquitetura, divergência do OpenAPI, links da documentação |
+| Commit | hook de `pre-commit` | formatação e lint, filtrado por caminho |
+| Rápido | GitHub e ritual de encerramento | formatação, lint, tipos, testes de domínio e de rota, teste de arquitetura, divergência do OpenAPI, links da documentação |
 | Cobertura | só no GitHub | os mesmos testes rápidos, medindo cobertura; falha abaixo do piso |
 | Pesado | GitHub e sob demanda local | tudo do rápido, mais o contrato de repositório no Postgres (serviço do runner no GitHub, compose localmente) e o build do front |
 
-Os hooks são scripts versionados em `.githooks/`, ligados por `core.hooksPath` (`D-074`). O de
-`pre-commit` roda o portão rápido só se os caminhos dele mudaram, e leva cerca de 30 segundos no
-backend e cerca de 40 no front. Nenhum hook roda teste no push: o `pre-push` saiu, e um
-`commit-msg` de milissegundos recusa assunto fora do Conventional Commits e trailer ou menção a
-ferramenta de IA (`D-132`).
+Os hooks são scripts versionados em `.githooks/`, ligados por `core.hooksPath` (`D-074`). Desde
+26/09/2026 (`D-132`), o de `pre-commit` roda só formatação e lint (`poe lint` no backend, `yarn
+lint` no front), filtrado por caminho, em segundos. O portão rápido completo roda no GitHub e no
+ritual de encerramento; nenhum hook roda teste: o `pre-push` saiu, e um `commit-msg` de
+milissegundos recusa assunto fora do Conventional Commits e trailer ou menção a ferramenta de IA
+(`D-132`).
 
 A cobertura é medida dentro do fluxo do GitHub: o resumo vai para o log do passo e o passo falha
 abaixo do piso. Nenhum serviço externo lê o código ou recebe relatório (`D-008`). Os dois lados

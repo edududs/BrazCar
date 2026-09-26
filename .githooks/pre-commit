@@ -1,15 +1,16 @@
 #!/bin/sh
-# Fast gate (D-066), filtered by path: format, lint, types, fast tests, contract drift.
-# Enable once per clone with `uv run poe hooks` from backend/.
+# Format and lint only, filtered by path (D-132): seconds, not the full fast gate.
+# The full fast gate runs on GitHub and at the close-step ritual; the heavy gate runs in the PR's
+# CI and at release. Enable once per clone with `uv run poe hooks` from backend/.
 set -e
 
 root=$(git rev-parse --show-toplevel)
 staged=$(git diff --cached --name-only --diff-filter=ACMR)
 
 if echo "$staged" | grep -qE '^(backend|contract|docs)/|\.md$'; then
-  (cd "$root/backend" && uv run poe check)
+  (cd "$root/backend" && uv run poe lint)
 fi
 
 if echo "$staged" | grep -qE '^(web|contract)/'; then
-  (cd "$root/web" && yarn run check)
+  (cd "$root/web" && yarn lint)
 fi
