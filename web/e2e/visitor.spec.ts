@@ -196,6 +196,11 @@ test("sem sessão, o detalhe some com quem dirige e o que só ela escreveu", asy
 }) => {
   // D-171: sem sessão, nome do motorista, mensagem original e observações somem; horário, paradas
   // e valor continuam.
+  // A hora e as pontas da rota também estão na barra compacta (`aria-hidden`), então a hora se lê
+  // no cabeçalho do detalhe e as paradas pelo papel de item de lista, nunca por trecho de texto.
+  const heroClock = (clock: string) =>
+    page.locator("main header").getByText(clock, { exact: true });
+  const stop = (label: string) => page.getByRole("listitem").filter({ hasText: label });
   const notes = demo.ride("open_today_long_notes");
   await openRide(page, notes.id);
 
@@ -204,9 +209,9 @@ test("sem sessão, o detalhe some com quem dirige e o que só ela escreveu", asy
   await expect(page.getByRole("heading", { name: "Mensagem original", exact: true })).toHaveCount(
     0,
   );
-  await expect(page.getByText(clockOf(notes.departureAt))).toBeVisible();
-  await expect(page.getByText("Brazlândia")).toBeVisible();
-  await expect(page.getByText("Setor Bancário Sul")).toBeVisible();
+  await expect(heroClock(clockOf(notes.departureAt))).toBeVisible();
+  await expect(stop("Brazlândia")).toBeVisible();
+  await expect(stop("Setor Bancário Sul")).toBeVisible();
   await expect(page.getByText("R$ 7,00").first()).toBeVisible();
 
   const external = demo.ride("imported_external");
@@ -219,9 +224,9 @@ test("sem sessão, o detalhe some com quem dirige e o que só ela escreveu", asy
   await expect(page.getByRole("heading", { name: "Mensagem original", exact: true })).toHaveCount(
     0,
   );
-  await expect(page.getByText(clockOf(external.departureAt))).toBeVisible();
-  await expect(page.getByText("Setor Tradicional")).toBeVisible();
-  await expect(page.getByText("Esplanada")).toBeVisible();
+  await expect(heroClock(clockOf(external.departureAt))).toBeVisible();
+  await expect(stop("Setor Tradicional")).toBeVisible();
+  await expect(stop("Esplanada")).toBeVisible();
   await expect(page.getByText("R$ 7,00").first()).toBeVisible();
 });
 
