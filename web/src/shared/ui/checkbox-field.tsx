@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 
 import { Icon } from "./icon";
 
@@ -8,14 +8,24 @@ interface CheckboxFieldProps {
   readonly children: ReactNode;
 }
 
-/** A native checkbox in the design's box, with the whole line as its target. */
+/**
+ * A native checkbox in the design's box, with the whole line as its target. Text and box share the
+ * line through a click handler and `aria-labelledby`, never a wrapping `<label>`: a `<label>` would
+ * forward a click anywhere inside it, including a link nested in the text, to the box underneath,
+ * so a link there could never be followed on its own (D-154).
+ */
 export function CheckboxField({ checked, onChange, children }: CheckboxFieldProps) {
+  const textId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+
   return (
-    <label className="flex min-h-11 items-start gap-3 text-secondary text-ink-2">
+    <span className="flex min-h-11 items-start gap-3 text-secondary text-ink-2">
       <span className="relative mt-[-1px] grid size-[26px] shrink-0 place-items-center">
         <input
+          ref={inputRef}
           type="checkbox"
           checked={checked}
+          aria-labelledby={textId}
           onChange={(event) => {
             onChange(event.target.checked);
           }}
@@ -25,7 +35,16 @@ export function CheckboxField({ checked, onChange, children }: CheckboxFieldProp
           <Icon name="check" size={16} />
         </span>
       </span>
-      <span className="pt-0.5">{children}</span>
-    </label>
+      <span
+        id={textId}
+        className="cursor-pointer pt-0.5"
+        onClick={() => {
+          inputRef.current?.focus();
+          onChange(!checked);
+        }}
+      >
+        {children}
+      </span>
+    </span>
   );
 }
