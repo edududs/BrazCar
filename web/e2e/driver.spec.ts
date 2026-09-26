@@ -21,10 +21,21 @@ async function pickPlace(page: Page, index: number, label: string, place: string
   await page.getByRole("option", { name: place, exact: true }).click();
 }
 
-test("sem e-mail confirmado, publicar mostra a conta retida", async ({ page, signIn, snap }) => {
+test("sem e-mail confirmado, a conta e publicar mostram a conta retida", async ({
+  page,
+  signIn,
+  snap,
+}) => {
   // driver_no_car ficou sem e-mail de propósito (D-168): antes desta conta caía direto na tela
   // "sem carro"; agora a conta retida vem primeiro, e "sem carro" nem chega a aparecer para ela.
   await signIn(page, "driver_no_car");
+  await page.goto("/conta");
+
+  await expect(
+    page.getByRole("heading", { name: "Falta confirmar seu e-mail", exact: true }),
+  ).toBeVisible();
+  await snap(page, "account/no-email");
+
   await page.goto("/publicar");
 
   await expect(

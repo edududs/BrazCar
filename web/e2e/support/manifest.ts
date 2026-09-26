@@ -25,6 +25,26 @@ export interface DemoInvite {
   readonly emailToken: string;
 }
 
+/** One invite of `catalog_invites`, in whatever state its name says (D-133, D-166, D-167): the
+ * screens catalogue opens these and never spends them. `email` and `emailToken` are only ever set
+ * for `awaiting` — the sign-up page is photographed with them. */
+export interface CatalogInvite {
+  readonly inviteToken: string;
+  readonly email: string | null;
+  readonly emailToken: string | null;
+}
+
+/** One invite per situation `GET /api/accounts/invites/{token}` can answer, reserved for the
+ * screens catalogue alone (D-133, D-134): `yarn screens` and the three projects share these same
+ * five tokens, so no test may give an e-mail, register or otherwise consume one. */
+export interface CatalogInvites {
+  readonly open: CatalogInvite;
+  readonly awaiting: CatalogInvite;
+  readonly expired: CatalogInvite;
+  readonly superseded: CatalogInvite;
+  readonly used: CatalogInvite;
+}
+
 export interface DemoRide {
   readonly slug: string;
   readonly id: string;
@@ -44,6 +64,8 @@ export interface DemoManifest {
   readonly suitePhones: readonly string[];
   /** One invite per `suitePhones` entry, aligned by index (D-166, D-167). */
   readonly suiteInvites: readonly DemoInvite[];
+  /** One invite per state the screens catalogue needs, never spent by any test (D-133, D-134). */
+  readonly catalogInvites: CatalogInvites;
   /** One seeded account without a confirmed e-mail per project x attempt (D-168), at the index
    * `sparePhone(0)` gives: there is no journey to multiply by, since these accounts exist from the
    * first request instead of being signed up by a test. */
@@ -83,6 +105,20 @@ interface RawInvite {
   email_token: string;
 }
 
+interface RawCatalogInvite {
+  invite_token: string;
+  email: string | null;
+  email_token: string | null;
+}
+
+interface RawCatalogInvites {
+  open: RawCatalogInvite;
+  awaiting: RawCatalogInvite;
+  expired: RawCatalogInvite;
+  superseded: RawCatalogInvite;
+  used: RawCatalogInvite;
+}
+
 interface RawRide {
   slug: string;
   id: string;
@@ -100,6 +136,7 @@ interface RawManifest {
   group_labels: string[];
   suite_phones: string[];
   suite_invites: RawInvite[];
+  catalog_invites: RawCatalogInvites;
   suite_legacy_phones: string[];
   legacy_person: string;
   accounts: RawAccount[];
@@ -142,6 +179,18 @@ export function loadManifest(): DemoManifest {
     email: invite.email,
     emailToken: invite.email_token,
   }));
+  const catalogInvite = (invite: RawCatalogInvite): CatalogInvite => ({
+    inviteToken: invite.invite_token,
+    email: invite.email,
+    emailToken: invite.email_token,
+  });
+  const catalogInvites: CatalogInvites = {
+    open: catalogInvite(raw.catalog_invites.open),
+    awaiting: catalogInvite(raw.catalog_invites.awaiting),
+    expired: catalogInvite(raw.catalog_invites.expired),
+    superseded: catalogInvite(raw.catalog_invites.superseded),
+    used: catalogInvite(raw.catalog_invites.used),
+  };
   const rides: DemoRide[] = raw.rides.map((ride) => ({
     slug: ride.slug,
     id: ride.id,
@@ -158,6 +207,7 @@ export function loadManifest(): DemoManifest {
     groupLabels: raw.group_labels,
     suitePhones: raw.suite_phones,
     suiteInvites,
+    catalogInvites,
     suiteLegacyPhones: raw.suite_legacy_phones,
     legacyPerson: raw.legacy_person,
     accounts,
