@@ -39,8 +39,8 @@ Resend, chave fora do repo): a recuperação de senha passa a mandar e-mail de v
 Em 2026-09-24 (v0.12.1) nada entrou no `api.env`; sem migração.
 O disparo de teste no deploy não deixou linha de erro de SMTP no log da API.
 As migrações `importing.0003` e `rides.0004` (D-138) põem o nono dígito nos telefones gravados com
-o endereço antigo do WhatsApp; rodam no entrypoint da API com `RUN_MIGRATIONS=1`, e o operador
-confere no log uma linha `ninth digit (D-138)` por coluna, com zero ilegíveis
+o endereço antigo do WhatsApp; rodam no entrypoint da API com `RUN_MIGRATIONS=1`, e o log traz
+uma linha `ninth digit (D-138)` por coluna, que deve mostrar zero ilegíveis
 (`docker compose logs api --since 3m | grep "ninth digit"`).
 Em 2026-09-24 (v0.13.0) nada entrou no `api.env`; as migrações de dados `importing.0003` e
 `rides.0004` (D-138) rodaram no `up` com 0 ilegíveis, corrigindo 20 telefones em
@@ -48,7 +48,7 @@ Em 2026-09-24 (v0.13.0) nada entrou no `api.env`; as migrações de dados `impor
 `importing_source_message.account` e 6 em `rides_ride.driver_phone`.
 Em 2026-09-24 (v0.14.0) nada entrou no `api.env`; sem migração.
 A migração `rides.0005` (D-140) preenche os registros de `ContactRequest` já existentes a partir
-da carona ainda gravada; o operador confere no log a linha `rides_contact_request: filled N row(s)`.
+da carona ainda gravada; o log traz a linha `rides_contact_request: filled N row(s)`.
 Em 2026-09-25 (v0.15.0) nada entrou no `api.env`; a migração `rides.0005` (D-140) preencheu 2
 pedidos de contato no `up`. Em 2026-09-25 (v0.16.0) nada entrou no `api.env`; sem migração; a
 fonte hospedada responde em `/fonts/...` pelo Vercel. Em 2026-09-25 (v0.17.0) nada entrou no
@@ -69,7 +69,7 @@ v0.25.0 não foi implantada.
 ## Worker do WhatsApp (passo 7a)
 
 O serviço `worker` roda `manage.py run_extractor` na imagem da API, um processo para uma conta (D-108).
-Feito assim em 2026-09-24 (v0.8.0), cada passo com ok do Eduardo:
+Feito assim em 2026-09-24 (v0.8.0), cada passo com aprovação explícita:
 
 ```bash
 ssh trovva@trovva-internal && cd ~/brazcar

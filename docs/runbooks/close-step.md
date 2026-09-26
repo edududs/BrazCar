@@ -1,7 +1,7 @@
 # Encerrar um passo
 
 Ritual para fechar um passo do [ROADMAP](../ROADMAP.md) ou qualquer entrega que mereça versão.
-Vale para pessoa e para agente. Siga na ordem; cada item diz como provar que foi feito.
+Vale para qualquer execução. Siga na ordem; cada item diz como provar que foi feito.
 
 Padrões usados: [Conventional Commits](https://www.conventionalcommits.org/pt-br/),
 [SemVer](https://semver.org/lang/pt-BR/), [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
@@ -59,7 +59,8 @@ gravadas na própria tag anotada.
 
 ## 5. Publicar
 
-**O push é do Eduardo**, salvo ordem explícita dele. A sessão para aqui, mostra o resumo e espera.
+**O push depende de autorização explícita.** O ritual para aqui, com o resumo à mostra, até
+essa autorização.
 
 ```bash
 git push --follow-tags
@@ -75,10 +76,11 @@ gh release view vX.Y.Z
 
 Publicar na máquina de teste é outro runbook: [deploy.md](deploy.md).
 
-## 6. Memória do agente
+## 6. Memória de trabalho
 
 Só o que não cabe no repo: fato novo sobre a máquina de teste, conta externa, caminho de segredo,
-preferência do Eduardo que apareceu no passo. Se um ponteiro para o repo ficou velho, atualize.
+preferência de condução do projeto que apareceu no passo. Se um ponteiro para o repo ficou velho,
+atualize.
 Nada que o repo já registre.
 
 ## 7. Relato final

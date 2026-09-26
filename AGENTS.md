@@ -22,7 +22,7 @@ Este arquivo é o único sempre carregado. Todo o resto é sob demanda: comece p
 8. **Sem tipos frouxos.** Nunca `Any` nem `any`. Pipeline antes de declarar pronto:
    `uv run poe fix` em `backend/`, `yarn fix` em `web/`.
 9. **Commits.** Conventional Commits, sem trailers (nada de `Co-Authored-By`) e sem citar
-   ferramentas usadas na autoria. Push é só do Eduardo.
+   ferramentas usadas na autoria. Push só com autorização explícita.
 10. **Documentação no mesmo commit.** Decisão nova vira linha em
     [docs/decisions/README.md](docs/decisions/README.md); decisão antiga nunca é editada, é substituída.
 11. **Segredos.** Nunca ler nem versionar tokens. Arquivos de ambiente ficam fora do repo.

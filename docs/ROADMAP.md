@@ -30,8 +30,8 @@ Plataforma que funciona sozinha, sem extrator.
 ## Beta fechado
 
 Decidido em 25/09/2026 (D-159 a D-164): a instância em produção fecha para convite; o repositório
-continua público e único. Até fechar, o worker de importação segue rodando por decisão do dono, com
-a exposição de telefone que motivou a decisão (D-117). Ordem de implementação:
+continua público e único. Até fechar, o worker de importação segue rodando por decisão deliberada,
+mesmo com a exposição de telefone que motivou o fechamento (D-117). Ordem de implementação:
 
 - Convite de uso único, com prazo, vinculado a um telefone, e e-mail obrigatório confirmado no
   mesmo fluxo de cadastro (D-159, D-160). **Feito, tag `v0.23.0`.**
@@ -65,7 +65,7 @@ de design, que depende de autorização para rodar.
   sobre o contrato (D-156, achou e corrigiu status não documentados em quase toda rota de escrita)
   e mediu a cobertura real do front, subindo o piso de 15% para 70% (medido: 72,23% de linhas de
   comando, 72,38% de linhas; D-157).
-- **Paridade de cobertura do front com o backend** (87%): passo próprio, com agente dedicado. Hoje
+- **Paridade de cobertura do front com o backend** (87%): passo próprio. Hoje
   o front está em 70% de piso (medido 72%); falta cobrir as rotas (`src/routes/`), as telas com
   teste de uso e os adaptadores de ciclo de vida do navegador (`resilient-event-source.ts`,
   `service-worker.ts`, `stream-diagnostics-source.ts`).
@@ -112,7 +112,7 @@ de design, que depende de autorização para rodar.
   `wa.me` para o número da plataforma e o extrator, que só lê, confirma a posse do número. Serve
   também para recuperar senha. Só com o extrator plugado; a plataforma não pode depender disso.
   **Substituído como mecanismo principal pelo convite do beta fechado (D-159)**: quem entra por
-  convite já tem o número validado pelo dono. A ideia fica registrada como recurso futuro de
+  convite já tem o número validado na emissão. A ideia fica registrada como recurso futuro de
   verificação automática, sem prioridade enquanto o beta durar.
 - **Limite de requisições no Traefik**, se o da aplicação não bastar.
 - **Monitoramento e alerta próprios**, se logs e endpoint de saúde não bastarem.

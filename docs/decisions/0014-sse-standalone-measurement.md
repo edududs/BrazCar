@@ -37,7 +37,7 @@ Diferenças em relação à aba do Safari:
   rede sem aviso só é notada por ele; o pior caso de mural parado cai de ~53s para ~43s. O custo de
   um falso alarme é uma reconexão.
 - **A rota `/api/diagnostics/sse`, a página `/diagnostics` e `SSE_DIAGNOSTICS_TOKEN` ficam**, por
-  decisão do Eduardo, como semente de uma telemetria própria (inclusive do aparelho). A página não
+  decisão explícita, como semente de uma telemetria própria (inclusive do aparelho). A página não
   tem link na interface: só se chega a ela digitando o endereço, e ela pede o token num campo.
 
 ## Alternativas descartadas

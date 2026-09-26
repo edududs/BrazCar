@@ -30,9 +30,9 @@ têm fica desligado pelo adaptador: com ele ligado uma resposta levou 49 s.
 
 | Data | Modelo | Onde | GPU | Ollama | Tipo | Campos | Mediana | Máxima | Passou |
 |---|---|---|---|---|---|---|---|---|---|
-| 2026-09-24 | `qwen3.5:4b` | notebook do Eduardo | RTX 4050 6 GB | 0.34.3 | 95% | 92% | 1,3 s | 11,3 s | sim |
-| 2026-09-24 | `qwen2.5:7b-instruct` | notebook do Eduardo | RTX 4050 6 GB | 0.34.3 | 91% | 93% | 3,1 s | 14,2 s | sim |
-| 2026-09-24 | `qwen2.5:3b-instruct` | notebook do Eduardo | RTX 4050 6 GB | 0.34.3 | 91% | 74% | 0,7 s | 6,5 s | não: erra o dia em 56 ofertas |
+| 2026-09-24 | `qwen3.5:4b` | notebook de desenvolvimento | RTX 4050 6 GB | 0.34.3 | 95% | 92% | 1,3 s | 11,3 s | sim |
+| 2026-09-24 | `qwen2.5:7b-instruct` | notebook de desenvolvimento | RTX 4050 6 GB | 0.34.3 | 91% | 93% | 3,1 s | 14,2 s | sim |
+| 2026-09-24 | `qwen2.5:3b-instruct` | notebook de desenvolvimento | RTX 4050 6 GB | 0.34.3 | 91% | 74% | 0,7 s | 6,5 s | não: erra o dia em 56 ofertas |
 | 2026-09-24 | `qwen3.5:4b` | trovva-internal (produção) | GTX 1060 6 GB | 0.24.0 | 94% | 91% | 4,3 s | 69,5 s | sim (máxima inflada: outra medição dividia a GPU) |
 | 2026-09-24 | `gemma3:4b` | trovva-internal (produção) | GTX 1060 6 GB | 0.24.0 | 92% | 83% | 4,0 s | 30,5 s | sim, mas abaixo do qwen3.5 nos campos |
 

@@ -24,7 +24,7 @@
 | trocar o e-mail | `RequestEmailChange`, `ConfirmEmail` | Pedir o link para o endereço novo e abri-lo com a sessão da conta. O e-mail antigo vale até a confirmação (D-168). |
 | link de troca de e-mail | `EmailConfirmation`, `EmailConfirmationTokens` | O que o link carrega (conta, e-mail novo, prazo de 2 horas e a confirmação que a conta tinha ao pedir) e a porta que o assina e lê, sem guardar nada no banco. Morre na primeira confirmação posterior. |
 | trocar a senha | `ChangePassword` | Exige a senha atual, verificada pela porta `Credentials`; sem ela, não muda nada (D-139). |
-| convite | `Invite`, `IssueInvite` | Agregado: acesso de uso único, com prazo, que o dono emite para um telefone. Substitui o cadastro aberto (D-159, D-166). |
+| convite | `Invite`, `IssueInvite` | Agregado: acesso de uso único, com prazo, emitido para um telefone. Substitui o cadastro aberto (D-159, D-166). |
 | token do convite | `invite_digest` | O segredo que vai no link do convite. Só o resumo sha256 é guardado (`token_digest`). |
 | e-mail informado | `EmailGiven` | O convite já tem o e-mail que a pessoa digitou e o resumo do token do link de confirmação. |
 | abrir o convite | `OpenInvite` | O que a página do link do convite mostra: situação, telefone e prazo, e o e-mail que espera confirmação. |
@@ -52,8 +52,8 @@ do framework. O domínio não conhece `User`.
 
 ## Convite
 
-O cadastro aberto sai (D-159). O dono emite um convite para um telefone e manda o link por
-mensagem direta a esse número. A pessoa abre o link e digita o e-mail; o convite guarda o e-mail e
+O cadastro aberto sai (D-159). O convite é emitido para um telefone, e o link vai por mensagem
+direta a esse número. A pessoa abre o link e digita o e-mail; o convite guarda o e-mail e
 manda para ele o link de confirmação. Esse link abre o resto do cadastro, e a conta nasce com o
 e-mail já confirmado (D-160). Não há cadastro pendente nem senha guardada antes da hora: até o fim,
 o que existe é o convite, emitido, com e-mail informado ou consumido.

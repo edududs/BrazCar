@@ -1,14 +1,14 @@
 # Como o projeto é conduzido
 
-O BrazCar é escrito por uma pessoa, com sessões de agentes de IA fazendo a execução. Boa parte do
-processo descrito aqui existe para conferir esse trabalho contra o repositório, porque o relato de
-um agente sobre o que ele fez costuma ser otimista.
+O BrazCar tem um único responsável, e a execução acontece em sessões de agentes de IA. Boa parte
+do processo descrito aqui existe para conferir essa execução contra o repositório, porque relato de
+execução costuma ser otimista.
 
 ## Desenho antes de código
 
 Nenhum contexto começa a ser escrito antes de estar decidido. O desenho acontece em rodadas de
-entrevista. O agente traz um bloco de perguntas fechadas, cada uma com as opções reais e uma
-recomendação justificada; o dono responde e rejeita o que não serve; a rodada seguinte parte dali.
+entrevista. Cada rodada traz um bloco de perguntas fechadas, cada uma com as opções reais e uma
+recomendação justificada; a resposta aceita ou rejeita cada opção, e a rodada seguinte parte dali.
 A entrevista inicial, de 18 a 20 de setembro de 2026, produziu as decisões `D-001` a `D-068` antes
 da primeira linha de código de domínio.
 
@@ -37,17 +37,17 @@ O [ROADMAP](ROADMAP.md) é dividido em passos, e cada passo recebe uma versão. 
 vertical que se sustenta sozinha: um contexto inteiro, o PWA, a medição do SSE. A ordem foi
 decidida em `D-068` e foi seguida.
 
-Cada passo é executado por uma sessão de agente própria, com contexto limpo, despachada por uma
-sessão mestre. O despacho é escrito e traz:
+Cada passo é executado numa sessão de agente própria, com contexto limpo, a partir de um despacho
+escrito na sessão coordenadora. O despacho traz:
 
 - **As fontes.** Quais documentos ler inteiros antes de escrever qualquer coisa.
 - **O escopo.** O que entra, o que fica de fora, o que não pode ser tocado.
 - **A forma da entrega.** Commits esperados, portões que precisam passar, o que o relato final
   precisa separar.
 
-Terminado o passo, a sessão mestre audita o resultado contra o repositório: lê o diff, roda os
-portões, abre os arquivos que a sessão disse ter mudado. O relato do agente entra nessa auditoria
-como hipótese sobre o que aconteceu.
+Terminado o passo, o resultado passa por auditoria contra o repositório: leitura do diff, execução
+dos portões, abertura dos arquivos declarados como alterados. O relato da execução entra nessa
+auditoria como hipótese sobre o que aconteceu.
 
 A auditoria alimenta duas seções de [STATE.md](STATE.md) com esses nomes literais: "verificado de
 verdade" e "não verificado". A segunda lista o que ficou sem conferência. Hoje ela diz, entre
@@ -63,10 +63,10 @@ Contexto de agente é limitado, e todo arquivo sempre carregado ocupa espaço em
   tabela de "onde está cada coisa", em 46 linhas.
 - `.claude/rules/*.md` são regras por área, com os caminhos que as ativam declarados no cabeçalho.
   A regra de domínio entra quando um arquivo de `domain/` ou `application/` é tocado; a do front,
-  quando um `.ts`, `.tsx` ou `.css` de `web/` é tocado. Quem está mexendo em documentação não
-  carrega nenhuma das duas.
-- [INDEX.md](INDEX.md) tem uma linha por documento, com "para quê" e "atualiza quando". A sessão
-  abre só o que a tarefa pede.
+  quando um `.ts`, `.tsx` ou `.css` de `web/` é tocado. Mudança só de documentação não carrega
+  nenhuma das duas.
+- [INDEX.md](INDEX.md) tem uma linha por documento, com "para quê" e "atualiza quando". Cada
+  tarefa abre só o que pede.
 
 O índice também define o que não se escreve: estrutura de pastas, assinaturas, lista de endpoints e
 campos de model ficam de fora, porque uma busca no código responde por eles e o documento
@@ -78,16 +78,16 @@ Cada contexto tem um glossário em `docs/domain/<contexto>.md` com três colunas
 o identificador no código, o que é. A regra de domínio manda consultar o glossário antes de nomear
 qualquer coisa e proíbe sinônimo.
 
-Sem isso, sessões independentes chegam a `RideStatus`, `RideState` e `status_value` para o mesmo
-conceito. Com o glossário, a situação da carona é `RideStatus` em qualquer sessão. O mesmo arquivo
+Sem isso, execuções independentes produzem `RideStatus`, `RideState` e `status_value` para o mesmo
+conceito. Com o glossário, a situação da carona é `RideStatus` em todo o código. O mesmo arquivo
 guarda as invariantes do contexto em português, o que permite revisá-las sem abrir o código.
 
 ## Documentação no mesmo commit
 
 Decisão nova vira linha na tabela no commit que a implementa. Termo novo entra no glossário no
 commit em que aparece no código. Documento novo ganha linha no índice. É regra inviolável no
-`AGENTS.md`, porque num fluxo de sessões independentes um documento defasado desalinha as sessões
-seguintes.
+`AGENTS.md`, porque, com execuções independentes, um documento defasado desalinha todo o trabalho
+seguinte.
 
 Parte disso é verificada por máquina. `backend/tests/test_docs_links.py` percorre todo Markdown
 versionado e falha quando um link relativo aponta para arquivo que não existe.
@@ -117,9 +117,9 @@ front é medido assim de propósito, para que a lacuna apareça; a meta era a pa
 e foi alcançada testando adaptadores, hooks, componentes e rotas.
 
 A lacuna se fecha por regra permanente: verificação feita à mão durante um passo vira teste
-automatizado no mesmo passo, e bugfix entra com o teste que o reproduz (`D-126`). Um agente
-que conferiu um fluxo no navegador ou uma rota por `curl` deixa esse caminho coberto antes de
-fechar o passo, para que o passo seguinte não o quebre em silêncio. Duas peças decididas em `D-065`
+automatizado no mesmo passo, e bugfix entra com o teste que o reproduz (`D-126`). Um fluxo
+conferido no navegador ou uma rota conferida por `curl` fica coberto por teste antes de o passo
+fechar, para que o passo seguinte não o quebre em silêncio. Duas peças decididas em `D-065`
 continuam sem existir, o Schemathesis sobre o OpenAPI e o E2E com Playwright nas jornadas críticas;
 elas entram num passo próprio de qualidade, o primeiro depois do 7a, que fechou na `v0.8.0`.
 
@@ -141,17 +141,18 @@ Cada item traz o comando que prova que foi feito.
    commit seguinte.
 5. **Publicar.** O script para antes do push e mostra o comando.
 6. **Memória.** Só o que não cabe no repositório: fato sobre a máquina de teste, caminho de
-   segredo, preferência do dono.
+   segredo, preferência de condução do projeto.
 7. **Relato final**, em quatro partes: o que entrou, o que foi verificado, o que não foi, e o que
    passa como pendência.
 
-A tag é a fonte da verdade da versão. O cálculo acontece na máquina do dono; o GitHub só transforma
+A tag é a fonte da verdade da versão. O cálculo acontece localmente; o GitHub só transforma
 a tag em release e em imagem no GHCR (`D-080`).
 
-## Quem decide e quem assina
+## Decisão e assinatura
 
-O dono decide o desenho, revisa o resultado e dá o push. Nenhuma sessão publica nem aprova o
-próprio trabalho: a auditoria é feita de fora, contra o repositório.
+Desenho, aceite do resultado e push dependem de aprovação explícita do responsável pelo projeto.
+Nenhuma execução publica nem aprova o próprio trabalho: a auditoria é externa, contra o
+repositório.
 
 Commits e documentação não citam ferramenta de autoria e não levam trailers. A metodologia está
 descrita neste documento, que é público; o histórico do Git registra a autoria e a

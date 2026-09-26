@@ -7,7 +7,7 @@ Atualizado em 2026-09-26.
 Versão `v0.21.0`: passo 6 da etapa de design, o canal de opinião (D-155): contexto `feedback`, só
 para quem tem conta, entrada só na Conta, três tipos, e a reclamação que aponta alguém pelo celular,
 lida só pelo comando `manage.py feedback`, com o número mascarado. Antes: `v0.20.0`, passo 5,
-movimento (D-153), e a bateria de testes de uso dos componentes (D-154) com a correção de dois defeitos achados pelo Eduardo no celular: a hora não
+movimento (D-153), e a bateria de testes de uso dos componentes (D-154) com a correção de dois defeitos achados no teste pelo celular: a hora não
 aceitava digitação, e o fim do formulário de publicar ficava atrás do botão fixo. Antes: `v0.19.0`,
 passo 4, formulários, conta e acesso (D-151, D-152): componente
 de data e hora da F7, trajeto desenhado com preço por parada atrás de interruptor, conta em leitura
@@ -412,8 +412,8 @@ de página inteira do celular, as superfícies fixas aparecem na posição do pr
 da lista: é como o Playwright fotografa página inteira, não a tela.
 
 **Não verificado:** o cabeçalho encolhendo e a barra compacta num Safari 26 ou Chrome de verdade (a
-suíte não rola o mural para isso; o Chromium do Playwright tem `animation-timeline`, mas ninguém
-afirmou nada sobre o resultado); o vidro das abas e a área segura num iPhone instalado; os ícones
+suíte não rola o mural para isso; o Chromium do Playwright tem `animation-timeline`, mas nenhum
+teste afirma nada sobre o resultado); o vidro das abas e a área segura num iPhone instalado; os ícones
 novos na tela de início do iPhone e o maskable no Android; o `inert` da página sem internet num
 iPhone.
 
@@ -442,7 +442,7 @@ segundo plano no app instalado; o aviso de build novo e a tela de piso num iPhon
 no Android; `login` e `password-reset` estourados pelo navegador; e-mail de verdade pelo Resend.
 
 **Pendências de design (D-103), depois do passo 6:** o balão de opinião no topo do mural (S14) não
-entra: por decisão do Eduardo, a opinião fica só na Conta (D-155). O "Ver amanhã a partir de HH:MM" e a contagem de lotadas escondidas estão no ROADMAP.
+entra: a opinião fica só na Conta, decidido antes de codificar (D-155). O "Ver amanhã a partir de HH:MM" e a contagem de lotadas escondidas estão no ROADMAP.
 O Base UI marca o resto da página como fora da árvore de acessibilidade enquanto a lista de lugares
 está aberta (e, no jsdom, até o fim de uma animação que nunca termina): parece comportamento modal
 indevido num combobox; fica para o passo de qualidade. O desktop usa a mesma casca do celular até o
@@ -450,8 +450,8 @@ canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é e
 
 ## Próximo passo
 
-1. Etapa de design (D-103, D-143): o Eduardo conferir no celular os passos 5 e 6 publicados; depois,
-   o desktop, quando o canvas tiver as pranchas.
+1. Etapa de design (D-103, D-143): validação no celular dos passos 5 e 6 publicados pendente; o
+   desktop aguarda as pranchas do canvas.
 2. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
    e as telas de observações e preço por parada.
 3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
@@ -472,8 +472,8 @@ canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é e
   documentos de privacidade, termo de uso e segurança: feito, `docs/privacy.md`, `docs/terms.md` e
   `docs/security.md`, ligados da frase de aceite do cadastro. Falta só uma rodada única do catálogo
   de telas (depende de autorização para rodar) antes de fechar o beta de vez. Até lá o worker de importação continua
-  rodando por decisão do dono, com a exposição de telefone de motorista não cadastrado que motivou a
-  decisão (D-117).
+  rodando por decisão deliberada, mesmo com a exposição de telefone de motorista não cadastrado que
+  motivou o fechamento (D-117).
 - Recuperação manual de senha para conta sem e-mail depende de admin, que só entra somente
   leitura (D-087); quem se cadastrou sem e-mail agora pode acrescentar um pela edição de dados
   pessoais (D-139) e passar a ter recuperação; sem isso, continua sem caminho.
@@ -502,8 +502,8 @@ canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é e
 - O extrator traz SQLAlchemy, Alembic, typer e tomlkit como dependências transitivas que o BrazCar não
   usa; tirá-las é assunto do repo dele (D-041).
 - A imagem da API cresceu com `git` no build e `libmagic1` no runtime, exigências do extrator.
-- O worker usa o número pessoal do Eduardo (D-110) até haver chip dedicado.
-- D-126 diz que o passo de qualidade é o primeiro depois do 7a; o Eduardo decidiu fazer o 7b antes.
+- O worker usa um número pessoal (D-110) até haver chip dedicado.
+- D-126 diz que o passo de qualidade é o primeiro depois do 7a; na execução, o 7b veio antes.
   A decisão não foi editada; a ordem real está aqui.
 - Tarifa importada que não casa com nenhuma parada (ou casa com mais de uma) é descartada em
   silêncio, e a carona fica com as tarifas que sobraram, ou sem nenhuma. Ninguém vê o descarte; só

@@ -20,4 +20,4 @@ O repo do extrator é somente leitura. Um `DjangoStore` neste repo implementa a 
 
 - Logging: basta declarar `root` com handler no `LOGGING`, e o `basicConfig` do neonize não faz nada.
 - Um processo por conta de WhatsApp.
-- Se uma correção for muito melhor no extrator, ela é levada ao dono daquele repo, não aplicada daqui.
+- Se uma correção for muito melhor no extrator, ela é proposta no repo do extrator, não aplicada daqui.
