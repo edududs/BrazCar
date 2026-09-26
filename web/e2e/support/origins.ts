@@ -1,3 +1,6 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 /**
  * Where the two servers of the suite answer.
  *
@@ -14,3 +17,8 @@ export const webOrigin = `http://localhost:${String(webPort)}`;
 
 /** Where the seed writes what it made, relative to `web/`. */
 export const manifestPath = "e2e/.state/manifest.json";
+
+/** Where the suite's own `EMAIL_FILE_PATH` writes every e-mail the backend sends (D-166 to D-168):
+ * an absolute path, so it means the same directory whether Playwright or Django resolves it. */
+const here = path.dirname(fileURLToPath(import.meta.url));
+export const mailDir = path.join(here, "..", ".state", "mail");
