@@ -10,7 +10,9 @@ test("o card da importada traz o selo via WhatsApp", async ({ page, snap }) => {
   await snap(page, "imported/board-card");
 });
 
-test("o detalhe mostra a mensagem original, já redigida", async ({ page, demo, snap }) => {
+test("o detalhe mostra a mensagem original, já redigida", async ({ page, demo, signIn, snap }) => {
+  // A mensagem original só aparece para quem tem sessão (D-171); sem isso ela nem nasce na tela.
+  await signIn(page, "passenger");
   await openRide(page, demo.ride("imported_external").id);
 
   await expect(page.getByText("via WhatsApp")).toBeVisible();
