@@ -872,7 +872,7 @@ export interface components {
         };
         /**
          * RideOut
-         * @description The card. Never the phone, never the plate (D-031).
+         * @description The card. Never the phone, never the plate (D-031); without a session, never a person (D-171).
          */
         RideOut: {
             actions: components["schemas"]["ActionsOut"];
@@ -883,7 +883,7 @@ export interface components {
              */
             departure_at: string;
             /** Driver Name */
-            driver_name: string;
+            driver_name: string | null;
             /** Has Fares */
             has_fares: boolean;
             /**

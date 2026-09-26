@@ -885,7 +885,7 @@
         "type": "object"
       },
       "RideOut": {
-        "description": "The card. Never the phone, never the plate (D-031).",
+        "description": "The card. Never the phone, never the plate (D-031); without a session, never a person (D-171).",
         "properties": {
           "actions": {
             "$ref": "#/components/schemas/ActionsOut"
@@ -906,8 +906,15 @@
             "type": "string"
           },
           "driver_name": {
-            "title": "Driver Name",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Name"
           },
           "has_fares": {
             "title": "Has Fares",

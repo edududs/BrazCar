@@ -394,6 +394,7 @@ async def _project(
     viewer: AccountId | None,
     now: datetime,
 ) -> tuple[BoardRide, ...]:
+    """Board, detail and "my rides" alike; without a session, the anonymous view (D-171)."""
     labels = await lister.places.labels()
     names: dict[AccountId, str] = {}
     for ride in rides:
@@ -401,7 +402,7 @@ async def _project(
         if account_id is not None and account_id not in names:
             driver = await lister.drivers.get(account_id)
             names[account_id] = driver.display_name if driver else "Motorista"
-    return tuple(
+    shown = (
         to_board_ride(
             ride,
             driver_name=_driver_name(ride, names),
@@ -412,6 +413,7 @@ async def _project(
         )
         for ride in rides
     )
+    return tuple(shown if viewer is not None else (ride.anonymized() for ride in shown))
 
 
 def _driver_name(ride: RideOffer, names: dict[AccountId, str]) -> str:
