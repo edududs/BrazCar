@@ -2,6 +2,7 @@
 
 import json
 import re
+from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import Any
 
@@ -10,18 +11,23 @@ from django.core import mail
 from django.http import HttpResponse
 from django.test.client import AsyncClient
 
+from brazcar.accounts.adapters.repository import DjangoAccountRepository
+from brazcar.accounts.domain import Account
+
+from .signup import registration
+
 pytestmark = [
     pytest.mark.django_db(transaction=True),
     pytest.mark.usefixtures("worker_thread_connections_closed"),
 ]
 
 FRONT = "http://localhost:5173"
+ACCEPTED_AT = datetime(2026, 9, 22, 12, 0, tzinfo=UTC)
 ANA = {
     "phone": "61 99999-0001",
     "password": "correct horse battery",
     "display_name": "Ana",
     "email": "ana@example.com",
-    "accepts_terms": True,
 }
 
 
@@ -57,8 +63,16 @@ def body(response: HttpResponse) -> dict[str, Any]:
     return json.loads(response.content)
 
 
-async def register(client: Browser, **overrides: object) -> dict[str, object]:
-    response = await client.post("/api/accounts/register", {**ANA, **overrides})
+async def register(client: Browser, **overrides: str) -> dict[str, object]:
+    """Ana, or whoever `overrides` makes of her, signed up through a fresh invite (D-167)."""
+    fields = {**ANA, **overrides}
+    data = await registration(
+        phone=fields["phone"],
+        email=fields["email"],
+        display_name=fields["display_name"],
+        password=fields["password"],
+    )
+    response = await client.post("/api/accounts/register", data)
     assert response.status_code == HTTPStatus.CREATED, response.content
     return body(response)
 
@@ -68,7 +82,7 @@ def _front_origin(settings: object) -> None:
     setattr(settings, "CORS_ALLOWED_ORIGINS", [FRONT])  # noqa: B010 - pytest-django's settings proxy
 
 
-async def test_register_logs_in_and_shows_the_own_account_without_verification() -> None:
+async def test_register_logs_in_and_shows_the_own_account_with_the_email_confirmed() -> None:
     client = browser()
 
     account = await register(client)
@@ -76,6 +90,8 @@ async def test_register_logs_in_and_shows_the_own_account_without_verification()
 
     assert account["phone"] == "+5561999990001"
     assert account["phone_display"] == "(61) 99999-0001"
+    assert account["email"] == ANA["email"]
+    assert account["email_confirmed"] is True
     assert account["can_drive"] is False
     assert me.status_code == HTTPStatus.OK
     assert body(me) == account
@@ -83,57 +99,24 @@ async def test_register_logs_in_and_shows_the_own_account_without_verification()
 
 async def test_register_needs_the_terms_and_a_decent_password() -> None:
     client = browser()
+    data = await registration(phone=ANA["phone"], email=ANA["email"])
 
-    refused = await client.post("/api/accounts/register", {**ANA, "accepts_terms": False})
-    weak = await client.post("/api/accounts/register", {**ANA, "password": "1234"})
+    refused = await client.post("/api/accounts/register", {**data, "accepts_terms": False})
+    weak = await client.post("/api/accounts/register", {**data, "password": "1234"})
 
     assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
     assert weak.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
 
 
-@pytest.mark.parametrize(
-    ("phone", "message"),
-    [
-        ("61 9", "telefone inválido: digite o celular com DDD, como (61) 99999-9999"),
-        ("+1 415 555 2671", "por enquanto só números do Brasil"),
-        ("(61) 3333-4444", "use um número de celular: o contato é pelo WhatsApp"),
-    ],
-)
-async def test_a_phone_that_cannot_own_an_account_is_refused_with_its_reason(
-    phone: str, message: str
-) -> None:
-    """Before D-137 a malformed phone escaped as a validation error and answered 500."""
-    refused = await browser().post("/api/accounts/register", {**ANA, "phone": phone})
+async def test_a_blank_display_name_is_refused_with_its_reason() -> None:
+    """Before D-158 an empty display name escaped `RegisterIn`, which leaves it unconstrained the
+    same way `ProfileIn` does, and answered 500 once `Account` refused to build."""
+    data = await registration(phone=ANA["phone"], email=ANA["email"])
+
+    refused = await browser().post("/api/accounts/register", {**data, "display_name": "   "})
 
     assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
-    assert body(refused) == {"detail": message}
-
-
-@pytest.mark.parametrize(
-    ("overrides", "message"),
-    [
-        ({"display_name": "   "}, "nome social não pode ficar vazio"),
-        ({"email": "not-an-email"}, "e-mail inválido"),
-    ],
-)
-async def test_a_malformed_registration_is_refused_with_its_reason(
-    overrides: dict[str, object], message: str
-) -> None:
-    """Before D-158 an empty display name or a malformed e-mail escaped `RegisterIn`, which leaves
-    both unconstrained the same way `ProfileIn` does, and answered 500 once `Account.register`
-    refused to build."""
-    refused = await browser().post("/api/accounts/register", {**ANA, **overrides})
-
-    assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
-    assert body(refused) == {"detail": message}
-
-
-async def test_the_same_phone_cannot_register_twice() -> None:
-    await register(browser())
-
-    again = await browser().post("/api/accounts/register", {**ANA, "phone": "+55 (61) 99999-0001"})
-
-    assert again.status_code == HTTPStatus.CONFLICT
+    assert body(refused) == {"detail": "nome social não pode ficar vazio"}
 
 
 async def test_login_logout_and_me_follow_the_session_cookie() -> None:
@@ -277,6 +260,30 @@ async def test_an_invalid_email_is_refused() -> None:
     assert body(refused) == {"detail": "e-mail inválido"}
 
 
+async def test_an_email_of_another_account_is_refused_case_aside() -> None:
+    other = Account.register(
+        phone="61 99999-0009", display_name="Bia", email="bia@example.com", accepted_terms_at=ACCEPTED_AT
+    )
+    await DjangoAccountRepository().save(other)
+    client = browser()
+    await register(client)
+
+    refused = await client.patch("/api/accounts/me", {"email": "BIA@example.com"})
+
+    assert refused.status_code == HTTPStatus.CONFLICT
+    assert body(refused) == {"detail": "este e-mail já tem conta"}
+
+
+async def test_another_email_is_no_longer_confirmed() -> None:
+    client = browser()
+    await register(client)
+
+    changed = await client.patch("/api/accounts/me", {"email": "nova@example.com"})
+
+    assert body(changed)["email"] == "nova@example.com"
+    assert body(changed)["email_confirmed"] is False
+
+
 async def test_a_blank_email_clears_it() -> None:
     client = browser()
     await register(client)
@@ -346,9 +353,8 @@ async def test_deleting_the_account_erases_it_ends_the_session_and_frees_the_pho
     deleted = await client.delete("/api/accounts/me")
     after = await client.get("/api/accounts/me")
     login = await client.post("/api/accounts/login", {"phone": ANA["phone"], "password": ANA["password"]})
-    again = await client.post("/api/accounts/register", ANA)
 
     assert deleted.status_code == HTTPStatus.OK
     assert after.status_code == HTTPStatus.UNAUTHORIZED
     assert login.status_code == HTTPStatus.UNAUTHORIZED
-    assert again.status_code == HTTPStatus.CREATED
+    await register(browser())  # a new invite for the phone, and the e-mail is free again too

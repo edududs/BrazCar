@@ -30,6 +30,8 @@ class Account(FrozenModel):
     phone: AccountPhone
     display_name: ShortText
     email: EmailStr | None = None
+    email_confirmed_at: datetime | None = None
+    """When the e-mail was proven to reach the owner. An account from before the invite may have none."""
     terms_accepted_at: datetime
     phone_verified_at: None = None  # foreseen, unused in the MVP (D-027)
     cars: tuple[Car, ...] = ()
@@ -39,6 +41,9 @@ class Account(FrozenModel):
         plates = [car.plate for car in self.cars]
         if len(set(plates)) != len(plates):
             message = "the same plate twice on one account"
+            raise ValueError(message)
+        if self.email_confirmed_at is not None and self.email is None:
+            message = "a confirmed e-mail without an e-mail"
             raise ValueError(message)
         return self
 
@@ -51,6 +56,8 @@ class Account(FrozenModel):
         email: str | None,
         accepted_terms_at: datetime,
     ) -> Self:
+        """An account as it was before the invite: the e-mail, if any, never confirmed. The product
+        signs up only through `register_from_invite` now (D-167); this stays for the seed and tests."""
         return cls(
             id=uuid4(),
             phone=account_phone(phone),
@@ -58,6 +65,25 @@ class Account(FrozenModel):
             email=email or None,
             terms_accepted_at=accepted_terms_at,
         )
+
+    @classmethod
+    def register_from_invite(
+        cls, *, phone: AccountPhone, email: str, display_name: str, now: datetime
+    ) -> Self:
+        """The account an invite finishes (D-160, D-167): phone and e-mail come from the invite, and
+        the e-mail is confirmed by the very link that opened this registration."""
+        return cls(
+            id=uuid4(),
+            phone=phone,
+            display_name=display_name,
+            email=email,
+            email_confirmed_at=now,
+            terms_accepted_at=now,
+        )
+
+    @property
+    def email_confirmed(self) -> bool:
+        return self.email_confirmed_at is not None
 
     @property
     def can_drive(self) -> bool:
@@ -80,12 +106,20 @@ class Account(FrozenModel):
 
         `None` leaves a field as is; an absent `display_name` never happens over HTTP, since it is
         required, but a blank one is still refused here, by the same rule as registration. A blank
-        `email` clears it. The phone stays out of reach until there is a way to prove it is still
-        the same owner (D-027); the password has its own path (`ChangePassword`).
+        `email` clears it. A different e-mail, or none, loses the confirmation: it was the old
+        address that was proven, not this one. The phone stays out of reach until there is a way to
+        prove it is still the same owner (D-027); the password has its own path (`ChangePassword`).
         """
         changes: dict[str, object] = {}
         if display_name is not None:
             changes["display_name"] = display_name
         if email is not None:
             changes["email"] = email or None
+            if not _same_address(email, self.email):
+                changes["email_confirmed_at"] = None
         return self if not changes else self.evolve(**changes)
+
+
+def _same_address(typed: str, stored: str | None) -> bool:
+    """Case aside, as the uniqueness of e-mails reads them (D-167)."""
+    return stored is not None and typed.strip().casefold() == stored.casefold()

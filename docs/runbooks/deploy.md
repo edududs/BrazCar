@@ -144,7 +144,8 @@ atualização obrigatória. Valor malformado impede a API de subir. Depois de mu
 
 `INVITE_LINK` no `api.env` (modelo em `infra/api.env.example`) diz para onde aponta o link que o
 comando de convite imprime (D-166). Precisa entrar antes do `up -d` da versão que traz o convite:
-sem ela, o comando imprime link de `localhost`. Para convidar alguém:
+sem ela, o comando imprime link de `localhost`. `SIGNUP_LINK` entra junto: é a página do cadastro
+para onde aponta o link de confirmação mandado ao e-mail (D-167). Para convidar alguém:
 
 ```bash
 docker compose exec api python manage.py invite <celular>             # vale 4 horas

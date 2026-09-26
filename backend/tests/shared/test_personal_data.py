@@ -2,7 +2,7 @@
 
 import pytest
 
-from brazcar.shared.domain.personal_data import has_personal_data, redact_personal_data
+from brazcar.shared.domain.personal_data import has_personal_data, masked_email, redact_personal_data
 
 OFFER = (
     "*04 Vagas as 17:00*\n🚘 SCS (Americanas)\n🚘 Estrutural\n🚘 33/34, Vila, Veredas\n"
@@ -49,3 +49,11 @@ def test_redaction_keeps_everything_else_in_place() -> None:
     text = "3 vagas 19:30 Esplanada, pix 61 98888-7777 ou pix@x.com, placa XYZ9A88, 7,00"
 
     assert redact_personal_data(text) == "3 vagas 19:30 Esplanada, pix […] ou […], placa […], 7,00"
+
+
+@pytest.mark.parametrize(
+    ("email", "masked"),
+    [("ana@example.com", "a***@example.com"), ("x@y.org", "x***@y.org"), ("a@b@c.com", "a***@c.com")],
+)
+def test_a_masked_email_keeps_the_first_letter_and_the_domain(email: str, masked: str) -> None:
+    assert masked_email(email) == masked

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from http import HTTPStatus
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from asgiref.sync import sync_to_async
@@ -21,20 +21,33 @@ from brazcar.accounts.application import (
     AddCar,
     ChangePassword,
     DeleteAccount,
+    GiveInviteEmail,
+    InviteView,
     LogIn,
-    RegisterAccount,
+    OpenInvite,
+    OpenSignup,
+    RegisterFromInvite,
     RemoveCar,
     RequestPasswordReset,
     ResetPassword,
+    SignupView,
     UpdateProfile,
 )
 from brazcar.accounts.domain import (
     Account,
+    AccountError,
     Car,
     CarNotFoundError,
+    EmailAlreadyRegisteredError,
     ForeignPhoneNumberError,
     InvalidCredentialsError,
     InvalidResetTokenError,
+    InviteAlreadyUsedError,
+    InviteConflictError,
+    InviteExpiredError,
+    InviteNotFoundError,
+    InviteStatus,
+    InviteSupersededError,
     LicensePlate,
     NotAMobilePhoneError,
     PhoneAlreadyRegisteredError,
@@ -46,6 +59,7 @@ from brazcar.accounts.domain import (
 from brazcar.shared.adapters.api_errors import with_errors
 from brazcar.shared.adapters.phone_input import INVALID_PHONE
 from brazcar.shared.adapters.session_auth import session_auth, signed_in_account_id
+from brazcar.shared.domain.personal_data import masked_email
 from brazcar.shared.domain.phone import InvalidPhoneNumberError
 
 from .models import User
@@ -70,6 +84,7 @@ class AccountOut(Schema):
     phone_display: str  # "(61) 99999-9999", ready to show (D-137)
     display_name: str
     email: str | None
+    email_confirmed: bool  # the account came through the invite, or its e-mail was proven (D-167)
     terms_accepted_at: datetime
     cars: list[CarOut]
     can_drive: bool
@@ -82,17 +97,54 @@ class AccountOut(Schema):
             phone_display=account.phone.display(),
             display_name=account.display_name,
             email=account.email,
+            email_confirmed=account.email_confirmed,
             terms_accepted_at=account.terms_accepted_at,
             cars=[CarOut.of(car) for car in account.cars],
             can_drive=account.can_drive,
         )
 
 
+class InviteOut(Schema):
+    """The invite's page (D-167). Phone and e-mail come masked: a link can be forwarded."""
+
+    status: Literal["open", "awaiting_email_confirmation"]
+    phone_masked: str
+    expires_at: datetime
+    email_masked: str | None  # the e-mail waiting for its link, so the page can offer to retype it
+
+    @classmethod
+    def of(cls, view: InviteView) -> Self:
+        awaiting = view.status is InviteStatus.AWAITING_EMAIL_CONFIRMATION
+        return cls(
+            status="awaiting_email_confirmation" if awaiting else "open",
+            phone_masked=view.phone.masked(),
+            expires_at=view.expires_at,
+            email_masked=None if view.email is None else masked_email(view.email),
+        )
+
+
+class InviteEmailIn(Schema):
+    email: str  # unconstrained here: the domain reads it, and its refusal gets its own words (D-158)
+
+
+class SignupOut(Schema):
+    """The e-mail link's page: the rest of the registration, phone and e-mail fixed (D-167)."""
+
+    phone_masked: str
+    email: str  # the person's own, just proven by opening the link
+    email_expires_at: datetime
+
+    @classmethod
+    def of(cls, view: SignupView) -> Self:
+        return cls(phone_masked=view.phone.masked(), email=view.email, email_expires_at=view.email_expires_at)
+
+
 class RegisterIn(Schema):
-    phone: str
+    """No phone and no e-mail: both come from the invite the e-mail link belongs to (D-167)."""
+
+    email_token: str
     password: str
     display_name: str
-    email: str | None = None
     accepts_terms: bool
 
 
@@ -141,6 +193,27 @@ PHONE_REFUSALS: dict[type[ValueError], str] = {  # one message per reason, in Po
     NotAMobilePhoneError: "use um número de celular: o contato é pelo WhatsApp",
 }
 
+INVITE_NOT_FOUND = "convite não encontrado"
+EMAIL_TAKEN = "este e-mail já tem conta"
+INVITE_USED = "este convite já foi usado"
+PHONE_TAKEN = "este telefone já tem conta"
+SUPERSEDED = "este convite foi substituído por um convite mais novo"
+
+INVITE_GONE: dict[type[AccountError], str] = {  # the invite's own link, and the e-mail step
+    InviteExpiredError: "este convite venceu; peça um novo a quem convidou você",
+    InviteSupersededError: SUPERSEDED,
+    InviteAlreadyUsedError: INVITE_USED,
+    PhoneAlreadyRegisteredError: PHONE_TAKEN,
+}
+EMAIL_LINK_GONE: dict[type[AccountError], str] = {  # the e-mail's link, and the registration
+    InviteExpiredError: "este link venceu; abra o convite de novo e informe o e-mail",
+    InviteSupersededError: SUPERSEDED,
+    InviteAlreadyUsedError: INVITE_USED,
+    PhoneAlreadyRegisteredError: PHONE_TAKEN,
+}
+GONE = (InviteExpiredError, InviteSupersededError, InviteAlreadyUsedError, PhoneAlreadyRegisteredError)
+"""Every way an invite stops serving: 410 on its pages, whose link then has nothing left to do."""
+
 ACCOUNT_FIELD_REFUSALS: dict[str, str] = {  # by the field pydantic names on `Account` itself
     "display_name": "nome social não pode ficar vazio",
     "email": "e-mail inválido",
@@ -152,7 +225,10 @@ so the same domain `pydantic.ValidationError` needs the same translation in eith
 @dataclass(frozen=True, slots=True)
 class AccountUseCases:
     accounts: AccountRepository  # for "who am I", which has no rule to run
-    register: RegisterAccount
+    open_invite: OpenInvite
+    give_invite_email: GiveInviteEmail
+    open_signup: OpenSignup
+    register: RegisterFromInvite
     log_in: LogIn
     update_profile: UpdateProfile
     change_password: ChangePassword
@@ -165,10 +241,61 @@ class AccountUseCases:
 
 def build_router(use_cases: AccountUseCases) -> Router:
     router = Router(tags=["accounts"])
+    _add_invite_routes(router, use_cases)
     _add_entry_routes(router, use_cases)
     _add_own_account_routes(router, use_cases)
     _add_profile_routes(router, use_cases)
     return router
+
+
+def _add_invite_routes(router: Router, use_cases: AccountUseCases) -> None:
+    """Without a session: the invite's link, the e-mail step and the e-mail's link (D-167). The
+    tokens travel in the path; `config/log_filters.py` keeps them out of the request log."""
+
+    @router.get(
+        "/invites/{token}",
+        response=with_errors(InviteOut, not_found=True, gone=True),
+        operation_id="open_invite",
+    )
+    async def open_invite(request: HttpRequest, token: str) -> InviteOut:
+        try:
+            view = await use_cases.open_invite(token=token)
+        except InviteNotFoundError as error:
+            raise HttpError(HTTPStatus.NOT_FOUND, INVITE_NOT_FOUND) from error
+        except GONE as error:
+            raise HttpError(HTTPStatus.GONE, INVITE_GONE[type(error)]) from error
+        return InviteOut.of(view)
+
+    @router.post(
+        "/invites/{token}/email",
+        response=with_errors(
+            {HTTPStatus.ACCEPTED: Done},
+            not_found=True,
+            conflict=True,
+            gone=True,
+            too_many_requests=True,
+            validation=True,
+        ),
+        operation_id="give_invite_email",
+    )
+    async def give_invite_email(request: HttpRequest, token: str, data: InviteEmailIn) -> Status[Done]:
+        """Send the e-mail's link. 409 tells an invite holder the address has an account (D-167)."""
+        await _give_invite_email(use_cases.give_invite_email, token, data.email)
+        return Status(HTTPStatus.ACCEPTED, Done())
+
+    @router.get(
+        "/signup/{email_token}",
+        response=with_errors(SignupOut, not_found=True, gone=True),
+        operation_id="open_signup",
+    )
+    async def open_signup(request: HttpRequest, email_token: str) -> SignupOut:
+        try:
+            view = await use_cases.open_signup(email_token=email_token)
+        except InviteNotFoundError as error:
+            raise HttpError(HTTPStatus.NOT_FOUND, INVITE_NOT_FOUND) from error
+        except GONE as error:
+            raise HttpError(HTTPStatus.GONE, EMAIL_LINK_GONE[type(error)]) from error
+        return SignupOut.of(view)
 
 
 def _add_entry_routes(router: Router, use_cases: AccountUseCases) -> None:
@@ -176,11 +303,13 @@ def _add_entry_routes(router: Router, use_cases: AccountUseCases) -> None:
 
     @router.post(
         "/register",
-        response=with_errors({HTTPStatus.CREATED: AccountOut}, conflict=True, validation=True),
+        response=with_errors(
+            {HTTPStatus.CREATED: AccountOut}, not_found=True, conflict=True, gone=True, validation=True
+        ),
         operation_id="register_account",
     )
     async def register(request: HttpRequest, data: RegisterIn) -> Status[AccountOut]:
-        """Create the account and log it in. The terms must be accepted (D-033)."""
+        """Finish the account the e-mail link opened and log it in. Terms must be accepted (D-033)."""
         if not data.accepts_terms:
             raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, "os termos precisam ser aceitos")
         _check_password(data.password)
@@ -284,7 +413,7 @@ def _add_profile_routes(router: Router, use_cases: AccountUseCases) -> None:
 
     @router.patch(
         "/me",
-        response=with_errors(AccountOut, unauthorized=True, validation=True),
+        response=with_errors(AccountOut, unauthorized=True, conflict=True, validation=True),
         auth=session_auth,
         operation_id="update_profile",
     )
@@ -294,6 +423,8 @@ def _add_profile_routes(router: Router, use_cases: AccountUseCases) -> None:
             account = await use_cases.update_profile(
                 signed_in_account_id(request), display_name=data.display_name, email=data.email
             )
+        except EmailAlreadyRegisteredError as error:
+            raise HttpError(HTTPStatus.CONFLICT, EMAIL_TAKEN) from error
         except ValidationError as error:
             raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, _account_field_refusal(error)) from error
         return AccountOut.of(account)
@@ -322,19 +453,41 @@ def _add_profile_routes(router: Router, use_cases: AccountUseCases) -> None:
         return Done()
 
 
-async def _register(register: RegisterAccount, data: RegisterIn) -> Account:
-    """`RegisterIn` leaves `display_name` and `email` unconstrained on purpose, the same way
-    `ProfileIn` does: a blank e-mail means "none", so the rule needs the domain's own reading of it,
-    not a schema regex (D-158). `Account.register` raises `pydantic.ValidationError` when either is
-    invalid; the message it gets is the same `update_profile` already gives that field."""
+async def _register(register: RegisterFromInvite, data: RegisterIn) -> Account:
+    """`RegisterIn` leaves `display_name` unconstrained on purpose, the same way `ProfileIn` does:
+    `Account` raises `pydantic.ValidationError` when it is blank, and the message it gets is the one
+    `update_profile` already gives that field (D-158). An invite that stopped serving is 410, as on
+    its pages; one spent by a concurrent request, or a phone or e-mail already taken, is 409 (D-167)."""
     try:
         return await register(
-            phone=data.phone, password=data.password, display_name=data.display_name, email=data.email
+            email_token=data.email_token, display_name=data.display_name, password=data.password
         )
+    except InviteNotFoundError as error:
+        raise HttpError(HTTPStatus.NOT_FOUND, INVITE_NOT_FOUND) from error
+    except (InviteAlreadyUsedError, InviteConflictError) as error:
+        raise HttpError(HTTPStatus.CONFLICT, INVITE_USED) from error
     except PhoneAlreadyRegisteredError as error:
-        raise HttpError(HTTPStatus.CONFLICT, "este telefone já tem conta") from error
-    except (InvalidPhoneNumberError, ForeignPhoneNumberError, NotAMobilePhoneError) as error:
-        raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, PHONE_REFUSALS[type(error)]) from error
+        raise HttpError(HTTPStatus.CONFLICT, PHONE_TAKEN) from error
+    except EmailAlreadyRegisteredError as error:
+        raise HttpError(HTTPStatus.CONFLICT, EMAIL_TAKEN) from error
+    except (InviteExpiredError, InviteSupersededError) as error:
+        raise HttpError(HTTPStatus.GONE, EMAIL_LINK_GONE[type(error)]) from error
+    except ValidationError as error:
+        raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, _account_field_refusal(error)) from error
+
+
+async def _give_invite_email(give: GiveInviteEmail, token: str, email: str) -> None:
+    try:
+        await give(token=token, email=email)
+    except InviteNotFoundError as error:
+        raise HttpError(HTTPStatus.NOT_FOUND, INVITE_NOT_FOUND) from error
+    except EmailAlreadyRegisteredError as error:
+        raise HttpError(HTTPStatus.CONFLICT, EMAIL_TAKEN) from error
+    except GONE as error:
+        raise HttpError(HTTPStatus.GONE, INVITE_GONE[type(error)]) from error
+    except TooManyAttemptsError as error:
+        message = "muitos envios para este convite; espere um pouco"
+        raise HttpError(HTTPStatus.TOO_MANY_REQUESTS, message) from error
     except ValidationError as error:
         raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, _account_field_refusal(error)) from error
 

@@ -9,10 +9,15 @@ class AccountRepository(Protocol):
 
     async def by_phone(self, phone: PhoneNumber) -> Account | None: ...
 
+    async def by_email(self, email: str) -> Account | None:
+        """The account with this e-mail, case aside: the same reading the uniqueness uses (D-167)."""
+        ...
+
     async def save(self, account: Account) -> None:
         """Insert or replace the account and its cars, whole (ADR-0008).
 
-        Raises `PhoneAlreadyRegisteredError` when another account owns the phone.
+        Raises `PhoneAlreadyRegisteredError` when another account owns the phone, and
+        `EmailAlreadyRegisteredError` when another account owns the e-mail, case aside.
         """
         ...
 

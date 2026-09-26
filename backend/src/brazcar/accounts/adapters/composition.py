@@ -7,9 +7,12 @@ from brazcar.accounts.application import (
     AddCar,
     ChangePassword,
     DeleteAccount,
+    GiveInviteEmail,
     IssueInvite,
     LogIn,
-    RegisterAccount,
+    OpenInvite,
+    OpenSignup,
+    RegisterFromInvite,
     RemoveCar,
     RequestPasswordReset,
     ResetPassword,
@@ -28,19 +31,25 @@ from .routes import AccountUseCases, build_router
 
 def accounts_router() -> Router:
     accounts = DjangoAccountRepository()
+    invites = DjangoInviteRepository()
     credentials = DjangoCredentials()
     tokens = DjangoPasswordResetTokens()
     limiter = DjangoRateLimiter()
+    mailer = DjangoMailer()
+    clock = SystemClock()
     use_cases = AccountUseCases(
         accounts=accounts,
-        register=RegisterAccount(accounts, credentials, SystemClock()),
+        open_invite=OpenInvite(invites, accounts, clock),
+        give_invite_email=GiveInviteEmail(invites, accounts, mailer, limiter, clock, settings.SIGNUP_LINK),
+        open_signup=OpenSignup(invites, accounts, clock),
+        register=RegisterFromInvite(invites, accounts, credentials, clock),
         log_in=LogIn(accounts, credentials, limiter),
         update_profile=UpdateProfile(accounts),
         change_password=ChangePassword(accounts, credentials, limiter),
         add_car=AddCar(accounts),
         remove_car=RemoveCar(accounts),
         request_password_reset=RequestPasswordReset(
-            accounts, tokens, DjangoMailer(), limiter, settings.PASSWORD_RESET_LINK
+            accounts, tokens, mailer, limiter, settings.PASSWORD_RESET_LINK
         ),
         reset_password=ResetPassword(accounts, credentials, tokens),
         delete=DeleteAccount(accounts),

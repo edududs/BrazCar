@@ -33,6 +33,8 @@ from schemathesis.checks import (
     load_all_checks,
 )
 
+from tests.accounts.signup import registration_sync
+
 pytestmark = [pytest.mark.heavy, pytest.mark.schemathesis, pytest.mark.django_db(transaction=True)]
 
 CONTRACT = Path(__file__).resolve().parents[2] / "contract" / "openapi.json"
@@ -99,12 +101,14 @@ FUZZ_SETTINGS = hypothesis_settings(
     suppress_health_check=[HealthCheck.too_slow, HealthCheck.function_scoped_fixture],
 )
 
-_phone_numbers = itertools.count(1)
+_spare_numbers = itertools.count(1)
 
 
-def _spare_phone() -> str:
-    """A phone the demonstration seed and the end to end suite never reserve (D-133, D-134)."""
-    return f"61 97000-{next(_phone_numbers):04d}"
+def _spare_phone_and_email() -> tuple[str, str]:
+    """A phone the demonstration seed and the end to end suite never reserve (D-133, D-134), and an
+    e-mail of its own: both are unique per account (D-167)."""
+    n = next(_spare_numbers)
+    return f"61 97000-{n:04d}", f"fuzzer{n}@example.com"
 
 
 @pytest.fixture(autouse=True)
@@ -113,12 +117,10 @@ def _front_origin(settings: Any) -> None:  # noqa: ANN401 - pytest-django's sett
 
 
 def _register(base_url: str) -> requests.Response:
-    payload = {
-        "phone": _spare_phone(),
-        "password": "correct horse battery staple",
-        "display_name": "Fuzzer",
-        "accepts_terms": True,
-    }
+    """Signed up the one way there is: an invite written to the live server's database, its e-mail
+    given, then the registration over HTTP (D-167)."""
+    phone, email = _spare_phone_and_email()
+    payload = registration_sync(phone=phone, email=email, display_name="Fuzzer")
     return requests.post(
         f"{base_url}/api/accounts/register", json=payload, headers={"Origin": FRONT}, timeout=10
     )

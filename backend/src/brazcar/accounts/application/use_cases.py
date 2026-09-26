@@ -12,7 +12,7 @@ from brazcar.accounts.domain import (
     WrongCurrentPasswordError,
     account_phone,
 )
-from brazcar.shared.application.ports import Clock, Mailer, RateLimiter
+from brazcar.shared.application.ports import Mailer, RateLimiter
 
 from .ports import AccountRepository, Credentials, PasswordResetTokens
 
@@ -25,23 +25,6 @@ class AccountLimits:
     login_window: timedelta = timedelta(minutes=15)
     reset_requests: int = 3
     reset_window: timedelta = timedelta(hours=1)
-
-
-@dataclass(frozen=True, slots=True)
-class RegisterAccount:
-    accounts: AccountRepository
-    credentials: Credentials
-    clock: Clock
-
-    async def __call__(
-        self, *, phone: str, password: str, display_name: str, email: str | None = None
-    ) -> Account:
-        account = Account.register(
-            phone=phone, display_name=display_name, email=email, accepted_terms_at=self.clock.now()
-        )
-        await self.accounts.save(account)
-        await self.credentials.register(account.id, password)
-        return account
 
 
 @dataclass(frozen=True, slots=True)
