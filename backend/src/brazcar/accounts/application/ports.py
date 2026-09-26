@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from brazcar.accounts.domain import Account, AccountId
+from brazcar.accounts.domain import Account, AccountId, Invite
 from brazcar.shared.domain.phone import PhoneNumber
 
 
@@ -36,4 +36,28 @@ class PasswordResetTokens(Protocol):
 
     async def redeem(self, token: str) -> AccountId | None:
         """The account the token was issued for, once, while it is still valid."""
+        ...
+
+
+class InviteRepository(Protocol):
+    """Invites by the digest of either link's token; the tokens themselves are never stored (D-166)."""
+
+    async def save(self, invite: Invite) -> None:
+        """Write the invite whole (ADR-0008): insert it when new, or else only over the version just
+        before `invite.version`.
+
+        Raises `InviteConflictError` when another write got there first.
+        """
+        ...
+
+    async def by_invite_token(self, token: str) -> Invite | None:
+        """The invite whose own link carries `token`, looked up by `token_digest`."""
+        ...
+
+    async def by_email_token(self, token: str) -> Invite | None:
+        """The invite whose e-mail link carries `token`, looked up by `token_digest`; also once consumed."""
+        ...
+
+    async def latest_for(self, phone: PhoneNumber) -> Invite | None:
+        """The phone's most recent invite by `issued_at`, the greater id breaking a tie: the one valid."""
         ...

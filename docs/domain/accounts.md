@@ -19,6 +19,11 @@
 | aceite dos termos | `terms_accepted_at` | Quando a pessoa aceitou os termos no cadastro (D-033). |
 | editar dados pessoais | `Account.update_profile`, `UpdateProfile` | Nome social e e-mail, os únicos campos que a própria conta edita (D-139). |
 | trocar a senha | `ChangePassword` | Exige a senha atual, verificada pela porta `Credentials`; sem ela, não muda nada (D-139). |
+| convite | `Invite`, `IssueInvite` | Agregado: acesso de uso único, com prazo, que o dono emite para um telefone. Substitui o cadastro aberto (D-159, D-166). |
+| token do convite | `invite_digest` | O segredo que vai no link do convite. Só o resumo sha256 é guardado (`token_digest`). |
+| e-mail informado | `EmailGiven` | O convite já tem o e-mail que a pessoa digitou e o resumo do token do link de confirmação. |
+| link de confirmação | `email_digest`, `email_expires_at` | O link mandado ao e-mail informado. Vale 2 horas a partir do envio e é o que consome o convite (`ConsumeInvite`). |
+| situação do convite | `InviteStatus` | Calculada, nunca gravada: aberto `open`, aguardando confirmação `awaiting_email_confirmation`, usado `consumed`, vencido `expired`, invalidado `superseded`. |
 
 ## Invariantes
 
@@ -34,6 +39,25 @@
 `Account` é do domínio. O usuário customizado do Django, com o telefone como identificador,
 existe desde a primeira migration e mora no adaptador, que reaproveita o hash de senha e a sessão
 do framework. O domínio não conhece `User`.
+
+## Convite
+
+O cadastro aberto sai (D-159). O dono emite um convite para um telefone e manda o link por
+mensagem direta a esse número. A pessoa abre o link e digita o e-mail; o convite guarda o e-mail e
+manda para ele o link de confirmação. Esse link abre o resto do cadastro, e a conta nasce com o
+e-mail já confirmado (D-160). Não há cadastro pendente nem senha guardada antes da hora: até o fim,
+o que existe é o convite, emitido, com e-mail informado ou consumido.
+
+- Telefone que já tem conta não recebe convite. Um convite vira uma conta só.
+- Só o convite mais recente de um telefone vale. Os anteriores ficam invalidados por cálculo, sem
+  escrita neles (ADR-0008).
+- Token nenhum é guardado, só o resumo. Redigitar o e-mail troca o token do link de confirmação, e
+  o anterior deixa de valer.
+- O prazo do convite (4 horas) vale até o e-mail ser informado; dali em diante vale só o do link de
+  confirmação (2 horas a partir do envio), mesmo que passe do convite. Se o link vence com o convite
+  ainda no prazo, a situação volta a aberto e a pessoa pode informar o e-mail de novo.
+- Consumido é final. Toda mudança incrementa a versão, e o repositório só grava sobre a versão
+  anterior: de dois consumos simultâneos, um perde com `InviteConflictError`.
 
 ## Edição de dados pessoais
 

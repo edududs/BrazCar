@@ -68,3 +68,42 @@ class InvalidResetTokenError(AccountError):
 class TooManyAttemptsError(AccountError):
     def __init__(self) -> None:
         super().__init__("too many attempts for now; try again later")
+
+
+class InviteNotFoundError(AccountError, LookupError):
+    """No invite answers to this link: unknown, or an e-mail link replaced by a newer one."""
+
+    def __init__(self) -> None:
+        super().__init__("no invite for this link")
+
+
+class InviteExpiredError(AccountError):
+    def __init__(self) -> None:
+        super().__init__("the invite or its e-mail link has expired")
+
+
+class InviteSupersededError(AccountError):
+    """A newer invite was issued to the same phone: only the latest one is valid (D-166)."""
+
+    def __init__(self) -> None:
+        super().__init__("a newer invite replaced this one")
+
+
+class InviteAlreadyUsedError(AccountError):
+    def __init__(self) -> None:
+        super().__init__("the invite was already used")
+
+
+class InviteEmailMissingError(AccountError):
+    """Consuming needs the e-mail link, and there is none before the e-mail is given."""
+
+    def __init__(self) -> None:
+        super().__init__("the invite has no e-mail yet")
+
+
+class InviteConflictError(AccountError):
+    """Another write reached the invite first: what keeps it single use under a race."""
+
+    def __init__(self, invite_id: UUID) -> None:
+        super().__init__(f"invite {invite_id} changed since it was read")
+        self.invite_id = invite_id
