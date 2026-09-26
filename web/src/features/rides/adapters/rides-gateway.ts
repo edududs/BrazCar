@@ -1,5 +1,6 @@
 import { apiClient } from "@/shared/adapters/api/client";
 import type { components } from "@/shared/adapters/api/schema";
+import { heldErrorOf } from "@/shared/domain/account-held";
 
 import type { BoardFilters } from "../domain/board";
 import {
@@ -67,8 +68,13 @@ function detailOf(error: unknown): string | null {
   return null;
 }
 
-function refused(status: number, error: unknown): RideRequestError {
-  return new RideRequestError(status, detailOf(error) ?? "Não foi possível concluir.");
+/** Every write route can come back held (D-168), rides included: recognized once, in one shared
+ * place, before falling back to this feature's own refusal. */
+function refused(status: number, error: unknown): Error {
+  return (
+    heldErrorOf(status, error) ??
+    new RideRequestError(status, detailOf(error) ?? "Não foi possível concluir.")
+  );
 }
 
 export async function fetchBoard(filters: BoardFilters, signal: AbortSignal): Promise<Ride[]> {

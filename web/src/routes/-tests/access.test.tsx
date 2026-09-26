@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeEventSource } from "@/shared/testing/fake-event-source";
 import { renderApp } from "@/shared/testing/render-app";
 
-import { driverOut, serveShell } from "./fixtures";
+import { driverOut, heldOut, serveShell } from "./fixtures";
 
 // The real adapter imports vite-plugin-pwa's virtual module, which Vitest cannot resolve; the
 // shell mounts it on every route, so any test rendering the whole app needs this double (D-106).
@@ -57,6 +57,32 @@ describe("/entrar", () => {
     expect(screen.queryByRole("navigation", { name: "Principal" })).toBeNull();
     // No self-serve way in: signing up is invite-only (D-167).
     expect(screen.queryByRole("link", { name: "Criar conta" })).toBeNull();
+  });
+
+  it("with a safe return address, lands there instead of the board (D-168)", async () => {
+    const user = userEvent.setup();
+    api.serve("POST", "/api/accounts/login", 200, driverOut);
+    const { router } = await renderApp("/entrar?returnTo=/conta");
+
+    await user.type(await screen.findByLabelText(/^Celular/), "61999990001");
+    await user.type(screen.getByLabelText(/^Senha/), "segredo123{Enter}");
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/conta");
+    });
+  });
+
+  it("an external return address is refused and falls back to the board", async () => {
+    const user = userEvent.setup();
+    api.serve("POST", "/api/accounts/login", 200, driverOut);
+    const { router } = await renderApp("/entrar?returnTo=//evil.example.com");
+
+    await user.type(await screen.findByLabelText(/^Celular/), "61999990001");
+    await user.type(screen.getByLabelText(/^Senha/), "segredo123{Enter}");
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/");
+    });
   });
 });
 
@@ -263,5 +289,77 @@ describe("/conta", () => {
     expect(
       await screen.findByText("Conta excluída. As caronas dela saíram do mural."),
     ).toBeDefined();
+  });
+
+  it("a held account sees the guard instead of the panel, pre-filled with its own address (D-168)", async () => {
+    serveShell(api, heldOut);
+    await renderApp("/conta");
+
+    expect(await screen.findByText("Falta confirmar seu e-mail")).toBeDefined();
+    expect(screen.getByLabelText<HTMLInputElement>(/^E-mail/).value).toBe("ana@example.com");
+    expect(screen.queryByText("Editar dados")).toBeNull();
+  });
+
+  it("a held account can still ask for the link, sign out and delete", async () => {
+    const user = userEvent.setup();
+    serveShell(api, heldOut);
+    api.serve("POST", "/api/accounts/me/email", 202, { ok: true });
+    const { router } = await renderApp("/conta");
+
+    await user.click(await screen.findByRole("button", { name: "Receber o link" }));
+
+    expect(await screen.findByText("Confirme seu e-mail")).toBeDefined();
+    expect(screen.getByText(/ana@example\.com/)).toBeDefined();
+    expect(api.sentTo("POST", "/api/accounts/me/email")[0]?.body).toEqual({
+      email: "ana@example.com",
+    });
+
+    api.serve("POST", "/api/accounts/logout", 200, { ok: true });
+    await user.click(screen.getByRole("button", { name: /^Sair/ }));
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/");
+    });
+  });
+});
+
+describe("/confirmar-email (D-168)", () => {
+  it("without a session, goes to sign in and carries the way back", async () => {
+    const { router } = await renderApp("/confirmar-email?token=tok-1");
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/entrar");
+    });
+    expect(router.state.location.search).toMatchObject({
+      returnTo: "/confirmar-email?token=tok-1",
+    });
+  });
+
+  it("with a session, confirms on its own and lands on the account with a notice", async () => {
+    serveShell(api, heldOut);
+    api.serve("POST", "/api/accounts/me/email/confirm", 200, driverOut);
+    const { router } = await renderApp("/confirmar-email?token=tok-1");
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/conta");
+    });
+    expect(await screen.findByText("E-mail confirmado.")).toBeDefined();
+    expect(api.sentTo("POST", "/api/accounts/me/email/confirm")[0]?.body).toEqual({
+      token: "tok-1",
+    });
+  });
+
+  it("a spent or invalid link offers another one instead of a technical error", async () => {
+    serveShell(api, heldOut);
+    api.serve("POST", "/api/accounts/me/email/confirm", 400, {
+      detail: "Link inválido ou vencido.",
+    });
+
+    await renderApp("/confirmar-email?token=old");
+
+    expect(await screen.findByText("Link inválido ou vencido")).toBeDefined();
+    expect(screen.getByRole("link", { name: "Pedir outro link" }).getAttribute("href")).toBe(
+      "/conta",
+    );
   });
 });

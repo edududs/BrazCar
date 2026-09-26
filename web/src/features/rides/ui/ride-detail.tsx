@@ -2,7 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import type { Session } from "@/features/accounts/domain/session";
+import { HeldNotice } from "@/features/accounts/ui/held-notice";
 import { addDays } from "@/shared/app/calendar";
+import { AccountHeldError } from "@/shared/domain/account-held";
 import { ActionBar } from "@/shared/ui/action-bar";
 import { ActionButton } from "@/shared/ui/action-button";
 import { Avatar } from "@/shared/ui/avatar";
@@ -280,7 +282,7 @@ interface PassengerActionsProps {
 
 /** The one action under the thumb, and what the ride's state says instead of it (S03, S04). */
 function PassengerActions({ ride, session, contacting, acceptsContact }: PassengerActionsProps) {
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const back = (
     <Link
       to="/"
@@ -352,9 +354,11 @@ function PassengerActions({ ride, session, contacting, acceptsContact }: Passeng
           error === null ? "Você vê o WhatsApp e a placa. O pedido fica registrado." : undefined
         }
       >
-        {error === null ? null : (
+        {error === null ? null : error instanceof AccountHeldError ? (
+          <HeldNotice message={error.message} />
+        ) : (
           <NoticeBar tone="caution" role="alert">
-            {error}
+            {reasonOf(error)}
           </NoticeBar>
         )}
         <ActionButton
@@ -364,7 +368,7 @@ function PassengerActions({ ride, session, contacting, acceptsContact }: Passeng
           onPress={() => {
             setError(null);
             contacting.request().catch((reason: unknown) => {
-              setError(reasonOf(reason));
+              setError(reason);
             });
           }}
         >
@@ -409,11 +413,11 @@ interface OwnerPanelProps {
 
 /** The driver's own ride: seats up top, then the other actions with their consequence (S05). */
 function OwnerPanel({ ride, actions, onRepeated }: OwnerPanelProps) {
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [repeatOpen, setRepeatOpen] = useState(false);
   const fail = (reason: unknown) => {
-    setError(reasonOf(reason));
+    setError(reason);
   };
   const allowed = ride.actions;
   return (
@@ -501,9 +505,11 @@ function OwnerPanel({ ride, actions, onRepeated }: OwnerPanelProps) {
           />
         ) : null}
       </ListGroup>
-      {error === null ? null : (
+      {error === null ? null : error instanceof AccountHeldError ? (
+        <HeldNotice message={error.message} />
+      ) : (
         <NoticeBar tone="critical" role="alert">
-          {error}
+          {reasonOf(error)}
         </NoticeBar>
       )}
       <ConfirmDialog

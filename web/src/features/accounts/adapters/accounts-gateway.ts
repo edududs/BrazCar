@@ -1,5 +1,6 @@
 import { apiClient } from "@/shared/adapters/api/client";
 import type { components } from "@/shared/adapters/api/schema";
+import { heldErrorOf } from "@/shared/domain/account-held";
 
 import {
   type Account,
@@ -54,8 +55,13 @@ function detailOf(error: unknown): string | null {
   return null;
 }
 
-function refused(status: number, error: unknown): AccountRequestError {
-  return new AccountRequestError(status, detailOf(error) ?? "Não foi possível concluir.");
+/** Every write route can come back held (D-168): recognized once, here, so no caller of this
+ * gateway has to parse a refusal's body on its own. */
+function refused(status: number, error: unknown): Error {
+  return (
+    heldErrorOf(status, error) ??
+    new AccountRequestError(status, detailOf(error) ?? "Não foi possível concluir.")
+  );
 }
 
 /** `null` when there is no session; the API answers 401 and that is not an error here. */

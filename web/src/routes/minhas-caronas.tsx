@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { useSession } from "@/features/accounts/app/use-session";
+import { AccountGate } from "@/features/accounts/ui/account-gate";
 import { useMyRides } from "@/features/rides/app/use-my-rides";
 import { RideList } from "@/features/rides/ui/ride-list";
 import { EmptyState } from "@/shared/ui/empty-state";
@@ -29,7 +30,9 @@ function MyRidesPage() {
           As caronas que você publicar aparecem aqui e no mural.
         </EmptyState>
       ) : (
-        <MyRidesList />
+        <AccountGate>
+          <MyRidesList />
+        </AccountGate>
       )}
     </PageShell>
   );

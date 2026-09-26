@@ -1,6 +1,7 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { useSession } from "@/features/accounts/app/use-session";
+import { AccountGate } from "@/features/accounts/ui/account-gate";
 import { usePublishRide } from "@/features/rides/app/use-publish-ride";
 import type { RideDraft } from "@/features/rides/domain/ride";
 import { RideForm } from "@/features/rides/ui/ride-form";
@@ -69,42 +70,46 @@ function PublishPage() {
         >
           Publicar uma carona pede uma conta, para o passageiro saber com quem combina.
         </NoticeScreen>
-      ) : !session.account.canDrive ? (
-        <NoticeScreen
-          title="Cadastre um carro para publicar"
-          glyph={<Icon name="car" size={32} />}
-          glyphTone="brand"
-          action={
-            <div className="flex flex-col gap-2">
-              <Link to="/conta" className={primaryLink}>
-                Cadastrar um carro
-              </Link>
-              <Link to="/" className={ghostLink}>
-                Voltar ao mural
-              </Link>
-            </div>
-          }
-        >
-          O mural mostra só o modelo e a cor. A placa aparece apenas para quem pedir o contato.
-        </NoticeScreen>
       ) : (
-        <RideForm
-          initial={blankDraft(session.account.cars[0]?.id ?? "", now)}
-          cars={session.account.cars}
-          busy={busy}
-          now={now}
-          submitLabel="Publicar carona"
-          onSubmit={(draft) =>
-            publish(draft).then(
-              (ride) =>
-                void navigate({
-                  to: "/caronas/$rideId",
-                  params: { rideId: ride.id },
-                  state: { flash: { message: "Carona publicada. Já está no mural." } },
-                }),
-            )
-          }
-        />
+        <AccountGate>
+          {!session.account.canDrive ? (
+            <NoticeScreen
+              title="Cadastre um carro para publicar"
+              glyph={<Icon name="car" size={32} />}
+              glyphTone="brand"
+              action={
+                <div className="flex flex-col gap-2">
+                  <Link to="/conta" className={primaryLink}>
+                    Cadastrar um carro
+                  </Link>
+                  <Link to="/" className={ghostLink}>
+                    Voltar ao mural
+                  </Link>
+                </div>
+              }
+            >
+              O mural mostra só o modelo e a cor. A placa aparece apenas para quem pedir o contato.
+            </NoticeScreen>
+          ) : (
+            <RideForm
+              initial={blankDraft(session.account.cars[0]?.id ?? "", now)}
+              cars={session.account.cars}
+              busy={busy}
+              now={now}
+              submitLabel="Publicar carona"
+              onSubmit={(draft) =>
+                publish(draft).then(
+                  (ride) =>
+                    void navigate({
+                      to: "/caronas/$rideId",
+                      params: { rideId: ride.id },
+                      state: { flash: { message: "Carona publicada. Já está no mural." } },
+                    }),
+                )
+              }
+            />
+          )}
+        </AccountGate>
       )}
     </PageShell>
   );

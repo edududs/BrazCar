@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeEventSource } from "@/shared/testing/fake-event-source";
 import { renderApp } from "@/shared/testing/render-app";
 
-import { driverOut, myRideOut, rideOut, serveShell } from "./fixtures";
+import { driverOut, heldOut, myRideOut, rideOut, serveShell } from "./fixtures";
 
 // The real adapter imports vite-plugin-pwa's virtual module, which Vitest cannot resolve; the
 // shell mounts it on every route, so any test rendering the whole app needs this double (D-106).
@@ -98,6 +98,24 @@ describe("/caronas/$rideId", () => {
     expect(await screen.findByText("(61) 98888-7777")).toBeDefined();
     expect(api.sentTo("POST", "/api/rides/r1/contact")).toHaveLength(1);
   });
+
+  it("a held account asking for the contact sees the phrase and a way to its own account, not a generic error (D-168)", async () => {
+    const user = userEvent.setup();
+    serveShell(api, heldOut);
+    api.serve("GET", "/api/rides/r1", 200, rideOut);
+    api.serve("POST", "/api/rides/r1/contact", 403, {
+      detail: "confirme seu e-mail para continuar",
+      required_action: "confirm_email",
+    });
+    await renderApp("/caronas/r1");
+
+    await user.click(await screen.findByRole("button", { name: "Pedir contato" }));
+
+    expect(await screen.findByText("confirme seu e-mail para continuar")).toBeDefined();
+    expect(screen.getByRole("link", { name: "Ir para minha conta" }).getAttribute("href")).toBe(
+      "/conta",
+    );
+  });
 });
 
 describe("/caronas/$rideId/editar", () => {
@@ -157,6 +175,16 @@ describe("/caronas/$rideId/editar", () => {
 
     expect(await screen.findByText("Esta carona não existe.")).toBeDefined();
   });
+
+  it("a held account sees the guard instead of the form (D-168)", async () => {
+    serveShell(api, heldOut);
+    api.serve("GET", "/api/rides/r1", 200, myRideOut);
+
+    await renderApp("/caronas/r1/editar");
+
+    expect(await screen.findByText("Falta confirmar seu e-mail")).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Salvar alterações" })).toBeNull();
+  });
 });
 
 describe("/publicar", () => {
@@ -186,6 +214,15 @@ describe("/publicar", () => {
     expect(await screen.findByRole("button", { name: "Publicar carona" })).toBeDefined();
     expect(screen.getByRole("link", { name: "Fechar" }).getAttribute("href")).toBe("/");
     expect(screen.queryByRole("navigation", { name: "Principal" })).toBeNull();
+  });
+
+  it("a held account sees the guard instead of the form (D-168)", async () => {
+    serveShell(api, heldOut);
+
+    await renderApp("/publicar");
+
+    expect(await screen.findByText("Falta confirmar seu e-mail")).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Publicar carona" })).toBeNull();
   });
 });
 
@@ -239,5 +276,13 @@ describe("/minhas-caronas", () => {
     await renderApp("/minhas-caronas");
 
     expect(await screen.findByText("Não foi possível carregar as caronas.")).toBeDefined();
+  });
+
+  it("a held account sees the guard instead of the list (D-168)", async () => {
+    serveShell(api, heldOut);
+
+    await renderApp("/minhas-caronas");
+
+    expect(await screen.findByText("Falta confirmar seu e-mail")).toBeDefined();
   });
 });

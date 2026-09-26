@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
+import { AccountGate } from "@/features/accounts/ui/account-gate";
 import { changesBetween, draftOf } from "@/features/rides/app/ride-changes";
 import { useRide } from "@/features/rides/app/use-ride";
 import { formatTime } from "@/features/rides/ui/format";
@@ -32,29 +33,31 @@ function EditRidePage() {
       heading="compact"
       back={{ to: "/caronas/$rideId", params: { rideId }, icon: "back", label: "Voltar" }}
     >
-      {status === "loading" ? (
-        <p className="text-secondary text-ink-2">Carregando…</p>
-      ) : ride === null ? (
-        <p className="text-secondary">Esta carona não existe.</p>
-      ) : !ride.actions.canEdit ? (
-        <p className="text-secondary">Esta carona não pode mais ser editada.</p>
-      ) : (
-        <>
-          <NoticeBar tone="info">
-            {ride.actions.delayUntil === null
-              ? "Antes de sair, o horário só muda dentro do mesmo dia."
-              : `Depois de sair, só dá para adiar, até ${formatTime(ride.actions.delayUntil)}.`}
-          </NoticeBar>
-          <RideForm
-            initial={draftOf(ride)}
-            busy={busy}
-            now={now}
-            dayLocked
-            submitLabel="Salvar alterações"
-            onSubmit={(draft) => edit(changesBetween(ride, draft)).then(saved)}
-          />
-        </>
-      )}
+      <AccountGate>
+        {status === "loading" ? (
+          <p className="text-secondary text-ink-2">Carregando…</p>
+        ) : ride === null ? (
+          <p className="text-secondary">Esta carona não existe.</p>
+        ) : !ride.actions.canEdit ? (
+          <p className="text-secondary">Esta carona não pode mais ser editada.</p>
+        ) : (
+          <>
+            <NoticeBar tone="info">
+              {ride.actions.delayUntil === null
+                ? "Antes de sair, o horário só muda dentro do mesmo dia."
+                : `Depois de sair, só dá para adiar, até ${formatTime(ride.actions.delayUntil)}.`}
+            </NoticeBar>
+            <RideForm
+              initial={draftOf(ride)}
+              busy={busy}
+              now={now}
+              dayLocked
+              submitLabel="Salvar alterações"
+              onSubmit={(draft) => edit(changesBetween(ride, draft)).then(saved)}
+            />
+          </>
+        )}
+      </AccountGate>
     </PageShell>
   );
 }

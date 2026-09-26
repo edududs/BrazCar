@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { useChangePassword } from "@/features/accounts/app/use-change-password";
 import { useSession } from "@/features/accounts/app/use-session";
+import { AccountGate } from "@/features/accounts/ui/account-gate";
 import { AccountPanel } from "@/features/accounts/ui/account-panel";
 import { FeedbackSheet } from "@/features/feedback/ui/feedback-sheet";
 import { useVersionFloor } from "@/shared/app/use-version-floor";
@@ -59,49 +60,51 @@ function AccountPage() {
           {footer}
         </>
       ) : (
-        <AccountPanel
-          account={session.account}
-          busy={busy}
-          updateProfile={updateProfile}
-          requestEmailChange={requestEmailChange}
-          changePassword={changePassword}
-          passwordBusy={passwordBusy}
-          addCar={addCar}
-          removeCar={removeCar}
-          logOut={() =>
-            logOut().then(
-              () =>
-                void navigate({
-                  to: "/",
-                  state: {
-                    flash: {
-                      message: "Você saiu da conta.",
-                      action: { label: "Entrar", to: "/entrar" },
+        <AccountGate>
+          <AccountPanel
+            account={session.account}
+            busy={busy}
+            updateProfile={updateProfile}
+            requestEmailChange={requestEmailChange}
+            changePassword={changePassword}
+            passwordBusy={passwordBusy}
+            addCar={addCar}
+            removeCar={removeCar}
+            logOut={() =>
+              logOut().then(
+                () =>
+                  void navigate({
+                    to: "/",
+                    state: {
+                      flash: {
+                        message: "Você saiu da conta.",
+                        action: { label: "Entrar", to: "/entrar" },
+                      },
                     },
-                  },
-                }),
-            )
-          }
-          deleteAccount={deleteAccount}
-          onDeleted={() => {
-            void navigate({
-              to: "/",
-              search: {
-                q: null,
-                day: null,
-                withSeats: false,
-                maxPrice: null,
-                from: null,
-                accountDeleted: true,
-              },
-            });
-          }}
-          appearance={appearance}
-          footer={footer}
-          onFeedback={() => {
-            setFeedbackOpen(true);
-          }}
-        />
+                  }),
+              )
+            }
+            deleteAccount={deleteAccount}
+            onDeleted={() => {
+              void navigate({
+                to: "/",
+                search: {
+                  q: null,
+                  day: null,
+                  withSeats: false,
+                  maxPrice: null,
+                  from: null,
+                  accountDeleted: true,
+                },
+              });
+            }}
+            appearance={appearance}
+            footer={footer}
+            onFeedback={() => {
+              setFeedbackOpen(true);
+            }}
+          />
+        </AccountGate>
       )}
       {/* Only a signed-in person sends an opinion (D-155). */}
       {session.status === "signed-in" ? (
