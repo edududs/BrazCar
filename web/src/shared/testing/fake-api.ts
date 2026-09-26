@@ -17,13 +17,25 @@ export interface SentRequest {
 type Answer = () => Response;
 
 /**
- * Stands in for the network under the real `apiClient`: every request is recorded, and each one
- * takes the next queued answer. With nothing queued the test forgot to say what the API replies,
- * and the request fails loudly instead of hanging.
+ * Stands in for the network under the real `apiClient`: every request is recorded. A request to a
+ * route given a standing answer with `serve` gets it every time; any other takes the next queued
+ * answer. With neither, the test forgot to say what the API replies, and the request fails loudly
+ * instead of hanging.
  */
 export class FakeApi {
   readonly sent: SentRequest[] = [];
   private readonly answers: Answer[] = [];
+  private readonly routes = new Map<string, Answer>();
+
+  /** A standing JSON answer for every `METHOD /path` request: a whole screen's worth of calls. */
+  serve(method: string, path: string, status: number, body: unknown): void {
+    this.routes.set(`${method} ${path}`, () => Response.json(body, { status }));
+  }
+
+  /** The requests sent to one route, in order. */
+  sentTo(method: string, path: string): SentRequest[] {
+    return this.sent.filter((request) => request.method === method && request.path === path);
+  }
 
   /** A JSON answer with a status. */
   answer(status: number, body: unknown): void {
@@ -59,6 +71,7 @@ export class FakeApi {
   reset(): void {
     this.sent.length = 0;
     this.answers.length = 0;
+    this.routes.clear();
   }
 
   readonly fetch = async (input: Request): Promise<Response> => {
@@ -72,7 +85,7 @@ export class FakeApi {
       contentType: input.headers.get("Content-Type"),
       body: text === "" ? undefined : (JSON.parse(text) as unknown),
     });
-    const next = this.answers.shift();
+    const next = this.routes.get(`${input.method} ${url.pathname}`) ?? this.answers.shift();
     if (next === undefined)
       throw new Error(`No answer queued for ${input.method} ${url.pathname}.`);
     return next();
