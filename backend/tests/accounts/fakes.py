@@ -3,7 +3,16 @@
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from brazcar.accounts.domain import Account, AccountId, PhoneAlreadyRegisteredError
+from brazcar.accounts.domain import (
+    Account,
+    AccountId,
+    Invite,
+    InviteConflictError,
+    InviteId,
+    Issued,
+    PhoneAlreadyRegisteredError,
+    token_digest,
+)
 from brazcar.shared.domain.phone import PhoneNumber
 
 
@@ -25,6 +34,36 @@ class InMemoryAccountRepository:
 
     async def erase(self, account_id: AccountId) -> None:
         self._accounts.pop(account_id, None)
+
+
+class InMemoryInviteRepository:
+    def __init__(self) -> None:
+        self._invites: dict[InviteId, Invite] = {}
+
+    async def save(self, invite: Invite) -> None:
+        stored = self._invites.get(invite.id)
+        if stored is not None and stored.version != invite.version - 1:
+            raise InviteConflictError(invite.id)
+        self._invites[invite.id] = invite
+
+    async def by_invite_token(self, token: str) -> Invite | None:
+        digest = token_digest(token)
+        return next((i for i in self._invites.values() if i.invite_digest == digest), None)
+
+    async def by_email_token(self, token: str) -> Invite | None:
+        digest = token_digest(token)
+        return next(
+            (
+                i
+                for i in self._invites.values()
+                if not isinstance(i.progress, Issued) and i.progress.email_digest == digest
+            ),
+            None,
+        )
+
+    async def latest_for(self, phone: PhoneNumber) -> Invite | None:
+        own = [i for i in self._invites.values() if i.phone == phone]
+        return max(own, key=lambda i: (i.issued_at, i.id), default=None)
 
 
 class InMemoryCredentials:
