@@ -28,6 +28,19 @@ test("o mural lista as caronas que ainda vão sair, e só elas", async ({ page, 
   await snap(page, "board/full");
 });
 
+test("sem sessão, nenhum card do mural mostra nome de pessoa da semente, e o aviso de beta fechado aparece", async ({
+  page,
+  demo,
+}) => {
+  await openBoard(page);
+
+  for (const account of demo.accounts) {
+    await expect(page.getByText(account.displayName, { exact: true }), account.slug).toHaveCount(0);
+  }
+  await expect(page.getByText("BrazCar em beta fechado", { exact: false })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Entrar", exact: true }).first()).toBeVisible();
+});
+
 test("o filtro de dia vive na URL e recorta o mural", async ({ page, demo, snap }) => {
   const today = demo.dayAt(0);
   await openBoard(page);

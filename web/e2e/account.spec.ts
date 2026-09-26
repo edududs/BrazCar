@@ -291,7 +291,8 @@ test("excluir conta: o diálogo explica, confirma, e o telefone deixa de servir 
     .click();
   await expect(page.getByRole("heading", { name: "Caronas", exact: true, level: 1 })).toBeVisible();
   await expect(page.getByText("Conta excluída.")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Entrar", exact: true })).toBeVisible();
+  // A barra de abas e o aviso de beta fechado (D-171) oferecem "Entrar" cada um o seu.
+  await expect(page.getByRole("link", { name: "Entrar", exact: true }).first()).toBeVisible();
   await snap(page, "account/deleted");
 
   await page.goto("/entrar");

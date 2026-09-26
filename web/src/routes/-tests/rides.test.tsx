@@ -38,6 +38,9 @@ beforeEach(() => {
 
 describe("/caronas/$rideId", () => {
   it("shows the ride the address names, without tabs", async () => {
+    // Signed in: the driver's name is personal data, and the routing this test checks is not
+    // what is under test here (D-171).
+    serveShell(api, driverOut);
     api.serve("GET", "/api/rides/r1", 200, rideOut);
 
     await renderApp("/caronas/r1");
@@ -192,7 +195,12 @@ describe("/publicar", () => {
     await renderApp("/publicar");
 
     expect(await screen.findByText("Entre para publicar")).toBeDefined();
-    expect(screen.getByRole("link", { name: "Entrar" }).getAttribute("href")).toBe("/entrar");
+    // Two "Entrar" links now (D-171): the page's own and the closed-beta notice in the shell.
+    const links = screen.getAllByRole("link", { name: "Entrar" });
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(link.getAttribute("href")).toBe("/entrar");
+    }
   });
 
   it("an account without a car is asked to add one", async () => {
