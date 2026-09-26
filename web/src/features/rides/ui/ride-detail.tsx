@@ -134,7 +134,11 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
         {ride.notes === null ? null : (
           <Card>
             <h2 className="text-label font-bold tracking-[0.08em] text-ink-3 uppercase">
-              {ride.isMine ? "Suas observações" : `Observações de ${firstNameOf(ride.driverName)}`}
+              {ride.isMine
+                ? "Suas observações"
+                : ride.driverName === null
+                  ? "Observações"
+                  : `Observações de ${firstNameOf(ride.driverName)}`}
             </h2>
             <p className="text-base leading-[1.55] whitespace-pre-line text-ink text-pretty">
               {ride.notes}
@@ -213,13 +217,17 @@ function DriverCard({ ride, contact, locked, signedIn }: DriverCardProps) {
   return (
     <Card highlight={contact !== null}>
       <div className="flex items-center gap-3">
-        <Avatar name={ride.driverName} size={48} />
+        {ride.driverName === null ? null : <Avatar name={ride.driverName} size={48} />}
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-body font-bold">{ride.driverName}</span>
+          {ride.driverName === null ? null : (
+            <span className="text-body font-bold">{ride.driverName}</span>
+          )}
           <span className="text-sm text-ink-2">
-            {ride.car === null
-              ? "Anunciou num grupo de WhatsApp"
-              : `${ride.car.model} ${ride.car.color}`}
+            {ride.car !== null
+              ? `${ride.car.model} ${ride.car.color}`
+              : ride.origin === "whatsapp"
+                ? "Anunciou num grupo de WhatsApp"
+                : null}
           </span>
         </div>
         {ride.origin === "whatsapp" ? (

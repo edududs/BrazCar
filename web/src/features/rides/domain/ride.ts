@@ -43,7 +43,8 @@ export interface OriginMessage {
 /** A card of the board. Never the phone, never the plate (ADR-0006). */
 export interface Ride {
   readonly id: string;
-  readonly driverName: string;
+  /** `null` for a viewer without a session, who sees the board with no data about anyone (D-171). */
+  readonly driverName: string | null;
   /** `null` when the platform never saw the car: a ride read from WhatsApp. */
   readonly car: Car | null;
   readonly origin: RideOrigin;
