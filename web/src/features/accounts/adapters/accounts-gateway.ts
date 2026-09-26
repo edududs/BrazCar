@@ -6,6 +6,7 @@ import {
   AccountRequestError,
   type CarData,
   type ChangePasswordData,
+  type Invite,
   type LoginData,
   type OpenSignup,
   type ProfileChanges,
@@ -15,6 +16,7 @@ import {
 type AccountOut = components["schemas"]["AccountOut"];
 type ProfileIn = components["schemas"]["ProfileIn"];
 type SignupOut = components["schemas"]["SignupOut"];
+type InviteOut = components["schemas"]["InviteOut"];
 
 function toAccount(out: AccountOut): Account {
   return {
@@ -32,6 +34,15 @@ function toAccount(out: AccountOut): Account {
 
 function toOpenSignup(out: SignupOut): OpenSignup {
   return { phoneMasked: out.phone_masked, email: out.email, emailExpiresAt: out.email_expires_at };
+}
+
+function toInvite(out: InviteOut): Invite {
+  return {
+    status: out.status,
+    phoneMasked: out.phone_masked,
+    emailMasked: out.email_masked,
+    expiresAt: out.expires_at,
+  };
 }
 
 function detailOf(error: unknown): string | null {
@@ -63,6 +74,27 @@ export async function openSignup(emailToken: string, signal: AbortSignal): Promi
   });
   if (data === undefined) throw refused(response.status, error);
   return toOpenSignup(data);
+}
+
+/** Opens the invite's page (D-166, D-167): 404 unknown, 410 lapsed, superseded, spent or the
+ * phone already has an account by another way in. */
+export async function openInvite(token: string, signal: AbortSignal): Promise<Invite> {
+  const { data, error, response } = await apiClient.GET("/api/accounts/invites/{token}", {
+    params: { path: { token } },
+    signal,
+  });
+  if (data === undefined) throw refused(response.status, error);
+  return toInvite(data);
+}
+
+/** Mails the invite's own e-mail link, good for 2 hours; redigitar troca o link e o anterior
+ * morre (D-166). Refusals: 409 already an account, 410 gone, 422 invalid, 429 too many sends. */
+export async function giveInviteEmail(token: string, email: string): Promise<void> {
+  const { error, response } = await apiClient.POST("/api/accounts/invites/{token}/email", {
+    params: { path: { token } },
+    body: { email },
+  });
+  if (!response.ok) throw refused(response.status, error);
 }
 
 export async function signUp(input: SignupData): Promise<Account> {

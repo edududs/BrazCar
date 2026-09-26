@@ -24,6 +24,20 @@ export interface Account {
   readonly canDrive: boolean;
 }
 
+/** The invite's own situation, calculated by the API, never guessed by the front (D-166). */
+export type InviteStatus = "open" | "awaiting_email_confirmation";
+
+/** The invite's page (D-166, D-167): phone and e-mail come masked, so a forwarded link reveals
+ * only that. */
+export interface Invite {
+  readonly status: InviteStatus;
+  /** `+5561*****0001`. */
+  readonly phoneMasked: string;
+  /** Set once an e-mail was given and awaits its own confirmation link. */
+  readonly emailMasked: string | null;
+  readonly expiresAt: string;
+}
+
 /** The e-mail link's page, telephone and e-mail already fixed by the invite (D-167). */
 export interface OpenSignup {
   /** `+5561*****0001`, the invite's own mask. */

@@ -10,8 +10,10 @@ import {
   confirmPasswordReset,
   deleteAccount,
   fetchCurrentAccount,
+  giveInviteEmail,
   logIn,
   logOut,
+  openInvite,
   openSignup,
   removeCar,
   requestEmailChange,
@@ -93,6 +95,81 @@ describe("the current session", () => {
     const account = await fetchCurrentAccount(signal);
 
     expect(account).toMatchObject({ emailConfirmed: false, requiredAction: "confirm_email" });
+  });
+});
+
+describe("opening the invite (D-166, D-167)", () => {
+  it("shows the masked phone and prazo of an open invite", async () => {
+    api.answer(200, {
+      status: "open",
+      phone_masked: "+5561*****0001",
+      email_masked: null,
+      expires_at: "2026-09-01T14:00:00-03:00",
+    });
+
+    const invite = await openInvite("tok-1", signal);
+
+    expect(api.last()).toMatchObject({ method: "GET", path: "/api/accounts/invites/tok-1" });
+    expect(invite).toEqual({
+      status: "open",
+      phoneMasked: "+5561*****0001",
+      emailMasked: null,
+      expiresAt: "2026-09-01T14:00:00-03:00",
+    });
+  });
+
+  it("carries the masked e-mail once one is awaiting confirmation", async () => {
+    api.answer(200, {
+      status: "awaiting_email_confirmation",
+      phone_masked: "+5561*****0001",
+      email_masked: "a**@example.com",
+      expires_at: "2026-09-01T14:00:00-03:00",
+    });
+
+    const invite = await openInvite("tok-1", signal);
+
+    expect(invite.emailMasked).toBe("a**@example.com");
+  });
+
+  it("an unknown or spent invite is refused with the API's sentence", async () => {
+    api.answer(410, { detail: "Convite vencido. Peça um convite novo." });
+
+    await expect(openInvite("old", signal)).rejects.toMatchObject({
+      status: 410,
+      message: "Convite vencido. Peça um convite novo.",
+    });
+  });
+});
+
+describe("giving the invite's e-mail (D-166, D-167)", () => {
+  it("sends the e-mail to the invite's own route", async () => {
+    api.answer(202, { ok: true });
+
+    await giveInviteEmail("tok-1", "ana@example.com");
+
+    expect(api.last()).toMatchObject({
+      method: "POST",
+      path: "/api/accounts/invites/tok-1/email",
+      body: { email: "ana@example.com" },
+    });
+  });
+
+  it("an e-mail already with an account is refused with the API's sentence", async () => {
+    api.answer(409, { detail: "Este e-mail já tem conta." });
+
+    await expect(giveInviteEmail("tok-1", "outra@example.com")).rejects.toMatchObject({
+      status: 409,
+      message: "Este e-mail já tem conta.",
+    });
+  });
+
+  it("too many sends (429) passes the API's own limit along, never one invented here", async () => {
+    api.answer(429, { detail: "Muitos envios. Espere um pouco." });
+
+    await expect(giveInviteEmail("tok-1", "ana@example.com")).rejects.toMatchObject({
+      status: 429,
+      message: "Muitos envios. Espere um pouco.",
+    });
   });
 });
 

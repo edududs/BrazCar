@@ -111,6 +111,65 @@ describe("/cadastro", () => {
   });
 });
 
+describe("/convite", () => {
+  it("without a token, says the link is not valid and shows no form", async () => {
+    await renderApp("/convite");
+
+    expect(await screen.findByText(/Este link de convite não é válido\./)).toBeDefined();
+    expect(screen.queryByLabelText(/^E-mail/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Receber o link" })).toBeNull();
+  });
+
+  it("a spent or superseded invite says so, in the API's own words", async () => {
+    api.serve("GET", "/api/accounts/invites/old", 410, {
+      detail: "Convite vencido. Peça um convite novo.",
+    });
+
+    await renderApp("/convite?token=old");
+
+    expect(await screen.findByText(/Convite vencido\. Peça um convite novo\./)).toBeDefined();
+    expect(screen.queryByLabelText(/^E-mail/)).toBeNull();
+  });
+
+  it("open, shows the masked phone and prazo, then sends the e-mail and confirms it", async () => {
+    const user = userEvent.setup();
+    api.serve("GET", "/api/accounts/invites/tok-1", 200, {
+      status: "open",
+      phone_masked: "+5561*****0001",
+      email_masked: null,
+      expires_at: "2026-09-01T14:00:00-03:00",
+    });
+    api.serve("POST", "/api/accounts/invites/tok-1/email", 202, { ok: true });
+
+    await renderApp("/convite?token=tok-1");
+
+    expect(
+      await screen.findByText(/celular \+5561\*\*\*\*\*0001 e vale até 01\/09 às 14:00/),
+    ).toBeDefined();
+    await user.type(screen.getByLabelText(/^E-mail/), "ana@example.com{Enter}");
+
+    expect(await screen.findByText("Confirme seu e-mail")).toBeDefined();
+    expect(screen.getByText(/ana@example\.com/)).toBeDefined();
+    expect(api.sentTo("POST", "/api/accounts/invites/tok-1/email")[0]?.body).toEqual({
+      email: "ana@example.com",
+    });
+  });
+
+  it("already awaiting confirmation on a fresh open, shows the masked address without resend", async () => {
+    api.serve("GET", "/api/accounts/invites/tok-1", 200, {
+      status: "awaiting_email_confirmation",
+      phone_masked: "+5561*****0001",
+      email_masked: "a**@example.com",
+      expires_at: "2026-09-01T14:00:00-03:00",
+    });
+
+    await renderApp("/convite?token=tok-1");
+
+    expect(await screen.findByText(/a\*\*@example\.com/)).toBeDefined();
+    expect(screen.getByRole("button", { name: "Reenviar" })).toHaveProperty("disabled", true);
+  });
+});
+
 describe("/esqueci-senha", () => {
   it("asks for the link and answers the same for any number", async () => {
     const user = userEvent.setup();
