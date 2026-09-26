@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { components } from "@/shared/adapters/api/schema";
+import { AccountHeldError } from "@/shared/domain/account-held";
 
 import { AccountRequestError } from "../domain/account";
 import {
@@ -415,6 +416,22 @@ describe("editing the account", () => {
 
     api.answer(500, {});
     await expect(deleteAccount()).rejects.toMatchObject({ message: "Não foi possível excluir." });
+  });
+
+  it("a held account's write comes back as an AccountHeldError, not a refusal (D-168)", async () => {
+    api.answer(403, {
+      detail: "confirme seu e-mail para continuar",
+      required_action: "confirm_email",
+    });
+
+    const attempt = updateProfile({ displayName: "Ana Paula" });
+
+    await expect(attempt).rejects.toBeInstanceOf(AccountHeldError);
+    await expect(attempt).rejects.not.toBeInstanceOf(AccountRequestError);
+    await expect(attempt).rejects.toMatchObject({
+      action: "confirm_email",
+      message: "confirme seu e-mail para continuar",
+    });
   });
 });
 

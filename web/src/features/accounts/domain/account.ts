@@ -1,12 +1,13 @@
+import type { RequiredAction } from "@/shared/domain/account-held";
+
+export type { RequiredAction };
+
 export interface Car {
   readonly id: string;
   readonly model: string;
   readonly color: string;
   readonly plate: string;
 }
-
-/** What an account must do before it writes anything else (D-168). Only one exists today. */
-export type RequiredAction = "confirm_email";
 
 /** The signed-in person's own account. Nobody else's account ever reaches the front. */
 export interface Account {

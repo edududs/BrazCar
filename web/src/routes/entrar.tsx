@@ -2,14 +2,31 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { useSession } from "@/features/accounts/app/use-session";
 import { LoginForm } from "@/features/accounts/ui/login-form";
+import { isSafeReturnTo } from "@/shared/domain/safe-return-to";
 import { BrandMark } from "@/shared/ui/brand-mark";
 import { PageShell } from "@/shared/ui/page-shell";
 
-export const Route = createFileRoute("/entrar")({ component: LoginPage });
+interface LoginSearch {
+  /** Where to go back to once signed in, e.g. from `/confirmar-email` without a session yet.
+   * Optional, so every other `<Link to="/entrar">` keeps working without it. `null`/absent
+   * unless it is an internal path (`isSafeReturnTo`): never an open redirect. */
+  readonly returnTo?: string | null;
+}
+
+export const Route = createFileRoute("/entrar")({
+  validateSearch: (search: Record<string, unknown>): LoginSearch => ({
+    returnTo:
+      typeof search.returnTo === "string" && isSafeReturnTo(search.returnTo)
+        ? search.returnTo
+        : null,
+  }),
+  component: LoginPage,
+});
 
 /** Little text, each field explaining itself (S12). */
 function LoginPage() {
   const { logIn, busy } = useSession();
+  const { returnTo = null } = Route.useSearch();
   const navigate = useNavigate();
   return (
     <PageShell
@@ -18,7 +35,13 @@ function LoginPage() {
       lead={<BrandMark size={48} />}
       intro="Com o celular e a senha da sua conta."
     >
-      <LoginForm logIn={logIn} busy={busy} onDone={() => void navigate({ to: "/" })} />
+      <LoginForm
+        logIn={logIn}
+        busy={busy}
+        onDone={() =>
+          void (returnTo === null ? navigate({ to: "/" }) : navigate({ href: returnTo }))
+        }
+      />
     </PageShell>
   );
 }

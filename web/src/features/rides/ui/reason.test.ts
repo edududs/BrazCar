@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { AccountHeldError } from "@/shared/domain/account-held";
+
 import { RideRequestError } from "../domain/ride";
 import { reasonOf } from "./reason";
 
@@ -8,6 +10,12 @@ describe("reasonOf", () => {
     expect(reasonOf(new RideRequestError(422, "confira os dados da carona"))).toBe(
       "confira os dados da carona",
     );
+  });
+
+  it("is the API's own phrase for a held account, not a generic line (D-168)", () => {
+    expect(
+      reasonOf(new AccountHeldError("confirm_email", "confirme seu e-mail para continuar")),
+    ).toBe("confirme seu e-mail para continuar");
   });
 
   it("is a generic line for anything else", () => {

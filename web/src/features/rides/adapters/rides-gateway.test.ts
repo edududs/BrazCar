@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { components } from "@/shared/adapters/api/schema";
 
+import { AccountHeldError } from "@/shared/domain/account-held";
+
 import { noFilters } from "../domain/board";
 import { type RideDraft, RideRequestError } from "../domain/ride";
 import {
@@ -245,6 +247,19 @@ describe("refusals and failures", () => {
     const error = await refusal(fetchRide("0b1c", signal));
 
     expect(error).toBeInstanceOf(SyntaxError);
+  });
+
+  it("a held account's 403 becomes an AccountHeldError, not a RideRequestError (D-168)", async () => {
+    api.answer(403, {
+      detail: "confirme seu e-mail para continuar",
+      required_action: "confirm_email",
+    });
+
+    const error = await refusal(requestContact("0b1c"));
+
+    expect(error).toBeInstanceOf(AccountHeldError);
+    expect(error).not.toBeInstanceOf(RideRequestError);
+    expect(error).toMatchObject({ message: "confirme seu e-mail para continuar" });
   });
 });
 

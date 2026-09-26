@@ -1,7 +1,7 @@
 import type { driverOut } from "@/shared/adapters/api-answers.fixture";
 import type { FakeApi } from "@/shared/testing/fake-api";
 
-export { driverOut, myRideOut, rideOut } from "@/shared/adapters/api-answers.fixture";
+export { driverOut, heldOut, myRideOut, rideOut } from "@/shared/adapters/api-answers.fixture";
 
 /** What every screen asks on the way in: who is signed in and the version floor. */
 export function serveShell(api: FakeApi, account: typeof driverOut | null): void {

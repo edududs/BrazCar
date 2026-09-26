@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import { ActionButton } from "@/shared/ui/action-button";
 import { Avatar } from "@/shared/ui/avatar";
-import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Form } from "@/shared/ui/form";
 import { Icon } from "@/shared/ui/icon";
 import { IconButton } from "@/shared/ui/icon-button";
@@ -15,6 +14,7 @@ import { TextField } from "@/shared/ui/text-field";
 import { Toast } from "@/shared/ui/toast";
 
 import type { Account, CarData, ChangePasswordData, ProfileChanges } from "../domain/account";
+import { DeleteAccountDialog } from "./delete-account-dialog";
 import { reasonOf } from "./reason";
 
 interface AccountPanelProps {
@@ -253,23 +253,13 @@ export function AccountPanel({
           />
         ) : null}
       </Sheet>
-      <ConfirmDialog
+      <DeleteAccountDialog
         open={open === "delete"}
         onOpenChange={(next) => {
           if (!next) close();
         }}
-        title="Excluir sua conta?"
-        description={
-          <>
-            A conta some e as caronas publicadas por ela saem do mural. Esta ação não pode ser
-            desfeita. Depois disso, o celular{" "}
-            <b className="text-ink tabular-nums">{account.phoneDisplay}</b> não entra mais com esta
-            senha.
-          </>
-        }
-        confirmLabel="Excluir conta"
+        phoneDisplay={account.phoneDisplay}
         busy={busy}
-        icon={<Icon name="alert" size={24} />}
         onConfirm={() => {
           close();
           deleteAccount().then(onDeleted, fail);

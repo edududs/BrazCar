@@ -18,6 +18,14 @@ export const driverOut: AccountOut = {
   terms_accepted_at: "2026-09-01T10:00:00-03:00",
 };
 
+/** A person from before the invite, with an e-mail nobody has proven yet (D-168). */
+export const heldOut: AccountOut = {
+  ...driverOut,
+  email: "ana@example.com",
+  email_confirmed: false,
+  required_action: "confirm_email",
+};
+
 /** A ride on the board, a day in the future so no clock makes it leave. */
 export const rideOut: RideOut = {
   id: "r1",

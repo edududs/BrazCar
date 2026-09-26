@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Session } from "@/features/accounts/domain/session";
+import { AccountHeldError } from "@/shared/domain/account-held";
 import { BOARD_UTC_OFFSET } from "@/shared/domain/board-time-zone";
 import { renderRouted } from "@/shared/testing/render-routed";
 
@@ -111,6 +112,23 @@ describe("RideDetail for the driver", () => {
     await user.click(screen.getByRole("button", { name: "Pôr uma vaga" }));
 
     expect((await screen.findByRole("alert")).textContent).toBe("A carona já saiu.");
+  });
+
+  it("a held account's refusal shows the phrase and a way to fix it, not a generic message (D-168)", async () => {
+    const user = userEvent.setup();
+    const actions = actionsFor(mine, {
+      changeSeats: vi.fn(() =>
+        Promise.reject(new AccountHeldError("confirm_email", "confirme seu e-mail para continuar")),
+      ),
+    });
+    await show(mine, { actions });
+
+    await user.click(screen.getByRole("button", { name: "Pôr uma vaga" }));
+
+    expect(await screen.findByText("confirme seu e-mail para continuar")).toBeDefined();
+    expect(screen.getByRole("link", { name: "Ir para minha conta" }).getAttribute("href")).toBe(
+      "/conta",
+    );
   });
 
   it("offers editing as a link to the edit page", async () => {
