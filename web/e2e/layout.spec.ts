@@ -49,7 +49,7 @@ test("detalhe: rolado até o fim, o último cartão termina acima da barra de a�
   // como passageira devolve o texto que estica a tela até perto da barra fixa.
   await signIn(page, "passenger");
   await openRide(page, demo.ride("open_today_long_notes").id);
-  const action = page.getByRole("link", { name: "Entrar para pedir contato", exact: true });
+  const action = page.getByRole("button", { name: "Pedir contato", exact: true });
   const lastCard = page.locator("main section").last();
   await expect(action).toBeVisible();
 
