@@ -13,7 +13,7 @@ from brazcar.accounts.adapters.repository import DjangoAccountRepository
 from brazcar.accounts.domain import Account, Invite, InviteStatus
 
 PHONE = "+5561999990001"
-LANDLINE = "+556132540000"  # a valid Brazilian number, but not a mobile: WhatsApp reaches none of it
+LANDLINE = "+556132540000"  # a valid Brazilian number, but not a mobile: the contact is WhatsApp only
 ACCOUNT_PHONE = "+5561999990002"
 
 
@@ -25,9 +25,7 @@ async def _run(*args: str) -> list[str]:
 
 
 def _token_from(lines: list[str]) -> str:
-    link = next(line for line in lines if line.startswith("Link: "))
-    query = parse_qs(urlparse(link.removeprefix("Link: ")).query)
-    return query["token"][0]
+    return parse_qs(urlparse(lines[0]).query)["token"][0]
 
 
 async def _invite(lines: list[str]) -> Invite:
@@ -39,15 +37,14 @@ async def _invite(lines: list[str]) -> Invite:
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.usefixtures("worker_thread_connections_closed")
 class TestInviteCommand:
-    async def test_prints_the_link_the_expiry_and_the_whatsapp_message(self) -> None:
+    async def test_the_first_line_is_only_the_link_and_the_second_only_the_deadline(self) -> None:
         lines = await _run(PHONE)
 
         invite = await _invite(lines)
         assert invite.phone.e164() == PHONE
+        assert lines[0] == f"http://localhost:5173/convite?token={_token_from(lines)}"
         expires = timezone.localtime(invite.expires_at).strftime("%d/%m às %H:%M")
-        assert any(line == f"Vence em {expires}" for line in lines)
-        wa_line = next(line for line in lines if line.startswith("WhatsApp: "))
-        assert wa_line.startswith("WhatsApp: https://wa.me/5561999990001?text=")
+        assert lines[1] == f"Vale até {expires} (horário de Brasília)."
 
     async def test_hours_sets_the_lifetime(self) -> None:
         lines = await _run(PHONE, "--hours", "1")

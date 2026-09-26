@@ -1,7 +1,7 @@
 """Storage of invites (D-166): one thread hop and one transaction per write (ADR-0008)."""
 
 from asgiref.sync import sync_to_async
-from django.db import IntegrityError, OperationalError, connection, transaction
+from django.db import IntegrityError, transaction
 
 from brazcar.accounts.domain import Consumed, EmailGiven, Invite, InviteConflictError, Issued, token_digest
 from brazcar.shared.domain.phone import PhoneNumber
@@ -13,10 +13,7 @@ class DjangoInviteRepository:
     """`InviteRepository` over the ORM. `save` writes the whole row, optimistic on `version`."""
 
     async def save(self, invite: Invite) -> None:
-        # `thread_sensitive=False`: a genuine second thread, not the one shared executor every
-        # other `sync_to_async` call in this process serializes onto. Two concurrent issuers need
-        # a real race to prove the version check settles it (tests/contracts/invite_repository.py).
-        await sync_to_async(_save, thread_sensitive=False)(invite)
+        await sync_to_async(_save)(invite)
 
     async def by_invite_token(self, token: str) -> Invite | None:
         return await sync_to_async(_by)(invite_digest=token_digest(token))
@@ -53,16 +50,6 @@ def _save(invite: Invite) -> None:
             if updated == 0:
                 InviteModel.objects.create(id=invite.id, version=invite.version, **fields)
     except IntegrityError as error:
-        raise InviteConflictError(invite.id) from error
-    except OperationalError as error:
-        # SQLite locks the whole file while a write is in flight; two real threads racing to
-        # update the same row can make the loser wait past its busy timeout and surface a plain
-        # "database is locked" here, instead of the clean zero-rows-updated conflict a database
-        # with row-level locking gives. Read it as the same conflict it always was - and only
-        # here: on Postgres this branch never matches, so a genuine operational failure still
-        # raises.
-        if connection.vendor != "sqlite" or "locked" not in str(error).lower():
-            raise
         raise InviteConflictError(invite.id) from error
 
 
