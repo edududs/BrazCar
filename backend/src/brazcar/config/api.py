@@ -13,7 +13,9 @@ from brazcar.feedback.adapters.composition import feedback_router
 from brazcar.places.adapters.repository import DjangoCatalogRepository
 from brazcar.places.adapters.routes import build_router as build_places_router
 from brazcar.rides.adapters.composition import rides_router
+from brazcar.shared.adapters.api_errors import HeldOut
 from brazcar.shared.adapters.health import router as health_router
+from brazcar.shared.adapters.session_auth import AccountHeldError
 from brazcar.shared.adapters.sse_diagnostics import router as sse_diagnostics_router
 from brazcar.shared.adapters.web_version import router as web_version_router
 
@@ -41,3 +43,11 @@ def _domain_validation_error(request: HttpRequest, exc: ValidationError) -> Http
     return api.create_response(
         request, {"detail": "confira os dados enviados"}, status=HTTPStatus.UNPROCESSABLE_CONTENT
     )
+
+
+@api.exception_handler(AccountHeldError)
+def _account_held(request: HttpRequest, exc: AccountHeldError) -> HttpResponse:
+    """A signed-in account that must do something before it writes (D-168): the refusal says what,
+    so the front leads the person there without guessing from the words."""
+    held = HeldOut(detail=exc.message, required_action=exc.required_action)
+    return api.create_response(request, held.model_dump(), status=HTTPStatus.FORBIDDEN)

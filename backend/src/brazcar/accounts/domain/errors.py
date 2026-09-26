@@ -73,6 +73,13 @@ class InvalidResetTokenError(AccountError):
         super().__init__("the password reset link is invalid or expired")
 
 
+class InvalidConfirmationLinkError(AccountError):
+    """The e-mail link does not serve this account now: forged, another account's, lapsed or spent."""
+
+    def __init__(self) -> None:
+        super().__init__("the e-mail confirmation link is invalid or expired")
+
+
 class TooManyAttemptsError(AccountError):
     def __init__(self) -> None:
         super().__init__("too many attempts for now; try again later")

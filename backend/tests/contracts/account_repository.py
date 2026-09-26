@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -9,6 +10,8 @@ from brazcar.shared.domain.phone import PhoneNumber
 from tests.accounts.strategies import accounts
 
 from . import contract_settings
+
+CONFIRMED_AT = datetime(2026, 9, 26, 12, 0, tzinfo=UTC)
 
 
 class AccountRepositoryContract:
@@ -75,7 +78,9 @@ class AccountRepositoryContract:
     @given(account=accounts())
     async def test_updating_the_display_name_and_email_persists(self, account: Account) -> None:
         repository = self.make_repository()
-        changed = account.update_profile(display_name="Nome Novo", email="novo@example.com")
+        changed = account.update_profile(display_name="Nome Novo").confirm_email(
+            "novo@example.com", CONFIRMED_AT
+        )
         await self._free(repository, account, changed)
         await repository.save(account)
 
@@ -86,12 +91,14 @@ class AccountRepositoryContract:
     @contract_settings
     @given(account=accounts())
     async def test_clearing_the_email_persists(self, account: Account) -> None:
+        """No route clears an e-mail any more (D-168), but an account from before the invite may
+        have none, and the repository keeps that as it is."""
         repository = self.make_repository()
-        with_email = account.update_profile(email="tinha@example.com")
+        with_email = account.confirm_email("tinha@example.com", CONFIRMED_AT)
         await self._free(repository, with_email)
         await repository.save(with_email)
 
-        cleared = with_email.update_profile(email="")
+        cleared = with_email.evolve(email=None, email_confirmed_at=None)
         await repository.save(cleared)
 
         assert await repository.get(account.id) == cleared
@@ -124,8 +131,8 @@ class AccountRepositoryContract:
     async def test_an_email_belongs_to_one_account_case_aside(self, one: Account, other: Account) -> None:
         assume(one.phone != other.phone)
         repository = self.make_repository()
-        one = one.update_profile(email="dono@example.com")
-        other = other.update_profile(email="DONO@Example.com")
+        one = one.confirm_email("dono@example.com", CONFIRMED_AT)
+        other = other.confirm_email("DONO@Example.com", CONFIRMED_AT)
         await self._free(repository, one, other)
 
         await repository.save(one)

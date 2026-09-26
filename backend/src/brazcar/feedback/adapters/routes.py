@@ -7,6 +7,7 @@ from django.http import HttpRequest
 from ninja import Field, Router, Schema
 from ninja.errors import HttpError
 from ninja.responses import Status
+from ninja.security.base import AuthBase
 from pydantic import ValidationError
 
 from brazcar.feedback.application import SendFeedback
@@ -19,7 +20,7 @@ from brazcar.feedback.domain import (
 )
 from brazcar.shared.adapters.api_errors import with_errors
 from brazcar.shared.adapters.phone_input import INVALID_PHONE
-from brazcar.shared.adapters.session_auth import session_auth, signed_in_account_id
+from brazcar.shared.adapters.session_auth import signed_in_account_id
 from brazcar.shared.domain.phone import InvalidPhoneNumberError
 
 
@@ -30,15 +31,20 @@ class FeedbackIn(Schema):
     web_version: str = Field(max_length=VERSION_LIMIT)
 
 
-def build_router(send: SendFeedback) -> Router:
+def build_router(send: SendFeedback, writer: AuthBase) -> Router:
+    """`writer`: an account held until it confirms its e-mail gets 403 (D-168)."""
     router = Router(tags=["feedback"])
 
     @router.post(
         "",
         response=with_errors(
-            {HTTPStatus.NO_CONTENT: None}, unauthorized=True, too_many_requests=True, validation=True
+            {HTTPStatus.NO_CONTENT: None},
+            unauthorized=True,
+            held=True,
+            too_many_requests=True,
+            validation=True,
         ),
-        auth=session_auth,
+        auth=writer,
         operation_id="send_feedback",
     )
     async def send_feedback(request: HttpRequest, data: FeedbackIn) -> Status[None]:

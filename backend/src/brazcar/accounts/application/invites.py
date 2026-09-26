@@ -23,6 +23,7 @@ from brazcar.shared.application.ports import Clock, Mailer, RateLimiter
 from brazcar.shared.domain.phone import PhoneNumber
 
 from .ports import AccountRepository, Credentials, InviteRepository
+from .wording import in_hours
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,7 +137,7 @@ class GiveInviteEmail:
                 "Olá.\n\n"
                 "Para confirmar este e-mail e terminar seu cadastro no BrazCar, abra o link abaixo:\n"
                 f"{self.signup_link.format(token=email_token)}\n\n"
-                f"O link vale {_hours(self.policy.email_link_lifetime)}. "
+                f"O link vale {in_hours(self.policy.email_link_lifetime)}. "
                 "Se você não pediu isso, ignore esta mensagem."
             ),
         )
@@ -220,8 +221,3 @@ async def _awaiting_confirmation(
             return given
         case _:  # the e-mail link lapsed, and the invite reads open again (D-166)
             raise InviteExpiredError
-
-
-def _hours(span: timedelta) -> str:
-    hours = int(span.total_seconds() // 3600)
-    return "1 hora" if hours == 1 else f"{hours} horas"

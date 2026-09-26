@@ -8,14 +8,22 @@ from .invites import (
     RegisterFromInvite,
     SignupView,
 )
-from .ports import AccountRepository, Credentials, InviteRepository, PasswordResetTokens
+from .ports import (
+    AccountRepository,
+    Credentials,
+    EmailConfirmationTokens,
+    InviteRepository,
+    PasswordResetTokens,
+)
 from .use_cases import (
     AccountLimits,
     AddCar,
     ChangePassword,
+    ConfirmEmail,
     DeleteAccount,
     LogIn,
     RemoveCar,
+    RequestEmailChange,
     RequestPasswordReset,
     ResetPassword,
     UpdateProfile,
@@ -26,8 +34,10 @@ __all__ = [
     "AccountRepository",
     "AddCar",
     "ChangePassword",
+    "ConfirmEmail",
     "Credentials",
     "DeleteAccount",
+    "EmailConfirmationTokens",
     "GiveInviteEmail",
     "InviteLimits",
     "InviteRepository",
@@ -39,6 +49,7 @@ __all__ = [
     "PasswordResetTokens",
     "RegisterFromInvite",
     "RemoveCar",
+    "RequestEmailChange",
     "RequestPasswordReset",
     "ResetPassword",
     "SignupView",

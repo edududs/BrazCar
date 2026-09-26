@@ -7,6 +7,7 @@ from brazcar.accounts.domain import (
     Account,
     AccountId,
     EmailAlreadyRegisteredError,
+    EmailConfirmation,
     Invite,
     InviteConflictError,
     InviteId,
@@ -103,6 +104,22 @@ class InMemoryResetTokens:
 
     async def redeem(self, token: str) -> UUID | None:
         return self.issued.pop(token, None)
+
+
+class InMemoryEmailConfirmationTokens:
+    """Like the signed adapter, a token reads back as often as it is presented: nothing is spent
+    here, the domain decides whether the confirmation still holds."""
+
+    def __init__(self) -> None:
+        self.issued: dict[str, EmailConfirmation] = {}
+
+    async def issue(self, confirmation: EmailConfirmation) -> str:
+        token = uuid4().hex
+        self.issued[token] = confirmation
+        return token
+
+    async def read(self, token: str) -> EmailConfirmation | None:
+        return self.issued.get(token)
 
 
 class RecordingMailer:

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Self
+from typing import Annotated, Literal, Self
 from uuid import UUID, uuid4
 
 from pydantic import EmailStr, StringConstraints, model_validator
@@ -13,6 +13,8 @@ from .license_plate import LicensePlate
 type AccountId = UUID
 type CarId = UUID
 type ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
+type RequiredAction = Literal["confirm_email"]
+"""What an account must do before it changes anything else (D-168). One value for now."""
 
 
 class Car(FrozenModel):
@@ -86,6 +88,12 @@ class Account(FrozenModel):
         return self.email_confirmed_at is not None
 
     @property
+    def required_action(self) -> RequiredAction | None:
+        """Computed, never stored (D-168): an account without a confirmed e-mail is held until it
+        confirms one, since the e-mail is what makes the account answerable (D-160)."""
+        return None if self.email_confirmed else "confirm_email"
+
+    @property
     def can_drive(self) -> bool:
         """Publishing a ride needs a car (D-029). `rides` reads this, never the cars themselves."""
         return bool(self.cars)
@@ -101,25 +109,17 @@ class Account(FrozenModel):
             raise CarNotFoundError(car_id)
         return self.evolve(cars=tuple(car for car in self.cars if car.id != car_id))
 
-    def update_profile(self, *, display_name: str | None = None, email: str | None = None) -> Self:
-        """The only two fields the account edits about itself (D-139).
+    def update_profile(self, *, display_name: str | None = None) -> Self:
+        """The display name, the only personal data the account edits by itself (D-139, D-168).
 
-        `None` leaves a field as is; an absent `display_name` never happens over HTTP, since it is
-        required, but a blank one is still refused here, by the same rule as registration. A blank
-        `email` clears it. A different e-mail, or none, loses the confirmation: it was the old
-        address that was proven, not this one. The phone stays out of reach until there is a way to
-        prove it is still the same owner (D-027); the password has its own path (`ChangePassword`).
+        `None` leaves it as is; a blank one is refused here, by the same rule as registration. The
+        e-mail changes only through a confirmed link (`confirm_email`); the phone stays out of reach
+        until there is a way to prove it is still the same owner (D-027); the password has its own
+        path (`ChangePassword`).
         """
-        changes: dict[str, object] = {}
-        if display_name is not None:
-            changes["display_name"] = display_name
-        if email is not None:
-            changes["email"] = email or None
-            if not _same_address(email, self.email):
-                changes["email_confirmed_at"] = None
-        return self if not changes else self.evolve(**changes)
+        return self if display_name is None else self.evolve(display_name=display_name)
 
-
-def _same_address(typed: str, stored: str | None) -> bool:
-    """Case aside, as the uniqueness of e-mails reads them (D-167)."""
-    return stored is not None and typed.strip().casefold() == stored.casefold()
+    def confirm_email(self, email: str, now: datetime) -> Self:
+        """The address a link just proved reaches the owner (D-168): it replaces the current one,
+        confirmed as of `now`."""
+        return self.evolve(email=email, email_confirmed_at=now)

@@ -107,6 +107,10 @@ PASSWORD_RESET_LINK = os.environ.get(
 INVITE_LINK = os.environ.get("INVITE_LINK", "http://localhost:5173/convite?token={token}")
 # The front's page that receives the e-mail link's token, to finish the registration (D-167).
 SIGNUP_LINK = os.environ.get("SIGNUP_LINK", "http://localhost:5173/cadastro?token={token}")
+# The front's page that receives the token of the link confirming a new e-mail (D-168).
+EMAIL_CONFIRM_LINK = os.environ.get(
+    "EMAIL_CONFIRM_LINK", "http://localhost:5173/confirmar-email?token={token}"
+)
 
 # The front lives on a sibling origin (D-058). Explicit origins only, with credentials (D-059).
 CORS_ALLOWED_ORIGINS = _env_list("DJANGO_CORS_ALLOWED_ORIGINS", default=[])

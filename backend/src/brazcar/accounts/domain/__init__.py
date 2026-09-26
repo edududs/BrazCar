@@ -1,11 +1,13 @@
-from .account import Account, AccountId, Car, CarId, ShortText
+from .account import Account, AccountId, Car, CarId, RequiredAction, ShortText
 from .account_phone import AccountPhone, account_phone
+from .email_confirmation import EMAIL_LINK_LIFETIME, EmailConfirmation
 from .errors import (
     AccountError,
     AccountNotFoundError,
     CarNotFoundError,
     EmailAlreadyRegisteredError,
     ForeignPhoneNumberError,
+    InvalidConfirmationLinkError,
     InvalidCredentialsError,
     InvalidResetTokenError,
     InviteAlreadyUsedError,
@@ -35,6 +37,7 @@ from .invite import (
 from .license_plate import LicensePlate, normalize_license_plate
 
 __all__ = [
+    "EMAIL_LINK_LIFETIME",
     "Account",
     "AccountError",
     "AccountId",
@@ -45,8 +48,10 @@ __all__ = [
     "CarNotFoundError",
     "Consumed",
     "EmailAlreadyRegisteredError",
+    "EmailConfirmation",
     "EmailGiven",
     "ForeignPhoneNumberError",
+    "InvalidConfirmationLinkError",
     "InvalidCredentialsError",
     "InvalidResetTokenError",
     "Invite",
@@ -65,6 +70,7 @@ __all__ = [
     "NotAMobilePhoneError",
     "PhoneAlreadyRegisteredError",
     "PlateAlreadyOnAccountError",
+    "RequiredAction",
     "ShortText",
     "TokenDigest",
     "TooManyAttemptsError",

@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from brazcar.accounts.domain import Account, AccountId, Invite
+from brazcar.accounts.domain import Account, AccountId, EmailConfirmation, Invite
 from brazcar.shared.domain.phone import PhoneNumber
 
 
@@ -41,6 +41,17 @@ class PasswordResetTokens(Protocol):
 
     async def redeem(self, token: str) -> AccountId | None:
         """The account the token was issued for, once, while it is still valid."""
+        ...
+
+
+class EmailConfirmationTokens(Protocol):
+    """The token of the link that confirms a new e-mail (D-168): signed, and nothing stored. It
+    carries the whole `EmailConfirmation`; whether that still holds is the domain's to say."""
+
+    async def issue(self, confirmation: EmailConfirmation) -> str: ...
+
+    async def read(self, token: str) -> EmailConfirmation | None:
+        """What the token was signed over; `None` when it is forged or malformed."""
         ...
 
 

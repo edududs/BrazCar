@@ -1,13 +1,16 @@
-"""`Credentials` and `PasswordResetTokens` on Django's password hashing and token generator."""
+"""`Credentials`, `PasswordResetTokens` and `EmailConfirmationTokens` on Django's password
+hashing, token generator and signing."""
 
 from dataclasses import dataclass, field
 from uuid import UUID
 
 from asgiref.sync import sync_to_async
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core import signing
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from pydantic import ValidationError
 
-from brazcar.accounts.domain import AccountId
+from brazcar.accounts.domain import AccountId, EmailConfirmation
 from brazcar.shared.domain.phone import PhoneNumber
 
 from .models import User
@@ -65,3 +68,23 @@ class DjangoPasswordResetTokens:
         if user is None or not self.generator.check_token(user, check):
             return None
         return user.id
+
+
+@dataclass(frozen=True, slots=True)
+class DjangoEmailConfirmationTokens:
+    """The whole `EmailConfirmation`, signed with `SECRET_KEY` under its own salt, so no other
+    signed value of the project passes for one (D-168). Signed, not encrypted: the new address and
+    the account travel readable, and the link goes only to that address. Nothing is stored; the
+    deadline is inside and the domain checks it."""
+
+    salt: str = "brazcar.accounts.email-confirmation"
+
+    async def issue(self, confirmation: EmailConfirmation) -> str:
+        return signing.dumps(confirmation.model_dump(mode="json"), salt=self.salt, compress=True)
+
+    async def read(self, token: str) -> EmailConfirmation | None:
+        try:
+            signed: object = signing.loads(token, salt=self.salt)
+            return EmailConfirmation.model_validate(signed)
+        except signing.BadSignature, ValidationError:
+            return None
