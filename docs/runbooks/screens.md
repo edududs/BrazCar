@@ -57,6 +57,9 @@ tentativa: a retentativa do GitHub acharia "este telefone já tem conta" se usas
 primeira. A semente reserva jornadas × tentativas × projetos (`SUITE_JOURNEYS`, `SUITE_ATTEMPTS` e
 `SUITE_PROJECTS` em `dataset.py`); jornada nova que registra conta aumenta `SUITE_JOURNEYS`.
 
+O servidor da suíte grava os e-mails em arquivo (`EMAIL_BACKEND` e `EMAIL_FILE_PATH` do ambiente),
+para a fixture do front ler o link de cadastro direto do disco em vez do `mail.outbox` dos testes.
+
 Localizador por papel usa o nome exato (`exact: true`). Sem isso o nome casa por trecho, e o modo
 estrito só reclama quando os dois elementos aparecem juntos: a aba "Conta" e o link "Criar conta"
 na tela de entrar derrubaram a `v0.20.1` no GitHub. Para ver o GitHub aqui:

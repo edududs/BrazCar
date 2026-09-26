@@ -14,6 +14,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.http import HttpResponse
 
+from brazcar.accounts.adapters.composition import issue_invite
 from brazcar.accounts.adapters.models import InviteModel, User
 from brazcar.demo.adapters import dataset as data
 from brazcar.demo.adapters.seeding import DemoManifest
@@ -67,7 +68,9 @@ def test_the_longest_note_is_exactly_the_limit() -> None:
 
 
 def test_the_demonstration_phones_are_invented_and_all_different() -> None:
-    phones = [person.phone for person in data.PEOPLE] + list(data.SUITE_PHONES)
+    phones = (
+        [person.phone for person in data.PEOPLE] + list(data.SUITE_PHONES) + list(data.SUITE_LEGACY_PHONES)
+    )
 
     assert len(set(phones)) == len(phones)
     assert all(phone.startswith("+55619000000") for phone in phones)
@@ -88,9 +91,9 @@ async def test_refuses_outside_debug() -> None:
 async def test_seeds_everything_it_promises(tmp_path: Path) -> None:
     seeded = await _seed(tmp_path / "manifest.json")
 
-    # Contas: uma de cada feitio (D-133).
+    # Contas: uma de cada feitio (D-133), mais as antigas reservadas para a suíte (D-168).
     assert len(seeded.accounts) == len(data.PEOPLE)
-    assert await User.objects.acount() == len(data.PEOPLE)
+    assert await User.objects.acount() == len(data.PEOPLE) + len(data.SUITE_LEGACY_PHONES)
     cars = {account.slug: len(account.cars) for account in seeded.accounts}
     assert cars[data.DRIVER_ONE_CAR.slug] == 1
     assert cars[data.DRIVER_TWO_CARS.slug] == 2
@@ -148,6 +151,13 @@ async def test_seeds_everything_it_promises(tmp_path: Path) -> None:
     assert seeded.legacy_person == data.DRIVER_NO_CAR.slug
     with_email = {person.slug for person in data.PEOPLE if person.email is not None}
     assert with_email == {account.slug for account in seeded.accounts} - {seeded.legacy_person}
+
+    # Contas antigas da própria suíte: uma por projeto x tentativa, sem e-mail (D-168).
+    assert seeded.suite_legacy_phones == data.SUITE_LEGACY_PHONES
+    assert len(seeded.suite_legacy_phones) == data.SUITE_PROJECTS * data.SUITE_ATTEMPTS
+    assert await User.objects.filter(phone__in=data.SUITE_LEGACY_PHONES, email__isnull=True).acount() == len(
+        data.SUITE_LEGACY_PHONES
+    )
 
 
 @pytest.mark.django_db(transaction=True)
@@ -242,3 +252,48 @@ async def test_only_the_legacy_person_is_held_from_writing(tmp_path: Path) -> No
     assert held.status_code == HTTPStatus.FORBIDDEN
     assert body(held) == {"detail": "confirme seu e-mail para continuar", "required_action": "confirm_email"}
     assert writing.status_code == HTTPStatus.OK
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.usefixtures("worker_thread_connections_closed")
+async def test_the_suites_own_legacy_accounts_sign_in_and_are_held_too(tmp_path: Path) -> None:
+    """One account without a confirmed e-mail per project x attempt, none of them `legacy_person`:
+    the suite's own e-mail confirmation journey never touches the shared, retained account the
+    screens catalogue keeps for its page (D-168)."""
+    seeded = await _seed(tmp_path / "manifest.json")
+    car = {"model": "Fiesta", "color": "azul", "plate": "DEM4X44"}
+
+    for phone in seeded.suite_legacy_phones:
+        client = Browser()
+        signed_in = await client.post("/api/accounts/login", {"phone": phone, "password": data.PASSWORD})
+        held = await client.post("/api/accounts/cars", car)
+
+        assert signed_in.status_code == HTTPStatus.OK, signed_in.content
+        assert held.status_code == HTTPStatus.FORBIDDEN
+        assert body(held) == {
+            "detail": "confirme seu e-mail para continuar",
+            "required_action": "confirm_email",
+        }
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.usefixtures("worker_thread_connections_closed")
+async def test_the_invite_email_step_writes_the_signup_link_to_a_file(
+    tmp_path: Path, settings: object
+) -> None:
+    """What the suite's server does when the environment points `EMAIL_BACKEND` at Django's own
+    filebased backend and gives it `EMAIL_FILE_PATH` (D-133, D-134): the front's fixture reads the
+    registration link off that file, because `mail.outbox` only exists inside this test process."""
+    email_dir = tmp_path / "outbox"
+    email_dir.mkdir()
+    setattr(settings, "EMAIL_BACKEND", "django.core.mail.backends.filebased.EmailBackend")  # noqa: B010
+    setattr(settings, "EMAIL_FILE_PATH", str(email_dir))  # noqa: B010
+    _, token = await issue_invite()(phone="61 99999-0098")
+    client = Browser()
+
+    given = await client.post(f"/api/accounts/invites/{token}/email", {"email": "leitor@example.com"})
+
+    assert given.status_code == HTTPStatus.ACCEPTED
+    written = list(email_dir.iterdir())
+    assert len(written) == 1
+    assert "cadastro?token=" in written[0].read_text(encoding="utf-8")

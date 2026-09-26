@@ -93,7 +93,8 @@ IMPORTED_OWNER = DemoPerson(
 )
 """The account whose phone a group message carries: its imported ride is hers (D-127)."""
 
-SUITE_JOURNEYS = 5  # sign-up, deleting it, changing its password, editing it, a wrong password first
+SUITE_JOURNEYS = 6  # sign-up, deleting it, changing its password, editing it, a wrong password
+# first, and the whole invite journey: open the invite, retype the e-mail, read the link, register
 SUITE_PROJECTS = 3  # `mobile`, `mobile-dark` and `desktop`
 SUITE_ATTEMPTS = 2  # the first run of a test and the one retry the CI allows
 SUITE_PHONES: tuple[str, ...] = tuple(
@@ -106,6 +107,17 @@ database of a run (`workers: 1`), and a retried test must not find the account i
 already created: the phone is at `(journey * attempts + retry) * projects + project`. A seeded
 account never has its password or e-mail changed by a test, so the second project to touch it in
 the same run still finds what the manifest promised."""
+
+SUITE_LEGACY_PHONES: tuple[str, ...] = tuple(
+    f"+55619000000{90 + index}" for index in range(SUITE_PROJECTS * SUITE_ATTEMPTS)
+)
+"""One seeded account from before the invite (D-168), without a confirmed e-mail, per project x
+attempt: the same index the suite uses for `sparePhone`, at `journey = 0`, since there is no
+journey here to multiply by — the account exists from the first request, not from a sign-up the
+test performs. `driver_no_car` stays the one shared, retained account the screens catalogue
+photographs; a test that confirms an old account's e-mail needs one of its own, or a second project
+touching the same run would find it already confirmed. Reserved above 90 so the block never meets
+`SUITE_PHONES`, which grows with `SUITE_JOURNEYS`."""
 
 PEOPLE: tuple[DemoPerson, ...] = (
     DRIVER_ONE_CAR,
