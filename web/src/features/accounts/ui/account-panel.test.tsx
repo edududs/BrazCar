@@ -18,6 +18,8 @@ const ana: Account = {
   phoneDisplay: "(61) 99999-0001",
   displayName: "Ana",
   email: null,
+  emailConfirmed: true,
+  requiredAction: null,
   cars: [],
   canDrive: false,
 };
@@ -29,6 +31,7 @@ interface ShowOptions {
   readonly deleteAccount?: () => Promise<void>;
   readonly onDeleted?: () => void;
   readonly updateProfile?: (changes: ProfileChanges) => Promise<Account>;
+  readonly requestEmailChange?: (email: string) => Promise<void>;
   readonly changePassword?: (data: ChangePasswordData) => Promise<void>;
 }
 
@@ -39,6 +42,7 @@ async function show(options: ShowOptions = {}): Promise<HTMLElement> {
       account={options.account ?? ana}
       busy={false}
       updateProfile={options.updateProfile ?? notInThisTest}
+      requestEmailChange={options.requestEmailChange ?? notInThisTest}
       changePassword={options.changePassword ?? notInThisTest}
       passwordBusy={false}
       addCar={notInThisTest}
@@ -129,8 +133,8 @@ describe("AccountPanel profile", () => {
     expect(screen.getByText("Sem e-mail você não recupera a senha.")).toBeDefined();
   });
 
-  it("saving a changed name and e-mail calls updateProfile with only what changed", async () => {
-    const updated: Account = { ...ana, displayName: "Ana Paula", email: "ana@example.com" };
+  it("saving a changed name calls updateProfile with only what changed", async () => {
+    const updated: Account = { ...ana, displayName: "Ana Paula" };
     const updateProfile = vi.fn(() => Promise.resolve(updated));
     await show({ updateProfile });
 
@@ -138,38 +142,37 @@ describe("AccountPanel profile", () => {
     fireEvent.change(await screen.findByLabelText("Nome social"), {
       target: { value: "Ana Paula" },
     });
-    fireEvent.change(screen.getByLabelText(/^E-mail/), { target: { value: "ana@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar dados" }));
 
     await waitFor(() => {
       expect(screen.getByText("Dados salvos.")).toBeDefined();
     });
-    expect(updateProfile).toHaveBeenCalledWith({
-      displayName: "Ana Paula",
-      email: "ana@example.com",
-    });
+    expect(updateProfile).toHaveBeenCalledWith({ displayName: "Ana Paula" });
   });
 
-  it("clearing a previous e-mail sends an empty string", async () => {
-    const withEmail: Account = { ...ana, email: "ana@example.com" };
-    const updated: Account = { ...withEmail, email: null };
-    const updateProfile = vi.fn(() => Promise.resolve(updated));
-    await show({ account: withEmail, updateProfile });
+  it("a changed e-mail asks for the change by link instead of saving it directly (D-168)", async () => {
+    const requestEmailChange = vi.fn(() => Promise.resolve());
+    await show({ requestEmailChange });
 
     fireEvent.click(screen.getByRole("button", { name: /^Editar dados/ }));
-    fireEvent.change(await screen.findByLabelText(/^E-mail/), { target: { value: "" } });
+    fireEvent.change(await screen.findByLabelText(/^E-mail/), {
+      target: { value: "ana@example.com" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Salvar dados" }));
 
     await waitFor(() => {
-      expect(updateProfile).toHaveBeenCalledWith({ email: "" });
+      expect(
+        screen.getByText("Enviamos um link para o novo e-mail. Ele vale 2 horas."),
+      ).toBeDefined();
     });
+    expect(requestEmailChange).toHaveBeenCalledWith("ana@example.com");
   });
 
-  it("an invalid e-mail shows the reason the API gives", async () => {
-    const updateProfile = vi.fn(() =>
+  it("an e-mail the API refuses shows its reason", async () => {
+    const requestEmailChange = vi.fn(() =>
       Promise.reject(new AccountRequestError(422, "e-mail inválido")),
     );
-    await show({ updateProfile });
+    await show({ requestEmailChange });
 
     fireEvent.click(screen.getByRole("button", { name: /^Editar dados/ }));
     fireEvent.change(await screen.findByLabelText(/^E-mail/), {

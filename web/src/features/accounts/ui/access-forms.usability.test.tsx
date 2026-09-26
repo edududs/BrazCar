@@ -20,6 +20,8 @@ const ana: Account = {
   phoneDisplay: "(61) 99999-0001",
   displayName: "Ana",
   email: null,
+  emailConfirmed: true,
+  requiredAction: null,
   cars: [],
   canDrive: false,
 };

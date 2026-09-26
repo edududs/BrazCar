@@ -14,6 +14,8 @@ const ana: Account = {
   phoneDisplay: "(61) 99999-0001",
   displayName: "Ana Paula",
   email: null,
+  emailConfirmed: true,
+  requiredAction: null,
   cars: [{ id: "c1", model: "Gol", color: "prata", plate: "ABC1D23" }],
   canDrive: true,
 };
@@ -26,6 +28,7 @@ function show(overrides: Partial<Parameters<typeof AccountPanel>[0]> = {}) {
       account={ana}
       busy={false}
       updateProfile={notInThisTest}
+      requestEmailChange={notInThisTest}
       changePassword={notInThisTest}
       passwordBusy={false}
       addCar={notInThisTest}
@@ -41,8 +44,8 @@ function show(overrides: Partial<Parameters<typeof AccountPanel>[0]> = {}) {
 describe("AccountPanel, as the owner uses it", () => {
   it("opens in reading; editing is asked for, and the sheet takes typing at once", async () => {
     const user = userEvent.setup();
-    const updateProfile = vi.fn(() => Promise.resolve({ ...ana, email: "ana@exemplo.com" }));
-    show({ updateProfile });
+    const requestEmailChange = vi.fn(() => Promise.resolve());
+    show({ requestEmailChange });
 
     expect(await screen.findByText("Ana Paula")).toBeDefined();
     expect(screen.queryByLabelText("Nome social")).toBeNull();
@@ -54,9 +57,11 @@ describe("AccountPanel, as the owner uses it", () => {
     await user.click(within(sheet).getByRole("button", { name: "Salvar dados" }));
 
     await waitFor(() => {
-      expect(updateProfile).toHaveBeenCalledWith({ email: "ana@exemplo.com" });
+      expect(requestEmailChange).toHaveBeenCalledWith("ana@exemplo.com");
     });
-    expect(await screen.findByText("Dados salvos.")).toBeDefined();
+    expect(
+      await screen.findByText("Enviamos um link para o novo e-mail. Ele vale 2 horas."),
+    ).toBeDefined();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 

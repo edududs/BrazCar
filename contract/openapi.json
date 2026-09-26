@@ -30,6 +30,10 @@
             ],
             "title": "Email"
           },
+          "email_confirmed": {
+            "title": "Email Confirmed",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -43,6 +47,16 @@
             "title": "Phone Display",
             "type": "string"
           },
+          "required_action": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequiredAction"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "terms_accepted_at": {
             "format": "date-time",
             "title": "Terms Accepted At",
@@ -55,6 +69,8 @@
           "phone_display",
           "display_name",
           "email",
+          "email_confirmed",
+          "required_action",
           "terms_accepted_at",
           "cars",
           "can_drive"
@@ -359,6 +375,33 @@
         "title": "EditIn",
         "type": "object"
       },
+      "EmailChangeIn": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "EmailChangeIn",
+        "type": "object"
+      },
+      "EmailConfirmIn": {
+        "description": "The link's token goes in the body, never in the path, so no request log ever has it.",
+        "properties": {
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "EmailConfirmIn",
+        "type": "object"
+      },
       "ErrorOut": {
         "description": "What `HttpError(status, message)` renders as: a fixed, human-readable refusal.",
         "properties": {
@@ -429,6 +472,85 @@
           "status"
         ],
         "title": "HealthStatus",
+        "type": "object"
+      },
+      "HeldOut": {
+        "description": "403 of a route behind `gated_session_auth` (D-168). `required_action` names what the account\nmust do before it writes (`confirm_email`); it is absent from the route's own 403 refusals.",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "required_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Action"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "HeldOut",
+        "type": "object"
+      },
+      "InviteEmailIn": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "InviteEmailIn",
+        "type": "object"
+      },
+      "InviteOut": {
+        "description": "The invite's page (D-167). Phone and e-mail come masked: a link can be forwarded.",
+        "properties": {
+          "email_masked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Masked"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "phone_masked": {
+            "title": "Phone Masked",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "awaiting_email_confirmation"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "phone_masked",
+          "expires_at",
+          "email_masked"
+        ],
+        "title": "InviteOut",
         "type": "object"
       },
       "LicensePlate": {
@@ -575,7 +697,7 @@
         "type": "object"
       },
       "ProfileIn": {
-        "description": "Every field optional: absent means unchanged; a blank e-mail clears it (D-139).",
+        "description": "Absent means unchanged (D-139). The e-mail is not here: it changes by a link (D-168).",
         "properties": {
           "display_name": {
             "anyOf": [
@@ -587,17 +709,6 @@
               }
             ],
             "title": "Display Name"
-          },
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
           }
         },
         "title": "ProfileIn",
@@ -675,6 +786,7 @@
         "type": "object"
       },
       "RegisterIn": {
+        "description": "No phone and no e-mail: both come from the invite the e-mail link belongs to (D-167).",
         "properties": {
           "accepts_terms": {
             "title": "Accepts Terms",
@@ -684,28 +796,17 @@
             "title": "Display Name",
             "type": "string"
           },
-          "email": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Email"
+          "email_token": {
+            "title": "Email Token",
+            "type": "string"
           },
           "password": {
             "title": "Password",
             "type": "string"
-          },
-          "phone": {
-            "title": "Phone",
-            "type": "string"
           }
         },
         "required": [
-          "phone",
+          "email_token",
           "password",
           "display_name",
           "accepts_terms"
@@ -726,6 +827,10 @@
         ],
         "title": "RepeatIn",
         "type": "object"
+      },
+      "RequiredAction": {
+        "const": "confirm_email",
+        "type": "string"
       },
       "ResolvedPlaceOut": {
         "properties": {
@@ -918,6 +1023,31 @@
         "maxLength": 60,
         "minLength": 1,
         "type": "string"
+      },
+      "SignupOut": {
+        "description": "The e-mail link's page: the rest of the registration, phone and e-mail fixed (D-167).",
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "email_expires_at": {
+            "format": "date-time",
+            "title": "Email Expires At",
+            "type": "string"
+          },
+          "phone_masked": {
+            "title": "Phone Masked",
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone_masked",
+          "email",
+          "email_expires_at"
+        ],
+        "title": "SignupOut",
+        "type": "object"
       },
       "StopIn": {
         "description": "A place of the catalog by identifier, or free text for \"other\" (D-013). One of the two.\n\n`fare` is what it costs to come this far from the origin, so the first stop never has one (D-131).",
@@ -1134,6 +1264,16 @@
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeldOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "409": {
             "content": {
               "application/json": {
@@ -1212,6 +1352,16 @@
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeldOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -1239,6 +1389,161 @@
           }
         ],
         "summary": "Remove Car",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/invites/{token}": {
+      "get": {
+        "operationId": "open_invite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Gone"
+          }
+        },
+        "summary": "Open Invite",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/invites/{token}/email": {
+      "post": {
+        "description": "Send the e-mail's link. 409 tells an invite holder the address has an account (D-167).",
+        "operationId": "give_invite_email",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteEmailIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Done"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Gone"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Give Invite Email",
         "tags": [
           "accounts"
         ]
@@ -1410,7 +1715,7 @@
         ]
       },
       "patch": {
-        "description": "The display name and the e-mail only: the phone and the password have their own path.",
+        "description": "The display name only: the e-mail, the phone and the password have their own path.",
         "operationId": "update_profile",
         "parameters": [],
         "requestBody": {
@@ -1454,6 +1759,16 @@
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeldOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -1471,6 +1786,172 @@
           }
         ],
         "summary": "Update Profile",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/me/email": {
+      "post": {
+        "description": "Mail the link. The current e-mail keeps its place until the link is opened.",
+        "operationId": "request_email_change",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChangeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Done"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Request Email Change",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/me/email/confirm": {
+      "post": {
+        "description": "Needs the session of the account the link was sent for: a link that leaks changes nothing\nby itself. Another account's link reads as invalid, like a lapsed or spent one.",
+        "operationId": "confirm_email",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailConfirmIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Confirm Email",
         "tags": [
           "accounts"
         ]
@@ -1526,7 +2007,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/HeldOut"
                 }
               }
             },
@@ -1671,7 +2152,7 @@
     },
     "/api/accounts/register": {
       "post": {
-        "description": "Create the account and log it in. The terms must be accepted (D-033).",
+        "description": "Finish the account the e-mail link opened and log it in. Terms must be accepted (D-033).",
         "operationId": "register_account",
         "parameters": [],
         "requestBody": {
@@ -1705,6 +2186,16 @@
             },
             "description": "Bad Request"
           },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
           "409": {
             "content": {
               "application/json": {
@@ -1714,6 +2205,16 @@
               }
             },
             "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Gone"
           },
           "422": {
             "content": {
@@ -1727,6 +2228,58 @@
           }
         },
         "summary": "Register",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/accounts/signup/{email_token}": {
+      "get": {
+        "operationId": "open_signup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "email_token",
+            "required": true,
+            "schema": {
+              "title": "Email Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignupOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Gone"
+          }
+        },
+        "summary": "Open Signup",
         "tags": [
           "accounts"
         ]
@@ -1770,6 +2323,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeldOut"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "422": {
             "content": {
@@ -2079,6 +2642,16 @@
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeldOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -2285,7 +2858,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/HeldOut"
                 }
               }
             },
@@ -2384,7 +2957,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/HeldOut"
                 }
               }
             },
@@ -2478,6 +3051,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeldOut"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -2592,7 +3175,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/HeldOut"
                 }
               }
             },
@@ -2701,7 +3284,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorOut"
+                  "$ref": "#/components/schemas/HeldOut"
                 }
               }
             },

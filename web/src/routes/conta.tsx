@@ -15,12 +15,19 @@ export const Route = createFileRoute("/conta")({ component: AccountPage });
 
 const primaryLink =
   "inline-flex min-h-target w-full items-center justify-center rounded-button bg-brand px-5 text-body font-semibold text-on-brand";
-const quietLink =
-  "inline-flex min-h-target w-full items-center justify-center rounded-button bg-surface-2 px-5 text-body font-semibold text-ink";
 
 /** A list of groups, like the phone's settings (S10). Theme and the version work for anyone. */
 function AccountPage() {
-  const { session, busy, updateProfile, addCar, removeCar, logOut, deleteAccount } = useSession();
+  const {
+    session,
+    busy,
+    updateProfile,
+    requestEmailChange,
+    addCar,
+    removeCar,
+    logOut,
+    deleteAccount,
+  } = useSession();
   const { changePassword, busy: passwordBusy } = useChangePassword();
   const navigate = useNavigate();
   const { version } = useVersionFloor();
@@ -45,9 +52,6 @@ function AccountPage() {
                 <Link to="/entrar" className={primaryLink}>
                   Entrar
                 </Link>
-                <Link to="/cadastro" className={quietLink}>
-                  Criar conta
-                </Link>
               </div>
             </div>
           </Card>
@@ -59,6 +63,7 @@ function AccountPage() {
           account={session.account}
           busy={busy}
           updateProfile={updateProfile}
+          requestEmailChange={requestEmailChange}
           changePassword={changePassword}
           passwordBusy={passwordBusy}
           addCar={addCar}

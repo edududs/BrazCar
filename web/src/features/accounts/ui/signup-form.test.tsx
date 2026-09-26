@@ -1,67 +1,93 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { PHONE_HINT_ERROR } from "@/shared/app/use-phone-input";
-
-import { type Account, AccountRequestError, type SignupData } from "../domain/account";
-import { SignupForm } from "./signup-form";
+import { type Account, AccountRequestError, type OpenSignup } from "../domain/account";
+import { type RegisterInput, SignupForm } from "./signup-form";
 
 const ana: Account = {
   id: "a1",
   phone: "+5561999990001",
   phoneDisplay: "(61) 99999-0001",
   displayName: "Ana",
-  email: null,
+  email: "ana@example.com",
+  emailConfirmed: true,
+  requiredAction: null,
   cars: [],
   canDrive: false,
 };
 
-function fill(phone: string): void {
-  fireEvent.change(screen.getByLabelText(/^Celular/), { target: { value: phone } });
-  fireEvent.change(screen.getByLabelText(/^Nome/), { target: { value: "Ana" } });
-  fireEvent.change(screen.getByLabelText(/^Senha/), { target: { value: "uma-senha-boa" } });
-  fireEvent.click(screen.getByLabelText(/Li e aceito os termos/));
-  fireEvent.click(screen.getByRole("button", { name: "Criar conta" }));
-}
+const signup: OpenSignup = {
+  phoneMasked: "+5561*****0001",
+  email: "ana@example.com",
+  emailExpiresAt: "2026-09-01T12:00:00-03:00",
+};
 
-describe("SignupForm phone", () => {
-  it("sends the number as E.164 however it was typed", async () => {
-    const signUp = vi.fn((data: SignupData) => Promise.resolve({ ...ana, phone: data.phone }));
+describe("SignupForm, as the invite's e-mail link opens it (D-167)", () => {
+  it("shows the phone masked and the e-mail fixed, neither one typed", () => {
+    render(<SignupForm signup={signup} signUp={vi.fn()} busy={false} onDone={vi.fn()} />);
+
+    const phone = screen.getByLabelText<HTMLInputElement>("Celular");
+    const email = screen.getByLabelText<HTMLInputElement>(/^E-mail/);
+    expect(phone.value).toBe("+5561*****0001");
+    expect(phone.readOnly).toBe(true);
+    expect(email.value).toBe("ana@example.com");
+    expect(email.readOnly).toBe(true);
+  });
+
+  it("types the name and the password, accepts the terms, and registers", async () => {
+    const user = userEvent.setup();
+    const signUp = vi.fn<(data: RegisterInput) => Promise<Account>>(() => Promise.resolve(ana));
     const onDone = vi.fn();
-    render(<SignupForm signUp={signUp} busy={false} onDone={onDone} />);
+    render(<SignupForm signup={signup} signUp={signUp} busy={false} onDone={onDone} />);
 
-    fill("+55 (61) 9 9999-0001");
+    await user.click(screen.getByLabelText(/^Nome/));
+    await user.keyboard("Ana Souza");
+    await user.click(screen.getByLabelText(/^Senha/));
+    await user.keyboard("uma-senha-boa");
+    await user.click(screen.getByLabelText(/Li e aceito os termos/));
+    await user.click(screen.getByRole("button", { name: "Criar conta" }));
 
     await waitFor(() => {
-      expect(onDone).toHaveBeenCalled();
+      expect(onDone).toHaveBeenCalledWith(ana);
     });
-    expect(signUp.mock.calls[0]?.[0].phone).toBe("+5561999990001");
+    expect(signUp).toHaveBeenCalledWith({
+      displayName: "Ana Souza",
+      password: "uma-senha-boa",
+      acceptsTerms: true,
+    });
   });
 
-  it("stops a half-typed number before it leaves, next to the field", () => {
-    const signUp = vi.fn(() => Promise.resolve(ana));
-    render(<SignupForm signUp={signUp} busy={false} onDone={vi.fn()} />);
+  it("stays disabled until the terms are accepted", async () => {
+    const user = userEvent.setup();
+    const signUp = vi.fn();
+    render(<SignupForm signup={signup} signUp={signUp} busy={false} onDone={vi.fn()} />);
 
-    fill("61 9");
+    expect(screen.getByRole("button", { name: "Criar conta" })).toHaveProperty("disabled", true);
 
-    expect(screen.getByRole("alert").textContent).toBe(PHONE_HINT_ERROR);
-    expect(signUp).not.toHaveBeenCalled();
+    await user.click(screen.getByLabelText(/Li e aceito os termos/));
+
+    expect(screen.getByRole("button", { name: "Criar conta" })).toHaveProperty("disabled", false);
   });
 
-  it("shows why the API refused a whole number, like a landline", async () => {
+  it("shows why the API refused, like a weak password", async () => {
+    const user = userEvent.setup();
     const signUp = vi.fn(() =>
-      Promise.reject(
-        new AccountRequestError(422, "use um número de celular: o contato é pelo WhatsApp"),
-      ),
+      Promise.reject(new AccountRequestError(422, "a senha precisa de pelo menos 8 caracteres")),
     );
-    render(<SignupForm signUp={signUp} busy={false} onDone={vi.fn()} />);
+    render(<SignupForm signup={signup} signUp={signUp} busy={false} onDone={vi.fn()} />);
 
-    fill("(61) 3333-4444");
+    await user.click(screen.getByLabelText(/^Nome/));
+    await user.keyboard("Ana Souza");
+    await user.click(screen.getByLabelText(/^Senha/));
+    await user.keyboard("123");
+    await user.click(screen.getByLabelText(/Li e aceito os termos/));
+    await user.click(screen.getByRole("button", { name: "Criar conta" }));
 
     expect(await screen.findByRole("alert")).toHaveProperty(
       "textContent",
-      "use um número de celular: o contato é pelo WhatsApp",
+      "a senha precisa de pelo menos 8 caracteres",
     );
   });
 });

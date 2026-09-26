@@ -6,12 +6,15 @@ import { AccountRequestError } from "../domain/account";
 import {
   addCar,
   changePassword,
+  confirmEmail,
   confirmPasswordReset,
   deleteAccount,
   fetchCurrentAccount,
   logIn,
   logOut,
+  openSignup,
   removeCar,
+  requestEmailChange,
   requestPasswordReset,
   signUp,
   updateProfile,
@@ -28,6 +31,8 @@ const accountOut: components["schemas"]["AccountOut"] = {
   phone_display: "(61) 99999-0001",
   display_name: "Ana",
   email: "ana@example.com",
+  email_confirmed: true,
+  required_action: null,
   cars: [{ id: "c1", model: "Gol", color: "prata", plate: "ABC1D23" }],
   can_drive: true,
   terms_accepted_at: "2026-09-01T10:00:00-03:00",
@@ -52,6 +57,8 @@ describe("the current session", () => {
       phoneDisplay: "(61) 99999-0001",
       displayName: "Ana",
       email: "ana@example.com",
+      emailConfirmed: true,
+      requiredAction: null,
       cars: [{ id: "c1", model: "Gol", color: "prata", plate: "ABC1D23" }],
       canDrive: true,
     });
@@ -79,17 +86,52 @@ describe("the current session", () => {
 
     expect(account?.email).toBeNull();
   });
+
+  it("a held account carries the action it still owes (D-168)", async () => {
+    api.answer(200, { ...accountOut, email_confirmed: false, required_action: "confirm_email" });
+
+    const account = await fetchCurrentAccount(signal);
+
+    expect(account).toMatchObject({ emailConfirmed: false, requiredAction: "confirm_email" });
+  });
+});
+
+describe("opening the e-mail link (D-167)", () => {
+  it("shows the masked phone and the e-mail the invite carries", async () => {
+    api.answer(200, {
+      phone_masked: "+5561*****0001",
+      email: "ana@example.com",
+      email_expires_at: "2026-09-01T12:00:00-03:00",
+    });
+
+    const opened = await openSignup("tok-1", signal);
+
+    expect(api.last()).toMatchObject({ method: "GET", path: "/api/accounts/signup/tok-1" });
+    expect(opened).toEqual({
+      phoneMasked: "+5561*****0001",
+      email: "ana@example.com",
+      emailExpiresAt: "2026-09-01T12:00:00-03:00",
+    });
+  });
+
+  it("an unknown or spent link is refused with the API's sentence", async () => {
+    api.answer(410, { detail: "Link vencido. Peça um convite novo." });
+
+    await expect(openSignup("old", signal)).rejects.toMatchObject({
+      status: 410,
+      message: "Link vencido. Peça um convite novo.",
+    });
+  });
 });
 
 describe("signing up and in", () => {
-  it("signs up with the API's names, a blank e-mail sent as null", async () => {
+  it("registers with only the e-mail link's token, no phone and no e-mail (D-167)", async () => {
     api.answer(201, accountOut);
 
     await signUp({
-      phone: "+5561999990001",
+      emailToken: "tok-1",
       password: "segredo123",
       displayName: "Ana",
-      email: "  ",
       acceptsTerms: true,
     });
 
@@ -98,44 +140,30 @@ describe("signing up and in", () => {
       path: "/api/accounts/register",
       credentials: "include",
       body: {
-        phone: "+5561999990001",
+        email_token: "tok-1",
         password: "segredo123",
         display_name: "Ana",
-        email: null,
         accepts_terms: true,
       },
     });
+    expect(api.last().body).not.toHaveProperty("phone");
+    expect(api.last().body).not.toHaveProperty("email");
   });
 
-  it("signs up with a written e-mail as it is", async () => {
-    api.answer(201, accountOut);
-
-    await signUp({
-      phone: "+5561999990001",
-      password: "segredo123",
-      displayName: "Ana",
-      email: "ana@example.com",
-      acceptsTerms: true,
-    });
-
-    expect(api.last().body).toMatchObject({ email: "ana@example.com" });
-  });
-
-  it("a taken phone comes back as the API's sentence", async () => {
-    api.answer(409, { detail: "Este celular já tem conta." });
+  it("a spent or lapsed link comes back as the API's sentence", async () => {
+    api.answer(410, { detail: "Link vencido. Peça um convite novo." });
 
     const attempt = signUp({
-      phone: "+5561999990001",
+      emailToken: "old",
       password: "segredo123",
       displayName: "Ana",
-      email: "",
       acceptsTerms: true,
     });
 
     await expect(attempt).rejects.toBeInstanceOf(AccountRequestError);
     await expect(attempt).rejects.toMatchObject({
-      status: 409,
-      message: "Este celular já tem conta.",
+      status: 410,
+      message: "Link vencido. Peça um convite novo.",
     });
   });
 
@@ -203,20 +231,54 @@ describe("editing the account", () => {
     expect(api.last().body).not.toHaveProperty("email");
   });
 
-  it("an empty e-mail goes as empty, which clears it (D-139)", async () => {
-    api.answer(200, { ...accountOut, email: null });
+  it("a profile refusal carries the sentence", async () => {
+    api.answer(422, { detail: "Nome social não pode ficar vazio." });
 
-    const account = await updateProfile({ email: "" });
-
-    expect(api.last().body).toEqual({ email: "" });
-    expect(account.email).toBeNull();
+    await expect(updateProfile({ displayName: "" })).rejects.toMatchObject({
+      message: "Nome social não pode ficar vazio.",
+    });
   });
 
-  it("a profile refusal carries the sentence", async () => {
-    api.answer(422, { detail: "E-mail inválido." });
+  it("requests the e-mail change, mailed to the new address (D-168)", async () => {
+    api.answer(202, { ok: true });
 
-    await expect(updateProfile({ email: "x" })).rejects.toMatchObject({
-      message: "E-mail inválido.",
+    await requestEmailChange("ana-nova@example.com");
+
+    expect(api.last()).toMatchObject({
+      method: "POST",
+      path: "/api/accounts/me/email",
+      body: { email: "ana-nova@example.com" },
+    });
+  });
+
+  it("an e-mail already taken is refused with the API's sentence", async () => {
+    api.answer(409, { detail: "Este e-mail já tem conta." });
+
+    await expect(requestEmailChange("outra@example.com")).rejects.toMatchObject({
+      status: 409,
+      message: "Este e-mail já tem conta.",
+    });
+  });
+
+  it("confirms the e-mail change with the link's token and hands the account back", async () => {
+    api.answer(200, { ...accountOut, email: "ana-nova@example.com" });
+
+    const account = await confirmEmail("tok-2");
+
+    expect(api.last()).toMatchObject({
+      method: "POST",
+      path: "/api/accounts/me/email/confirm",
+      body: { token: "tok-2" },
+    });
+    expect(account.email).toBe("ana-nova@example.com");
+  });
+
+  it("an invalid or spent confirmation link is refused with the API's sentence", async () => {
+    api.answer(400, { detail: "Link inválido ou vencido." });
+
+    await expect(confirmEmail("old")).rejects.toMatchObject({
+      status: 400,
+      message: "Link inválido ou vencido.",
     });
   });
 

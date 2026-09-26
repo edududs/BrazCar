@@ -34,6 +34,8 @@ const signedIn: Session = {
     phone: "+5561999990002",
     phoneDisplay: "(61) 99999-0002",
     email: null,
+    emailConfirmed: true,
+    requiredAction: null,
     cars: [],
     canDrive: false,
   },
@@ -265,11 +267,12 @@ describe("RideDetail for a passenger, by the ride's state", () => {
     expect(screen.queryByRole("button", { name: "Pedir contato" })).toBeNull();
   });
 
-  it("a visitor is offered to create an account beside signing in", async () => {
+  it("a visitor is offered to sign in, with no self-serve way to create an account", async () => {
     await show(openRide, { session: { status: "anonymous" } });
 
-    expect(screen.getByRole("link", { name: "Criar conta" }).getAttribute("href")).toBe(
-      "/cadastro",
-    );
+    expect(
+      screen.getByRole("link", { name: "Entrar para pedir contato" }).getAttribute("href"),
+    ).toBe("/entrar");
+    expect(screen.queryByRole("link", { name: "Criar conta" })).toBeNull();
   });
 });

@@ -35,6 +35,8 @@ const signedIn: Session = {
     phone: "+5561999990002",
     phoneDisplay: "(61) 99999-0002",
     email: null,
+    emailConfirmed: true,
+    requiredAction: null,
     cars: [],
     canDrive: false,
   },

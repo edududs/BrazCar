@@ -10,7 +10,6 @@ import { Badge } from "@/shared/ui/badge";
 import { Card } from "@/shared/ui/card";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Icon } from "@/shared/ui/icon";
-import { inlineLinkClass } from "@/shared/ui/link-class";
 import { ListGroup, ListRowButton, ListRowLink } from "@/shared/ui/list-row";
 import { NoticeBar } from "@/shared/ui/notice-bar";
 import { Sheet } from "@/shared/ui/sheet";
@@ -336,16 +335,7 @@ function PassengerActions({ ride, session, contacting, acceptsContact }: Passeng
   }
   if (session.status === "anonymous" && acceptsContact) {
     return (
-      <ActionBar
-        hint={
-          <>
-            Ainda não tem conta?{" "}
-            <Link to="/cadastro" className={inlineLinkClass}>
-              Criar conta
-            </Link>
-          </>
-        }
-      >
+      <ActionBar>
         <Link
           to="/entrar"
           className="inline-flex min-h-target items-center justify-center rounded-button bg-brand text-body font-semibold text-on-brand"

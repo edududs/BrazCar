@@ -16,6 +16,15 @@ export interface DemoAccount {
   readonly cars: readonly string[];
 }
 
+/** One invite issued for a `suitePhones` entry, its e-mail already given (D-166, D-167): the suite
+ * finishes the registration itself, opening `/cadastro?token=<emailToken>`. */
+export interface DemoInvite {
+  readonly phone: string;
+  readonly inviteToken: string;
+  readonly email: string;
+  readonly emailToken: string;
+}
+
 export interface DemoRide {
   readonly slug: string;
   readonly id: string;
@@ -33,6 +42,10 @@ export interface DemoManifest {
   readonly groupLabels: readonly string[];
   /** Numbers no seeded account uses: the suite may register them and the teardown forgets them. */
   readonly suitePhones: readonly string[];
+  /** One invite per `suitePhones` entry, aligned by index (D-166, D-167). */
+  readonly suiteInvites: readonly DemoInvite[];
+  /** Slug of the one seeded account still without a confirmed e-mail (D-168). */
+  readonly legacyPerson: string;
   readonly accounts: readonly DemoAccount[];
   readonly rides: readonly DemoRide[];
   readonly candidatesByVerdict: Readonly<Record<string, number>>;
@@ -42,6 +55,8 @@ export interface DemoManifest {
   dayAt: (index: number) => string;
   /** One of the numbers the suite may register, one per project. */
   suitePhoneAt: (index: number) => string;
+  /** The invite of one of the numbers the suite may register, same index as `suitePhoneAt`. */
+  suiteInviteAt: (index: number) => DemoInvite;
   /** The label of one of the groups the demonstration messages arrived in. */
   groupLabelAt: (index: number) => string;
 }
@@ -53,6 +68,13 @@ interface RawAccount {
   display_name: string;
   password: string;
   cars: string[];
+}
+
+interface RawInvite {
+  phone: string;
+  invite_token: string;
+  email: string;
+  email_token: string;
 }
 
 interface RawRide {
@@ -71,6 +93,8 @@ interface RawManifest {
   days: string[];
   group_labels: string[];
   suite_phones: string[];
+  suite_invites: RawInvite[];
+  legacy_person: string;
   accounts: RawAccount[];
   rides: RawRide[];
   candidates_by_verdict: Record<string, number>;
@@ -87,7 +111,7 @@ function found<T extends { slug: string }>(items: readonly T[], slug: string, wh
   return item;
 }
 
-function at(items: readonly string[], index: number, what: string): string {
+function at<T>(items: readonly T[], index: number, what: string): T {
   const item = items[index];
   if (item === undefined) {
     throw new Error(`the seed left no ${what} at ${String(index)}; run yarn e2e again`);
@@ -105,6 +129,12 @@ export function loadManifest(): DemoManifest {
     password: account.password,
     cars: account.cars,
   }));
+  const suiteInvites: DemoInvite[] = raw.suite_invites.map((invite) => ({
+    phone: invite.phone,
+    inviteToken: invite.invite_token,
+    email: invite.email,
+    emailToken: invite.email_token,
+  }));
   const rides: DemoRide[] = raw.rides.map((ride) => ({
     slug: ride.slug,
     id: ride.id,
@@ -120,6 +150,8 @@ export function loadManifest(): DemoManifest {
     days: raw.days,
     groupLabels: raw.group_labels,
     suitePhones: raw.suite_phones,
+    suiteInvites,
+    legacyPerson: raw.legacy_person,
     accounts,
     rides,
     candidatesByVerdict: raw.candidates_by_verdict,
@@ -127,6 +159,7 @@ export function loadManifest(): DemoManifest {
     ride: (slug) => found(rides, slug, "ride"),
     dayAt: (index) => at(raw.days, index, "day"),
     suitePhoneAt: (index) => at(raw.suite_phones, index, "spare phone"),
+    suiteInviteAt: (index) => at(suiteInvites, index, "suite invite"),
     groupLabelAt: (index) => at(raw.group_labels, index, "group label"),
   };
 }

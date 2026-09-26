@@ -55,19 +55,45 @@ describe("/entrar", () => {
       (await screen.findByRole("link", { name: "Voltar ao mural" })).getAttribute("href"),
     ).toBe("/");
     expect(screen.queryByRole("navigation", { name: "Principal" })).toBeNull();
-    expect(screen.getByRole("link", { name: "Criar conta" }).getAttribute("href")).toBe(
-      "/cadastro",
-    );
+    // No self-serve way in: signing up is invite-only (D-167).
+    expect(screen.queryByRole("link", { name: "Criar conta" })).toBeNull();
   });
 });
 
 describe("/cadastro", () => {
-  it("creates the account and lands on the board", async () => {
-    const user = userEvent.setup();
-    api.serve("POST", "/api/accounts/register", 201, driverOut);
-    const { router } = await renderApp("/cadastro");
+  it("without a token, says signing up is invite-only and shows no form", async () => {
+    await renderApp("/cadastro");
 
-    await user.type(await screen.findByLabelText(/^Celular/), "61999990001");
+    expect(await screen.findByText("Só por convite")).toBeDefined();
+    expect(screen.queryByLabelText(/^Nome/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Criar conta" })).toBeNull();
+  });
+
+  it("a spent or lapsed link says so, in the API's own words", async () => {
+    api.serve("GET", "/api/accounts/signup/old", 410, {
+      detail: "Link vencido. Peça um convite novo.",
+    });
+
+    await renderApp("/cadastro?token=old");
+
+    expect(await screen.findByText("Link vencido. Peça um convite novo.")).toBeDefined();
+    expect(screen.queryByLabelText(/^Nome/)).toBeNull();
+  });
+
+  it("with the invite's link, shows the phone masked and the e-mail fixed, and registers", async () => {
+    const user = userEvent.setup();
+    api.serve("GET", "/api/accounts/signup/tok-1", 200, {
+      phone_masked: "+5561*****0001",
+      email: "ana@example.com",
+      email_expires_at: "2026-09-01T12:00:00-03:00",
+    });
+    api.serve("POST", "/api/accounts/register", 201, driverOut);
+    const { router } = await renderApp("/cadastro?token=tok-1");
+
+    expect((await screen.findByLabelText<HTMLInputElement>("Celular")).value).toBe(
+      "+5561*****0001",
+    );
+    expect(screen.getByLabelText<HTMLInputElement>(/^E-mail/).value).toBe("ana@example.com");
     await user.type(screen.getByLabelText(/^Nome/), "Ana Souza");
     await user.type(screen.getByLabelText(/^Senha/), "uma-senha-boa");
     await user.click(screen.getByLabelText(/Li e aceito os termos/));
@@ -76,9 +102,10 @@ describe("/cadastro", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/");
     });
-    expect(api.sentTo("POST", "/api/accounts/register")[0]?.body).toMatchObject({
-      phone: "+5561999990001",
+    expect(api.sentTo("POST", "/api/accounts/register")[0]?.body).toEqual({
+      email_token: "tok-1",
       display_name: "Ana Souza",
+      password: "uma-senha-boa",
       accepts_terms: true,
     });
   });
@@ -131,7 +158,8 @@ describe("/conta", () => {
     expect(await screen.findByText("Entre para publicar e pedir contato")).toBeDefined();
     const page = within(screen.getByRole("main"));
     expect(page.getByRole("link", { name: "Entrar" }).getAttribute("href")).toBe("/entrar");
-    expect(page.getByRole("link", { name: "Criar conta" }).getAttribute("href")).toBe("/cadastro");
+    // No self-serve way in: signing up is invite-only (D-167).
+    expect(page.queryByRole("link", { name: "Criar conta" })).toBeNull();
     expect(screen.getByText(/^BrazCar \d+\.\d+\.\d+/)).toBeDefined();
   });
 

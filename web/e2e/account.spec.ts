@@ -1,23 +1,27 @@
 import { expect, test } from "./support/fixtures";
 import { apiOrigin, webOrigin } from "./support/origins";
 
-/** Entrar no BrazCar: criar conta, entrar, recuperar a senha e cuidar dos carros. */
+/** Entrar no BrazCar: abrir o convite, entrar, recuperar a senha e cuidar dos carros. */
 
-test("criar conta: os erros aparecem e a conta entra direto no mural", async ({
+test("criar conta: o link do convite mostra o celular mascarado e o e-mail fixo", async ({
   page,
   demo,
   sparePhone,
   snap,
 }) => {
-  // Um número por projeto: os três rodam a mesma jornada no mesmo banco.
-  const phone = demo.suitePhoneAt(sparePhone(0));
-  await page.goto("/cadastro");
+  // Um convite por projeto: os três rodam a mesma jornada no mesmo banco.
+  const invite = demo.suiteInviteAt(sparePhone(0));
+  await page.goto(`/cadastro?token=${invite.emailToken}`);
   await expect(
     page.getByRole("heading", { name: "Criar conta", exact: true, level: 1 }),
   ).toBeVisible();
+  // O celular vem mascarado, e o e-mail já é o do convite: nenhum dos dois se digita (D-167).
+  await expect(page.getByLabel("Celular")).toHaveValue(
+    new RegExp(`\\*+${invite.phone.slice(-4)}$`),
+  );
+  await expect(page.getByLabel("E-mail")).toHaveValue(invite.email);
   await snap(page, "signup/empty");
 
-  await page.getByLabel("Celular").fill("61 9");
   await page.getByLabel("Nome").fill("Visitante de Demonstração");
   await page.getByLabel(/^Senha/).fill("123");
   await page.getByLabel("Li e aceito os termos").check();
@@ -25,24 +29,24 @@ test("criar conta: os erros aparecem e a conta entra direto no mural", async ({
   await expect(page.getByRole("alert")).toBeVisible();
   await snap(page, "signup/refused");
 
-  // Digitado como se digita: com país, parênteses, o nove solto e hífen; o campo arruma sozinho.
-  const [area, rest] = [phone.slice(3, 5), phone.slice(5)];
-  const field = page.getByLabel("Celular");
-  await field.clear();
-  await field.pressSequentially(
-    `+55 (${area}) ${rest.slice(0, 1)} ${rest.slice(1, 5)}-${rest.slice(5)}`,
-  );
-  await expect(field).toHaveValue(`+55 ${area} ${rest.slice(0, 5)} ${rest.slice(5)}`);
   await page.getByLabel(/^Senha/).fill("uma-senha-de-demonstracao");
-  await snap(page, "signup/phone-formatted");
   await page.getByRole("button", { name: "Criar conta", exact: true }).click();
 
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("link", { name: "Conta", exact: true })).toBeVisible();
   await snap(page, "board/signed-in");
 
+  const [area, rest] = [invite.phone.slice(3, 5), invite.phone.slice(5)];
   await page.getByRole("link", { name: "Conta", exact: true }).click();
   await expect(page.getByText(`(${area}) ${rest.slice(0, 5)}-${rest.slice(5)}`)).toBeVisible();
+});
+
+test("cadastro sem convite: nenhum formulário, só o aviso", async ({ page, snap }) => {
+  await page.goto("/cadastro");
+
+  await expect(page.getByRole("heading", { name: "Só por convite", exact: true })).toBeVisible();
+  await expect(page.getByLabel(/^Nome/)).toHaveCount(0);
+  await snap(page, "signup/no-invite");
 });
 
 test("entrar: senha errada é recusada e a certa leva ao mural", async ({
@@ -53,11 +57,16 @@ test("entrar: senha errada é recusada e a certa leva ao mural", async ({
 }) => {
   // Conta própria deste teste: uma senha errada gasta tentativas do telefone (D-097), e gastar as
   // de uma conta da semente derrubava, em cascata, todo teste seguinte que entra com ela.
-  const phone = demo.suitePhoneAt(sparePhone(4));
+  const invite = demo.suiteInviteAt(sparePhone(4));
   const password = "uma-senha-de-demonstracao";
   const created = await page.request.post(`${apiOrigin}/api/accounts/register`, {
     headers: { Origin: webOrigin },
-    data: { phone, password, display_name: "Conta Para Entrar", accepts_terms: true },
+    data: {
+      email_token: invite.emailToken,
+      password,
+      display_name: "Conta Para Entrar",
+      accepts_terms: true,
+    },
   });
   expect(created.ok(), await created.text()).toBe(true);
   await page.context().clearCookies();
@@ -66,7 +75,7 @@ test("entrar: senha errada é recusada e a certa leva ao mural", async ({
   await expect(page.getByRole("heading", { name: "Entrar", exact: true, level: 1 })).toBeVisible();
   await snap(page, "login/empty");
 
-  await page.getByLabel("Celular").fill(phone);
+  await page.getByLabel("Celular").fill(invite.phone);
   await page.getByLabel(/^Senha/).fill("senha-que-nao-e-a-dela");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page.getByText("telefone ou senha incorretos")).toBeVisible();
@@ -137,37 +146,41 @@ test("nome social longo cabe na conta", async ({ page, demo, signIn, snap }) => 
   await snap(page, "account/long-name");
 });
 
-test("editar dados: quem não tem e-mail pode adicionar um, e ele fica depois de recarregar", async ({
+test("trocar o e-mail: o aviso diz quanto tempo o link vale, e o antigo segue valendo", async ({
   page,
   demo,
   sparePhone,
   snap,
 }) => {
-  // Conta própria deste teste, como a de excluir e a de trocar a senha: editar o e-mail de uma
+  // Conta própria deste teste, como a de excluir e a de trocar a senha: trocar o e-mail de uma
   // conta da semente afetaria a outra jornada quando os dois projetos dividem o mesmo banco.
-  const phone = demo.suitePhoneAt(sparePhone(3));
+  const invite = demo.suiteInviteAt(sparePhone(3));
   const password = "uma-senha-de-demonstracao";
-  await page.goto("/cadastro");
-  await page.getByLabel("Celular").fill(phone);
-  await page.getByLabel("Nome").fill("Conta Para Editar Dados");
-  await page.getByLabel(/^Senha/).fill(password);
-  await page.getByLabel("Li e aceito os termos").check();
-  await page.getByRole("button", { name: "Criar conta", exact: true }).click();
-  await expect(page).toHaveURL(/\/$/);
+  const created = await page.request.post(`${apiOrigin}/api/accounts/register`, {
+    headers: { Origin: webOrigin },
+    data: {
+      email_token: invite.emailToken,
+      password,
+      display_name: "Conta Para Trocar E-mail",
+      accepts_terms: true,
+    },
+  });
+  expect(created.ok(), await created.text()).toBe(true);
 
   await page.goto("/conta");
-  await expect(page.getByText("Sem e-mail você não recupera a senha.")).toBeVisible();
   await page.getByRole("button", { name: /^Editar dados/ }).click();
   await snap(page, "account/profile-edit");
 
-  await page.getByLabel("E-mail").fill("conta-para-editar@example.org");
+  await page.getByLabel(/^E-mail/).fill("nova-conta-para-editar@example.org");
   await page.getByRole("button", { name: "Salvar dados", exact: true }).click();
-  await expect(page.getByText("Dados salvos.")).toBeVisible();
-  await snap(page, "account/profile-saved");
+  await expect(
+    page.getByText("Enviamos um link para o novo e-mail. Ele vale 2 horas."),
+  ).toBeVisible();
+  await snap(page, "account/email-change-requested");
 
+  // O e-mail antigo segue valendo até o link novo ser aberto (D-168).
   await page.reload();
-  await expect(page.getByText("conta-para-editar@example.org")).toBeVisible();
-  await expect(page.getByText("Sem e-mail você não recupera a senha.")).toBeHidden();
+  await expect(page.getByText(invite.email)).toBeVisible();
 });
 
 test("trocar a senha: a nova senha funciona depois de sair e entrar de novo", async ({
@@ -178,11 +191,10 @@ test("trocar a senha: a nova senha funciona depois de sair e entrar de novo", as
 }) => {
   // Conta própria deste teste, como a de excluir: mudar a senha de uma conta da semente afetaria
   // as outras jornadas que dividem o mesmo banco.
-  const phone = demo.suitePhoneAt(sparePhone(2));
+  const invite = demo.suiteInviteAt(sparePhone(2));
   const oldPassword = "uma-senha-de-demonstracao";
   const newPassword = "outra-senha-de-demonstracao";
-  await page.goto("/cadastro");
-  await page.getByLabel("Celular").fill(phone);
+  await page.goto(`/cadastro?token=${invite.emailToken}`);
   await page.getByLabel("Nome").fill("Conta Para Trocar Senha");
   await page.getByLabel(/^Senha/).fill(oldPassword);
   await page.getByLabel("Li e aceito os termos").check();
@@ -201,7 +213,7 @@ test("trocar a senha: a nova senha funciona depois de sair e entrar de novo", as
   await expect(page.getByText("Você saiu da conta.")).toBeVisible();
 
   await page.goto("/entrar");
-  await page.getByLabel("Celular").fill(phone);
+  await page.getByLabel("Celular").fill(invite.phone);
   await page.getByLabel(/^Senha/).fill(newPassword);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
@@ -255,11 +267,10 @@ test("excluir conta: o diálogo explica, confirma, e o telefone deixa de servir 
   snap,
 }) => {
   // Conta própria deste teste, criada aqui (não da semente), para não desligar da sessão de
-  // nenhuma outra jornada que divide o mesmo banco. Um número por projeto, como o cadastro.
-  const phone = demo.suitePhoneAt(sparePhone(1));
+  // nenhuma outra jornada que divide o mesmo banco. Um convite por projeto, como o cadastro.
+  const invite = demo.suiteInviteAt(sparePhone(1));
   const password = "uma-senha-de-demonstracao";
-  await page.goto("/cadastro");
-  await page.getByLabel("Celular").fill(phone);
+  await page.goto(`/cadastro?token=${invite.emailToken}`);
   await page.getByLabel("Nome").fill("Conta Para Excluir");
   await page.getByLabel(/^Senha/).fill(password);
   await page.getByLabel("Li e aceito os termos").check();
@@ -284,7 +295,7 @@ test("excluir conta: o diálogo explica, confirma, e o telefone deixa de servir 
   await snap(page, "account/deleted");
 
   await page.goto("/entrar");
-  await page.getByLabel("Celular").fill(phone);
+  await page.getByLabel("Celular").fill(invite.phone);
   await page.getByLabel(/^Senha/).fill(password);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page.getByText("telefone ou senha incorretos")).toBeVisible();
