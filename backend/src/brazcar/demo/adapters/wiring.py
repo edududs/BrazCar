@@ -10,7 +10,7 @@ from django.conf import settings
 
 from brazcar.accounts.adapters.credentials import DjangoCredentials
 from brazcar.accounts.adapters.repository import DjangoAccountRepository
-from brazcar.accounts.application import AddCar, RegisterAccount
+from brazcar.accounts.application import AddCar
 from brazcar.importing.adapters.bridges import RidesBridge
 from brazcar.importing.adapters.repository import (
     DjangoBlockedSenders,
@@ -58,7 +58,8 @@ def demo_wiring() -> DemoWiring:
     import_ride = ImportRide(rides, drivers, places, search, clock)
     bridge = RidesBridge(import_ride, ForgetRides(rides, search), rides)
     return DemoWiring(
-        register=RegisterAccount(accounts, DjangoCredentials(), clock),
+        accounts=accounts,
+        credentials=DjangoCredentials(),
         add_car=AddCar(accounts),
         publish=PublishRide(rides, drivers, places, search, clock),
         edit=EditRide(rides, places, search, clock),

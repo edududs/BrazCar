@@ -149,6 +149,15 @@ class Invite(FrozenModel):
             case _:
                 return InviteStatus.EXPIRED
 
+    @property
+    def email(self) -> str | None:
+        """The e-mail given, once there is one; kept after the invite is consumed."""
+        match self.progress:
+            case EmailGiven(email=email) | Consumed(email=email):
+                return email
+            case Issued():
+                return None
+
     def give_email(self, email: str, now: datetime, policy: InvitePolicy) -> tuple[Self, str]:
         """Record the e-mail and a new token for its link. Giving it again replaces both: the old
         token dies. Only while the invite itself is in time."""

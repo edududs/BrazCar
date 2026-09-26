@@ -6,6 +6,7 @@ import uuid
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+from django.db.models.functions import Lower
 
 
 class UserManager(BaseUserManager["User"]):
@@ -28,6 +29,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=16, unique=True, null=True)  # noqa: DJ001
     display_name = models.CharField(max_length=60, blank=True)
     email = models.EmailField(blank=True, null=True)  # noqa: DJ001 - None means "no e-mail"; the domain says so
+    email_confirmed_at = models.DateTimeField(null=True, blank=True)
     terms_accepted_at = models.DateTimeField()
     phone_verified_at = models.DateTimeField(null=True, blank=True)
     erased_at = models.DateTimeField(null=True, blank=True)
@@ -44,6 +46,14 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         db_table = "accounts_user"
+        constraints = (
+            # One account per e-mail, case aside (D-167); erased rows hold no e-mail and stay out.
+            models.UniqueConstraint(
+                Lower("email"),
+                name="one_account_per_email",
+                condition=models.Q(email__isnull=False) & ~models.Q(email=""),
+            ),
+        )
 
     def __str__(self) -> str:
         return self.display_name or str(self.id)

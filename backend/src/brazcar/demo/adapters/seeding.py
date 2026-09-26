@@ -14,8 +14,8 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from brazcar.accounts.application import AddCar, RegisterAccount
-from brazcar.accounts.domain import Account
+from brazcar.accounts.application import AccountRepository, AddCar, Credentials
+from brazcar.accounts.domain import Account, account_phone
 from brazcar.importing.application import BlockSender, Candidates, IngestMessages, SourceMessages
 from brazcar.importing.domain import (
     Accepted,
@@ -131,7 +131,8 @@ class DemoManifest(FrozenModel):
 class DemoWiring:
     """Every use case and port the seed drives. Built by `wiring.py` from the Django adapters."""
 
-    register: RegisterAccount
+    accounts: AccountRepository
+    credentials: Credentials
     add_car: AddCar
     publish: PublishRide
     edit: EditRide
@@ -154,7 +155,7 @@ async def seed(wiring: DemoWiring, *, anchor: datetime) -> DemoManifest:
     `anchor` is the moment everything is counted from, in the board's own zone (D-094), so that a
     day of a departure is the day the board shows.
     """
-    accounts = {person.slug: await _register(wiring, person) for person in data.PEOPLE}
+    accounts = {person.slug: await _register(wiring, person, anchor=anchor) for person in data.PEOPLE}
     rides = await _published(wiring, accounts, anchor=anchor)
     rides |= await _imported(wiring, anchor=anchor)
     await _contacts(wiring, accounts, rides)
@@ -165,13 +166,24 @@ async def seed(wiring: DemoWiring, *, anchor: datetime) -> DemoManifest:
 # --- accounts ------------------------------------------------------------------------------------
 
 
-async def _register(wiring: DemoWiring, person: data.DemoPerson) -> Account:
-    account = await wiring.register(
-        phone=person.phone,
-        password=data.PASSWORD,
-        display_name=person.display_name,
-        email=person.email,
+async def _register(wiring: DemoWiring, person: data.DemoPerson, *, anchor: datetime) -> Account:
+    """Through the accounts' ports, not the invite: its e-mail link has nobody to reach here (D-167).
+    A person with an e-mail reads as someone who came by invite; one without, as an account from
+    before the invite, the way the migration left them."""
+    account = (
+        Account.register_from_invite(
+            phone=account_phone(person.phone),
+            email=person.email,
+            display_name=person.display_name,
+            now=anchor,
+        )
+        if person.email is not None
+        else Account.register(
+            phone=person.phone, display_name=person.display_name, email=None, accepted_terms_at=anchor
+        )
     )
+    await wiring.accounts.save(account)
+    await wiring.credentials.register(account.id, data.PASSWORD)
     for car in person.cars:
         account = await wiring.add_car(account.id, model=car.model, color=car.color, plate=car.plate)
     return account

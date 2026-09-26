@@ -105,6 +105,8 @@ PASSWORD_RESET_LINK = os.environ.get(
 )
 # The front's page that receives the invite's token; `{token}` is filled by the use case (D-166).
 INVITE_LINK = os.environ.get("INVITE_LINK", "http://localhost:5173/convite?token={token}")
+# The front's page that receives the e-mail link's token, to finish the registration (D-167).
+SIGNUP_LINK = os.environ.get("SIGNUP_LINK", "http://localhost:5173/cadastro?token={token}")
 
 # The front lives on a sibling origin (D-058). Explicit origins only, with credentials (D-059).
 CORS_ALLOWED_ORIGINS = _env_list("DJANGO_CORS_ALLOWED_ORIGINS", default=[])
@@ -170,6 +172,9 @@ LOGGING: dict[str, object] = {
     "formatters": {
         "json": {"()": "brazcar.shared.adapters.json_logging.JsonFormatter"},
     },
+    "filters": {
+        "secret_paths": {"()": "brazcar.config.log_filters.RedactSecretPaths"},
+    },
     "handlers": {
         "stdout": {
             "class": "logging.StreamHandler",
@@ -180,6 +185,12 @@ LOGGING: dict[str, object] = {
     "root": {"handlers": ["stdout"], "level": os.environ.get("LOG_LEVEL", "INFO")},
     # Django and uvicorn install their own plain-text handlers; hand their records to the root instead.
     "loggers": {
-        name: {"handlers": [], "propagate": True} for name in ("django", "uvicorn", "uvicorn.access")
+        **{name: {"handlers": [], "propagate": True} for name in ("django", "uvicorn")},
+        # The ones that write request paths, where the invite's tokens travel (D-167). A logger's
+        # filter sees only its own records, so each of them is named.
+        **{
+            name: {"handlers": [], "propagate": True, "filters": ["secret_paths"]}
+            for name in ("django.request", "django.server", "uvicorn.access")
+        },
     },
 }

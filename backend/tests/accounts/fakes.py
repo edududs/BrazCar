@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 from brazcar.accounts.domain import (
     Account,
     AccountId,
+    EmailAlreadyRegisteredError,
     Invite,
     InviteConflictError,
     InviteId,
@@ -26,10 +27,17 @@ class InMemoryAccountRepository:
     async def by_phone(self, phone: PhoneNumber) -> Account | None:
         return next((a for a in self._accounts.values() if a.phone == phone), None)
 
+    async def by_email(self, email: str) -> Account | None:
+        wanted = email.lower()
+        return next((a for a in self._accounts.values() if a.email and a.email.lower() == wanted), None)
+
     async def save(self, account: Account) -> None:
         owner = await self.by_phone(account.phone)
         if owner is not None and owner.id != account.id:
             raise PhoneAlreadyRegisteredError(account.phone)
+        holder = None if account.email is None else await self.by_email(account.email)
+        if holder is not None and holder.id != account.id:
+            raise EmailAlreadyRegisteredError
         self._accounts[account.id] = account
 
     async def erase(self, account_id: AccountId) -> None:

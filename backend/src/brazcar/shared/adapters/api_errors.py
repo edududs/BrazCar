@@ -43,12 +43,14 @@ def with_errors(  # noqa: PLR0913 - one flag per status a route can reach, all o
     forbidden: bool = False,
     not_found: bool = False,
     conflict: bool = False,
+    gone: bool = False,
     too_many_requests: bool = False,
     validation: bool = False,
 ) -> Response:
     """`response`, plus the error status(es) this exact route can reach. Order matches how a
     request is refused: the request itself, authentication, authorization, "not found", a conflict
-    with the resource's own state, a rate limit, then input validation."""
+    with the resource's own state, a resource that existed and no longer serves ("gone"), a rate
+    limit, then input validation."""
     merged: Response = dict(response) if isinstance(response, dict) else {HTTPStatus.OK: response}
     if bad_request:
         merged[HTTPStatus.BAD_REQUEST] = ErrorOut
@@ -60,6 +62,8 @@ def with_errors(  # noqa: PLR0913 - one flag per status a route can reach, all o
         merged[HTTPStatus.NOT_FOUND] = ErrorOut
     if conflict:
         merged[HTTPStatus.CONFLICT] = ErrorOut
+    if gone:
+        merged[HTTPStatus.GONE] = ErrorOut
     if too_many_requests:
         merged[HTTPStatus.TOO_MANY_REQUESTS] = ErrorOut
     if validation:

@@ -172,3 +172,36 @@ def test_update_profile_refuses_an_email_that_is_not_one() -> None:
 
     with pytest.raises(ValidationError):
         account.update_profile(email="not-an-email")
+
+
+def invited(email: str = "ana@example.com") -> Account:
+    return Account.register_from_invite(
+        phone=account_phone("61 99999-0001"), email=email, display_name="Ana", now=ACCEPTED_AT
+    )
+
+
+def test_an_account_from_an_invite_is_born_with_the_email_confirmed() -> None:
+    account = invited()
+
+    assert account.email == "ana@example.com"
+    assert account.email_confirmed_at == ACCEPTED_AT == account.terms_accepted_at
+    assert account.email_confirmed
+    assert not register(email="ana@example.com").email_confirmed  # the seed's accounts from before
+
+
+def test_a_confirmation_needs_an_email() -> None:
+    with pytest.raises(ValidationError, match="confirmed e-mail without an e-mail"):
+        register().evolve(email_confirmed_at=ACCEPTED_AT)
+
+
+@pytest.mark.parametrize("same", ["ana@example.com", "  ANA@Example.com "])
+def test_update_profile_keeps_the_confirmation_of_the_same_address(same: str) -> None:
+    assert invited().update_profile(email=same).email_confirmed
+
+
+@pytest.mark.parametrize("other", ["outra@example.com", ""])
+def test_update_profile_loses_the_confirmation_with_another_address_or_none(other: str) -> None:
+    changed = invited().update_profile(email=other)
+
+    assert changed.email_confirmed_at is None
+    assert changed.email == (other or None)

@@ -32,3 +32,9 @@ def redact_personal_data(text: str, mask: str = MASK) -> str:
     for pattern in _PATTERNS:
         text = pattern.sub(mask, text)
     return text
+
+
+def masked_email(email: str) -> str:
+    """`a***@example.com`: the first letter and the domain, enough for the owner to recognize it."""
+    local, _, domain = email.rpartition("@")
+    return f"{local[:1]}***@{domain}"

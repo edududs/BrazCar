@@ -32,12 +32,15 @@ def cars(draw: st.DrawFn) -> Car:
 @st.composite
 def accounts(draw: st.DrawFn) -> Account:
     own_cars = draw(st.lists(cars(), max_size=3, unique_by=lambda car: car.plate))
+    email = draw(st.none() | emails)
+    joined = datetime(2026, 9, 22, tzinfo=UTC)
     return Account(
         id=uuid4(),
         phone=draw(phones),
         display_name=draw(short_texts),
-        email=draw(st.none() | emails),
-        terms_accepted_at=datetime(2026, 9, 22, tzinfo=UTC),
+        email=email,
+        email_confirmed_at=None if email is None else draw(st.sampled_from((None, joined))),
+        terms_accepted_at=joined,
         cars=tuple(own_cars),
     )
 

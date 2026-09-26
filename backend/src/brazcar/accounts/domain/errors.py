@@ -13,6 +13,14 @@ class PhoneAlreadyRegisteredError(AccountError):
         self.phone = phone
 
 
+class EmailAlreadyRegisteredError(AccountError):
+    """An e-mail belongs to one account, case aside (D-167). The address stays out of the message:
+    it is personal data, and a message may end up in a log."""
+
+    def __init__(self) -> None:
+        super().__init__("the e-mail already has an account")
+
+
 class ForeignPhoneNumberError(AccountError, ValueError):
     """A valid number of another country: accounts are Brazilian for now (D-137)."""
 

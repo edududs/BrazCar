@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from brazcar.places.adapters.repository import DjangoCatalogRepository
 from brazcar.places.domain import Catalog, Place
+from tests.accounts.signup import registration
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -22,18 +23,8 @@ pytestmark = [
 
 FRONT = "http://localhost:5173"
 BRASILIA = ZoneInfo("America/Sao_Paulo")
-ANA = {
-    "phone": "61 99999-0001",
-    "password": "correct horse battery",
-    "display_name": "Ana",
-    "accepts_terms": True,
-}
-BIA = {
-    "phone": "61 99999-0002",
-    "password": "correct horse battery",
-    "display_name": "Bia",
-    "accepts_terms": True,
-}
+ANA = {"phone": "61 99999-0001", "email": "ana@example.com", "display_name": "Ana"}
+BIA = {"phone": "61 99999-0002", "email": "bia@example.com", "display_name": "Bia"}
 GOL = {"model": "Gol", "color": "prata", "plate": "ABC1234"}
 
 
@@ -92,14 +83,16 @@ def _front_origin(settings: object) -> None:
 async def driver() -> tuple[Browser, str]:
     """Ana, signed in, with a car: the identifier of the car comes back."""
     client = Browser()
-    assert (await client.post("/api/accounts/register", ANA)).status_code == HTTPStatus.CREATED
+    signed_up = await client.post("/api/accounts/register", await registration(**ANA))
+    assert signed_up.status_code == HTTPStatus.CREATED
     with_car = await client.post("/api/accounts/cars", GOL)
     return client, body(with_car)["cars"][0]["id"]
 
 
 async def passenger() -> Browser:
     client = Browser()
-    assert (await client.post("/api/accounts/register", BIA)).status_code == HTTPStatus.CREATED
+    signed_up = await client.post("/api/accounts/register", await registration(**BIA))
+    assert signed_up.status_code == HTTPStatus.CREATED
     return client
 
 

@@ -6,17 +6,16 @@ from brazcar.accounts.application import (
     ChangePassword,
     DeleteAccount,
     LogIn,
-    RegisterAccount,
     RemoveCar,
     RequestPasswordReset,
     ResetPassword,
     UpdateProfile,
 )
 from brazcar.accounts.domain import (
+    Account,
     AccountNotFoundError,
     InvalidCredentialsError,
     InvalidResetTokenError,
-    PhoneAlreadyRegisteredError,
     TooManyAttemptsError,
     WrongCurrentPasswordError,
 )
@@ -42,7 +41,6 @@ class Context:
         self.clock = FixedClock()
         self.limiter = InMemoryRateLimiter(self.clock)
         self.limits = AccountLimits(login_attempts=3, reset_requests=1)
-        self.register = RegisterAccount(self.accounts, self.credentials, self.clock)
         self.log_in = LogIn(self.accounts, self.credentials, self.limiter, self.limits)
         self.request_reset = RequestPasswordReset(
             self.accounts,
@@ -56,25 +54,21 @@ class Context:
         self.update_profile = UpdateProfile(self.accounts)
         self.change_password = ChangePassword(self.accounts, self.credentials, self.limiter, self.limits)
 
+    async def register(
+        self, *, phone: str, password: str, display_name: str, email: str | None = None
+    ) -> Account:
+        """An account straight through the ports: signing up itself is `test_invite_use_cases`'s."""
+        account = Account.register(
+            phone=phone, display_name=display_name, email=email, accepted_terms_at=self.clock.now()
+        )
+        await self.accounts.save(account)
+        await self.credentials.register(account.id, password)
+        return account
+
 
 @pytest.fixture
 def ctx() -> Context:
     return Context()
-
-
-async def test_register_stores_the_account_with_the_terms_time_and_the_password(ctx: Context) -> None:
-    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana", email="a@b.com")
-
-    assert await ctx.accounts.get(account.id) == account
-    assert account.terms_accepted_at == ctx.clock.at
-    assert ctx.credentials.passwords[account.id] == PASSWORD
-
-
-async def test_register_refuses_a_phone_that_already_has_an_account(ctx: Context) -> None:
-    await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
-
-    with pytest.raises(PhoneAlreadyRegisteredError):
-        await ctx.register(phone="+55 61 99999-0001", password="other one", display_name="Bia")
 
 
 async def test_log_in_accepts_the_phone_however_it_is_typed(ctx: Context) -> None:
