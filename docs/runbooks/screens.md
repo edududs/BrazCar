@@ -94,6 +94,9 @@ O `--manifest` grava o que foi criado (identificadores, dias, situações). A su
 em vez de carregar constantes que envelheceriam: os identificadores nascem no domínio e mudam a
 cada execução, os apelidos (`open_today_simple`, `imported_external`…) não.
 
+A semente também traz um convite em cada estado (aberto, aguardando e-mail, vencido, substituído
+e usado), em `manifest.catalog_invites`, para o catálogo fotografar a tela do convite por inteiro.
+
 ## Acrescentar um estado ao catálogo
 
 1. Se o estado precisa de dado que ainda não existe, acrescente-o em `demo/adapters/dataset.py` e
