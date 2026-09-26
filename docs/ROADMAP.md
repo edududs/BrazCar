@@ -39,13 +39,14 @@ a exposição de telefone que motivou a decisão (D-117). Ordem de implementaç�
   página pública que D-161 previa maior. **Feito, tag `v0.24.0`.**
 - Porta de saída, para o motorista com carona importada pedir a própria remoção (D-162, D-172).
   **Backend feito, tag `v0.25.0`**: rota `POST /api/removal-requests` e `manage.py approve_removal`.
-  **Pendente:** a página pública do site que torna a rota alcançável para qualquer pessoa, sem login,
-  com `noindex` (D-161). A semente de demonstração já não vai para o ar em produção (D-163).
+  **Página feita no repositório**: `/sair-do-mural`, sem login, ligada do detalhe da carona importada
+  e do fim do mural e da conta; entra na próxima versão. A semente de demonstração já não vai para o
+  ar em produção (D-163).
 - Documentos de privacidade, termo de uso e segurança. **Feito no repositório**: `docs/privacy.md`,
   `docs/terms.md`, `docs/security.md`.
 
-O beta segue aberto só por convite, ainda não fechado de vez: faltam a página pública de remoção e a
-rodada única do catálogo de telas do passo de design, que depende de autorização para rodar.
+Os quatro passos estão feitos no repositório. Falta só a rodada única do catálogo de telas do passo
+de design, que depende de autorização para rodar.
 
 ## Depois
 

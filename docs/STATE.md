@@ -466,17 +466,13 @@ canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é e
   confirmado, D-159, D-160, D-167, D-168, D-169) no ar desde a v0.23.0 (2026-09-26), cadastro aberto
   fora do ar; passo da visão anônima (D-171) no ar desde a v0.24.0. Passo 2, a porta de saída para o
   motorista com carona importada pedir a própria remoção (D-162, D-172): o backend está pronto, tag
-  `v0.25.0` (rota `POST /api/removal-requests`, `manage.py approve_removal`), mas a página pública do
-  site que a torna alcançável para qualquer pessoa, sem login, ainda não existe — pendente. Passo 4,
-  os documentos de privacidade, termo de uso e segurança: feito, `docs/privacy.md`, `docs/terms.md`
-  e `docs/security.md`. Falta a página do passo 2 e uma rodada única do catálogo de telas (depende
-  de autorização para rodar) antes de fechar o beta de vez. Até lá o worker de importação continua
+  `v0.25.0` (rota `POST /api/removal-requests`, `manage.py approve_removal`), e a página pública
+  `/sair-do-mural`, sem login, está feita no repositório e entra na próxima versão. Passo 4, os
+  documentos de privacidade, termo de uso e segurança: feito, `docs/privacy.md`, `docs/terms.md` e
+  `docs/security.md`, ligados da frase de aceite do cadastro. Falta só uma rodada única do catálogo
+  de telas (depende de autorização para rodar) antes de fechar o beta de vez. Até lá o worker de importação continua
   rodando por decisão do dono, com a exposição de telefone de motorista não cadastrado que motivou a
   decisão (D-117).
-- O cadastro grava o aceite dos termos (D-033) e a tela mostra a frase "Li e aceito os termos de uso
-  e a política de privacidade", mas sem link para `docs/terms.md` nem `docs/privacy.md`
-  (`web/src/features/accounts/ui/signup-form.tsx`); ligar o texto aos documentos é pendência de
-  código, fora deste passo.
 - Recuperação manual de senha para conta sem e-mail depende de admin, que só entra somente
   leitura (D-087); quem se cadastrou sem e-mail agora pode acrescentar um pela edição de dados
   pessoais (D-139) e passar a ter recuperação; sem isso, continua sem caminho.
