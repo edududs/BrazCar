@@ -1,61 +1,61 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+// @vitest-environment jsdom
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import * as resilient from "@/shared/adapters/resilient-event-source";
+import { FakeEventSource, installFakeEventSource } from "@/shared/testing/fake-event-source";
 
-import { subscribeToBoardSignal } from "./board-signal-source";
+import { type BoardSignalSubscription, subscribeToBoardSignal } from "./board-signal-source";
 
-vi.mock("@/shared/adapters/resilient-event-source");
+let subscription: BoardSignalSubscription | null = null;
 
-const mocked = vi.mocked(resilient);
+beforeEach(() => {
+  vi.useFakeTimers();
+  installFakeEventSource();
+});
 
 afterEach(() => {
-  vi.resetAllMocks();
+  subscription?.close();
+  subscription = null;
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
 describe("subscribeToBoardSignal", () => {
-  it("opens an event source on the signal route, without credentials", () => {
-    const close = vi.fn();
-    mocked.openResilientEventSource.mockReturnValue({ close, reconnect: vi.fn() });
-    subscribeToBoardSignal(vi.fn());
+  it("listens to the board's signal route without the cookie", () => {
+    subscription = subscribeToBoardSignal(vi.fn());
 
-    const options = mocked.openResilientEventSource.mock.calls[0]?.[0];
-    expect(options?.url).toMatch(/\/api\/rides\/signal$/);
-    expect(options?.withCredentials).toBe(false);
-    expect(options?.events).toEqual(["revision", "ping"]);
+    expect(FakeEventSource.latest().url).toMatch(/\/api\/rides\/signal$/);
+    expect(FakeEventSource.latest().init).toEqual({ withCredentials: false });
   });
 
-  it("hands the revision number out of a 'revision' message", () => {
-    let capturedOnMessage: ((message: { event: string; data: string }) => void) | undefined;
-    mocked.openResilientEventSource.mockImplementation((options) => {
-      capturedOnMessage = options.onMessage;
-      return { close: vi.fn(), reconnect: vi.fn() };
-    });
+  it("hands on every revision number, and nothing for a ping", () => {
     const onRevision = vi.fn();
-    subscribeToBoardSignal(onRevision);
+    subscription = subscribeToBoardSignal(onRevision);
+    const connection = FakeEventSource.latest();
 
-    capturedOnMessage?.({ event: "revision", data: JSON.stringify({ revision: 5 }) });
-    expect(onRevision).toHaveBeenCalledWith(5);
+    connection.send("revision", '{"revision":3}');
+    connection.send("ping", "{}");
+    connection.send("revision", '{"revision":4}');
+
+    expect(onRevision.mock.calls).toEqual([[3], [4]]);
   });
 
-  it("ignores anything that is not a 'revision' message, or a malformed one", () => {
-    let capturedOnMessage: ((message: { event: string; data: string }) => void) | undefined;
-    mocked.openResilientEventSource.mockImplementation((options) => {
-      capturedOnMessage = options.onMessage;
-      return { close: vi.fn(), reconnect: vi.fn() };
-    });
+  it("ignores a revision frame without a number instead of passing garbage on", () => {
     const onRevision = vi.fn();
-    subscribeToBoardSignal(onRevision);
+    subscription = subscribeToBoardSignal(onRevision);
+    const connection = FakeEventSource.latest();
 
-    capturedOnMessage?.({ event: "ping", data: "" });
-    capturedOnMessage?.({ event: "revision", data: JSON.stringify({ nothing: "here" }) });
+    connection.send("revision", '{"revision":"3"}');
+    connection.send("revision", "{}");
+    connection.send("revision", "null");
+
     expect(onRevision).not.toHaveBeenCalled();
   });
 
-  it("closes through to the underlying source", () => {
-    const close = vi.fn();
-    mocked.openResilientEventSource.mockReturnValue({ close, reconnect: vi.fn() });
-    const subscription = subscribeToBoardSignal(vi.fn());
+  it("closing closes the connection", () => {
+    subscription = subscribeToBoardSignal(vi.fn());
+
     subscription.close();
-    expect(close).toHaveBeenCalled();
+
+    expect(FakeEventSource.latest().closed).toBe(true);
   });
 });

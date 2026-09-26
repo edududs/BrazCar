@@ -1,65 +1,71 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-import { apiClient } from "@/shared/adapters/api/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { fetchPlace, searchPlaces } from "./places-gateway";
 
-vi.mock("@/shared/adapters/api/client", () => ({ apiClient: { GET: vi.fn() } }));
-
-const get = vi.mocked(apiClient.GET);
-
-afterEach(() => {
-  vi.resetAllMocks();
+const api = await vi.hoisted(async () => {
+  const { installFakeApi } = await import("@/shared/testing/fake-api");
+  return installFakeApi();
 });
 
-const PLACE_OUT = {
-  id: "brazlandia",
-  name: "Brazlândia",
+const incra = {
+  id: "incra-8",
+  name: "Incra 8",
   kind: "area",
-  aliases: ["Braz"],
-  parent_id: null,
-};
-const PLACE = {
-  id: "brazlandia",
-  name: "Brazlândia",
-  kind: "area",
-  aliases: ["Braz"],
-  parentId: null,
-};
+  aliases: ["Incra"],
+  parent_id: "brazlandia",
+} as const;
+
+const signal = new AbortController().signal;
+
+beforeEach(() => {
+  api.reset();
+});
 
 describe("searchPlaces", () => {
-  it("translates every match", async () => {
-    get.mockResolvedValue({ data: [PLACE_OUT], response: { status: 200 } });
-    const controller = new AbortController();
-    await expect(searchPlaces("braz", controller.signal)).resolves.toEqual([PLACE]);
-    expect(get).toHaveBeenCalledWith("/api/places", {
-      params: { query: { q: "braz" } },
-      signal: controller.signal,
-    });
+  it("sends the typed words as `q` and turns each place into the screen's", async () => {
+    api.answer(200, [incra]);
+
+    const places = await searchPlaces("inc", signal);
+
+    expect(api.last()).toMatchObject({ method: "GET", path: "/api/places" });
+    expect(api.last().query.get("q")).toBe("inc");
+    expect(places).toEqual([
+      { id: "incra-8", name: "Incra 8", kind: "area", aliases: ["Incra"], parentId: "brazlandia" },
+    ]);
   });
 
-  it("throws with the status when the API fails", async () => {
-    get.mockResolvedValue({ data: undefined, response: { status: 500 } });
-    await expect(searchPlaces("braz", new AbortController().signal)).rejects.toThrow("500");
+  it("an error status rejects, so the picker can say the search failed", async () => {
+    api.answerText(500, "Internal Server Error");
+
+    await expect(searchPlaces("inc", signal)).rejects.toThrow("status 500");
+  });
+
+  it("with the network down it rejects too", async () => {
+    api.dropConnection();
+
+    await expect(searchPlaces("inc", signal)).rejects.toBeInstanceOf(TypeError);
   });
 });
 
 describe("fetchPlace", () => {
-  it("translates the place, ignoring its descendants", async () => {
-    get.mockResolvedValue({
-      data: { place: PLACE_OUT, descendants: [] },
-      response: { status: 200 },
-    });
-    await expect(fetchPlace("brazlandia", new AbortController().signal)).resolves.toEqual(PLACE);
+  it("reads one place by id and keeps only the place, not what is beneath it", async () => {
+    api.answer(200, { place: incra, descendants: [{ ...incra, id: "child" }] });
+
+    const place = await fetchPlace("incra-8", signal);
+
+    expect(api.last().path).toBe("/api/places/incra-8");
+    expect(place?.id).toBe("incra-8");
   });
 
-  it("is null when the catalog does not know it", async () => {
-    get.mockResolvedValue({ data: undefined, response: { status: 404 } });
-    await expect(fetchPlace("nada", new AbortController().signal)).resolves.toBeNull();
+  it("a place the catalog does not know (404) is null, not an error", async () => {
+    api.answer(404, { detail: "Lugar não encontrado." });
+
+    await expect(fetchPlace("nowhere", signal)).resolves.toBeNull();
   });
 
-  it("throws with the status on any other failure", async () => {
-    get.mockResolvedValue({ data: undefined, response: { status: 500 } });
-    await expect(fetchPlace("brazlandia", new AbortController().signal)).rejects.toThrow("500");
+  it("any other failure rejects", async () => {
+    api.answer(503, {});
+
+    await expect(fetchPlace("incra-8", signal)).rejects.toThrow("status 503");
   });
 });

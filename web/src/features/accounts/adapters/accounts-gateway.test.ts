@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { apiClient } from "@/shared/adapters/api/client";
 import type { components } from "@/shared/adapters/api/schema";
 
 import { AccountRequestError } from "../domain/account";
@@ -18,77 +17,89 @@ import {
   updateProfile,
 } from "./accounts-gateway";
 
-vi.mock("@/shared/adapters/api/client", () => ({
-  apiClient: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn(), DELETE: vi.fn() },
-}));
-
-const get = vi.mocked(apiClient.GET);
-const post = vi.mocked(apiClient.POST);
-const patch = vi.mocked(apiClient.PATCH);
-const del = vi.mocked(apiClient.DELETE);
-
-afterEach(() => {
-  vi.resetAllMocks();
+const api = await vi.hoisted(async () => {
+  const { installFakeApi } = await import("@/shared/testing/fake-api");
+  return installFakeApi();
 });
 
-const ACCOUNT_OUT: components["schemas"]["AccountOut"] = {
+const accountOut: components["schemas"]["AccountOut"] = {
   id: "a1",
   phone: "+5561999990001",
   phone_display: "(61) 99999-0001",
   display_name: "Ana",
-  email: "ana@example.org",
-  cars: [],
-  can_drive: false,
-  terms_accepted_at: "2026-01-01T00:00:00-03:00",
+  email: "ana@example.com",
+  cars: [{ id: "c1", model: "Gol", color: "prata", plate: "ABC1D23" }],
+  can_drive: true,
+  terms_accepted_at: "2026-09-01T10:00:00-03:00",
 };
 
-const ACCOUNT = {
-  id: "a1",
-  phone: "+5561999990001",
-  phoneDisplay: "(61) 99999-0001",
-  displayName: "Ana",
-  email: "ana@example.org",
-  cars: [],
-  canDrive: false,
-};
+const signal = new AbortController().signal;
 
-describe("fetchCurrentAccount", () => {
-  it("returns the signed-in account", async () => {
-    get.mockResolvedValue({ data: ACCOUNT_OUT, response: { status: 200 } });
-    await expect(fetchCurrentAccount(new AbortController().signal)).resolves.toEqual(ACCOUNT);
+beforeEach(() => {
+  api.reset();
+});
+
+describe("the current session", () => {
+  it("turns the API's account into the screen's, leaving the terms date behind", async () => {
+    api.answer(200, accountOut);
+
+    const account = await fetchCurrentAccount(signal);
+
+    expect(api.last()).toMatchObject({ method: "GET", path: "/api/accounts/me" });
+    expect(account).toEqual({
+      id: "a1",
+      phone: "+5561999990001",
+      phoneDisplay: "(61) 99999-0001",
+      displayName: "Ana",
+      email: "ana@example.com",
+      cars: [{ id: "c1", model: "Gol", color: "prata", plate: "ABC1D23" }],
+      canDrive: true,
+    });
   });
 
-  it("is null with no session (401 is not an error here)", async () => {
-    get.mockResolvedValue({ data: undefined, response: { status: 401 } });
-    await expect(fetchCurrentAccount(new AbortController().signal)).resolves.toBeNull();
+  it("no session (401) is an answer, not an error: nobody is signed in", async () => {
+    api.answer(401, { detail: "Não autenticado." });
+
+    await expect(fetchCurrentAccount(signal)).resolves.toBeNull();
   });
 
-  it("throws on any other failure", async () => {
-    get.mockResolvedValue({ data: undefined, response: { status: 500 } });
-    await expect(fetchCurrentAccount(new AbortController().signal)).rejects.toBeInstanceOf(
-      AccountRequestError,
-    );
+  it("any other failure is an error, so the screen does not show a signed-out page by mistake", async () => {
+    api.answerText(503, "Service Unavailable");
+
+    await expect(fetchCurrentAccount(signal)).rejects.toMatchObject({
+      status: 503,
+      message: "Não foi possível verificar a sessão.",
+    });
+  });
+
+  it("a missing e-mail reaches the screen as null", async () => {
+    api.answer(200, { ...accountOut, email: undefined }); // JSON leaves the key out
+
+    const account = await fetchCurrentAccount(signal);
+
+    expect(account?.email).toBeNull();
   });
 });
 
-describe("signUp", () => {
-  it("clears a blank e-mail and keeps the rest", async () => {
-    post.mockResolvedValue({
-      data: ACCOUNT_OUT,
-      error: undefined,
-      response: { status: 201 },
-    });
+describe("signing up and in", () => {
+  it("signs up with the API's names, a blank e-mail sent as null", async () => {
+    api.answer(201, accountOut);
+
     await signUp({
-      phone: "61 99999-0001",
-      password: "correct horse battery",
+      phone: "+5561999990001",
+      password: "segredo123",
       displayName: "Ana",
       email: "  ",
       acceptsTerms: true,
     });
-    expect(post).toHaveBeenCalledWith("/api/accounts/register", {
+
+    expect(api.last()).toMatchObject({
+      method: "POST",
+      path: "/api/accounts/register",
+      credentials: "include",
       body: {
-        phone: "61 99999-0001",
-        password: "correct horse battery",
+        phone: "+5561999990001",
+        password: "segredo123",
         display_name: "Ana",
         email: null,
         accepts_terms: true,
@@ -96,149 +107,214 @@ describe("signUp", () => {
     });
   });
 
-  it("throws the API's refusal", async () => {
-    post.mockResolvedValue({
-      data: undefined,
-      error: { detail: "este telefone já tem conta" },
-      response: { status: 409 },
+  it("signs up with a written e-mail as it is", async () => {
+    api.answer(201, accountOut);
+
+    await signUp({
+      phone: "+5561999990001",
+      password: "segredo123",
+      displayName: "Ana",
+      email: "ana@example.com",
+      acceptsTerms: true,
     });
-    await expect(
-      signUp({
-        phone: "61 99999-0001",
-        password: "x",
-        displayName: "Ana",
-        email: "",
-        acceptsTerms: true,
-      }),
-    ).rejects.toMatchObject({ status: 409, message: "este telefone já tem conta" });
-  });
-});
 
-describe("logIn", () => {
-  it("returns the account on success", async () => {
-    post.mockResolvedValue({
-      data: ACCOUNT_OUT,
-      error: undefined,
-      response: { status: 200 },
+    expect(api.last().body).toMatchObject({ email: "ana@example.com" });
+  });
+
+  it("a taken phone comes back as the API's sentence", async () => {
+    api.answer(409, { detail: "Este celular já tem conta." });
+
+    const attempt = signUp({
+      phone: "+5561999990001",
+      password: "segredo123",
+      displayName: "Ana",
+      email: "",
+      acceptsTerms: true,
     });
-    await expect(logIn({ phone: "61 99999-0001", password: "x" })).resolves.toEqual(ACCOUNT);
+
+    await expect(attempt).rejects.toBeInstanceOf(AccountRequestError);
+    await expect(attempt).rejects.toMatchObject({
+      status: 409,
+      message: "Este celular já tem conta.",
+    });
+  });
+
+  it("logs in with phone and password and hands the account back", async () => {
+    api.answer(200, accountOut);
+
+    const account = await logIn({ phone: "+5561999990001", password: "segredo123" });
+
+    expect(api.last()).toMatchObject({
+      path: "/api/accounts/login",
+      body: { phone: "+5561999990001", password: "segredo123" },
+    });
+    expect(account.displayName).toBe("Ana");
+  });
+
+  it("too many attempts (429) pass the API's words on", async () => {
+    api.answer(429, { detail: "Muitas tentativas. Espere um pouco." });
+
+    await expect(logIn({ phone: "+55", password: "x" })).rejects.toMatchObject({
+      status: 429,
+      message: "Muitas tentativas. Espere um pouco.",
+    });
+  });
+
+  it("a validation list becomes one line asking to check the data", async () => {
+    api.answer(422, { detail: [{ loc: ["body", "phone"], msg: "bad" }] });
+
+    await expect(logIn({ phone: "1", password: "x" })).rejects.toMatchObject({
+      message: "Confira os dados informados.",
+    });
+  });
+
+  it("with the network down the failure is not dressed as a refusal", async () => {
+    api.dropConnection();
+
+    const attempt = logIn({ phone: "+5561999990001", password: "x" });
+
+    await expect(attempt).rejects.toBeInstanceOf(TypeError);
+  });
+
+  it("logs out, and says so when the API does not let go", async () => {
+    api.answerEmpty(204);
+    await logOut();
+    expect(api.last()).toMatchObject({ method: "POST", path: "/api/accounts/logout" });
+
+    api.answer(500, { detail: "boom" });
+    await expect(logOut()).rejects.toMatchObject({
+      status: 500,
+      message: "Não foi possível sair.",
+    });
   });
 });
 
-describe("logOut", () => {
-  it("resolves on success", async () => {
-    post.mockResolvedValue({ response: { ok: true } });
-    await expect(logOut()).resolves.toBeUndefined();
-  });
+describe("editing the account", () => {
+  it("sends only the profile fields that changed", async () => {
+    api.answer(200, accountOut);
 
-  it("throws when the API refuses", async () => {
-    post.mockResolvedValue({ response: { ok: false, status: 500 } });
-    await expect(logOut()).rejects.toBeInstanceOf(AccountRequestError);
-  });
-});
-
-describe("updateProfile", () => {
-  it("sends only the fields the caller touched", async () => {
-    patch.mockResolvedValue({
-      data: ACCOUNT_OUT,
-      error: undefined,
-      response: { status: 200 },
-    } as never);
     await updateProfile({ displayName: "Ana Paula" });
-    expect(patch).toHaveBeenCalledWith("/api/accounts/me", { body: { display_name: "Ana Paula" } });
+
+    expect(api.last()).toMatchObject({
+      method: "PATCH",
+      path: "/api/accounts/me",
+      body: { display_name: "Ana Paula" },
+    });
+    expect(api.last().body).not.toHaveProperty("email");
   });
 
-  it("sends a blank e-mail as is: it clears the field (D-139)", async () => {
-    patch.mockResolvedValue({
-      data: ACCOUNT_OUT,
-      error: undefined,
-      response: { status: 200 },
-    } as never);
-    await updateProfile({ email: "" });
-    expect(patch).toHaveBeenCalledWith("/api/accounts/me", { body: { email: "" } });
-  });
-});
+  it("an empty e-mail goes as empty, which clears it (D-139)", async () => {
+    api.answer(200, { ...accountOut, email: null });
 
-describe("changePassword", () => {
-  it("resolves on success", async () => {
-    post.mockResolvedValue({ error: undefined, response: { ok: true } });
+    const account = await updateProfile({ email: "" });
+
+    expect(api.last().body).toEqual({ email: "" });
+    expect(account.email).toBeNull();
+  });
+
+  it("a profile refusal carries the sentence", async () => {
+    api.answer(422, { detail: "E-mail inválido." });
+
+    await expect(updateProfile({ email: "x" })).rejects.toMatchObject({
+      message: "E-mail inválido.",
+    });
+  });
+
+  it("changes the password with the API's names", async () => {
+    api.answer(200, { ok: true });
+
+    await changePassword({ currentPassword: "velha123", newPassword: "nova12345" });
+
+    expect(api.last()).toMatchObject({
+      path: "/api/accounts/me/password",
+      body: { current_password: "velha123", new_password: "nova12345" },
+    });
+  });
+
+  it("a wrong current password is refused with the API's sentence", async () => {
+    api.answer(400, { detail: "A senha atual não confere." });
+
     await expect(
-      changePassword({ currentPassword: "old", newPassword: "new" }),
-    ).resolves.toBeUndefined();
-    expect(post).toHaveBeenCalledWith("/api/accounts/me/password", {
-      body: { current_password: "old", new_password: "new" },
+      changePassword({ currentPassword: "errada", newPassword: "nova12345" }),
+    ).rejects.toMatchObject({ status: 400, message: "A senha atual não confere." });
+  });
+
+  it("adds and removes a car and hands the updated account back", async () => {
+    api.answer(201, accountOut);
+    api.answer(200, { ...accountOut, cars: [] });
+
+    const added = await addCar({ model: "Gol", color: "prata", plate: "ABC1D23" });
+    expect(api.last()).toMatchObject({
+      method: "POST",
+      path: "/api/accounts/cars",
+      body: { model: "Gol", color: "prata", plate: "ABC1D23" },
+    });
+    const removed = await removeCar("c1");
+    expect(api.last()).toMatchObject({ method: "DELETE", path: "/api/accounts/cars/c1" });
+
+    expect(added.cars).toHaveLength(1);
+    expect(removed.cars).toEqual([]);
+  });
+
+  it("a refused car says why", async () => {
+    api.answer(422, { detail: "Placa inválida." });
+    await expect(addCar({ model: "Gol", color: "prata", plate: "?" })).rejects.toMatchObject({
+      message: "Placa inválida.",
+    });
+
+    api.answer(404, {});
+    await expect(removeCar("nope")).rejects.toMatchObject({
+      status: 404,
+      message: "Não foi possível concluir.",
     });
   });
 
-  it("throws the API's refusal, e.g. the wrong current password", async () => {
-    post.mockResolvedValue({
-      error: { detail: "senha atual não confere" },
-      response: { ok: false, status: 403 },
-    });
-    await expect(
-      changePassword({ currentPassword: "old", newPassword: "new" }),
-    ).rejects.toMatchObject({
-      status: 403,
-      message: "senha atual não confere",
-    });
-  });
-});
+  it("deletes the account, and says so when it could not", async () => {
+    api.answerEmpty(204);
+    await deleteAccount();
+    expect(api.last()).toMatchObject({ method: "DELETE", path: "/api/accounts/me" });
 
-describe("addCar and removeCar", () => {
-  it("addCar posts the car and returns the account", async () => {
-    post.mockResolvedValue({
-      data: ACCOUNT_OUT,
-      error: undefined,
-      response: { status: 200 },
-    });
-    await expect(addCar({ model: "Gol", color: "prata", plate: "ABC1234" })).resolves.toEqual(
-      ACCOUNT,
-    );
-  });
-
-  it("removeCar deletes by id and returns the account", async () => {
-    del.mockResolvedValue({
-      data: ACCOUNT_OUT,
-      error: undefined,
-      response: { status: 200 },
-    } as never);
-    await expect(removeCar("c1")).resolves.toEqual(ACCOUNT);
-    expect(del).toHaveBeenCalledWith("/api/accounts/cars/{car_id}", {
-      params: { path: { car_id: "c1" } },
-    });
+    api.answer(500, {});
+    await expect(deleteAccount()).rejects.toMatchObject({ message: "Não foi possível excluir." });
   });
 });
 
-describe("password reset", () => {
-  it("requestPasswordReset resolves on success and throws otherwise", async () => {
-    post.mockResolvedValue({ response: { ok: true } });
-    await expect(requestPasswordReset("61 99999-0001")).resolves.toBeUndefined();
+describe("password recovery", () => {
+  it("asks for a reset with the phone only", async () => {
+    api.answer(200, { ok: true });
 
-    post.mockResolvedValue({ response: { ok: false, status: 500 } });
-    await expect(requestPasswordReset("61 99999-0001")).rejects.toBeInstanceOf(AccountRequestError);
-  });
+    await requestPasswordReset("+5561999990001");
 
-  it("confirmPasswordReset resolves on success and throws the API's refusal otherwise", async () => {
-    post.mockResolvedValue({ error: undefined, response: { ok: true } });
-    await expect(confirmPasswordReset("tok", "correct horse battery")).resolves.toBeUndefined();
-
-    post.mockResolvedValue({
-      error: { detail: "link inválido ou vencido" },
-      response: { ok: false, status: 400 },
-    });
-    await expect(confirmPasswordReset("tok", "correct horse battery")).rejects.toMatchObject({
-      status: 400,
-      message: "link inválido ou vencido",
+    expect(api.last()).toMatchObject({
+      path: "/api/accounts/password-reset",
+      body: { phone: "+5561999990001" },
     });
   });
-});
 
-describe("deleteAccount", () => {
-  it("resolves on success and throws otherwise", async () => {
-    del.mockResolvedValue({ response: { ok: true } } as never);
-    await expect(deleteAccount()).resolves.toBeUndefined();
+  it("a failed request says it could not ask", async () => {
+    api.answer(503, {});
 
-    del.mockResolvedValue({ response: { ok: false, status: 500 } } as never);
-    await expect(deleteAccount()).rejects.toBeInstanceOf(AccountRequestError);
+    await expect(requestPasswordReset("+55")).rejects.toMatchObject({
+      message: "Não foi possível pedir.",
+    });
+  });
+
+  it("confirms with the token and the new password", async () => {
+    api.answer(200, { ok: true });
+
+    await confirmPasswordReset("tok-1", "nova12345");
+
+    expect(api.last()).toMatchObject({
+      path: "/api/accounts/password-reset/confirm",
+      body: { token: "tok-1", password: "nova12345" },
+    });
+  });
+
+  it("an expired link is refused with the API's sentence", async () => {
+    api.answer(400, { detail: "Link vencido. Peça outro." });
+
+    await expect(confirmPasswordReset("old", "nova12345")).rejects.toMatchObject({
+      message: "Link vencido. Peça outro.",
+    });
   });
 });
