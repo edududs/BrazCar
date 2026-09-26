@@ -65,6 +65,15 @@ estrito só reclama quando os dois elementos aparecem juntos: a aba "Conta" e o 
 na tela de entrar derrubaram a `v0.20.1` no GitHub. Para ver o GitHub aqui:
 `yarn e2e --retries=1`.
 
+Valor que a casca repete na tela nunca se afirma por trecho de texto. A barra compacta do detalhe
+(`aria-hidden`) repete a hora e "origem → destino", e o card e o detalhe repetem preço e paradas:
+um `getByText("17:30")` casou dois elementos e derrubou a PR da visão anônima no GitHub. A hora se
+lê com escopo (`page.locator("main header")`), as paradas por papel
+(`getByRole("listitem").filter({ hasText })`, que ignora o que está em `aria-hidden`), e o que
+existe em mais de um lugar de propósito, como o link "Entrar" da barra de abas e do aviso de beta
+fechado, leva `.first()` com um comentário dizendo por quê. Para provar ausência,
+`getByText(...).toHaveCount(0)` continua valendo.
+
 O relatório HTML e os traces ficam em `web/e2e/.state/` e não são versionados. As imagens e o
 `docs/screens/README.md`, sim.
 
