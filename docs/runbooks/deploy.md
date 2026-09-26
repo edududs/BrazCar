@@ -63,6 +63,8 @@ Em 2026-09-26 (v0.23.0) entraram `SIGNUP_LINK` e `EMAIL_CONFIRM_LINK` no `api.en
 `accounts.0003` marcou confirmadas 3 contas com e-mail; o cadastro aberto saiu do ar.
 Em 2026-09-26 (v0.24.0) nada entrou no `api.env`; sem migração; o mural público passou a sair sem
 dado pessoal.
+Em 2026-09-26 (v0.26.0) entrou `CLIENT_IP_HEADER` no `api.env`; migrações de remoção aplicadas; a
+v0.25.0 não foi implantada.
 
 ## Worker do WhatsApp (passo 7a)
 

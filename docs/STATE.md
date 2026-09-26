@@ -32,7 +32,8 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 2026-09-23; a API e o worker na `v0.9.0` desde 2026-09-24; API, worker e front na `v0.11.0` desde
 2026-09-24; API, worker e front na `v0.21.3` desde 2026-09-26; API, worker e front na `v0.22.0`
 desde 2026-09-26; API, worker e front na `v0.23.0` desde 2026-09-26; API, worker e front na
-`v0.24.0` desde 2026-09-26.
+`v0.24.0` desde 2026-09-26; API, worker e front na `v0.26.0` desde 2026-09-26 (a `v0.25.0` não foi
+implantada).
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -465,9 +466,9 @@ canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é e
 - Beta fechado por convite (D-159 a D-164), ainda não fechado de vez. Passo 1 (convite com e-mail
   confirmado, D-159, D-160, D-167, D-168, D-169) no ar desde a v0.23.0 (2026-09-26), cadastro aberto
   fora do ar; passo da visão anônima (D-171) no ar desde a v0.24.0. Passo 2, a porta de saída para o
-  motorista com carona importada pedir a própria remoção (D-162, D-172): o backend está pronto, tag
-  `v0.25.0` (rota `POST /api/removal-requests`, `manage.py approve_removal`), e a página pública
-  `/sair-do-mural`, sem login, está feita no repositório e entra na próxima versão. Passo 4, os
+  motorista com carona importada pedir a própria remoção (D-162, D-172): o backend (rota
+  `POST /api/removal-requests`, `manage.py approve_removal`) e a página pública `/sair-do-mural`,
+  sem login, estão implantados desde a `v0.26.0` (2026-09-26). Passo 4, os
   documentos de privacidade, termo de uso e segurança: feito, `docs/privacy.md`, `docs/terms.md` e
   `docs/security.md`, ligados da frase de aceite do cadastro. Falta só uma rodada única do catálogo
   de telas (depende de autorização para rodar) antes de fechar o beta de vez. Até lá o worker de importação continua
