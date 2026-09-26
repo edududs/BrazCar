@@ -146,8 +146,16 @@ atualização obrigatória. Valor malformado impede a API de subir. Depois de mu
 comando de convite imprime (D-166). Precisa entrar antes do `up -d` da versão que traz o convite:
 sem ela, o comando imprime link de `localhost`. `SIGNUP_LINK` entra junto: é a página do cadastro
 para onde aponta o link de confirmação mandado ao e-mail (D-167). `EMAIL_CONFIRM_LINK` também:
-é a página que recebe o link mandado quando uma conta confirma ou troca o e-mail (D-168). Para
-convidar alguém:
+é a página que recebe o link mandado quando uma conta confirma ou troca o e-mail (D-168). As três
+linhas, como entram no `api.env`:
+
+```bash
+INVITE_LINK=https://brazcar.elj-labs.org/convite?token={token}
+SIGNUP_LINK=https://brazcar.elj-labs.org/cadastro?token={token}
+EMAIL_CONFIRM_LINK=https://brazcar.elj-labs.org/confirmar-email?token={token}
+```
+
+Para convidar alguém:
 
 ```bash
 docker compose exec api python manage.py invite <celular>             # vale 4 horas
