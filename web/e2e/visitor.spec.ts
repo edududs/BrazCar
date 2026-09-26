@@ -176,11 +176,53 @@ test("carona com preço por parada mostra cada tarifa", async ({ page, demo, sna
   await snap(page, "ride/fares-per-stop");
 });
 
-test("carona com observações longas mostra o texto inteiro", async ({ page, demo, snap }) => {
+test("carona com observações longas mostra o texto inteiro", async ({
+  page,
+  demo,
+  signIn,
+  snap,
+}) => {
+  // As observações só aparecem para quem tem sessão (D-171); sem isso o texto nem nasce na tela.
+  await signIn(page, "passenger");
   await openRide(page, demo.ride("open_today_long_notes").id);
 
   await expect(page.getByText("Obrigado, e que a gente chegue bem.")).toBeVisible();
   await snap(page, "ride/long-notes");
+});
+
+test("sem sessão, o detalhe some com quem dirige e o que só ela escreveu", async ({
+  page,
+  demo,
+}) => {
+  // D-171: sem sessão, nome do motorista, mensagem original e observações somem; horário, paradas
+  // e valor continuam.
+  const notes = demo.ride("open_today_long_notes");
+  await openRide(page, notes.id);
+
+  await expect(page.getByText("Obrigado, e que a gente chegue bem.")).toHaveCount(0);
+  await expect(page.getByText("Ana Paula Ribeiro")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Mensagem original", exact: true })).toHaveCount(
+    0,
+  );
+  await expect(page.getByText(clockOf(notes.departureAt))).toBeVisible();
+  await expect(page.getByText("Brazlândia")).toBeVisible();
+  await expect(page.getByText("Setor Bancário Sul")).toBeVisible();
+  await expect(page.getByText("R$ 7,00").first()).toBeVisible();
+
+  const external = demo.ride("imported_external");
+  await openRide(page, external.id);
+
+  await expect(
+    page.getByText("Bom dia! 3 vagas saindo do Setor Tradicional às 6h30 para a Esplanada"),
+  ).toHaveCount(0);
+  await expect(page.getByText("Marcos das Caronas")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Mensagem original", exact: true })).toHaveCount(
+    0,
+  );
+  await expect(page.getByText(clockOf(external.departureAt))).toBeVisible();
+  await expect(page.getByText("Setor Tradicional")).toBeVisible();
+  await expect(page.getByText("Esplanada")).toBeVisible();
+  await expect(page.getByText("R$ 7,00").first()).toBeVisible();
 });
 
 test("endereço de carona que não existe explica o que houve", async ({ page, snap }) => {
