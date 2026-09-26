@@ -6,7 +6,6 @@ never a log line, so a copy of the console never carries what the link itself al
 import asyncio
 from datetime import datetime, timedelta
 from typing import override
-from urllib.parse import quote
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError, CommandParser
@@ -53,16 +52,9 @@ class Command(BaseCommand):
         self._announce(invite, token)
 
     def _announce(self, invite: Invite, token: str) -> None:
-        link = settings.INVITE_LINK.format(token=token)
-        expires = _local(invite.expires_at)
-        text = (
-            f"Oi! Este é o seu convite para o BrazCar: {link}. "
-            f"Vale até {expires} e é só para você, não encaminhe."
-        )
-        wa_link = f"https://wa.me/{invite.phone.jid_user()}?text={quote(text)}"
-        self.stdout.write(f"Link: {link}")
-        self.stdout.write(f"Vence em {expires}")
-        self.stdout.write(f"WhatsApp: {wa_link}")
+        """The link alone on its own line, easy to copy into whatever message the owner writes."""
+        self.stdout.write(settings.INVITE_LINK.format(token=token))
+        self.stdout.write(f"Vale até {_local(invite.expires_at)} (horário de Brasília).")
 
 
 def _local(at: datetime) -> str:
