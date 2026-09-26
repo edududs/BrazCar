@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.conf import settings
 from ninja import Router
 
+from brazcar.accounts.adapters.composition import writer_auth
 from brazcar.accounts.adapters.repository import DjangoAccountRepository
 from brazcar.places.adapters.repository import DjangoCatalogRepository
 from brazcar.rides.application import (
@@ -61,4 +62,4 @@ def rides_router() -> Router:
         revision=revision,
         signal=PollingBoardSignal(revision),
     )
-    return build_router(use_cases)
+    return build_router(use_cases, writer_auth())

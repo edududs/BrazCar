@@ -2,7 +2,6 @@
 
 import json
 import re
-from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import Any
 
@@ -10,9 +9,6 @@ import pytest
 from django.core import mail
 from django.http import HttpResponse
 from django.test.client import AsyncClient
-
-from brazcar.accounts.adapters.repository import DjangoAccountRepository
-from brazcar.accounts.domain import Account
 
 from .signup import registration
 
@@ -22,7 +18,6 @@ pytestmark = [
 ]
 
 FRONT = "http://localhost:5173"
-ACCEPTED_AT = datetime(2026, 9, 22, 12, 0, tzinfo=UTC)
 ANA = {
     "phone": "61 99999-0001",
     "password": "correct horse battery",
@@ -248,50 +243,6 @@ async def test_a_blank_display_name_is_refused() -> None:
 
     assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
     assert body(refused) == {"detail": "nome social não pode ficar vazio"}
-
-
-async def test_an_invalid_email_is_refused() -> None:
-    client = browser()
-    await register(client)
-
-    refused = await client.patch("/api/accounts/me", {"email": "not-an-email"})
-
-    assert refused.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
-    assert body(refused) == {"detail": "e-mail inválido"}
-
-
-async def test_an_email_of_another_account_is_refused_case_aside() -> None:
-    other = Account.register(
-        phone="61 99999-0009", display_name="Bia", email="bia@example.com", accepted_terms_at=ACCEPTED_AT
-    )
-    await DjangoAccountRepository().save(other)
-    client = browser()
-    await register(client)
-
-    refused = await client.patch("/api/accounts/me", {"email": "BIA@example.com"})
-
-    assert refused.status_code == HTTPStatus.CONFLICT
-    assert body(refused) == {"detail": "este e-mail já tem conta"}
-
-
-async def test_another_email_is_no_longer_confirmed() -> None:
-    client = browser()
-    await register(client)
-
-    changed = await client.patch("/api/accounts/me", {"email": "nova@example.com"})
-
-    assert body(changed)["email"] == "nova@example.com"
-    assert body(changed)["email_confirmed"] is False
-
-
-async def test_a_blank_email_clears_it() -> None:
-    client = browser()
-    await register(client)
-
-    cleared = await client.patch("/api/accounts/me", {"email": ""})
-
-    assert cleared.status_code == HTTPStatus.OK
-    assert body(cleared)["email"] is None
 
 
 async def test_changing_the_password_needs_the_current_one_and_then_it_works() -> None:

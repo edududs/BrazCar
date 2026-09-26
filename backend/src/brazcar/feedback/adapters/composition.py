@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.conf import settings
 from ninja import Router
 
+from brazcar.accounts.adapters.composition import writer_auth
 from brazcar.feedback.application import FeedbackRules, SendFeedback
 from brazcar.shared.adapters.clock import SystemClock
 from brazcar.shared.adapters.rate_limit import DjangoRateLimiter
@@ -17,4 +18,5 @@ def feedback_router() -> Router:
     rules = FeedbackRules(
         limit=settings.FEEDBACK_LIMIT, window=timedelta(hours=settings.FEEDBACK_WINDOW_HOURS)
     )
-    return build_router(SendFeedback(DjangoFeedbackBox(), DjangoRateLimiter(), SystemClock(), rules))
+    send = SendFeedback(DjangoFeedbackBox(), DjangoRateLimiter(), SystemClock(), rules)
+    return build_router(send, writer_auth())

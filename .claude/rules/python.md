@@ -19,7 +19,9 @@ paths:
   `ping` a cada 15s, nunca comentário: o navegador esconde comentários do JavaScript (ADR-0013).
   Rota SSE não segura conexão do ORM.
 - Rota que exige login usa `shared/adapters/session_auth.session_auth`; o que chega em
-  `request.auth` é só o identificador da conta, lido por `signed_in_account_id(request)`. Método
+  `request.auth` é só o identificador da conta, lido por `signed_in_account_id(request)`. Rota de
+  escrita usa `writer_auth()` de `accounts/adapters/composition.py`, que a composição passa ao
+  `build_router`: conta sem e-mail confirmado recebe 403 (D-168). Método
   que altera estado passa pela checagem de `Origin` do middleware (D-091); não há token de CSRF.
 - ninja é adaptador de entrada: traduz HTTP para DTO, chama o caso de uso, traduz erro de
   domínio em resposta. Sem regra de negócio em rota.

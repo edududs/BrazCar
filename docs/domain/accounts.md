@@ -10,7 +10,9 @@
 | telefone de conta | `AccountPhone`, `account_phone` | A regra deste contexto sobre o `PhoneNumber`: só celular do Brasil (D-137). Fixo é `NotAMobilePhoneError`, número de fora é `ForeignPhoneNumberError`. |
 | nome social | `display_name` | Obrigatório. É o único nome exibido no mural, e o cadastro avisa isso. |
 | e-mail | `email` | Único por conta, sem distinguir maiúsculas. Toda conta nova tem, confirmado; conta de antes do convite pode não ter. Recupera a senha. |
-| e-mail confirmado | `email_confirmed_at`, `email_confirmed` | Quando se provou que o e-mail chega à pessoa. Só existe com e-mail; trocar o e-mail perde a confirmação. |
+| e-mail confirmado | `email_confirmed_at`, `email_confirmed` | Quando se provou que o e-mail chega à pessoa. Só existe com e-mail. O e-mail só muda por link, que já o grava confirmado (`Account.confirm_email`). |
+| ação exigida | `required_action`, `RequiredAction` | Calculada, nunca gravada: o que a conta precisa fazer antes de escrever qualquer outra coisa. Hoje só `confirm_email`, para conta sem e-mail confirmado; `null` quando não falta nada (D-168). |
+| conta retida | `WriteGate`, `AccountWriteGate`, `writer_auth` | Conta com ação exigida: entra e lê, mas toda escrita responde 403 com a ação no corpo, até ela ser cumprida (D-168). |
 | telefone verificado | `phone_verified_at` | Previsto no modelo, sem uso no MVP. |
 | carro | `Car` | Modelo, cor e placa. Uma conta pode ter vários. |
 | placa | `LicensePlate` | Value object. Aceita o formato antigo e o Mercosul, normaliza para maiúsculas sem hífen. |
@@ -18,7 +20,9 @@
 | exclusão de conta | `DeleteAccount` | Caso de uso que apaga a conta no lugar (`erase`): dados pessoais somem, o identificador fica para o histórico. |
 | credenciais | `Credentials` | Porta: guarda e confere a senha. O domínio nunca a vê. |
 | aceite dos termos | `terms_accepted_at` | Quando a pessoa aceitou os termos no cadastro (D-033). |
-| editar dados pessoais | `Account.update_profile`, `UpdateProfile` | Nome social e e-mail, os únicos campos que a própria conta edita (D-139). |
+| editar dados pessoais | `Account.update_profile`, `UpdateProfile` | Nome social, o único campo que a própria conta edita livremente (D-139, D-168). |
+| trocar o e-mail | `RequestEmailChange`, `ConfirmEmail` | Pedir o link para o endereço novo e abri-lo com a sessão da conta. O e-mail antigo vale até a confirmação (D-168). |
+| link de troca de e-mail | `EmailConfirmation`, `EmailConfirmationTokens` | O que o link carrega (conta, e-mail novo, prazo de 2 horas e a confirmação que a conta tinha ao pedir) e a porta que o assina e lê, sem guardar nada no banco. Morre na primeira confirmação posterior. |
 | trocar a senha | `ChangePassword` | Exige a senha atual, verificada pela porta `Credentials`; sem ela, não muda nada (D-139). |
 | convite | `Invite`, `IssueInvite` | Agregado: acesso de uso único, com prazo, que o dono emite para um telefone. Substitui o cadastro aberto (D-159, D-166). |
 | token do convite | `invite_digest` | O segredo que vai no link do convite. Só o resumo sha256 é guardado (`token_digest`). |
@@ -35,6 +39,7 @@
 - E-mail é único por conta, sem distinguir maiúsculas.
 - Telefone de conta é celular do Brasil. A conta e o contato o mostram como `(61) 99999-9999`.
 - Ver o mural não exige conta. Qualquer interação exige: publicar, pedir contato, editar.
+- Conta sem e-mail confirmado não escreve até confirmar um (D-168).
 - Publicar carona exige pelo menos um carro. Uma placa aparece uma vez por conta.
 - A marca do carro não é guardada: o modelo já a traz ("Gol prata", "BYD cinza").
 - CPF, CNH e documentos ficam fora.
@@ -92,21 +97,60 @@ tinha segue sem e-mail.
 
 ## Edição de dados pessoais
 
-`PATCH /api/accounts/me` edita nome social e e-mail, os dois opcionais no corpo: campo ausente
-não muda, e-mail em branco (`""`) limpa o e-mail. Trocar o e-mail perde a confirmação, e e-mail de
-outra conta é recusado com 409. Nome social, quando enviado, segue a mesma regra do cadastro (não
-pode ficar vazio). O telefone não está aqui: ele é a identidade da conta e a
+`PATCH /api/accounts/me` edita só o nome social: ausente no corpo, não muda; enviado, segue a
+mesma regra do cadastro (não pode ficar vazio). O e-mail saiu daqui (D-168): muda só pelo link da
+seção seguinte, e e-mail em branco não limpa mais nada. O telefone não está aqui: ele é a identidade da conta e a
 verificação de posse ainda não existe (D-027), então trocá-lo exigiria provar que a pessoa continua
 dona do número novo. A senha também não: ela tem o próprio caminho, `ChangePassword`
 (`POST /api/accounts/me/password`), com a senha atual conferida pela mesma porta `Credentials` que
 o login usa, e o mesmo limite de tentativas (D-097), para uma sessão roubada não virar oráculo de
 força bruta contra a senha de verdade.
 
+## E-mail confirmado e troca por link
+
+Toda conta nascida do convite tem o e-mail confirmado. A troca, e a primeira confirmação de uma
+conta antiga, passam por link (D-168):
+
+- `POST /api/accounts/me/email` com `{email}` manda ao endereço novo um link para a página de
+  `EMAIL_CONFIRM_LINK`, dizendo que ele vale 2 horas. E-mail que já é de outra conta, sem distinguir
+  maiúsculas, é recusado com 409, e o pedido passa pelo limite de 5 por hora por conta
+  (`AccountLimits`, chave `email-change:<conta>`). Nada muda na conta: o e-mail antigo continua
+  valendo, e recuperando a senha, até a confirmação.
+- `POST /api/accounts/me/email/confirm` com `{token}` grava o e-mail novo com `email_confirmed_at`
+  e devolve a conta. Exige a sessão da conta para a qual o link foi mandado: um link vazado não troca
+  o e-mail sozinho, e o front leva a pessoa a entrar e volta ao link. Token forjado, vencido, de
+  outra conta ou já usado dá o mesmo 400, "link inválido ou vencido"; endereço que ganhou conta
+  depois do envio dá 409.
+
+O token não guarda estado no banco. É o `EmailConfirmation` inteiro, assinado com a chave do
+projeto (`EmailConfirmationTokens`): conta, e-mail novo, prazo e a confirmação que a conta tinha ao
+pedir. Como toda confirmação muda `email_confirmed_at`, a primeira que acontecer mata todos os links
+pedidos antes dela, e o link vale uma vez. A assinatura não esconde o conteúdo: o endereço e o
+identificador da conta vão legíveis, mas só para o próprio endereço. O token vai no corpo, nunca no
+caminho, e por isso não aparece no log de requisição.
+
+## Conta antiga retida
+
+Conta de antes do convite sem e-mail confirmado entra normalmente, mas fica retida até confirmar um
+(D-168), porque é o e-mail que torna a conta responsabilizável (D-160). `AccountOut` traz
+`required_action: "confirm_email"`, calculado em `Account.required_action`, e o front leva a pessoa à
+troca de e-mail.
+
+- Retido: publicar, editar, mudar vagas, cancelar e repetir carona, pedir contato, cadastrar e tirar
+  carro, mandar opinião, `PATCH /api/accounts/me` e trocar a senha. Respondem 403 com
+  `{"detail": "confirme seu e-mail para continuar", "required_action": "confirm_email"}`.
+- Livre: ver o mural, entrar, sair, `GET /api/accounts/me`, as duas rotas do e-mail, a recuperação
+  de senha e a exclusão da conta.
+
+O bloqueio mora na autenticação, não em cada rota: as rotas de escrita usam `writer_auth`, a sessão
+de `gated_session_auth` com o `AccountWriteGate` deste contexto, que lê `required_action` pela porta
+`AccountRepository`. `shared` só sabe que uma conta pode estar retida, nunca por quê.
+
 ## Recuperação de senha
 
 Por e-mail, quando informado (D-092). Sem e-mail, o pedido responde igual e nada é enviado; a
-pessoa pode agora adicionar um e-mail pela edição de dados pessoais e passar a ter recuperação; sem
-isso, a recuperação manual fica para quando houver admin. Não há SMS.
+pessoa entra com a senha, confirma um e-mail pelo link e passa a ter recuperação; sem isso, a
+recuperação manual fica para quando houver admin. Não há SMS.
 
 ## Termos e privacidade
 

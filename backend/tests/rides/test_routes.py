@@ -1,6 +1,7 @@
 """The routes against the real composition: ninja, session, use cases, ORM, catalog, revision."""
 
 import json
+import re
 from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -8,13 +9,14 @@ from typing import Any, cast
 from zoneinfo import ZoneInfo
 
 import pytest
+from django.core import mail
 from django.http import HttpResponse, StreamingHttpResponse
 from django.test.client import AsyncClient
 from django.utils import timezone
 
 from brazcar.places.adapters.repository import DjangoCatalogRepository
 from brazcar.places.domain import Catalog, Place
-from tests.accounts.signup import registration
+from tests.accounts.signup import PASSWORD, legacy_account, registration
 
 pytestmark = [
     pytest.mark.django_db(transaction=True),
@@ -119,6 +121,31 @@ async def test_publishing_needs_a_session_a_car_and_known_places() -> None:
     assert without_car.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
     assert nowhere.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
     assert both.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+
+
+async def test_an_account_from_before_the_invite_publishes_once_it_confirms_its_email() -> None:
+    """D-168, the whole way: signed in, the account is held; the link sent to the e-mail it gives
+    lets it write again."""
+    await legacy_account(phone="61 99999-0005")
+    client = Browser()
+    await client.post("/api/accounts/login", {"phone": "61 99999-0005", "password": PASSWORD})
+
+    before = body(await client.get("/api/accounts/me"))
+    held = await client.post("/api/rides", ride_payload())
+    asked = await client.post("/api/accounts/me/email", {"email": "antiga@example.com"})
+    link = re.search(r"confirmar-email\?token=(\S+)", mail.outbox[-1].body)
+    assert link is not None
+    confirmed = await client.post("/api/accounts/me/email/confirm", {"token": link.group(1)})
+    with_car = await client.post("/api/accounts/cars", GOL)
+    ride = await publish(client, body(with_car)["cars"][0]["id"])
+
+    assert before["required_action"] == "confirm_email"
+    assert held.status_code == HTTPStatus.FORBIDDEN
+    assert body(held) == {"detail": "confirme seu e-mail para continuar", "required_action": "confirm_email"}
+    assert asked.status_code == HTTPStatus.ACCEPTED
+    assert mail.outbox[-1].to == ["antiga@example.com"]
+    assert body(confirmed)["required_action"] is None
+    assert ride["driver_name"] == "Antiga"
 
 
 async def test_more_than_four_seats_is_refused_on_publishing_and_on_changing_seats() -> None:

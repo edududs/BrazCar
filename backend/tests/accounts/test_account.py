@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -152,26 +152,11 @@ def test_update_profile_with_nothing_given_is_the_same_account() -> None:
     assert account.update_profile() is account
 
 
-def test_update_profile_blank_email_clears_it() -> None:
-    account = register(email="ana@example.com")
-
-    cleared = account.update_profile(email="")
-
-    assert cleared.email is None
-
-
 def test_update_profile_refuses_a_blank_display_name() -> None:
     account = register()
 
     with pytest.raises(ValidationError):
         account.update_profile(display_name="   ")
-
-
-def test_update_profile_refuses_an_email_that_is_not_one() -> None:
-    account = register()
-
-    with pytest.raises(ValidationError):
-        account.update_profile(email="not-an-email")
 
 
 def invited(email: str = "ana@example.com") -> Account:
@@ -194,14 +179,29 @@ def test_a_confirmation_needs_an_email() -> None:
         register().evolve(email_confirmed_at=ACCEPTED_AT)
 
 
-@pytest.mark.parametrize("same", ["ana@example.com", "  ANA@Example.com "])
-def test_update_profile_keeps_the_confirmation_of_the_same_address(same: str) -> None:
-    assert invited().update_profile(email=same).email_confirmed
+@pytest.mark.parametrize(
+    ("account", "action"),
+    [
+        (register(), "confirm_email"),  # no e-mail at all
+        (register(email="ana@example.com"), "confirm_email"),  # an e-mail never proven
+        (invited(), None),
+    ],
+    ids=["without-email", "unconfirmed", "confirmed"],
+)
+def test_only_a_confirmed_email_leaves_nothing_required(account: Account, action: str | None) -> None:
+    assert account.required_action == action
 
 
-@pytest.mark.parametrize("other", ["outra@example.com", ""])
-def test_update_profile_loses_the_confirmation_with_another_address_or_none(other: str) -> None:
-    changed = invited().update_profile(email=other)
+def test_confirming_an_email_replaces_the_address_and_clears_the_requirement() -> None:
+    confirmed_at = ACCEPTED_AT + timedelta(days=3)
 
-    assert changed.email_confirmed_at is None
-    assert changed.email == (other or None)
+    confirmed = register().confirm_email("ana@example.com", confirmed_at)
+
+    assert confirmed.email == "ana@example.com"
+    assert confirmed.email_confirmed_at == confirmed_at
+    assert confirmed.required_action is None
+
+
+def test_confirming_refuses_an_address_that_is_not_one() -> None:
+    with pytest.raises(ValidationError):
+        register().confirm_email("not-an-email", ACCEPTED_AT)

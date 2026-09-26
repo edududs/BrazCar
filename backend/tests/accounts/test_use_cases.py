@@ -147,15 +147,6 @@ async def test_update_profile_saves_the_change_and_leaves_absent_fields_alone(ct
     assert await ctx.accounts.get(account.id) == renamed
 
 
-async def test_update_profile_blank_email_clears_it(ctx: Context) -> None:
-    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana", email="a@b.com")
-
-    cleared = await ctx.update_profile(account.id, email="")
-
-    assert cleared.email is None
-    assert await ctx.accounts.get(account.id) == cleared
-
-
 async def test_change_password_needs_the_current_one_and_then_takes_hold(ctx: Context) -> None:
     account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
 

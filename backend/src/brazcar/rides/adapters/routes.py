@@ -16,6 +16,7 @@ from django.http import HttpRequest, StreamingHttpResponse
 from ninja import Field, Query, Router, Schema
 from ninja.errors import HttpError
 from ninja.responses import Status
+from ninja.security.base import AuthBase
 from pydantic import ValidationError
 
 from brazcar.rides.application import (
@@ -244,11 +245,12 @@ class RideUseCases:
     signal: BoardSignal
 
 
-def build_router(use_cases: RideUseCases) -> Router:
+def build_router(use_cases: RideUseCases, writer: AuthBase) -> Router:
+    """`writer` guards every write: an account held until it confirms its e-mail gets 403 (D-168)."""
     router = Router(tags=["rides"])
     _add_board_routes(router, use_cases)
-    _add_driver_routes(router, use_cases)
-    _add_contact_route(router, use_cases)
+    _add_driver_routes(router, use_cases, writer)
+    _add_contact_route(router, use_cases, writer)
     return router
 
 
@@ -297,13 +299,13 @@ def _add_board_routes(router: Router, use_cases: RideUseCases) -> None:
             raise HttpError(HTTPStatus.NOT_FOUND, "carona não encontrada") from error
 
 
-def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
+def _add_driver_routes(router: Router, use_cases: RideUseCases, writer: AuthBase) -> None:
     """With a session, and only the driver's own rides."""
 
     @router.post(
         "",
-        response=with_errors({HTTPStatus.CREATED: RideOut}, unauthorized=True, validation=True),
-        auth=session_auth,
+        response=with_errors({HTTPStatus.CREATED: RideOut}, unauthorized=True, held=True, validation=True),
+        auth=writer,
         operation_id="publish_ride",
     )
     async def publish(request: HttpRequest, data: PublishIn) -> Status[RideOut]:
@@ -324,9 +326,15 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
     @router.patch(
         "/{ride_id}",
         response=with_errors(
-            RideOut, unauthorized=True, forbidden=True, not_found=True, conflict=True, validation=True
+            RideOut,
+            unauthorized=True,
+            held=True,
+            forbidden=True,
+            not_found=True,
+            conflict=True,
+            validation=True,
         ),
-        auth=session_auth,
+        auth=writer,
         operation_id="edit_ride",
     )
     async def edit(request: HttpRequest, ride_id: UUID, data: EditIn) -> RideOut:
@@ -346,9 +354,15 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
     @router.post(
         "/{ride_id}/seats",
         response=with_errors(
-            RideOut, unauthorized=True, forbidden=True, not_found=True, conflict=True, validation=True
+            RideOut,
+            unauthorized=True,
+            held=True,
+            forbidden=True,
+            not_found=True,
+            conflict=True,
+            validation=True,
         ),
-        auth=session_auth,
+        auth=writer,
         operation_id="change_seats",
     )
     async def change_seats(request: HttpRequest, ride_id: UUID, data: SeatsIn) -> RideOut:
@@ -361,9 +375,15 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
     @router.post(
         "/{ride_id}/cancel",
         response=with_errors(
-            RideOut, unauthorized=True, forbidden=True, not_found=True, conflict=True, validation=True
+            RideOut,
+            unauthorized=True,
+            held=True,
+            forbidden=True,
+            not_found=True,
+            conflict=True,
+            validation=True,
         ),
-        auth=session_auth,
+        auth=writer,
         operation_id="cancel_ride",
     )
     async def cancel(request: HttpRequest, ride_id: UUID) -> RideOut:
@@ -378,12 +398,13 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
         response=with_errors(
             {HTTPStatus.CREATED: RideOut},
             unauthorized=True,
+            held=True,
             forbidden=True,
             not_found=True,
             conflict=True,
             validation=True,
         ),
-        auth=session_auth,
+        auth=writer,
         operation_id="repeat_ride",
     )
     async def repeat(request: HttpRequest, ride_id: UUID, data: RepeatIn) -> Status[RideOut]:
@@ -394,18 +415,19 @@ def _add_driver_routes(router: Router, use_cases: RideUseCases) -> None:
         return Status(HTTPStatus.CREATED, RideOut.of(await use_cases.show(ride.id, driver_id)))
 
 
-def _add_contact_route(router: Router, use_cases: RideUseCases) -> None:
+def _add_contact_route(router: Router, use_cases: RideUseCases, writer: AuthBase) -> None:
     @router.post(
         "/{ride_id}/contact",
         response=with_errors(
             ContactOut,
             unauthorized=True,
+            held=True,
             not_found=True,
             conflict=True,
             too_many_requests=True,
             validation=True,
         ),
-        auth=session_auth,
+        auth=writer,
         operation_id="request_contact",
     )
     async def request_contact(request: HttpRequest, ride_id: UUID) -> ContactOut:

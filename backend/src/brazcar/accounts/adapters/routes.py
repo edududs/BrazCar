@@ -14,12 +14,14 @@ from django.http import HttpRequest
 from ninja import Router, Schema
 from ninja.errors import HttpError
 from ninja.responses import Status
+from ninja.security.base import AuthBase
 from pydantic import ValidationError
 
 from brazcar.accounts.application import (
     AccountRepository,
     AddCar,
     ChangePassword,
+    ConfirmEmail,
     DeleteAccount,
     GiveInviteEmail,
     InviteView,
@@ -28,6 +30,7 @@ from brazcar.accounts.application import (
     OpenSignup,
     RegisterFromInvite,
     RemoveCar,
+    RequestEmailChange,
     RequestPasswordReset,
     ResetPassword,
     SignupView,
@@ -40,6 +43,7 @@ from brazcar.accounts.domain import (
     CarNotFoundError,
     EmailAlreadyRegisteredError,
     ForeignPhoneNumberError,
+    InvalidConfirmationLinkError,
     InvalidCredentialsError,
     InvalidResetTokenError,
     InviteAlreadyUsedError,
@@ -52,6 +56,7 @@ from brazcar.accounts.domain import (
     NotAMobilePhoneError,
     PhoneAlreadyRegisteredError,
     PlateAlreadyOnAccountError,
+    RequiredAction,
     ShortText,
     TooManyAttemptsError,
     WrongCurrentPasswordError,
@@ -85,6 +90,7 @@ class AccountOut(Schema):
     display_name: str
     email: str | None
     email_confirmed: bool  # the account came through the invite, or its e-mail was proven (D-167)
+    required_action: RequiredAction | None  # what to do before writing anything else (D-168)
     terms_accepted_at: datetime
     cars: list[CarOut]
     can_drive: bool
@@ -98,6 +104,7 @@ class AccountOut(Schema):
             display_name=account.display_name,
             email=account.email,
             email_confirmed=account.email_confirmed,
+            required_action=account.required_action,
             terms_accepted_at=account.terms_accepted_at,
             cars=[CarOut.of(car) for car in account.cars],
             can_drive=account.can_drive,
@@ -163,10 +170,19 @@ class CarIn(Schema):
 
 
 class ProfileIn(Schema):
-    """Every field optional: absent means unchanged; a blank e-mail clears it (D-139)."""
+    """Absent means unchanged (D-139). The e-mail is not here: it changes by a link (D-168)."""
 
     display_name: str | None = None
-    email: str | None = None
+
+
+class EmailChangeIn(Schema):
+    email: str  # unconstrained here, as in `InviteEmailIn`: the domain reads it (D-158)
+
+
+class EmailConfirmIn(Schema):
+    """The link's token goes in the body, never in the path, so no request log ever has it."""
+
+    token: str
 
 
 class ChangePasswordIn(Schema):
@@ -198,6 +214,7 @@ EMAIL_TAKEN = "este e-mail já tem conta"
 INVITE_USED = "este convite já foi usado"
 PHONE_TAKEN = "este telefone já tem conta"
 SUPERSEDED = "este convite foi substituído por um convite mais novo"
+INVALID_LINK = "link inválido ou vencido"
 
 INVITE_GONE: dict[type[AccountError], str] = {  # the invite's own link, and the e-mail step
     InviteExpiredError: "este convite venceu; peça um novo a quem convidou você",
@@ -231,6 +248,8 @@ class AccountUseCases:
     register: RegisterFromInvite
     log_in: LogIn
     update_profile: UpdateProfile
+    request_email_change: RequestEmailChange
+    confirm_email: ConfirmEmail
     change_password: ChangePassword
     add_car: AddCar
     remove_car: RemoveCar
@@ -239,12 +258,16 @@ class AccountUseCases:
     delete: DeleteAccount
 
 
-def build_router(use_cases: AccountUseCases) -> Router:
+def build_router(use_cases: AccountUseCases, writer: AuthBase) -> Router:
+    """`writer` guards what changes state: a signed-in account that must confirm its e-mail first
+    gets 403 there (D-168). Log in and out, "who am I", the e-mail's own routes, the password's
+    recovery and deleting the account stay open to it, on the plain `session_auth` or none."""
     router = Router(tags=["accounts"])
     _add_invite_routes(router, use_cases)
     _add_entry_routes(router, use_cases)
-    _add_own_account_routes(router, use_cases)
-    _add_profile_routes(router, use_cases)
+    _add_own_account_routes(router, use_cases, writer)
+    _add_email_routes(router, use_cases)
+    _add_profile_routes(router, use_cases, writer)
     return router
 
 
@@ -350,11 +373,11 @@ def _add_entry_routes(router: Router, use_cases: AccountUseCases) -> None:
         try:
             await use_cases.reset_password(token=data.token, password=data.password)
         except InvalidResetTokenError as error:
-            raise HttpError(HTTPStatus.BAD_REQUEST, "link inválido ou vencido") from error
+            raise HttpError(HTTPStatus.BAD_REQUEST, INVALID_LINK) from error
         return Done()
 
 
-def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
+def _add_own_account_routes(router: Router, use_cases: AccountUseCases, writer: AuthBase) -> None:
     """With a session: the owner's own account, and nobody else's."""
 
     @router.post("/logout", response=Done, operation_id="log_out")
@@ -373,8 +396,8 @@ def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
 
     @router.post(
         "/cars",
-        response=with_errors(AccountOut, unauthorized=True, conflict=True, validation=True),
-        auth=session_auth,
+        response=with_errors(AccountOut, unauthorized=True, held=True, conflict=True, validation=True),
+        auth=writer,
         operation_id="add_car",
     )
     async def add_car(request: HttpRequest, data: CarIn) -> AccountOut:
@@ -388,8 +411,8 @@ def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
 
     @router.delete(
         "/cars/{car_id}",
-        response=with_errors(AccountOut, unauthorized=True, not_found=True, validation=True),
-        auth=session_auth,
+        response=with_errors(AccountOut, unauthorized=True, held=True, not_found=True, validation=True),
+        auth=writer,
         operation_id="remove_car",
     )
     async def remove_car(request: HttpRequest, car_id: UUID) -> AccountOut:
@@ -408,23 +431,67 @@ def _add_own_account_routes(router: Router, use_cases: AccountUseCases) -> None:
         return Done()
 
 
-def _add_profile_routes(router: Router, use_cases: AccountUseCases) -> None:
-    """Editing the own account (D-139): the display name, the e-mail, and the password."""
+def _add_email_routes(router: Router, use_cases: AccountUseCases) -> None:
+    """Changing the e-mail by a link to the new address (D-168). With the session, and open to an
+    account held for its e-mail: these are the way out of the hold."""
+
+    @router.post(
+        "/me/email",
+        response=with_errors(
+            {HTTPStatus.ACCEPTED: Done},
+            unauthorized=True,
+            conflict=True,
+            too_many_requests=True,
+            validation=True,
+        ),
+        auth=session_auth,
+        operation_id="request_email_change",
+    )
+    async def request_email_change(request: HttpRequest, data: EmailChangeIn) -> Status[Done]:
+        """Mail the link. The current e-mail keeps its place until the link is opened."""
+        try:
+            await use_cases.request_email_change(signed_in_account_id(request), email=data.email)
+        except EmailAlreadyRegisteredError as error:
+            raise HttpError(HTTPStatus.CONFLICT, EMAIL_TAKEN) from error
+        except TooManyAttemptsError as error:
+            raise HttpError(HTTPStatus.TOO_MANY_REQUESTS, "muitos envios; espere um pouco") from error
+        except ValidationError as error:
+            raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, _account_field_refusal(error)) from error
+        return Status(HTTPStatus.ACCEPTED, Done())
+
+    @router.post(
+        "/me/email/confirm",
+        response=with_errors(AccountOut, bad_request=True, unauthorized=True, conflict=True, validation=True),
+        auth=session_auth,
+        operation_id="confirm_email",
+    )
+    async def confirm_email(request: HttpRequest, data: EmailConfirmIn) -> AccountOut:
+        """Needs the session of the account the link was sent for: a link that leaks changes nothing
+        by itself. Another account's link reads as invalid, like a lapsed or spent one."""
+        try:
+            account = await use_cases.confirm_email(signed_in_account_id(request), token=data.token)
+        except InvalidConfirmationLinkError as error:
+            raise HttpError(HTTPStatus.BAD_REQUEST, INVALID_LINK) from error
+        except EmailAlreadyRegisteredError as error:
+            raise HttpError(HTTPStatus.CONFLICT, EMAIL_TAKEN) from error
+        return AccountOut.of(account)
+
+
+def _add_profile_routes(router: Router, use_cases: AccountUseCases, writer: AuthBase) -> None:
+    """Editing the own account (D-139): the display name and the password."""
 
     @router.patch(
         "/me",
-        response=with_errors(AccountOut, unauthorized=True, conflict=True, validation=True),
-        auth=session_auth,
+        response=with_errors(AccountOut, unauthorized=True, held=True, validation=True),
+        auth=writer,
         operation_id="update_profile",
     )
     async def update_profile(request: HttpRequest, data: ProfileIn) -> AccountOut:
-        """The display name and the e-mail only: the phone and the password have their own path."""
+        """The display name only: the e-mail, the phone and the password have their own path."""
         try:
             account = await use_cases.update_profile(
-                signed_in_account_id(request), display_name=data.display_name, email=data.email
+                signed_in_account_id(request), display_name=data.display_name
             )
-        except EmailAlreadyRegisteredError as error:
-            raise HttpError(HTTPStatus.CONFLICT, EMAIL_TAKEN) from error
         except ValidationError as error:
             raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, _account_field_refusal(error)) from error
         return AccountOut.of(account)
@@ -432,9 +499,9 @@ def _add_profile_routes(router: Router, use_cases: AccountUseCases) -> None:
     @router.post(
         "/me/password",
         response=with_errors(
-            Done, unauthorized=True, forbidden=True, too_many_requests=True, validation=True
+            Done, unauthorized=True, forbidden=True, held=True, too_many_requests=True, validation=True
         ),
-        auth=session_auth,
+        auth=writer,
         operation_id="change_password",
     )
     async def change_password(request: HttpRequest, data: ChangePasswordIn) -> Done:

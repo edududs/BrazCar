@@ -21,6 +21,13 @@ class ErrorOut(Schema):
     detail: str
 
 
+class HeldOut(ErrorOut):
+    """403 of a route behind `gated_session_auth` (D-168). `required_action` names what the account
+    must do before it writes (`confirm_email`); it is absent from the route's own 403 refusals."""
+
+    required_action: str | None = None
+
+
 class ValidationErrorItem(Schema):
     type: str
     loc: list[str | int]
@@ -41,6 +48,7 @@ def with_errors(  # noqa: PLR0913 - one flag per status a route can reach, all o
     bad_request: bool = False,
     unauthorized: bool = False,
     forbidden: bool = False,
+    held: bool = False,
     not_found: bool = False,
     conflict: bool = False,
     gone: bool = False,
@@ -50,14 +58,15 @@ def with_errors(  # noqa: PLR0913 - one flag per status a route can reach, all o
     """`response`, plus the error status(es) this exact route can reach. Order matches how a
     request is refused: the request itself, authentication, authorization, "not found", a conflict
     with the resource's own state, a resource that existed and no longer serves ("gone"), a rate
-    limit, then input validation."""
+    limit, then input validation. `held` is the 403 of an account that must do something first
+    (`gated_session_auth`), a superset of the plain one, so it wins when a route has both."""
     merged: Response = dict(response) if isinstance(response, dict) else {HTTPStatus.OK: response}
     if bad_request:
         merged[HTTPStatus.BAD_REQUEST] = ErrorOut
     if unauthorized:
         merged[HTTPStatus.UNAUTHORIZED] = ErrorOut
-    if forbidden:
-        merged[HTTPStatus.FORBIDDEN] = ErrorOut
+    if forbidden or held:
+        merged[HTTPStatus.FORBIDDEN] = HeldOut if held else ErrorOut
     if not_found:
         merged[HTTPStatus.NOT_FOUND] = ErrorOut
     if conflict:
