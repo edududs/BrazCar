@@ -1,6 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 
-import { apiOrigin, apiPort, manifestPath, webOrigin, webPort } from "./e2e/support/origins";
+import {
+  apiOrigin,
+  apiPort,
+  mailDir,
+  manifestPath,
+  webOrigin,
+  webPort,
+} from "./e2e/support/origins";
 
 /**
  * End to end suite and screens catalogue (D-133, D-134).
@@ -69,6 +76,14 @@ export default defineConfig({
         DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1",
         DJANGO_CORS_ALLOWED_ORIGINS: webOrigin,
         PASSWORD_RESET_LINK: `${webOrigin}/redefinir-senha?token={token}`,
+        // The invite and e-mail links (D-166 to D-168) point at the suite's own web origin, and
+        // the mails themselves go to a file the fixtures read the link off (`support/mail.ts`),
+        // never to `mail.outbox`.
+        INVITE_LINK: `${webOrigin}/convite?token={token}`,
+        SIGNUP_LINK: `${webOrigin}/cadastro?token={token}`,
+        EMAIL_CONFIRM_LINK: `${webOrigin}/confirmar-email?token={token}`,
+        EMAIL_BACKEND: "django.core.mail.backends.filebased.EmailBackend",
+        EMAIL_FILE_PATH: mailDir,
         PYTHONIOENCODING: "utf-8",
       },
     },

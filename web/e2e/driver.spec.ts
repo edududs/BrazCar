@@ -21,15 +21,19 @@ async function pickPlace(page: Page, index: number, label: string, place: string
   await page.getByRole("option", { name: place, exact: true }).click();
 }
 
-test("sem carro, publicar manda cadastrar um", async ({ page, signIn, snap }) => {
+test("sem e-mail confirmado, publicar mostra a conta retida", async ({ page, signIn, snap }) => {
+  // driver_no_car ficou sem e-mail de propósito (D-168): antes desta conta caía direto na tela
+  // "sem carro"; agora a conta retida vem primeiro, e "sem carro" nem chega a aparecer para ela.
   await signIn(page, "driver_no_car");
   await page.goto("/publicar");
 
   await expect(
-    page.getByRole("heading", { name: "Cadastre um carro para publicar", exact: true }),
+    page.getByRole("heading", { name: "Falta confirmar seu e-mail", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Cadastrar um carro", exact: true })).toBeVisible();
-  await snap(page, "publish/without-a-car");
+  await expect(
+    page.getByRole("heading", { name: "Cadastre um carro para publicar", exact: true }),
+  ).toHaveCount(0);
+  await snap(page, "publish/held");
 });
 
 test("publicar uma carona simples", async ({ page, demo, signIn, snap }) => {

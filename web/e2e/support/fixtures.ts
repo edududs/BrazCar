@@ -69,6 +69,11 @@ interface Fixtures {
   demo: DemoManifest;
   /** The index of a spare phone this project may register for a journey (0, 1, 2…). */
   sparePhone: (journey: number) => number;
+  /** An e-mail address this project and attempt alone use (D-166 to D-168): the invite and the
+   * held-account journeys each give the API their own, so `mobile`, `mobile-dark` and `desktop`
+   * never race each other for the same link, and one journey's address never collides with
+   * another's account. */
+  uniqueEmail: (prefix: string) => string;
   snap: Snap;
   signIn: SignIn;
   publishFor: PublishFor;
@@ -89,6 +94,13 @@ export const test = base.extend<Fixtures>({
     const slot = projects.findIndex((project) => project.name === testInfo.project.name);
     const attempts = testInfo.project.retries + 1;
     await use((journey) => (journey * attempts + testInfo.retry) * projects.length + slot);
+  },
+
+  // eslint-disable-next-line no-empty-pattern -- Playwright reads the destructuring to find deps
+  uniqueEmail: async ({}, use, testInfo) => {
+    await use(
+      (prefix) => `${prefix}-${testInfo.project.name}-${String(testInfo.retry)}@example.com`,
+    );
   },
 
   // The clock the front reads is the moment the seed counted from, so "hoje" and "amanhã" mean

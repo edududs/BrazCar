@@ -44,6 +44,10 @@ export interface DemoManifest {
   readonly suitePhones: readonly string[];
   /** One invite per `suitePhones` entry, aligned by index (D-166, D-167). */
   readonly suiteInvites: readonly DemoInvite[];
+  /** One seeded account without a confirmed e-mail per project x attempt (D-168), at the index
+   * `sparePhone(0)` gives: there is no journey to multiply by, since these accounts exist from the
+   * first request instead of being signed up by a test. */
+  readonly suiteLegacyPhones: readonly string[];
   /** Slug of the one seeded account still without a confirmed e-mail (D-168). */
   readonly legacyPerson: string;
   readonly accounts: readonly DemoAccount[];
@@ -57,6 +61,8 @@ export interface DemoManifest {
   suitePhoneAt: (index: number) => string;
   /** The invite of one of the numbers the suite may register, same index as `suitePhoneAt`. */
   suiteInviteAt: (index: number) => DemoInvite;
+  /** One of the numbers held for want of a confirmed e-mail, at `sparePhone(0)`'s index. */
+  suiteLegacyPhoneAt: (index: number) => string;
   /** The label of one of the groups the demonstration messages arrived in. */
   groupLabelAt: (index: number) => string;
 }
@@ -94,6 +100,7 @@ interface RawManifest {
   group_labels: string[];
   suite_phones: string[];
   suite_invites: RawInvite[];
+  suite_legacy_phones: string[];
   legacy_person: string;
   accounts: RawAccount[];
   rides: RawRide[];
@@ -151,6 +158,7 @@ export function loadManifest(): DemoManifest {
     groupLabels: raw.group_labels,
     suitePhones: raw.suite_phones,
     suiteInvites,
+    suiteLegacyPhones: raw.suite_legacy_phones,
     legacyPerson: raw.legacy_person,
     accounts,
     rides,
@@ -160,6 +168,7 @@ export function loadManifest(): DemoManifest {
     dayAt: (index) => at(raw.days, index, "day"),
     suitePhoneAt: (index) => at(raw.suite_phones, index, "spare phone"),
     suiteInviteAt: (index) => at(suiteInvites, index, "suite invite"),
+    suiteLegacyPhoneAt: (index) => at(raw.suite_legacy_phones, index, "legacy phone"),
     groupLabelAt: (index) => at(raw.group_labels, index, "group label"),
   };
 }
