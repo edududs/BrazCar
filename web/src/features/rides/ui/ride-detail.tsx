@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { useCanSeePeople } from "@/features/accounts/app/use-can-see-people";
 import type { Session } from "@/features/accounts/domain/session";
 import { HeldNotice } from "@/features/accounts/ui/held-notice";
+import { PersonalData } from "@/features/accounts/ui/personal-data";
 import { addDays } from "@/shared/app/calendar";
 import { AccountHeldError } from "@/shared/domain/account-held";
 import { ActionBar } from "@/shared/ui/action-bar";
@@ -59,6 +61,7 @@ const skyClass = {
  */
 export function RideDetail({ ride, session, actions, onRepeated }: RideDetailProps) {
   const contacting = useContact(ride.id);
+  const seesPeople = useCanSeePeople();
   const gone = ride.status === "cancelled" || ride.status === "departed";
   const acceptsContact = ride.status === "open" || ride.status === "reopened";
 
@@ -131,18 +134,22 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
         ) : (
           <Facts ride={ride} />
         )}
-        {ride.notes === null ? null : (
+        {seesPeople === "visible" && ride.notes === null ? null : (
           <Card>
             <h2 className="text-label font-bold tracking-[0.08em] text-ink-3 uppercase">
               {ride.isMine
                 ? "Suas observações"
-                : ride.driverName === null
-                  ? "Observações"
-                  : `Observações de ${firstNameOf(ride.driverName)}`}
+                : seesPeople === "visible" && ride.driverName !== null
+                  ? `Observações de ${firstNameOf(ride.driverName)}`
+                  : "Observações"}
             </h2>
-            <p className="text-base leading-[1.55] whitespace-pre-line text-ink text-pretty">
-              {ride.notes}
-            </p>
+            <PersonalData fallback="block">
+              {ride.notes === null ? null : (
+                <p className="text-base leading-[1.55] whitespace-pre-line text-ink text-pretty">
+                  {ride.notes}
+                </p>
+              )}
+            </PersonalData>
           </Card>
         )}
         {ride.isMine ? null : (
@@ -217,17 +224,21 @@ function DriverCard({ ride, contact, locked, signedIn }: DriverCardProps) {
   return (
     <Card highlight={contact !== null}>
       <div className="flex items-center gap-3">
-        {ride.driverName === null ? null : <Avatar name={ride.driverName} size={48} />}
+        <PersonalData fallback="line">
+          {ride.driverName === null ? null : <Avatar name={ride.driverName} size={48} />}
+        </PersonalData>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          {ride.driverName === null ? null : (
-            <span className="text-body font-bold">{ride.driverName}</span>
-          )}
+          <PersonalData fallback="line">
+            {ride.driverName === null ? null : (
+              <span className="text-body font-bold">{ride.driverName}</span>
+            )}
+          </PersonalData>
           <span className="text-sm text-ink-2">
-            {ride.car !== null
-              ? `${ride.car.model} ${ride.car.color}`
-              : ride.origin === "whatsapp"
-                ? "Anunciou num grupo de WhatsApp"
-                : null}
+            {ride.car !== null ? (
+              <PersonalData fallback="line">{`${ride.car.model} ${ride.car.color}`}</PersonalData>
+            ) : ride.origin === "whatsapp" ? (
+              "Anunciou num grupo de WhatsApp"
+            ) : null}
           </span>
         </div>
         {ride.origin === "whatsapp" ? (
@@ -393,19 +404,27 @@ interface OriginMessageCardProps {
   readonly mine: boolean;
 }
 
-/** The words this record came from, as posted, in a chat bubble (S06; personal data redacted, D-128). */
+/**
+ * The words this record came from, as posted, in a chat bubble (S06; personal data redacted,
+ * D-128). Only ever mounted with a message (D-171 nulls it out from the API itself for a viewer
+ * without a session, so the section does not exist there at all); the `PersonalData` wrap is the
+ * same defence every other fact here has, in case the two queries this page makes ever settle out
+ * of step.
+ */
 function OriginMessageCard({ message, mine }: OriginMessageCardProps) {
   return (
     <Card>
       <h2 className="text-label font-bold tracking-[0.08em] text-ink-3 uppercase">
         {mine ? "Sua mensagem no grupo" : "Mensagem original"}
       </h2>
-      <blockquote className="rounded-[20px] rounded-bl-[6px] bg-surface-2 px-4 py-3.5 text-base leading-[1.5] whitespace-pre-line text-ink">
-        {message.text}
-      </blockquote>
-      <p className="text-caption text-ink-3">
-        {message.groupLabel} · {formatDay(message.sentAt)} às {formatTime(message.sentAt)}
-      </p>
+      <PersonalData fallback="block">
+        <blockquote className="rounded-[20px] rounded-bl-[6px] bg-surface-2 px-4 py-3.5 text-base leading-[1.5] whitespace-pre-line text-ink">
+          {message.text}
+        </blockquote>
+        <p className="text-caption text-ink-3">
+          {message.groupLabel} · {formatDay(message.sentAt)} às {formatTime(message.sentAt)}
+        </p>
+      </PersonalData>
       {mine ? null : (
         <p className="text-caption text-ink-3">O BrazCar esconde telefones e placas da mensagem.</p>
       )}

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { PersonalData } from "@/features/accounts/ui/personal-data";
 import { Avatar } from "@/shared/ui/avatar";
 import { Badge } from "@/shared/ui/badge";
 import { Icon } from "@/shared/ui/icon";
@@ -66,17 +67,21 @@ export function RideCard({ ride, showDay = false, fresh = false, matched }: Ride
             <span className="text-ink-3">
               <Icon name="route" size={16} />
             </span>
-          ) : ride.driverName === null ? null : (
-            <Avatar name={ride.driverName} />
+          ) : (
+            <PersonalData fallback="line">
+              {ride.driverName === null ? null : <Avatar name={ride.driverName} />}
+            </PersonalData>
           )}
-          <span className="min-w-0 flex-1 truncate">
-            {ride.isMine || ride.driverName === null ? null : (
-              <b className="font-semibold text-ink">{ride.driverName}</b>
-            )}
-            {ride.car === null
-              ? null
-              : `${ride.isMine || ride.driverName === null ? "" : " · "}${ride.car.model} ${ride.car.color}`}
-          </span>
+          <PersonalData fallback="line">
+            <span className="min-w-0 flex-1 truncate">
+              {ride.isMine || ride.driverName === null ? null : (
+                <b className="font-semibold text-ink">{ride.driverName}</b>
+              )}
+              {ride.car === null
+                ? null
+                : `${ride.isMine || ride.driverName === null ? "" : " · "}${ride.car.model} ${ride.car.color}`}
+            </span>
+          </PersonalData>
           {ride.isMine ? <Badge tone="accent">Sua carona</Badge> : null}
           {ride.origin === "whatsapp" ? (
             <Badge tone="outline" icon={<Icon name="chat" size={16} />}>
