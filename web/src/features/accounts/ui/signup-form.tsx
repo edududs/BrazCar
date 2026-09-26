@@ -3,8 +3,8 @@ import { useState } from "react";
 import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from "@/shared/domain/legal-links";
 import { ActionButton } from "@/shared/ui/action-button";
 import { CheckboxField } from "@/shared/ui/checkbox-field";
+import { ExternalLink } from "@/shared/ui/external-link";
 import { Form } from "@/shared/ui/form";
-import { inlineLinkClass } from "@/shared/ui/link-class";
 import { PasswordField } from "@/shared/ui/password-field";
 import { TextField } from "@/shared/ui/text-field";
 
@@ -63,32 +63,8 @@ export function SignupForm({ signup, signUp, busy, onDone }: SignupFormProps) {
         hint="Pelo menos 8 caracteres."
       />
       <CheckboxField checked={data.acceptsTerms} onChange={set("acceptsTerms")}>
-        Li e aceito os{" "}
-        <a
-          href={TERMS_OF_USE_URL}
-          target="_blank"
-          rel="noreferrer"
-          className={inlineLinkClass}
-          // Without this, the click would also reach the checkbox and toggle it.
-          onClick={(event) => {
-            event.stopPropagation();
-          }}
-        >
-          termos de uso
-        </a>{" "}
-        e a{" "}
-        <a
-          href={PRIVACY_POLICY_URL}
-          target="_blank"
-          rel="noreferrer"
-          className={inlineLinkClass}
-          onClick={(event) => {
-            event.stopPropagation();
-          }}
-        >
-          política de privacidade
-        </a>
-        .
+        Li e aceito os <ExternalLink href={TERMS_OF_USE_URL}>termos de uso</ExternalLink> e a{" "}
+        <ExternalLink href={PRIVACY_POLICY_URL}>política de privacidade</ExternalLink>.
       </CheckboxField>
       <ActionButton submit emphasis="primary" busy={busy} disabled={!data.acceptsTerms}>
         Criar conta
