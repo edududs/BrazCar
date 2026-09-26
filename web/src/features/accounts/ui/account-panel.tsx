@@ -21,6 +21,8 @@ interface AccountPanelProps {
   readonly account: Account;
   readonly busy: boolean;
   readonly updateProfile: (changes: ProfileChanges) => Promise<Account>;
+  /** Mails a link to the new address; the current e-mail keeps its place until it opens (D-168). */
+  readonly requestEmailChange: (email: string) => Promise<void>;
   readonly changePassword: (data: ChangePasswordData) => Promise<void>;
   readonly passwordBusy: boolean;
   readonly addCar: (data: CarData) => Promise<Account>;
@@ -47,6 +49,7 @@ export function AccountPanel({
   account,
   busy,
   updateProfile,
+  requestEmailChange,
   changePassword,
   passwordBusy,
   addCar,
@@ -206,9 +209,10 @@ export function AccountPanel({
             account={account}
             busy={busy}
             updateProfile={updateProfile}
-            onSaved={() => {
+            requestEmailChange={requestEmailChange}
+            onSaved={(message) => {
               close();
-              say("Dados salvos.");
+              say(message);
             }}
           />
         ) : null}
@@ -279,13 +283,21 @@ interface ProfileFormProps {
   readonly account: Account;
   readonly busy: boolean;
   readonly updateProfile: (changes: ProfileChanges) => Promise<Account>;
-  readonly onSaved: () => void;
+  readonly requestEmailChange: (email: string) => Promise<void>;
+  /** What to say once saving is done, since a changed e-mail earns its own sentence (D-168). */
+  readonly onSaved: (message: string) => void;
 }
 
-/** Nome social and e-mail, the only personal data the account edits by itself (D-139). The phone
- * is shown, never edited: it is the account's identity, and nothing proves a new one is still the
- * same owner yet (D-027). */
-function ProfileForm({ account, busy, updateProfile, onSaved }: ProfileFormProps) {
+/** Nome social saves at once; a changed e-mail asks the new address to confirm it by link
+ * instead (D-168). The phone is shown, never edited: it is the account's identity, and nothing
+ * proves a new one is still the same owner yet (D-027). */
+function ProfileForm({
+  account,
+  busy,
+  updateProfile,
+  requestEmailChange,
+  onSaved,
+}: ProfileFormProps) {
   const [displayName, setDisplayName] = useState(account.displayName);
   const [email, setEmail] = useState(account.email ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -295,16 +307,22 @@ function ProfileForm({ account, busy, updateProfile, onSaved }: ProfileFormProps
     const nameChanged = displayName !== account.displayName;
     const emailChanged = email !== (account.email ?? "");
     if (!nameChanged && !emailChanged) {
-      onSaved();
+      onSaved("Dados salvos.");
       return;
     }
-    const changes: ProfileChanges = {
-      ...(nameChanged ? { displayName } : {}),
-      ...(emailChanged ? { email } : {}),
-    };
-    updateProfile(changes).then(onSaved, (reason: unknown) => {
-      setError(reasonOf(reason));
-    });
+    Promise.all([
+      nameChanged ? updateProfile({ displayName }) : Promise.resolve(),
+      emailChanged ? requestEmailChange(email) : Promise.resolve(),
+    ]).then(
+      () => {
+        onSaved(
+          emailChanged ? "Enviamos um link para o novo e-mail. Ele vale 2 horas." : "Dados salvos.",
+        );
+      },
+      (reason: unknown) => {
+        setError(reasonOf(reason));
+      },
+    );
   };
 
   return (
@@ -313,12 +331,11 @@ function ProfileForm({ account, busy, updateProfile, onSaved }: ProfileFormProps
       <TextField label="Nome social" value={displayName} onChange={setDisplayName} required />
       <TextField
         label="E-mail"
-        optional
         value={email}
         onChange={setEmail}
         type="email"
         inputMode="email"
-        hint={email === "" ? "Sem e-mail você não recupera a senha." : "Só para recuperar a senha."}
+        hint="Trocar o e-mail manda um link de confirmação para o endereço novo."
       />
       <ActionButton submit emphasis="primary" busy={busy}>
         Salvar dados

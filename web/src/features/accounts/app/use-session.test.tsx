@@ -16,6 +16,8 @@ const ana: Account = {
   phoneDisplay: "(61) 99999-0001",
   displayName: "Ana",
   email: null,
+  emailConfirmed: true,
+  requiredAction: null,
   cars: [],
   canDrive: false,
 };
@@ -104,5 +106,24 @@ describe("useSession", () => {
     await waitFor(() => {
       expect(result.current.session.status).toBe("anonymous");
     });
+  });
+
+  it("requesting an e-mail change leaves the signed-in account exactly as it was (D-168)", async () => {
+    mocked.fetchCurrentAccount.mockResolvedValue(ana);
+    mocked.requestEmailChange.mockResolvedValue(undefined);
+    const { result } = renderSession();
+    await waitFor(() => {
+      expect(result.current.session.status).toBe("signed-in");
+    });
+
+    await act(async () => {
+      await result.current.requestEmailChange("ana-nova@example.com");
+    });
+
+    expect(mocked.requestEmailChange).toHaveBeenCalledWith(
+      "ana-nova@example.com",
+      expect.anything(),
+    );
+    expect(result.current.session).toEqual({ status: "signed-in", account: ana });
   });
 });

@@ -38,6 +38,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts/invites/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open Invite */
+        get: operations["open_invite"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/invites/{token}/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Give Invite Email
+         * @description Send the e-mail's link. 409 tells an invite holder the address has an account (D-167).
+         */
+        post: operations["give_invite_email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts/login": {
         parameters: {
             query?: never;
@@ -89,9 +126,50 @@ export interface paths {
         head?: never;
         /**
          * Update Profile
-         * @description The display name and the e-mail only: the phone and the password have their own path.
+         * @description The display name only: the e-mail, the phone and the password have their own path.
          */
         patch: operations["update_profile"];
+        trace?: never;
+    };
+    "/api/accounts/me/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Email Change
+         * @description Mail the link. The current e-mail keeps its place until the link is opened.
+         */
+        post: operations["request_email_change"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/email/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Email
+         * @description Needs the session of the account the link was sent for: a link that leaks changes nothing
+         *     by itself. Another account's link reads as invalid, like a lapsed or spent one.
+         */
+        post: operations["confirm_email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/accounts/me/password": {
@@ -162,9 +240,26 @@ export interface paths {
         put?: never;
         /**
          * Register
-         * @description Create the account and log it in. The terms must be accepted (D-033).
+         * @description Finish the account the e-mail link opened and log it in. Terms must be accepted (D-033).
          */
         post: operations["register_account"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/signup/{email_token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open Signup */
+        get: operations["open_signup"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -435,6 +530,8 @@ export interface components {
             display_name: string;
             /** Email */
             email: string | null;
+            /** Email Confirmed */
+            email_confirmed: boolean;
             /**
              * Id
              * Format: uuid
@@ -444,6 +541,7 @@ export interface components {
             phone: string;
             /** Phone Display */
             phone_display: string;
+            required_action: components["schemas"]["RequiredAction"] | null;
             /**
              * Terms Accepted At
              * Format: date-time
@@ -551,6 +649,19 @@ export interface components {
             /** Stops */
             stops?: components["schemas"]["StopIn"][] | null;
         };
+        /** EmailChangeIn */
+        EmailChangeIn: {
+            /** Email */
+            email: string;
+        };
+        /**
+         * EmailConfirmIn
+         * @description The link's token goes in the body, never in the path, so no request log ever has it.
+         */
+        EmailConfirmIn: {
+            /** Token */
+            token: string;
+        };
         /**
          * ErrorOut
          * @description What `HttpError(status, message)` renders as: a fixed, human-readable refusal.
@@ -581,6 +692,42 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /**
+         * HeldOut
+         * @description 403 of a route behind `gated_session_auth` (D-168). `required_action` names what the account
+         *     must do before it writes (`confirm_email`); it is absent from the route's own 403 refusals.
+         */
+        HeldOut: {
+            /** Detail */
+            detail: string;
+            /** Required Action */
+            required_action?: string | null;
+        };
+        /** InviteEmailIn */
+        InviteEmailIn: {
+            /** Email */
+            email: string;
+        };
+        /**
+         * InviteOut
+         * @description The invite's page (D-167). Phone and e-mail come masked: a link can be forwarded.
+         */
+        InviteOut: {
+            /** Email Masked */
+            email_masked: string | null;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Phone Masked */
+            phone_masked: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "awaiting_email_confirmation";
         };
         LicensePlate: string;
         /** LoginIn */
@@ -646,13 +793,11 @@ export interface components {
         };
         /**
          * ProfileIn
-         * @description Every field optional: absent means unchanged; a blank e-mail clears it (D-139).
+         * @description Absent means unchanged (D-139). The e-mail is not here: it changes by a link (D-168).
          */
         ProfileIn: {
             /** Display Name */
             display_name?: string | null;
-            /** Email */
-            email?: string | null;
         };
         /** PublishIn */
         PublishIn: {
@@ -680,18 +825,19 @@ export interface components {
             /** Stops */
             stops: components["schemas"]["StopIn"][];
         };
-        /** RegisterIn */
+        /**
+         * RegisterIn
+         * @description No phone and no e-mail: both come from the invite the e-mail link belongs to (D-167).
+         */
         RegisterIn: {
             /** Accepts Terms */
             accepts_terms: boolean;
             /** Display Name */
             display_name: string;
-            /** Email */
-            email?: string | null;
+            /** Email Token */
+            email_token: string;
             /** Password */
             password: string;
-            /** Phone */
-            phone: string;
         };
         /** RepeatIn */
         RepeatIn: {
@@ -701,6 +847,8 @@ export interface components {
              */
             departure_at: string;
         };
+        /** @constant */
+        RequiredAction: "confirm_email";
         /** ResolvedPlaceOut */
         ResolvedPlaceOut: {
             /** Descendants */
@@ -770,6 +918,21 @@ export interface components {
             seats_available: number;
         };
         ShortText: string;
+        /**
+         * SignupOut
+         * @description The e-mail link's page: the rest of the registration, phone and e-mail fixed (D-167).
+         */
+        SignupOut: {
+            /** Email */
+            email: string;
+            /**
+             * Email Expires At
+             * Format: date-time
+             */
+            email_expires_at: string;
+            /** Phone Masked */
+            phone_masked: string;
+        };
         /**
          * StopIn
          * @description A place of the catalog by identifier, or free text for "other" (D-013). One of the two.
@@ -866,6 +1029,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorOut"];
                 };
             };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeldOut"];
+                };
+            };
             /** @description Conflict */
             409: {
                 headers: {
@@ -924,6 +1096,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorOut"];
                 };
             };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeldOut"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -940,6 +1121,126 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ValidationErrorOut"];
+                };
+            };
+        };
+    };
+    open_invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Gone */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    give_invite_email: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteEmailIn"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Done"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Gone */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorOut"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
                 };
             };
         };
@@ -1122,6 +1423,144 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorOut"];
                 };
             };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeldOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorOut"];
+                };
+            };
+        };
+    };
+    request_email_change: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChangeIn"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Done"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorOut"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    confirm_email: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailConfirmIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
             /** @description Unprocessable Content */
             422: {
                 headers: {
@@ -1179,7 +1618,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorOut"];
+                    "application/json": components["schemas"]["HeldOut"];
                 };
             };
             /** @description Unprocessable Content */
@@ -1317,8 +1756,26 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorOut"];
                 };
             };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
             /** @description Conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Gone */
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1333,6 +1790,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ValidationErrorOut"];
+                };
+            };
+        };
+    };
+    open_signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                email_token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignupOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Gone */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
                 };
             };
         };
@@ -1373,6 +1870,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeldOut"];
                 };
             };
             /** @description Unprocessable Content */
@@ -1552,6 +2058,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorOut"];
                 };
             };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeldOut"];
+                };
+            };
             /** @description Unprocessable Content */
             422: {
                 headers: {
@@ -1709,7 +2224,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorOut"];
+                    "application/json": components["schemas"]["HeldOut"];
                 };
             };
             /** @description Not Found */
@@ -1785,7 +2300,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorOut"];
+                    "application/json": components["schemas"]["HeldOut"];
                 };
             };
             /** @description Not Found */
@@ -1853,6 +2368,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeldOut"];
                 };
             };
             /** @description Not Found */
@@ -1941,7 +2465,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorOut"];
+                    "application/json": components["schemas"]["HeldOut"];
                 };
             };
             /** @description Not Found */
@@ -2021,7 +2545,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorOut"];
+                    "application/json": components["schemas"]["HeldOut"];
                 };
             };
             /** @description Not Found */

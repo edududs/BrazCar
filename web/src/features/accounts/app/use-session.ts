@@ -7,6 +7,7 @@ import {
   logIn,
   logOut,
   removeCar,
+  requestEmailChange,
   signUp,
   updateProfile,
 } from "../adapters/accounts-gateway";
@@ -22,6 +23,9 @@ export interface SessionActions {
   readonly logIn: (data: LoginData) => Promise<Account>;
   readonly logOut: () => Promise<void>;
   readonly updateProfile: (changes: ProfileChanges) => Promise<Account>;
+  /** Mails a link to the new address; the current e-mail keeps its place until it is opened
+   * (D-168). */
+  readonly requestEmailChange: (email: string) => Promise<void>;
   readonly addCar: (data: CarData) => Promise<Account>;
   readonly removeCar: (carId: string) => Promise<Account>;
   readonly deleteAccount: () => Promise<void>;
@@ -50,6 +54,9 @@ export function useSession(): SessionActions {
     },
   });
   const updateProfileMutation = useMutation({ mutationFn: updateProfile, onSuccess: remember });
+  // Nothing about the signed-in account changes yet: the new address only takes over once its
+  // own link is opened (D-168).
+  const requestEmailChangeMutation = useMutation({ mutationFn: requestEmailChange });
   const addCarMutation = useMutation({ mutationFn: addCar, onSuccess: remember });
   const removeCarMutation = useMutation({ mutationFn: removeCar, onSuccess: remember });
   const deleteMutation = useMutation({
@@ -72,6 +79,7 @@ export function useSession(): SessionActions {
     logIn: logInMutation.mutateAsync,
     logOut: logOutMutation.mutateAsync,
     updateProfile: updateProfileMutation.mutateAsync,
+    requestEmailChange: requestEmailChangeMutation.mutateAsync,
     addCar: addCarMutation.mutateAsync,
     removeCar: removeCarMutation.mutateAsync,
     deleteAccount: deleteMutation.mutateAsync,
@@ -80,6 +88,7 @@ export function useSession(): SessionActions {
       logInMutation,
       logOutMutation,
       updateProfileMutation,
+      requestEmailChangeMutation,
       addCarMutation,
       removeCarMutation,
       deleteMutation,

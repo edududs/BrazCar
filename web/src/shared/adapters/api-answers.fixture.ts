@@ -11,6 +11,8 @@ export const driverOut: AccountOut = {
   phone_display: "(61) 99999-0001",
   display_name: "Ana Souza",
   email: "ana@example.com",
+  email_confirmed: true,
+  required_action: null,
   cars: [{ id: "c1", model: "Gol", color: "prata", plate: "ABC1D23" }],
   can_drive: true,
   terms_accepted_at: "2026-09-01T10:00:00-03:00",

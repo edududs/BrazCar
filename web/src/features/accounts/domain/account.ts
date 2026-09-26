@@ -5,6 +5,9 @@ export interface Car {
   readonly plate: string;
 }
 
+/** What an account must do before it writes anything else (D-168). Only one exists today. */
+export type RequiredAction = "confirm_email";
+
 /** The signed-in person's own account. Nobody else's account ever reaches the front. */
 export interface Account {
   readonly id: string;
@@ -14,15 +17,26 @@ export interface Account {
   readonly phoneDisplay: string;
   readonly displayName: string;
   readonly email: string | null;
+  readonly emailConfirmed: boolean;
+  /** Calculated, never stored: what the account must do before it can write (D-168). */
+  readonly requiredAction: RequiredAction | null;
   readonly cars: readonly Car[];
   readonly canDrive: boolean;
 }
 
+/** The e-mail link's page, telephone and e-mail already fixed by the invite (D-167). */
+export interface OpenSignup {
+  /** `+5561*****0001`, the invite's own mask. */
+  readonly phoneMasked: string;
+  readonly email: string;
+  readonly emailExpiresAt: string;
+}
+
+/** `POST /accounts/register`: the invite's e-mail link finishes the account (D-167). */
 export interface SignupData {
-  readonly phone: string;
+  readonly emailToken: string;
   readonly password: string;
   readonly displayName: string;
-  readonly email: string;
   readonly acceptsTerms: boolean;
 }
 
@@ -37,10 +51,9 @@ export interface CarData {
   readonly plate: string;
 }
 
-/** What `PATCH /accounts/me` changes. Absent means unchanged; an empty e-mail clears it (D-139). */
+/** What `PATCH /accounts/me` changes: the display name only (D-168). Absent means unchanged. */
 export interface ProfileChanges {
   readonly displayName?: string;
-  readonly email?: string;
 }
 
 export interface ChangePasswordData {
