@@ -6,6 +6,23 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.25.0] - 2026-09-26
+
+### Adicionado
+
+- **web:** Draw a skeleton for personal data without a session
+- **web:** Flag the closed beta in the shell and keep it out of search
+- **importing:** Take public removal requests and approve them by command
+
+### Refatorado
+
+- **shared:** Move the Done response schema to the shared adapters
+
+### Documentação
+
+- Record the v0.24.0 deploy
+- Read repeated values in the suite by role or scope, never by text
+
 ## [0.24.0] - 2026-09-26
 
 ### Adicionado
