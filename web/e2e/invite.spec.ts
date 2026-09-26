@@ -144,3 +144,70 @@ test("convite inválido não mostra formulário nenhum", async ({ page, snap }) 
   await expect(page.getByLabel("E-mail")).toHaveCount(0);
   await snap(page, "invite/refused");
 });
+
+/**
+ * Os cinco convites do catálogo (D-133, D-134, D-166, D-167): só abertos e fotografados, nunca
+ * gasto um e-mail, um cadastro nem uma reemissão, porque `yarn screens` e os três projetos leem os
+ * mesmos cinco tokens.
+ */
+
+test("convite aberto do catálogo ainda não tem e-mail", async ({ page, demo, snap }) => {
+  await page.goto(`/convite?token=${demo.catalogInvites.open.inviteToken}`);
+
+  await expect(page.getByRole("heading", { name: "Seu convite", exact: true })).toBeVisible();
+  await expect(page.getByText(/Este convite é para o celular/)).toBeVisible();
+  await expect(page.getByLabel("E-mail")).toHaveValue("");
+  await snap(page, "invite/open");
+});
+
+test("convite vencido do catálogo manda pedir um novo", async ({ page, demo, snap }) => {
+  await page.goto(`/convite?token=${demo.catalogInvites.expired.inviteToken}`);
+
+  await expect(
+    page.getByRole("heading", { name: "Convite indisponível", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/este convite venceu; peça um novo a quem convidou você/),
+  ).toBeVisible();
+  await snap(page, "invite/expired");
+});
+
+test("convite substituído do catálogo aponta para o mais novo", async ({ page, demo, snap }) => {
+  await page.goto(`/convite?token=${demo.catalogInvites.superseded.inviteToken}`);
+
+  await expect(
+    page.getByRole("heading", { name: "Convite indisponível", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/este convite foi substituído por um convite mais novo/),
+  ).toBeVisible();
+  await snap(page, "invite/superseded");
+});
+
+test("convite já usado do catálogo não abre outra vez", async ({ page, demo, snap }) => {
+  await page.goto(`/convite?token=${demo.catalogInvites.used.inviteToken}`);
+
+  await expect(
+    page.getByRole("heading", { name: "Convite indisponível", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText(/este convite já foi usado/)).toBeVisible();
+  await snap(page, "invite/used");
+});
+
+test("cadastro pelo convite aguardando do catálogo, sem enviar", async ({ page, demo, snap }) => {
+  const { email, emailToken } = demo.catalogInvites.awaiting;
+  if (email === null || emailToken === null) {
+    throw new Error("o convite aguardando do catálogo deveria ter e-mail e token");
+  }
+
+  // Só abre e fotografa (D-133, D-134): enviar gastaria o convite que o catálogo reaproveita a
+  // cada `yarn screens` e nos três projetos.
+  await page.goto(`/cadastro?token=${emailToken}`);
+
+  await expect(
+    page.getByRole("heading", { name: "Criar conta", exact: true, level: 1 }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Celular")).toHaveValue(/\*+\d{4}$/);
+  await expect(page.getByLabel("E-mail")).toHaveValue(email);
+  await snap(page, "signup/prefilled");
+});
