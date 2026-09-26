@@ -24,7 +24,7 @@ tem limite por conta e grava o pedido ([D-031](decisions/README.md)).
 Por chave, quantidade e janela, como estão hoje no código ([D-064](decisions/README.md),
 [D-097](decisions/README.md)):
 
-- Login: 10 tentativas a cada 15 minutos, por telefone. Trocar a senha estando logada passa pelo
+- Login: 10 tentativas a cada 15 minutos, por telefone. Trocar a senha com a sessão aberta passa pelo
   mesmo balde, para uma sessão roubada não virar oráculo de força bruta.
 - Recuperação de senha: 3 pedidos por hora, por telefone; acima disso cai em silêncio, como telefone
   desconhecido.
