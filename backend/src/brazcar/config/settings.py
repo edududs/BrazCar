@@ -129,6 +129,11 @@ RIDE_CONTACT_WINDOW_HOURS = int(os.environ.get("RIDE_CONTACT_WINDOW_HOURS", "24"
 FEEDBACK_LIMIT = int(os.environ.get("FEEDBACK_LIMIT", "5"))
 FEEDBACK_WINDOW_HOURS = int(os.environ.get("FEEDBACK_WINDOW_HOURS", "24"))
 
+# The header the edge fills with the client's address (`CF-Connecting-IP` behind the Cloudflare
+# tunnel), for the limit per client of the public removal request (D-172). No default: unset, the
+# socket's address is used. Trustworthy only while the API is reachable through the tunnel alone.
+CLIENT_IP_HEADER = os.environ.get("CLIENT_IP_HEADER", "").strip()
+
 # The WhatsApp worker (D-108, D-109, D-119). Only `run_extractor` and its siblings read these.
 WHATSAPP_ACCOUNT = os.environ.get("WHATSAPP_ACCOUNT", "").strip()
 WHATSAPP_SESSION_DSN = os.environ.get(

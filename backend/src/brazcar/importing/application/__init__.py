@@ -5,9 +5,16 @@ from .ports import (
     Clock,
     ImportedRide,
     ImportedRides,
+    RemovalRequests,
     RideParser,
     SourceMessages,
     StopResolver,
+)
+from .removals import (
+    ApproveRemoval,
+    RefuseRemoval,
+    RemovalRequestNotFoundError,
+    RequestRemoval,
 )
 from .use_cases import (
     BlockSender,
@@ -22,6 +29,7 @@ from .use_cases import (
 )
 
 __all__ = [
+    "ApproveRemoval",
     "BlockSender",
     "BlockedSenders",
     "Candidates",
@@ -35,8 +43,12 @@ __all__ = [
     "ParserOutput",
     "PurgeImported",
     "PurgeReport",
+    "RefuseRemoval",
     "RejudgeReport",
+    "RemovalRequestNotFoundError",
+    "RemovalRequests",
     "ReopenJudged",
+    "RequestRemoval",
     "RideParser",
     "SourceMessages",
     "StopFare",

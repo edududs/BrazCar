@@ -168,3 +168,32 @@ docker compose exec api python manage.py invite <celular> --hours 12  # outro pr
 
 A primeira linha da saída é o link, para colar na conversa com a pessoa; a segunda diz até quando
 ele vale, no horário de Brasília. Emitir de novo para o mesmo celular invalida o link anterior.
+
+## Pedidos de remoção
+
+A rota pública `POST /api/removal-requests` limita pedidos por cliente (D-172), e atrás do túnel
+todo pedido chega à API pelo endereço do próprio túnel. `CLIENT_IP_HEADER` diz qual cabeçalho traz o
+endereço de quem pediu. Precisa entrar no `api.env` antes do `up -d` da versão que traz a rota: sem
+ela, todos os pedidos contam como um cliente só, e o limite de 10 por dia vale para o mundo inteiro.
+A linha, como entra no `api.env`:
+
+```bash
+CLIENT_IP_HEADER=CF-Connecting-IP
+```
+
+O cabeçalho só é confiável porque a API é alcançável apenas pelo túnel do Cloudflare. Se a API
+ganhar entrada direta, o cabeçalho passa a ser forjável e o limite por IP deixa de valer.
+
+Um pedido não remove nada sozinho. Para decidir:
+
+```bash
+docker compose exec api python manage.py removal_requests            # pendentes, telefone mascarado
+docker compose exec api python manage.py removal_requests --all       # inclui os decididos
+docker compose exec api python manage.py removal_requests --reveal    # telefone inteiro
+docker compose exec api python manage.py approve_removal <id>         # bloqueia e apaga o que veio dele
+docker compose exec api python manage.py approve_removal <id> --refuse
+```
+
+A aprovação imprime quantas caronas, candidatas e mensagens saíram. Se falhar no meio, o pedido
+continua pendente e basta aprovar de novo. Aprovar ou recusar de novo o que já foi decidido do mesmo
+jeito não faz nada; a decisão oposta é recusada. Quem pediu não recebe aviso.

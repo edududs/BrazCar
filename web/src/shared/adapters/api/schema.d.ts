@@ -343,6 +343,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/removal-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Removal
+         * @description Record a removal request. 202 for every well-formed one, whether the phone has rides on
+         *     the board or not; only the limit per client is told (429).
+         */
+        post: operations["request_removal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rides": {
         parameters: {
             query?: never;
@@ -838,6 +859,13 @@ export interface components {
             email_token: string;
             /** Password */
             password: string;
+        };
+        /** RemovalRequestIn */
+        RemovalRequestIn: {
+            /** Note */
+            note?: string | null;
+            /** Phone */
+            phone: string;
         };
         /** RepeatIn */
         RepeatIn: {
@@ -1965,6 +1993,57 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    request_removal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemovalRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Done"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorOut"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

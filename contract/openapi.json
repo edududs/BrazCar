@@ -814,6 +814,31 @@
         "title": "RegisterIn",
         "type": "object"
       },
+      "RemovalRequestIn": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "phone": {
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone"
+        ],
+        "title": "RemovalRequestIn",
+        "type": "object"
+      },
       "RepeatIn": {
         "properties": {
           "departure_at": {
@@ -2473,6 +2498,69 @@
         "summary": "Resolve",
         "tags": [
           "places"
+        ]
+      }
+    },
+    "/api/removal-requests": {
+      "post": {
+        "description": "Record a removal request. 202 for every well-formed one, whether the phone has rides on\nthe board or not; only the limit per client is told (429).",
+        "operationId": "request_removal",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemovalRequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Done"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Request Removal",
+        "tags": [
+          "importing"
         ]
       }
     },

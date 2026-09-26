@@ -35,6 +35,10 @@ Depende do extrator embutido (ADR-0009) e entrega para `rides` por porta (ADR-00
 | junção por partida | `ImportRide` | Mesmo motorista e mesma partida é a mesma carona: a candidata nova é aceita como `joined` (D-113). |
 | redação | `redact_personal_data` | Em `shared/domain`: telefone, e-mail, CPF e placa viram `[…]` antes de o texto original chegar à carona (D-128). |
 | lista de bloqueio | `BlockedSenders` | Telefone de quem pediu para sair. `BlockSender` apaga mensagens, candidatas e caronas dele; a varredura nunca mais o toma (D-119). |
+| pedido de remoção | `RemovalRequest` | O que o motorista com carona importada manda pela página pública, sem conta (D-162, D-172): telefone, qualquer número válido (D-137), gravado em E.164; quando chegou; um texto opcional de até 500 caracteres, sem espaço nas pontas; e a decisão. Sozinho não remove nada. O texto só sai no comando, nunca na API. |
+| decisão do pedido | `RemovalDecision` | Tipo-soma gravado: pendente `Pending`, aprovado `Approved(at)`, recusado `Refused(at)`. A primeira decisão fica: repetir a mesma não muda nada, e a oposta é recusada (`RemovalAlreadyDecidedError`). |
+| aprovação | `ApproveRemoval`, `manage.py approve_removal <id>` | Bloqueia o telefone pelo `BlockSender`, que apaga mensagens, candidatas e caronas externas dele, e só depois grava `Approved`. Aprovar o que já foi aprovado não bloqueia de novo. |
+| recusa | `RefuseRemoval`, `manage.py approve_removal <id> --refuse` | Grava `Refused`; nada é removido e o pedido fica registrado. |
 | varredura | `run_extractor` | Tarefa asyncio no processo do worker, acordada pelo handler do extrator, ao subir e a cada minuto (D-112): `IngestMessages` (mensagem em candidata), `JudgeCandidates` (uma por vez), `PurgeImported` quando a poda é do worker. |
 | poda | `PurgeImported` | Caso de uso (D-119): apaga as caronas de motorista externo que já saíram, com candidatas e mensagens; as candidatas sem carona julgadas há mais de 24h; as mensagens não tomadas há mais de 24h. O job do `pg_cron` é a mesma regra em SQL (`purge_statements`), provada igual por contrato no Postgres. |
 | golden set | `tests/importing/golden/messages.jsonl` | 120 mensagens reais anonimizadas com a leitura esperada. `poe test-golden` mede um modelo contra o Ollama: acerto de tipo, acerto por campo e latência (D-120). As medições ficam em [parser-models.md](../parser-models.md). |
@@ -59,6 +63,23 @@ Depende do extrator embutido (ADR-0009) e entrega para `rides` por porta (ADR-00
 - Telefone do remetente nunca sai por lista; só pela rota de contato de `rides` (D-031).
 - Nada de motorista externo sobrevive à partida: carona, candidata e fontes somem juntas (D-119).
   Carona vinculada a conta é do dono e fica.
+- Pedido de remoção nunca remove nada por si: só a aprovação por comando bloqueia o telefone. A
+  primeira decisão fica, e o pedido nunca é apagado.
+
+## Pedido de remoção
+
+1. `POST /api/removal-requests`, sem sessão, recebe telefone e texto opcional. Todo pedido bem
+   formado responde 202 igual, tenha o telefone caronas no mural ou não. Mais de 10 pedidos por dia
+   do mesmo cliente respondem 429; mais de 3 pedidos por dia para o mesmo telefone caem em silêncio,
+   sem gravar, para a resposta nunca dizer se o telefone está no mural.
+2. O pedido fica pendente e não remove nada: a página é pública, e qualquer um poderia pedir a
+   remoção de outro motorista.
+3. `manage.py removal_requests` lista os pendentes com o telefone mascarado (`--reveal` mostra
+   inteiro) e avisa quando o texto traz telefone, e-mail ou placa (D-128); `--all` inclui os
+   decididos.
+4. `manage.py approve_removal <id>` bloqueia o telefone e apaga o que veio dele (D-119), primeiro,
+   e grava a aprovação depois; uma falha no meio deixa o pedido pendente, e aprovar de novo termina
+   o serviço. `--refuse` recusa. Quem pediu não é avisado: não há canal de volta.
 
 ## Fora do passo 7
 

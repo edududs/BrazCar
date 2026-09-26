@@ -22,6 +22,16 @@ from .candidate import (
 from .checks import Checks, check
 from .fares import attach_fares
 from .judgement import Day, Judgement, Offer, OfferFare, Other, Payment, Request, Update
+from .removal_request import (
+    NOTE_LIMIT,
+    Approved,
+    Refused,
+    RemovalAlreadyDecidedError,
+    RemovalDecision,
+    RemovalRequest,
+    RemovalRequestId,
+    TooManyAttemptsError,
+)
 from .schedule import resolve_departure
 from .source_message import GroupJid, Sender, SourceMessage, WatchedGroup
 from .text_key import digit_tokens, text_key
@@ -31,8 +41,10 @@ __all__ = [
     "DEFAULT_PAYMENT",
     "DEFAULT_PRICE",
     "DEFAULT_SEATS",
+    "NOTE_LIMIT",
     "Accept",
     "Accepted",
+    "Approved",
     "Candidate",
     "CandidateId",
     "Checks",
@@ -46,13 +58,19 @@ __all__ = [
     "Other",
     "Payment",
     "Pending",
+    "Refused",
     "RejectReason",
     "Rejected",
+    "RemovalAlreadyDecidedError",
+    "RemovalDecision",
+    "RemovalRequest",
+    "RemovalRequestId",
     "Request",
     "ResolvedStop",
     "RideDraft",
     "Sender",
     "SourceMessage",
+    "TooManyAttemptsError",
     "Update",
     "Verdict",
     "WatchedGroup",

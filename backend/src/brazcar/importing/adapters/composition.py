@@ -11,11 +11,13 @@ from whatsapp_extractor.settings import Settings, StoreKind, ViewKind
 
 from brazcar.accounts.adapters.repository import DjangoAccountRepository
 from brazcar.importing.application import (
+    ApproveRemoval,
     BlockSender,
     ImportRules,
     IngestMessages,
     JudgeCandidates,
     PurgeImported,
+    RefuseRemoval,
     ReopenJudged,
 )
 from brazcar.places.adapters.repository import DjangoCatalogRepository
@@ -28,7 +30,7 @@ from brazcar.shared.adapters.clock import SystemClock
 from .bridges import CatalogStopResolver, RidesBridge
 from .config import ImportingSettings, PurgeMode
 from .ollama import OllamaRideParser
-from .repository import DjangoBlockedSenders, DjangoCandidates, DjangoSourceMessages
+from .repository import DjangoBlockedSenders, DjangoCandidates, DjangoRemovalRequests, DjangoSourceMessages
 from .store import DjangoStore
 from .worker import Extract, Sweep
 
@@ -100,6 +102,21 @@ def import_use_cases(config: ImportingSettings) -> ImportUseCases:
         purge=PurgeImported(messages, candidates, rides, clock, rules),
         block=BlockSender(blocked, messages, candidates, rides),
         reopen=ReopenJudged(candidates, rides),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class RemovalDecisions:
+    approve: ApproveRemoval
+    refuse: RefuseRemoval
+
+
+def removal_decisions(config: ImportingSettings) -> RemovalDecisions:
+    """The decision on a request of the public page (D-172): approving blocks the phone (D-119)."""
+    requests, clock = DjangoRemovalRequests(), SystemClock()
+    return RemovalDecisions(
+        approve=ApproveRemoval(requests, import_use_cases(config).block, clock),
+        refuse=RefuseRemoval(requests, clock),
     )
 
 

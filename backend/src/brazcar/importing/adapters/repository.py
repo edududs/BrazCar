@@ -11,19 +11,24 @@ from django.utils import timezone
 
 from brazcar.importing.domain import (
     Accepted,
+    Approved,
     Candidate,
     CandidateId,
     Failed,
     Pending,
+    Refused,
     Rejected,
     RejectReason,
+    RemovalDecision,
+    RemovalRequest,
+    RemovalRequestId,
     Sender,
     SourceMessage,
     Verdict,
 )
 from brazcar.shared.domain.phone import PhoneNumber
 
-from .models import BlockedSenderModel, CandidateModel, SourceMessageModel
+from .models import BlockedSenderModel, CandidateModel, RemovalRequestModel, SourceMessageModel
 
 
 class DjangoSourceMessages:
@@ -92,6 +97,23 @@ class DjangoBlockedSenders:
         await BlockedSenderModel.objects.aget_or_create(
             phone=phone.jid_user(), defaults={"blocked_at": timezone.now()}
         )
+
+
+class DjangoRemovalRequests:
+    async def save(self, request: RemovalRequest) -> None:
+        await sync_to_async(_save_removal_request)(request)
+
+    async def get(self, request_id: RemovalRequestId) -> RemovalRequest | None:
+        row = await RemovalRequestModel.objects.filter(id=request_id).afirst()
+        return None if row is None else removal_request_from_row(row)
+
+    async def pending(self) -> tuple[RemovalRequest, ...]:
+        rows = RemovalRequestModel.objects.filter(decision="pending").order_by("requested_at", "id")
+        return tuple([removal_request_from_row(row) async for row in rows])
+
+    async def all(self) -> tuple[RemovalRequest, ...]:
+        rows = RemovalRequestModel.objects.order_by("requested_at", "id")
+        return tuple([removal_request_from_row(row) async for row in rows])
 
 
 # --- rows and entities -----------------------------------------------------------------------------
@@ -205,3 +227,40 @@ def message_from_row(row: SourceMessageModel) -> SourceMessage:
 def _local(moment: datetime) -> datetime:
     """The database keeps UTC; the day rules of the schedule read the board's zone (D-094)."""
     return timezone.localtime(moment)
+
+
+@transaction.atomic
+def _save_removal_request(request: RemovalRequest) -> None:
+    decision = request.decision
+    RemovalRequestModel.objects.update_or_create(
+        id=request.id,
+        defaults={
+            "phone": request.phone.e164(),
+            "requested_at": request.requested_at,
+            "note": request.note or "",
+            "decision": decision.kind,
+            "decided_at": None if isinstance(decision, Pending) else decision.at,
+        },
+    )
+
+
+def _decision_from_row(row: RemovalRequestModel) -> RemovalDecision:
+    match row.decision:
+        case "approved":
+            assert row.decided_at is not None  # noqa: S101 - the check constraint holds them together
+            return Approved(at=_local(row.decided_at))
+        case "refused":
+            assert row.decided_at is not None  # noqa: S101
+            return Refused(at=_local(row.decided_at))
+        case _:
+            return Pending()
+
+
+def removal_request_from_row(row: RemovalRequestModel) -> RemovalRequest:
+    return RemovalRequest(
+        id=row.id,
+        phone=PhoneNumber.parse(row.phone),
+        requested_at=_local(row.requested_at),
+        note=row.note or None,
+        decision=_decision_from_row(row),
+    )
