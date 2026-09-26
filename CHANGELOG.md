@@ -6,6 +6,32 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.24.0] - 2026-09-26
+
+### Adicionado
+
+- **demo:** Seed one invite in each state for the screens catalogue
+- **QUEBRA** **rides:** Hide every personal field from a viewer without a session
+
+### Corrigido
+
+- **web:** Draw no driver line when the board comes without a name
+
+### Documentação
+
+- Record the v0.23.0 deploy
+
+### Testes
+
+- **e2e:** Photograph every invite and held account state for the catalogue
+- **e2e:** Sign in where a journey reads personal data and prove the visitor sees none
+- **e2e:** Measure the layout against the contact button a signed-in passenger sees
+- **e2e:** Read the anonymous detail's time and stops by role, not by text that repeats
+
+### Infraestrutura
+
+- Run only formatting and lint in the pre-commit hook
+
 ## [0.23.0] - 2026-09-26
 
 ### Adicionado
