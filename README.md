@@ -21,6 +21,10 @@ O repositório continua público, para quem quiser ler o código, estudar as dec
 Para rodar em casa, siga "Como rodar" abaixo e use `manage.py seed_demo` para povoar o banco com a
 semente de demonstração, no lugar de dado real.
 
+O que o produto coleta, o compromisso de quem usa e o modelo de ameaça estão em
+[docs/privacy.md](docs/privacy.md), [docs/terms.md](docs/terms.md) e
+[docs/security.md](docs/security.md).
+
 ## O problema
 
 Moradores de Brazlândia trabalham e estudam no centro de Brasília, a 30 ou 50 km, com transporte

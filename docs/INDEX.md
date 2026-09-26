@@ -8,6 +8,9 @@ Uma linha por documento. Abra só o que a tarefa pede.
 | [ROADMAP.md](ROADMAP.md) | Agora, depois, talvez. Inclui o backlog pós-MVP. | Escopo fecha ou é adiado |
 | [product.md](product.md) | Problema, usuários, o que o produto faz e não faz. | Escopo de produto muda |
 | [architecture.md](architecture.md) | Contexto, blocos, fluxos, conceitos transversais. | Fronteira de contexto ou dependência externa muda |
+| [privacy.md](privacy.md) | O que o produto coleta, de quem, por quê e por quanto tempo. | Dado pessoal novo ou retenção muda |
+| [terms.md](terms.md) | Termo de uso do beta fechado. | Compromisso de quem usa muda |
+| [security.md](security.md) | Modelo de ameaça em uma página. | Limite, proteção ou risco assumido muda |
 | [decisions/README.md](decisions/README.md) | Tabela de todas as decisões, com status. | Toda decisão nova |
 | `decisions/NNNN-*.md` | Registro completo das decisões cujo motivo não é óbvio. | Imutável; decisão nova substitui |
 | [domain/rides.md](domain/rides.md) | Glossário e invariantes de caronas. | Conceito muda ou é renomeado |
