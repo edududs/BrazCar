@@ -12,7 +12,8 @@ interface CheckboxFieldProps {
  * A native checkbox in the design's box, with the whole line as its target. Text and box share the
  * line through a click handler and `aria-labelledby`, never a wrapping `<label>`: a `<label>` would
  * forward a click anywhere inside it, including a link nested in the text, to the box underneath,
- * so a link there could never be followed on its own (D-154).
+ * so a link there could never be followed on its own. Nothing a caller nests in the text needs to
+ * know about this: the handler itself steps aside for a click that started on a link or a button.
  */
 export function CheckboxField({ checked, onChange, children }: CheckboxFieldProps) {
   const textId = useId();
@@ -38,7 +39,8 @@ export function CheckboxField({ checked, onChange, children }: CheckboxFieldProp
       <span
         id={textId}
         className="cursor-pointer pt-0.5"
-        onClick={() => {
+        onClick={(event) => {
+          if (event.target instanceof Element && event.target.closest("a, button")) return;
           inputRef.current?.focus();
           onChange(!checked);
         }}

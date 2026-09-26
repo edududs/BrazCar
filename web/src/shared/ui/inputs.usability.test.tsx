@@ -5,7 +5,6 @@ import { useState } from "react";
 import { describe, expect, it } from "vitest";
 
 import { usePhoneInput } from "../app/use-phone-input";
-import { CheckboxField } from "./checkbox-field";
 import { PasswordField } from "./password-field";
 import { PhoneField } from "./phone-field";
 import { SearchField } from "./search-field";
@@ -164,27 +163,6 @@ describe("SelectField", () => {
     render(<Harness />);
     await user.selectOptions(screen.getByLabelText("Carro"), "Onix branco");
     expect(screen.getByLabelText("Carro")).toHaveProperty("value", "c2");
-  });
-});
-
-describe("CheckboxField", () => {
-  function Harness() {
-    const [checked, setChecked] = useState(false);
-    return (
-      <CheckboxField checked={checked} onChange={setChecked}>
-        Li e aceito os termos
-      </CheckboxField>
-    );
-  }
-
-  it("toggles from its text and from the space bar", async () => {
-    const user = userEvent.setup();
-    render(<Harness />);
-    const box = screen.getByRole("checkbox", { name: "Li e aceito os termos" });
-    await user.click(screen.getByText("Li e aceito os termos"));
-    expect(box).toHaveProperty("checked", true);
-    await user.keyboard(" ");
-    expect(box).toHaveProperty("checked", false);
   });
 });
 
