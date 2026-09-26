@@ -48,6 +48,25 @@ describe("the shell", () => {
     expect(await within(tabs).findByRole("link", { name: "Conta" })).toBeDefined();
   });
 
+  it("shows the closed-beta notice, with a way in, for a visitor with no session (D-171)", async () => {
+    await renderApp("/");
+
+    const notice = await screen.findByRole("status");
+    expect(notice.textContent).toContain("BrazCar em beta fechado");
+    expect(within(notice).getByRole("link", { name: "Entrar" }).getAttribute("href")).toBe(
+      "/entrar",
+    );
+  });
+
+  it("hides the closed-beta notice once someone is signed in", async () => {
+    serveShell(api, driverOut);
+
+    await renderApp("/");
+
+    await screen.findByRole("heading", { level: 1, name: "Caronas" });
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
   it("below the version floor, the whole app is one screen that updates (D-105)", async () => {
     const user = userEvent.setup();
     const { applyUpdate } = await import("@/shared/adapters/service-worker");
@@ -64,7 +83,8 @@ describe("the shell", () => {
   it("without a network the page stays, inert, under a notice, and the board loads fresh after (D-051)", async () => {
     const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
     await renderApp("/");
-    await screen.findByRole("link", { name: /Bruno/ });
+    // Anonymous by default (D-171): the driver's name is gone, but the route stays.
+    await screen.findByRole("link", { name: /Brazlândia/ });
 
     onLine.mockReturnValue(false);
     act(() => {
@@ -85,7 +105,7 @@ describe("the shell", () => {
     await waitFor(() => {
       expect(screen.queryByText(/Sem internet/)).toBeNull();
     });
-    expect(await screen.findByRole("link", { name: /Bruno/ })).toBeDefined();
+    expect(await screen.findByRole("link", { name: /Brazlândia/ })).toBeDefined();
     expect(api.sentTo("GET", "/api/rides").length).toBeGreaterThan(asked);
   });
 });

@@ -1,4 +1,4 @@
-import { Outlet, createRootRoute, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, createRootRoute, useRouterState } from "@tanstack/react-router";
 
 import { useSession } from "@/features/accounts/app/use-session";
 import { useForgetBoardOffline } from "@/features/rides/app/use-forget-board-offline";
@@ -7,6 +7,7 @@ import { useVersionFloor } from "@/shared/app/use-version-floor";
 import { ActionButton } from "@/shared/ui/action-button";
 import { BrandMark } from "@/shared/ui/brand-mark";
 import { Icon } from "@/shared/ui/icon";
+import { NoticeBar } from "@/shared/ui/notice-bar";
 import { NoticeScreen } from "@/shared/ui/notice-screen";
 import { RouteNotFound } from "@/shared/ui/route-not-found";
 import { ShellOverlays } from "@/shared/ui/shell-overlays";
@@ -62,6 +63,20 @@ function RootLayout() {
         inert={offline}
         className={`flex flex-1 flex-col pt-[env(safe-area-inset-top)] ${offline ? "shell-dimmed" : ""}`}
       >
+        {session.status === "anonymous" ? (
+          <div className="mx-auto w-full max-w-md px-gutter pt-3">
+            <NoticeBar
+              tone="neutral"
+              actions={
+                <Link to="/entrar" className="text-secondary font-semibold text-brand-ink">
+                  Entrar
+                </Link>
+              }
+            >
+              BrazCar em beta fechado: sem entrar, o mural mostra só rota, horário, valor e vagas.
+            </NoticeBar>
+          </div>
+        ) : null}
         <Outlet />
       </div>
       {offline ? (

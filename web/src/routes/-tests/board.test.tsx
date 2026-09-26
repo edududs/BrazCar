@@ -39,7 +39,9 @@ describe("the board at /", () => {
 
     await renderApp("/");
 
-    const card = await screen.findByRole("link", { name: /Bruno/ });
+    // Anonymous by default (D-171): the driver's name is gone, but the route stays, so the card
+    // is found by it instead.
+    const card = await screen.findByRole("link", { name: /Brazlândia/ });
     expect(card.getAttribute("href")).toBe("/caronas/r1");
     expect(screen.getByRole("heading", { level: 1, name: "Caronas" })).toBeDefined();
   });
@@ -110,7 +112,7 @@ describe("the board at /", () => {
   it("a revision from the signal asks the API for the board again", async () => {
     api.serve("GET", "/api/rides", 200, [rideOut]);
     await renderApp("/");
-    await screen.findByRole("link", { name: /Bruno/ });
+    await screen.findByRole("link", { name: /Brazlândia/ });
     const before = api.sentTo("GET", "/api/rides").length;
 
     FakeEventSource.latest().send("revision", '{"revision":2}');
