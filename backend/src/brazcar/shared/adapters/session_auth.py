@@ -57,6 +57,11 @@ class SessionAuth(APIKeyCookie):
         super().__init__()
         self._gate = gate
 
+    @property
+    def gated(self) -> bool:
+        """Whether a held account is refused here: what `tests/test_write_gate_coverage.py` reads."""
+        return self._gate is not None
+
     async def __call__(self, request: HttpRequest) -> UUID | None:  # pyright: ignore[reportIncompatibleMethodOverride]
         user = await sync_to_async(get_user)(request)
         if not user.is_authenticated:
