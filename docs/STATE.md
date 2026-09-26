@@ -31,7 +31,7 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 `brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.7.0` desde
 2026-09-23; a API e o worker na `v0.9.0` desde 2026-09-24; API, worker e front na `v0.11.0` desde
 2026-09-24; API, worker e front na `v0.21.3` desde 2026-09-26; API, worker e front na `v0.22.0`
-desde 2026-09-26.
+desde 2026-09-26; API, worker e front na `v0.23.0` desde 2026-09-26.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -461,9 +461,10 @@ canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é e
 
 ## Pendências abertas
 
-- Beta fechado por convite (D-159 a D-164): decidido em 25/09/2026, ainda não implementado. Até lá o
-  worker de importação continua rodando por decisão do dono, com a exposição de telefone de
-  motorista não cadastrado que motivou a decisão (D-117).
+- Beta fechado por convite (D-159 a D-164): decidido em 25/09/2026, passo 1 no ar desde a v0.23.0
+  (2026-09-26): cadastro só por convite com e-mail confirmado (D-159, D-160, D-167, D-168, D-169),
+  cadastro aberto fora do ar. Até lá o worker de importação continua rodando por decisão do dono, com
+  a exposição de telefone de motorista não cadastrado que motivou a decisão (D-117).
 - Texto dos termos de uso e de privacidade ainda não foi escrito (D-033); o cadastro já grava o
   aceite e a tela já mostra a frase, sem link.
 - Recuperação manual de senha para conta sem e-mail depende de admin, que só entra somente

@@ -59,6 +59,8 @@ canal de opinião no `up`. Em 2026-09-26 (v0.21.2) nada entrou no `api.env`; sem
 Em 2026-09-26 (v0.21.3) nada entrou no `api.env`; sem migração.
 Em 2026-09-26 (v0.22.0) entrou `INVITE_LINK` no `api.env`; a migração `accounts.0002` criou a
 tabela de convites no `up`.
+Em 2026-09-26 (v0.23.0) entraram `SIGNUP_LINK` e `EMAIL_CONFIRM_LINK` no `api.env`; a migração
+`accounts.0003` marcou confirmadas 3 contas com e-mail; o cadastro aberto saiu do ar.
 
 ## Worker do WhatsApp (passo 7a)
 
