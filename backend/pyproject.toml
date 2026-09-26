@@ -1,6 +1,6 @@
 [project]
 name = "brazcar"
-version = "0.21.1"
+version = "0.21.2"
 description = "Ride board between Brazlandia and downtown Brasilia."
 requires-python = ">=3.14"
 dependencies = [

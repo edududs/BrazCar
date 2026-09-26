@@ -6,6 +6,18 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.21.2] - 2026-09-26
+
+### Corrigido
+
+- **web:** Format and group every ride date in the board's zone
+
+### Documentação
+
+- Record closed-beta decisions and update roadmap, readme, state
+- Record the board zone decision for the front's dates (D-159)
+- Renumber the board zone decision to D-165
+
 ## [0.21.1] - 2026-09-25
 
 ### Corrigido
