@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
-export type ButtonEmphasis =
-  "primary" | "ink" | "quiet" | "outline" | "ghost" | "critical" | "critical-solid";
+import { type ButtonEmphasis, type ButtonSize, actionClassName } from "./action-class";
+
+export type { ButtonEmphasis };
 
 interface ActionButtonProps {
   /** Omitted for a `submit` button: the form's `onSubmit` is the action. */
@@ -11,7 +12,7 @@ interface ActionButtonProps {
   /** `primary` is the brand colour and appears once per screen; the rest are ink and surface. */
   readonly emphasis?: ButtonEmphasis;
   /** 54 px by default, the main touch target; `compact` is the 44 px minimum. */
-  readonly size?: "default" | "compact";
+  readonly size?: ButtonSize;
   /** Working: disabled, with a spinner before the label the caller already put in the gerund. */
   readonly busy?: boolean;
   readonly icon?: ReactNode;
@@ -19,21 +20,6 @@ interface ActionButtonProps {
   readonly form?: string;
   readonly children: ReactNode;
 }
-
-const emphasisTone = {
-  primary: "bg-brand text-on-brand",
-  ink: "bg-ink text-bg",
-  quiet: "bg-surface-2 text-ink",
-  outline: "bg-transparent text-ink inset-ring-[1.5px] inset-ring-line-strong",
-  ghost: "bg-transparent text-brand-ink",
-  critical: "bg-critical-soft text-critical",
-  "critical-solid": "bg-critical text-surface",
-} as const satisfies Record<ButtonEmphasis, string>;
-
-const sizeClass = {
-  default: "min-h-target rounded-button px-5 text-body",
-  compact: "min-h-11 rounded-field px-4 text-secondary",
-} as const;
 
 export function ActionButton({
   onPress,
@@ -53,7 +39,7 @@ export function ActionButton({
       onClick={onPress}
       disabled={disabled || busy}
       aria-busy={busy || undefined}
-      className={`inline-flex items-center justify-center gap-2 font-semibold whitespace-nowrap transition-transform duration-(--duration-press) ease-out active:scale-[.97] disabled:opacity-[.42] disabled:active:scale-100 ${sizeClass[size]} ${emphasisTone[emphasis]}`}
+      className={actionClassName(emphasis, size)}
     >
       {busy ? <Spinner /> : icon}
       {children}
