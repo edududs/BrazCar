@@ -9,8 +9,9 @@ from datetime import timedelta
 from django.conf import settings
 
 from brazcar.accounts.adapters.credentials import DjangoCredentials
+from brazcar.accounts.adapters.invite_repository import DjangoInviteRepository
 from brazcar.accounts.adapters.repository import DjangoAccountRepository
-from brazcar.accounts.application import AddCar
+from brazcar.accounts.application import AddCar, IssueInvite
 from brazcar.importing.adapters.bridges import RidesBridge
 from brazcar.importing.adapters.repository import (
     DjangoBlockedSenders,
@@ -61,6 +62,8 @@ def demo_wiring() -> DemoWiring:
         accounts=accounts,
         credentials=DjangoCredentials(),
         add_car=AddCar(accounts),
+        # The real clock, not `anchor`: the suite's invites must still be valid while it runs (D-166).
+        issue_invite=IssueInvite(DjangoInviteRepository(), accounts, clock),
         publish=PublishRide(rides, drivers, places, search, clock),
         edit=EditRide(rides, places, search, clock),
         change_seats=ChangeSeats(rides, clock),

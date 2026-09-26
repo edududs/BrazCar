@@ -43,7 +43,8 @@ class Command(BaseCommand):
         if removed.anything:
             self.stdout.write(
                 f"forgot {removed.accounts} account(s), {removed.rides} ride(s), "
-                f"{removed.candidates} candidate(s), {removed.messages} message(s)"
+                f"{removed.candidates} candidate(s), {removed.messages} message(s), "
+                f"{removed.invites} invite(s)"
             )
         if options["forget"]:
             return
