@@ -6,6 +6,27 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.21.3] - 2026-09-26
+
+### Corrigido
+
+- **web:** Anchor the repeat proposal's board-zone clock under TZ=UTC
+- **web:** Mock the service worker in route tests that mount the app
+
+### Documentação
+
+- Record the v0.21.2 deploy
+- Record the measured coverage after the front's floor rose to 94/95
+
+### Testes
+
+- **web:** Cover the adapters by their contract
+- **web:** Cover the headless hooks left without tests
+- **web:** Usability tests for the access forms and the ride detail
+- **web:** Run the routes over the whole app
+- **web:** Cover what changesBetween sends for time, payment and price
+- **web:** Raise the coverage floor to the level reached
+
 ## [0.21.2] - 2026-09-26
 
 ### Corrigido
