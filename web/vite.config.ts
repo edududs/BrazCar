@@ -77,11 +77,11 @@ export default defineConfig({
     maxWorkers: 4,
     coverage: {
       provider: "v8",
-      // The whole of src, like the backend measures the whole of src/brazcar (D-109), so the number
-      // shows the real gap instead of hiding it behind an include list. Adapters and hooks are now
-      // well covered (D-157); routes, screens and a few browser-lifecycle adapters are the gap left
-      // toward the backend's floor (docs/architecture.md). No third-party service reads this
-      // (D-008): the summary goes to the log and the floor is right here.
+      // The whole of src, like the backend measures the whole of src/brazcar (D-109). The target is
+      // parity with the backend (D-126), reached with adapters, hooks, components and routes under
+      // test; the floor sits two points under what the suite reaches, so a step that drops
+      // coverage fails here. No third-party service reads this (D-008): the summary goes to the
+      // log and the floor is right here.
       include: ["src/**"],
       exclude: [
         ...coverageConfigDefaults.exclude,
@@ -90,7 +90,7 @@ export default defineConfig({
         "src/shared/testing/**",
       ],
       reporter: ["text", "text-summary"],
-      thresholds: { statements: 70, lines: 70 },
+      thresholds: { statements: 94, lines: 95 },
     },
   },
 });

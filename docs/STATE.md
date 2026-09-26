@@ -260,8 +260,10 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   Barra de status do iPhone em `black-translucent`.
 - Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
   (`poe coverage`), 88,58% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
-  (`yarn coverage`), 72,23% de linhas de comando (72,38% de linhas) medidos sobre `src` inteiro e
-  piso de 70% (D-157, subiu de 15%), com meta de paridade (D-126). O resumo
+  (`yarn coverage`), COVERAGE_PLACEHOLDER% medidos sobre `src` e piso de FLOOR_PLACEHOLDER%
+  (linhas: LINES_PLACEHOLDER% e piso de LINES_FLOOR_PLACEHOLDER%), acima da meta de paridade
+  (D-126): adaptadores pelo contrato, hooks, componentes com `user-event` e as rotas montadas sobre
+  o app inteiro (`shared/testing/render-app.tsx`). O resumo
   fica no log do passo e nada é enviado para serviço de terceiros (D-008).
 - Portões (D-132): o `pre-push` saiu, nenhum hook roda teste no push. O GitHub roda o portão
   pesado (Postgres como serviço do runner, Schemathesis, build do front); localmente ele é ato
@@ -452,10 +454,10 @@ canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é e
    e as telas de observações e preço por parada.
 3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
    mensagens que trazem lista de preços (as de número 25, 31, 34 e 41).
-4. O que ainda falta do passo de qualidade: a cobertura do front até empatar com a do backend
-   (rotas, telas com teste de uso, adaptadores de ciclo de vida do navegador); e, fora do escopo
-   deste passo, a semente de demonstração determinística, para `yarn screens` parar de reescrever
-   o catálogo inteiro a cada rodada (ver ROADMAP).
+4. Passo de qualidade encerrado: Schemathesis sobre o contrato (D-156, D-158) e a cobertura do
+   front empatada com a do backend (D-157) estão feitos. Fora do escopo dele, a semente de
+   demonstração determinística, para `yarn screens` parar de reescrever o catálogo inteiro a cada
+   rodada (ver ROADMAP), segue pendente.
 
 ## Pendências abertas
 
