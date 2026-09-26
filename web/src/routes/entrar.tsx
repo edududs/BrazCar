@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
+import { landingAfterSignIn } from "@/features/accounts/app/landing-after-sign-in";
 import { useSession } from "@/features/accounts/app/use-session";
 import { LoginForm } from "@/features/accounts/ui/login-form";
 import { isSafeReturnTo } from "@/shared/domain/safe-return-to";
@@ -38,9 +39,12 @@ function LoginPage() {
       <LoginForm
         logIn={logIn}
         busy={busy}
-        onDone={() =>
-          void (returnTo === null ? navigate({ to: "/" }) : navigate({ href: returnTo }))
-        }
+        onDone={(account) => {
+          const landing = landingAfterSignIn(account, returnTo);
+          void (landing.kind === "return"
+            ? navigate({ href: landing.href })
+            : navigate({ to: landing.to }));
+        }}
       />
     </PageShell>
   );
