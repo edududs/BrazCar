@@ -6,6 +6,22 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.22.0] - 2026-09-26
+
+### Adicionado
+
+- **accounts:** Add the invite aggregate, its port and use cases
+- **accounts:** Store invites and issue them with manage.py invite
+
+### Corrigido
+
+- **accounts:** Print only the invite link and its deadline
+
+### Documentação
+
+- Record the v0.21.3 deploy
+- Explain how to issue an invite on the test machine
+
 ## [0.21.3] - 2026-09-26
 
 ### Corrigido
