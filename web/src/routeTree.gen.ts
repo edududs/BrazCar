@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as ContaRouteImport } from './routes/conta'
+import { Route as ConviteRouteImport } from './routes/convite'
 import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as EsqueciSenhaRouteImport } from './routes/esqueci-senha'
@@ -34,6 +35,11 @@ const CadastroRoute = CadastroRouteImport.update({
 const ContaRoute = ContaRouteImport.update({
   id: '/conta',
   path: '/conta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConviteRoute = ConviteRouteImport.update({
+  id: '/convite',
+  path: '/convite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DiagnosticsRoute = DiagnosticsRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/conta': typeof ContaRoute
+  '/convite': typeof ConviteRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/entrar': typeof EntrarRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/conta': typeof ContaRoute
+  '/convite': typeof ConviteRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/entrar': typeof EntrarRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/conta': typeof ContaRoute
+  '/convite': typeof ConviteRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/entrar': typeof EntrarRoute
   '/esqueci-senha': typeof EsqueciSenhaRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/conta'
+    | '/convite'
     | '/diagnostics'
     | '/entrar'
     | '/esqueci-senha'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/conta'
+    | '/convite'
     | '/diagnostics'
     | '/entrar'
     | '/esqueci-senha'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/conta'
+    | '/convite'
     | '/diagnostics'
     | '/entrar'
     | '/esqueci-senha'
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CadastroRoute: typeof CadastroRoute
   ContaRoute: typeof ContaRoute
+  ConviteRoute: typeof ConviteRoute
   DiagnosticsRoute: typeof DiagnosticsRoute
   EntrarRoute: typeof EntrarRoute
   EsqueciSenhaRoute: typeof EsqueciSenhaRoute
@@ -194,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/conta'
       fullPath: '/conta'
       preLoaderRoute: typeof ContaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/convite': {
+      id: '/convite'
+      path: '/convite'
+      fullPath: '/convite'
+      preLoaderRoute: typeof ConviteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/diagnostics': {
@@ -259,6 +279,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastroRoute: CadastroRoute,
   ContaRoute: ContaRoute,
+  ConviteRoute: ConviteRoute,
   DiagnosticsRoute: DiagnosticsRoute,
   EntrarRoute: EntrarRoute,
   EsqueciSenhaRoute: EsqueciSenhaRoute,
