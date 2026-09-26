@@ -124,6 +124,11 @@ class DemoManifest(FrozenModel):
     group_labels: tuple[str, ...]
     suite_phones: tuple[str, ...]  # free numbers the suite may register itself
     suite_invites: tuple[SeededInvite, ...]  # one per `suite_phones`, aligned by index (D-166, D-167)
+    suite_legacy_phones: tuple[str, ...]
+    """One seeded account without a confirmed e-mail per project x attempt (D-168), aligned by the
+    same index the suite uses for `suitePhoneAt` at `journey = 0` — no journey factor, since these
+    accounts exist already and are not signed up by a test. Own accounts for the suite's e-mail
+    confirmation journey, so it never contends with the shared, retained `legacy_person`."""
     legacy_person: str  # slug of the one seeded account still without a confirmed e-mail (D-168)
     accounts: tuple[SeededAccount, ...]
     rides: tuple[SeededRide, ...]
@@ -180,6 +185,7 @@ async def seed(wiring: DemoWiring, *, anchor: datetime) -> DemoManifest:
     day of a departure is the day the board shows.
     """
     accounts = {person.slug: await _register(wiring, person, anchor=anchor) for person in data.PEOPLE}
+    await _suite_legacy_accounts(wiring, anchor=anchor)
     rides = await _published(wiring, accounts, anchor=anchor)
     rides |= await _imported(wiring, anchor=anchor)
     await _contacts(wiring, accounts, rides)
@@ -213,6 +219,22 @@ async def _register(wiring: DemoWiring, person: data.DemoPerson, *, anchor: date
     for car in person.cars:
         account = await wiring.add_car(account.id, model=car.model, color=car.color, plate=car.plate)
     return account
+
+
+async def _suite_legacy_accounts(wiring: DemoWiring, *, anchor: datetime) -> None:
+    """`SUITE_LEGACY_PHONES`, made the same way as `driver_no_car` (D-168): through
+    `Account.register`, no e-mail and no car, so each stays held until it confirms one. The end to
+    end suite reads their phones back from the manifest, never their identifiers: nothing else of
+    theirs is worth naming."""
+    for index, phone in enumerate(data.SUITE_LEGACY_PHONES):
+        account = Account.register(
+            phone=phone,
+            display_name=f"Conta antiga da suíte {index}",
+            email=None,
+            accepted_terms_at=anchor,
+        )
+        await wiring.accounts.save(account)
+        await wiring.credentials.register(account.id, data.PASSWORD)
 
 
 async def _suite_invites(wiring: DemoWiring) -> tuple[SeededInvite, ...]:
@@ -543,6 +565,7 @@ def _manifest(result: _SeedResult, *, anchor: datetime, tolerance: timedelta) ->
         group_labels=(data.GROUP_LABEL, data.GROUP_LABEL_SECOND),
         suite_phones=data.SUITE_PHONES,
         suite_invites=suite_invites,
+        suite_legacy_phones=data.SUITE_LEGACY_PHONES,
         legacy_person=data.LEGACY_PERSON,
         accounts=tuple(
             SeededAccount(

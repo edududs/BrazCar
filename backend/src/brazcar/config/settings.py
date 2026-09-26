@@ -99,6 +99,10 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", default=True)
 DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_FROM", "BrazCar <no-reply@localhost>")
+# Only read when `EMAIL_BACKEND` names Django's own filebased backend, as the end to end suite's
+# server does: it writes each e-mail to a file there, so a fixture can read a link off disk (D-133,
+# D-134). Empty otherwise; setting it turns nothing on by itself.
+EMAIL_FILE_PATH = os.environ.get("EMAIL_FILE_PATH", "")
 # The front's page that receives the e-mailed token; `{token}` is filled by the use case.
 PASSWORD_RESET_LINK = os.environ.get(
     "PASSWORD_RESET_LINK", "http://localhost:5173/redefinir-senha?token={token}"

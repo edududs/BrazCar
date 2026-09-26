@@ -45,7 +45,9 @@ async def forget_demo() -> Removed:
 
 @transaction.atomic
 def _forget() -> Removed:
-    phones = [person.phone for person in data.PEOPLE] + list(data.SUITE_PHONES)
+    phones = (
+        [person.phone for person in data.PEOPLE] + list(data.SUITE_PHONES) + list(data.SUITE_LEGACY_PHONES)
+    )
     senders = [sender.phone for sender in data.SENDERS]
     users = User.objects.filter(phone__in=phones)
     account_ids = list(users.values_list("id", flat=True))
