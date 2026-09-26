@@ -62,6 +62,7 @@ from brazcar.accounts.domain import (
     WrongCurrentPasswordError,
 )
 from brazcar.shared.adapters.api_errors import with_errors
+from brazcar.shared.adapters.api_schemas import Done
 from brazcar.shared.adapters.phone_input import INVALID_PHONE
 from brazcar.shared.adapters.session_auth import session_auth, signed_in_account_id
 from brazcar.shared.domain.personal_data import masked_email
@@ -197,10 +198,6 @@ class PasswordResetIn(Schema):
 class PasswordResetConfirmIn(Schema):
     token: str
     password: str
-
-
-class Done(Schema):
-    ok: bool = True
 
 
 PHONE_REFUSALS: dict[type[ValueError], str] = {  # one message per reason, in Portuguese
