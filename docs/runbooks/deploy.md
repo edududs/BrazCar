@@ -57,6 +57,8 @@ entrou no `api.env`; sem migração. Em 2026-09-25 (v0.20.2) nada entrou no `api
 Em 2026-09-25 (v0.21.0) nada entrou no `api.env`; a migração `feedback.0001` criou a tabela do
 canal de opinião no `up`. Em 2026-09-26 (v0.21.2) nada entrou no `api.env`; sem migração.
 Em 2026-09-26 (v0.21.3) nada entrou no `api.env`; sem migração.
+Em 2026-09-26 (v0.22.0) entrou `INVITE_LINK` no `api.env`; a migração `accounts.0002` criou a
+tabela de convites no `up`.
 
 ## Worker do WhatsApp (passo 7a)
 
