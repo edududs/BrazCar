@@ -30,16 +30,22 @@ Plataforma que funciona sozinha, sem extrator.
 ## Beta fechado
 
 Decidido em 25/09/2026 (D-159 a D-164): a instância em produção fecha para convite; o repositório
-continua público e único. Nenhum destes passos foi implementado ainda; até lá, o worker de
-importação segue rodando por decisão do dono, com a exposição de telefone que motivou a decisão
-(D-117). Ordem de implementação:
+continua público e único. Até fechar, o worker de importação segue rodando por decisão do dono, com
+a exposição de telefone que motivou a decisão (D-117). Ordem de implementação:
 
 - Convite de uso único, com prazo, vinculado a um telefone, e e-mail obrigatório confirmado no
-  mesmo fluxo de cadastro (D-159, D-160).
-- Porta pública de saída, para o motorista com carona importada pedir a própria remoção (D-162).
-- Página pública sem login: explicação do projeto, mural anonimizado, pedido de participação,
-  `noindex` (D-161). A semente de demonstração deixa de ir para o ar em produção (D-163).
-- Documentos de privacidade, termo de uso e segurança.
+  mesmo fluxo de cadastro (D-159, D-160). **Feito, tag `v0.23.0`.**
+- Visão anônima: mural e detalhe sem sessão não mostram nenhum dado de pessoa (D-171), recorte da
+  página pública que D-161 previa maior. **Feito, tag `v0.24.0`.**
+- Porta de saída, para o motorista com carona importada pedir a própria remoção (D-162, D-172).
+  **Backend feito, tag `v0.25.0`**: rota `POST /api/removal-requests` e `manage.py approve_removal`.
+  **Pendente:** a página pública do site que torna a rota alcançável para qualquer pessoa, sem login,
+  com `noindex` (D-161). A semente de demonstração já não vai para o ar em produção (D-163).
+- Documentos de privacidade, termo de uso e segurança. **Feito no repositório**: `docs/privacy.md`,
+  `docs/terms.md`, `docs/security.md`.
+
+O beta segue aberto só por convite, ainda não fechado de vez: faltam a página pública de remoção e a
+rodada única do catálogo de telas do passo de design, que depende de autorização para rodar.
 
 ## Depois
 
