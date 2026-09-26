@@ -14,7 +14,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from brazcar.accounts.application import AccountRepository, AddCar, Credentials
+from brazcar.accounts.application import AccountRepository, AddCar, Credentials, IssueInvite
 from brazcar.accounts.domain import Account, account_phone
 from brazcar.importing.application import BlockSender, Candidates, IngestMessages, SourceMessages
 from brazcar.importing.domain import (
@@ -102,6 +102,16 @@ class SeededRide(FrozenModel):
     on_board: bool  # whether the public board lists it: cancelled and departed rides never are
 
 
+class SeededInvite(FrozenModel):
+    """One invite issued for a `suite_phones` entry, its e-mail already given (D-166, D-167): the
+    suite finishes the registration itself, `POST /api/accounts/register` with `email_token`."""
+
+    phone: str
+    invite_token: str
+    email: str
+    email_token: str
+
+
 class DemoManifest(FrozenModel):
     """What the seed made, for whoever drives the screens afterwards.
 
@@ -113,6 +123,8 @@ class DemoManifest(FrozenModel):
     days: tuple[date, ...]  # the departure days the board shows, earliest first
     group_labels: tuple[str, ...]
     suite_phones: tuple[str, ...]  # free numbers the suite may register itself
+    suite_invites: tuple[SeededInvite, ...]  # one per `suite_phones`, aligned by index (D-166, D-167)
+    legacy_person: str  # slug of the one seeded account still without a confirmed e-mail (D-168)
     accounts: tuple[SeededAccount, ...]
     rides: tuple[SeededRide, ...]
     candidates_by_verdict: dict[str, int]
@@ -134,6 +146,7 @@ class DemoWiring:
     accounts: AccountRepository
     credentials: Credentials
     add_car: AddCar
+    issue_invite: IssueInvite  # its own `invites` repository and clock come along with it
     publish: PublishRide
     edit: EditRide
     change_seats: ChangeSeats
@@ -149,6 +162,17 @@ class DemoWiring:
     departure_tolerance: timedelta  # `RideRules.departure_tolerance`, to read the status back
 
 
+@dataclass(frozen=True, slots=True)
+class _SeedResult:
+    """What each step of `seed` produced, gathered in one piece so `_manifest` reads it, not six
+    separate parameters (PLR0913)."""
+
+    accounts: dict[str, Account]
+    rides: dict[str, RideOffer]
+    verdicts: dict[str, int]
+    suite_invites: tuple[SeededInvite, ...]
+
+
 async def seed(wiring: DemoWiring, *, anchor: datetime) -> DemoManifest:
     """Write the whole demonstration. The caller has already emptied what a previous run left.
 
@@ -160,7 +184,9 @@ async def seed(wiring: DemoWiring, *, anchor: datetime) -> DemoManifest:
     rides |= await _imported(wiring, anchor=anchor)
     await _contacts(wiring, accounts, rides)
     verdicts = await _group_traffic(wiring, rides, anchor=anchor)
-    return _manifest(accounts, rides, verdicts, anchor=anchor, tolerance=wiring.departure_tolerance)
+    suite_invites = await _suite_invites(wiring)
+    result = _SeedResult(accounts=accounts, rides=rides, verdicts=verdicts, suite_invites=suite_invites)
+    return _manifest(result, anchor=anchor, tolerance=wiring.departure_tolerance)
 
 
 # --- accounts ------------------------------------------------------------------------------------
@@ -187,6 +213,25 @@ async def _register(wiring: DemoWiring, person: data.DemoPerson, *, anchor: date
     for car in person.cars:
         account = await wiring.add_car(account.id, model=car.model, color=car.color, plate=car.plate)
     return account
+
+
+async def _suite_invites(wiring: DemoWiring) -> tuple[SeededInvite, ...]:
+    """One invite per phone the end to end suite may register (D-166): issued and given an e-mail
+    straight through the domain, `Invite.give_email`, so no mailer is asked to send anything nobody
+    reads. Both tokens are the domain's own random ones; the manifest is the only place they travel
+    in the clear. Issued against `wiring.issue_invite`'s own clock — the real one, not `anchor` — so
+    the invite (four hours) and its e-mail link (two) are still good however long the suite runs."""
+    issue = wiring.issue_invite
+    seeded: list[SeededInvite] = []
+    for index, phone in enumerate(data.SUITE_PHONES):
+        invite, invite_token = await issue(phone=phone)
+        email = f"suite-{index}@example.com"
+        waiting, email_token = invite.give_email(email, issue.clock.now(), issue.policy)
+        await issue.invites.save(waiting)
+        seeded.append(
+            SeededInvite(phone=phone, invite_token=invite_token, email=email, email_token=email_token)
+        )
+    return tuple(seeded)
 
 
 # --- published rides -----------------------------------------------------------------------------
@@ -472,14 +517,13 @@ def _verdict(candidate: Candidate, rides: dict[str, RideOffer]) -> Accepted | Re
 # --- the manifest --------------------------------------------------------------------------------
 
 
-def _manifest(
-    accounts: dict[str, Account],
-    rides: dict[str, RideOffer],
-    verdicts: dict[str, int],
-    *,
-    anchor: datetime,
-    tolerance: timedelta,
-) -> DemoManifest:
+def _manifest(result: _SeedResult, *, anchor: datetime, tolerance: timedelta) -> DemoManifest:
+    accounts, rides, verdicts, suite_invites = (
+        result.accounts,
+        result.rides,
+        result.verdicts,
+        result.suite_invites,
+    )
     seeded = tuple(
         SeededRide(
             slug=slug,
@@ -498,6 +542,8 @@ def _manifest(
         days=tuple(sorted({ride.day for ride in seeded if ride.on_board})),
         group_labels=(data.GROUP_LABEL, data.GROUP_LABEL_SECOND),
         suite_phones=data.SUITE_PHONES,
+        suite_invites=suite_invites,
+        legacy_person=data.LEGACY_PERSON,
         accounts=tuple(
             SeededAccount(
                 slug=person.slug,

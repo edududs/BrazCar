@@ -15,7 +15,7 @@ from asgiref.sync import sync_to_async
 from django.db import transaction
 from django.db.models import Q
 
-from brazcar.accounts.adapters.models import CarModel, User
+from brazcar.accounts.adapters.models import CarModel, InviteModel, User
 from brazcar.feedback.adapters.models import FeedbackModel
 from brazcar.importing.adapters.models import BlockedSenderModel, CandidateModel, SourceMessageModel
 from brazcar.rides.adapters.models import ContactRequestModel, RideModel
@@ -32,10 +32,11 @@ class Removed:
     rides: int
     candidates: int
     messages: int
+    invites: int
 
     @property
     def anything(self) -> bool:
-        return bool(self.accounts or self.rides or self.candidates or self.messages)
+        return bool(self.accounts or self.rides or self.candidates or self.messages or self.invites)
 
 
 async def forget_demo() -> Removed:
@@ -48,6 +49,12 @@ def _forget() -> Removed:
     senders = [sender.phone for sender in data.SENDERS]
     users = User.objects.filter(phone__in=phones)
     account_ids = list(users.values_list("id", flat=True))
+
+    # No `PROTECT` reaches an invite (`account_id` is a reference, never a join, D-166): the order
+    # here does not matter, only that `seed_demo` never finds one of an earlier run in its way.
+    invites = InviteModel.objects.filter(phone__in=phones)
+    removed_invites = invites.count()
+    invites.delete()
 
     rides = RideModel.objects.filter(Q(driver_id__in=account_ids) | Q(driver_phone__in=senders))
     ride_ids = [str(ride_id) for ride_id in rides.values_list("id", flat=True)]
@@ -76,4 +83,5 @@ def _forget() -> Removed:
         rides=len(ride_ids),
         candidates=removed_candidates,
         messages=removed_messages,
+        invites=removed_invites,
     )

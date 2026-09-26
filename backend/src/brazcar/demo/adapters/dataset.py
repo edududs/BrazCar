@@ -62,6 +62,10 @@ DRIVER_NO_CAR = DemoPerson(
     phone="+5561900000003",
     display_name="Fernanda Lopes",
 )
+"""No e-mail, on purpose: the beta cast's one account from before the invite, retained until it
+confirms one (D-168). The end to end suite signs in as her, but only to read; never to write, so
+the hold never gets in its way. Kept without an e-mail so the screens catalogue has a legacy
+account's own page to show (`legacy_person` in the manifest, D-166)."""
 PASSENGER = DemoPerson(
     slug="passenger",
     phone="+5561900000004",
@@ -72,17 +76,20 @@ LONG_NAME = DemoPerson(
     slug="long_name",
     phone="+5561900000005",
     display_name="Maria das Graças de Albuquerque Cavalcanti Fonseca",
+    email="maria.demo@example.org",
     cars=(DemoCar(model="Kwid", color="vermelho", plate="DEM9C87"),),
 )
 FRESH = DemoPerson(
     slug="fresh",
     phone="+5561900000006",
     display_name="Novo Usuário",
+    email="novo.demo@example.org",
 )
 IMPORTED_OWNER = DemoPerson(
     slug="imported_owner",
     phone="+5561900000007",
     display_name="Roberto Silva Matos",
+    email="roberto.demo@example.org",
 )
 """The account whose phone a group message carries: its imported ride is hers (D-127)."""
 
@@ -109,6 +116,11 @@ PEOPLE: tuple[DemoPerson, ...] = (
     FRESH,
     IMPORTED_OWNER,
 )
+
+LEGACY_PERSON = DRIVER_NO_CAR.slug
+"""Which of `PEOPLE` is the one left without an e-mail (see `DRIVER_NO_CAR`); the manifest hands
+this slug out as `legacy_person`, so the screens catalogue knows whose page shows the account from
+before the invite."""
 
 # --- what the drivers write -------------------------------------------------------------------
 

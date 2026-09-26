@@ -4,6 +4,7 @@ Seeding is not cheap, so the promises are checked together on one run instead of
 """
 
 from datetime import UTC, datetime
+from http import HTTPStatus
 from io import StringIO
 from pathlib import Path
 
@@ -11,8 +12,9 @@ import pytest
 from asgiref.sync import sync_to_async
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.http import HttpResponse
 
-from brazcar.accounts.adapters.models import User
+from brazcar.accounts.adapters.models import InviteModel, User
 from brazcar.demo.adapters import dataset as data
 from brazcar.demo.adapters.seeding import DemoManifest
 from brazcar.feedback.adapters.models import FeedbackModel
@@ -22,9 +24,16 @@ from brazcar.importing.adapters.models import BlockedSenderModel, CandidateModel
 from brazcar.rides.adapters.models import ContactRequestModel, RideModel
 from brazcar.rides.domain import NOTES_LIMIT, RideStatus
 from brazcar.shared.domain.phone import PhoneNumber
+from tests.accounts.test_routes import FRONT, Browser, body
 
 CONTACT_LIMIT = 20  # `RideRules.contact_limit` by default (D-097)
 DAYS = 3  # hoje, amanhã e outro dia
+SUITE_PASSWORD = "correct horse battery"  # forte o bastante para os validadores do Django
+
+
+@pytest.fixture(autouse=True)
+def _front_origin(settings: object) -> None:
+    setattr(settings, "CORS_ALLOWED_ORIGINS", [FRONT])  # noqa: B010 - pytest-django's settings proxy
 
 
 async def _run(*args: str) -> None:
@@ -42,13 +51,14 @@ async def _seed(manifest: Path) -> DemoManifest:
     return await sync_to_async(_read, thread_sensitive=False)(manifest)
 
 
-async def _counts() -> tuple[int, int, int, int, int]:
+async def _counts() -> tuple[int, int, int, int, int, int]:
     return (
         await User.objects.acount(),
         await RideModel.objects.acount(),
         await CandidateModel.objects.acount(),
         await SourceMessageModel.objects.acount(),
         await ContactRequestModel.objects.acount(),
+        await InviteModel.objects.acount(),
     )
 
 
@@ -128,6 +138,17 @@ async def test_seeds_everything_it_promises(tmp_path: Path) -> None:
     assert asked == CONTACT_LIMIT
     assert await ContactRequestModel.objects.acount() > asked
 
+    # Convites: um por telefone reservado, alinhado por índice (D-166, D-167).
+    assert [invite.phone for invite in seeded.suite_invites] == list(data.SUITE_PHONES)
+    assert len({invite.invite_token for invite in seeded.suite_invites}) == len(data.SUITE_PHONES)
+    assert len({invite.email_token for invite in seeded.suite_invites}) == len(data.SUITE_PHONES)
+    assert await InviteModel.objects.acount() == len(data.SUITE_PHONES)
+
+    # Conta antiga: a única sem e-mail, e não é usada para escrever em nenhuma jornada da suíte.
+    assert seeded.legacy_person == data.DRIVER_NO_CAR.slug
+    with_email = {person.slug for person in data.PEOPLE if person.email is not None}
+    assert with_email == {account.slug for account in seeded.accounts} - {seeded.legacy_person}
+
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.usefixtures("worker_thread_connections_closed")
@@ -143,7 +164,7 @@ async def test_repeats_itself_and_can_forget_everything(tmp_path: Path) -> None:
 
     await _run("--yes-i-know", "--forget")
 
-    assert await _counts() == (0, 0, 0, 0, 0)
+    assert await _counts() == (0, 0, 0, 0, 0, 0)
 
 
 @pytest.mark.django_db(transaction=True)
@@ -166,3 +187,58 @@ async def test_an_opinion_sent_by_a_seeded_account_does_not_block_forgetting(tmp
 
     assert await FeedbackModel.objects.acount() == 0
     assert await User.objects.acount() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.usefixtures("worker_thread_connections_closed")
+async def test_a_suite_invites_email_token_opens_the_signup_page_and_registers(tmp_path: Path) -> None:
+    """What the suite itself would do with the manifest's first spare invite (D-166, D-167)."""
+    seeded = await _seed(tmp_path / "manifest.json")
+    invite = seeded.suite_invites[0]
+    client = Browser()
+
+    opened = await client.get(f"/api/accounts/signup/{invite.email_token}")
+    registered = await client.post(
+        "/api/accounts/register",
+        {
+            "email_token": invite.email_token,
+            "display_name": "Conta da Suíte",
+            "password": SUITE_PASSWORD,
+            "accepts_terms": True,
+        },
+    )
+    me = await client.get("/api/accounts/me")
+
+    assert opened.status_code == HTTPStatus.OK
+    assert body(opened)["email"] == invite.email
+    assert registered.status_code == HTTPStatus.CREATED
+    assert body(registered)["email"] == invite.email
+    assert body(registered)["email_confirmed"] is True
+    assert body(registered)["phone"] == invite.phone
+    assert me.status_code == HTTPStatus.OK
+    assert body(me)["required_action"] is None
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.usefixtures("worker_thread_connections_closed")
+async def test_only_the_legacy_person_is_held_from_writing(tmp_path: Path) -> None:
+    """The seeded account without a confirmed e-mail is 403 with `required_action`; the others
+    that the suite signs in to write with are not (D-168)."""
+    seeded = await _seed(tmp_path / "manifest.json")
+    car = {"model": "Fiesta", "color": "azul", "plate": "DEM8Y88"}
+
+    async def add_car(slug: str) -> HttpResponse:
+        account = seeded.account(slug)
+        client = Browser()
+        signed_in = await client.post(
+            "/api/accounts/login", {"phone": account.phone, "password": account.password}
+        )
+        assert signed_in.status_code == HTTPStatus.OK, signed_in.content
+        return await client.post("/api/accounts/cars", car)
+
+    held = await add_car(seeded.legacy_person)
+    writing = await add_car(data.DRIVER_TWO_CARS.slug)
+
+    assert held.status_code == HTTPStatus.FORBIDDEN
+    assert body(held) == {"detail": "confirme seu e-mail para continuar", "required_action": "confirm_email"}
+    assert writing.status_code == HTTPStatus.OK
