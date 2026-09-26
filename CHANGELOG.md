@@ -6,6 +6,34 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.23.0] - 2026-09-26
+
+### Adicionado
+
+- **QUEBRA** **accounts:** Require an invite and a confirmed e-mail to sign up
+- **QUEBRA** **accounts:** Hold accounts without a confirmed e-mail and confirm e-mail changes by link
+- **demo:** Issue invites for the suite's phones and confirm the seed's e-mails
+- **QUEBRA** **web:** Sign up from the e-mail link and change the e-mail by link
+- **web:** Open the invite and send its e-mail link
+- **web:** Hold accounts without a confirmed e-mail and confirm it by link
+- **demo:** Seed legacy accounts for the suite and let e-mail go to files
+
+### Corrigido
+
+- **web:** Keep the confirm link's flow in a hook and tighten returnTo
+- **web:** Send a held account to its e-mail screen after signing in
+
+### Documentação
+
+- Record the v0.22.0 deploy
+- List the three invite links the api.env needs
+- Record the invite and held account screens (D-169)
+
+### Testes
+
+- **api:** Require the write gate on every state-changing route
+- **e2e:** Prove the invite and the held account journeys through the e-mail link
+
 ## [0.22.0] - 2026-09-26
 
 ### Adicionado
