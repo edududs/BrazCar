@@ -61,6 +61,8 @@ Em 2026-09-26 (v0.22.0) entrou `INVITE_LINK` no `api.env`; a migração `account
 tabela de convites no `up`.
 Em 2026-09-26 (v0.23.0) entraram `SIGNUP_LINK` e `EMAIL_CONFIRM_LINK` no `api.env`; a migração
 `accounts.0003` marcou confirmadas 3 contas com e-mail; o cadastro aberto saiu do ar.
+Em 2026-09-26 (v0.24.0) nada entrou no `api.env`; sem migração; o mural público passou a sair sem
+dado pessoal.
 
 ## Worker do WhatsApp (passo 7a)
 

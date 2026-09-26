@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado em 2026-09-25.
+Atualizado em 2026-09-26.
 
 ## Onde estamos
 
@@ -31,7 +31,8 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 `brazcar.elj-labs.org` ([runbooks/deploy.md](runbooks/deploy.md)), os dois na `v0.7.0` desde
 2026-09-23; a API e o worker na `v0.9.0` desde 2026-09-24; API, worker e front na `v0.11.0` desde
 2026-09-24; API, worker e front na `v0.21.3` desde 2026-09-26; API, worker e front na `v0.22.0`
-desde 2026-09-26; API, worker e front na `v0.23.0` desde 2026-09-26.
+desde 2026-09-26; API, worker e front na `v0.23.0` desde 2026-09-26; API, worker e front na
+`v0.24.0` desde 2026-09-26.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
