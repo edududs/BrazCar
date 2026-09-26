@@ -8,6 +8,14 @@ import { renderApp } from "@/shared/testing/render-app";
 
 import { rideOut, serveShell } from "./fixtures";
 
+// The real adapter imports vite-plugin-pwa's virtual module, which Vitest cannot resolve; the
+// shell mounts it on every route, so any test rendering the whole app needs this double (D-106).
+vi.mock("@/shared/adapters/service-worker", () => ({
+  applyUpdate: vi.fn(() => Promise.resolve()),
+  readUpdateWaiting: () => false,
+  subscribeToUpdateWaiting: () => () => undefined,
+}));
+
 const api = await vi.hoisted(async () => {
   const { installFakeApi } = await import("@/shared/testing/fake-api");
   return installFakeApi();
