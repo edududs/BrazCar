@@ -84,6 +84,20 @@ describe("/entrar", () => {
       expect(router.state.location.pathname).toBe("/");
     });
   });
+
+  it("a held account lands on its own guard, not the board (D-168)", async () => {
+    const user = userEvent.setup();
+    api.serve("POST", "/api/accounts/login", 200, heldOut);
+    const { router } = await renderApp("/entrar");
+
+    await user.type(await screen.findByLabelText(/^Celular/), "61999990001");
+    await user.type(screen.getByLabelText(/^Senha/), "segredo123{Enter}");
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/conta");
+    });
+    expect(await screen.findByText("Falta confirmar seu e-mail")).toBeDefined();
+  });
 });
 
 describe("/cadastro", () => {

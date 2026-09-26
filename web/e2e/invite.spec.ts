@@ -81,11 +81,9 @@ test("conta antiga: troca o e-mail, sai, entra pelo link e confirma", async ({
   await page.getByLabel("Celular").fill(phone);
   await page.getByLabel(/^Senha/).fill(password);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await expect(page).toHaveURL(/\/$/);
 
-  // O portão fica em cada rota que exige escrita (D-168), não no mural: "/conta" é onde a conta
-  // retida aparece.
-  await page.goto("/conta");
+  // Entrar já leva a conta retida direto para "/conta" (decisão do dono do produto, D-168).
+  await expect(page).toHaveURL(/\/conta$/);
   await expect(
     page.getByRole("heading", { name: "Falta confirmar seu e-mail", exact: true }),
   ).toBeVisible();
