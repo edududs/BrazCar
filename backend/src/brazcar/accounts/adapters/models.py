@@ -64,3 +64,70 @@ class CarModel(models.Model):
 
     def __str__(self) -> str:
         return f"{self.model} {self.plate}"
+
+
+# `kind` mirrors `InviteProgress`'s pydantic discriminator (`accounts.domain.invite`): "issued",
+# "email_given" or "consumed". The columns of a stage the row has not reached stay null; nothing
+# is ever cleared once set, so a spent e-mail link still resolves by its digest (D-166).
+_NO_PROGRESS = models.Q(
+    email__isnull=True,
+    email_digest__isnull=True,
+    email_given_at__isnull=True,
+    email_expires_at__isnull=True,
+    account_id__isnull=True,
+    consumed_at__isnull=True,
+)
+_HAS_EMAIL_ONLY = models.Q(
+    email__isnull=False,
+    email_digest__isnull=False,
+    email_given_at__isnull=False,
+    email_expires_at__isnull=False,
+    account_id__isnull=True,
+    consumed_at__isnull=True,
+)
+_HAS_ACCOUNT = models.Q(
+    email__isnull=False, email_digest__isnull=False, account_id__isnull=False, consumed_at__isnull=False
+)
+
+
+class InviteModel(models.Model):
+    """One row per invite (D-166). The token itself never lives here, only the digest of it."""
+
+    id = models.UUIDField(primary_key=True, editable=False)
+    phone = models.CharField(max_length=16, db_index=True)  # E.164; a phone may own several, over time
+    invite_digest = models.CharField(max_length=64, unique=True)
+    issued_at = models.DateTimeField()
+    expires_at = models.DateTimeField()
+    kind = models.CharField(
+        max_length=12,
+        choices=(("issued", "issued"), ("email_given", "email_given"), ("consumed", "consumed")),
+    )
+    email = models.EmailField(null=True, blank=True)  # noqa: DJ001 - unset before the e-mail is given
+    email_digest = models.CharField(max_length=64, null=True, blank=True, unique=True)
+    email_given_at = models.DateTimeField(null=True, blank=True)
+    email_expires_at = models.DateTimeField(null=True, blank=True)
+    account_id = models.UUIDField(null=True, blank=True)  # set once consumed; a reference, never a join
+    consumed_at = models.DateTimeField(null=True, blank=True)
+    version = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = "accounts_invite"
+        indexes = (models.Index(fields=("phone", "issued_at", "id"), name="accounts_invite_latest_idx"),)
+        constraints = (
+            models.CheckConstraint(
+                condition=models.Q(kind__in=("issued", "email_given", "consumed")), name="invite_kind_known"
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(kind="issued") | _NO_PROGRESS, name="invite_issued_has_no_progress"
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(kind="email_given") | _HAS_EMAIL_ONLY,
+                name="invite_email_given_has_email_only",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(kind="consumed") | _HAS_ACCOUNT, name="invite_consumed_has_account"
+            ),
+        )
+
+    def __str__(self) -> str:
+        return f"{self.kind} {self.id}"

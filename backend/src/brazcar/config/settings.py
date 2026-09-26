@@ -103,6 +103,8 @@ DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_FROM", "BrazCar <no-reply@localhost>"
 PASSWORD_RESET_LINK = os.environ.get(
     "PASSWORD_RESET_LINK", "http://localhost:5173/redefinir-senha?token={token}"
 )
+# The front's page that receives the invite's token; `{token}` is filled by the use case (D-166).
+INVITE_LINK = os.environ.get("INVITE_LINK", "http://localhost:5173/convite?token={token}")
 
 # The front lives on a sibling origin (D-058). Explicit origins only, with credentials (D-059).
 CORS_ALLOWED_ORIGINS = _env_list("DJANGO_CORS_ALLOWED_ORIGINS", default=[])

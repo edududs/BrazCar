@@ -1,3 +1,6 @@
+import pytest
+
+from brazcar.accounts.adapters.invite_repository import DjangoInviteRepository
 from brazcar.accounts.application import InviteRepository
 from tests.contracts.invite_repository import InviteRepositoryContract
 
@@ -9,4 +12,9 @@ class TestInMemoryInviteRepository(InviteRepositoryContract):
         return InMemoryInviteRepository()
 
 
-# The Django adapter joins here as `TestDjangoInviteRepository`, marked like `TestDjangoAccountRepository`.
+@pytest.mark.contract
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.usefixtures("worker_thread_connections_closed")
+class TestDjangoInviteRepository(InviteRepositoryContract):
+    def make_repository(self) -> InviteRepository:
+        return DjangoInviteRepository()
