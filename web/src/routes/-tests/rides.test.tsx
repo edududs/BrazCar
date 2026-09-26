@@ -102,6 +102,29 @@ describe("/caronas/$rideId", () => {
     expect(api.sentTo("POST", "/api/rides/r1/contact")).toHaveLength(1);
   });
 
+  it("a ride imported from WhatsApp offers the way to leave the board, even with no session (D-172)", async () => {
+    api.serve("GET", "/api/rides/r1", 200, { ...rideOut, origin: "whatsapp", driver_name: null });
+
+    await renderApp("/caronas/r1");
+
+    expect(
+      (
+        await screen.findByRole("link", { name: "É sua esta carona? Peça para sair do mural." })
+      ).getAttribute("href"),
+    ).toBe("/sair-do-mural");
+  });
+
+  it("a published ride offers no way to leave the board", async () => {
+    api.serve("GET", "/api/rides/r1", 200, rideOut);
+
+    await renderApp("/caronas/r1");
+
+    expect(await screen.findByRole("link", { name: "Entrar para pedir contato" })).toBeDefined();
+    expect(
+      screen.queryByRole("link", { name: "É sua esta carona? Peça para sair do mural." }),
+    ).toBeNull();
+  });
+
   it("a held account asking for the contact sees the phrase and a way to its own account, not a generic error (D-168)", async () => {
     const user = userEvent.setup();
     serveShell(api, heldOut);

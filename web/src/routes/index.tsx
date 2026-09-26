@@ -1,4 +1,5 @@
 import {
+  Link,
   type SearchSchemaInput,
   createFileRoute,
   stripSearchParams,
@@ -13,6 +14,7 @@ import { BoardFiltersForm } from "@/features/rides/ui/board-filters";
 import { RideList } from "@/features/rides/ui/ride-list";
 import { useClock } from "@/shared/app/use-clock";
 import { ActionButton } from "@/shared/ui/action-button";
+import { inlineLinkClass } from "@/shared/ui/link-class";
 import { NoticeBar } from "@/shared/ui/notice-bar";
 import { PageShell } from "@/shared/ui/page-shell";
 
@@ -123,6 +125,11 @@ function BoardPage() {
           }
         />
       </div>
+      <p className="pb-2 text-center text-caption text-ink-3">
+        <Link to="/sair-do-mural" className={inlineLinkClass}>
+          Sair do mural
+        </Link>
+      </p>
     </PageShell>
   );
 }

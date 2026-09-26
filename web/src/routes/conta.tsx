@@ -9,6 +9,7 @@ import { FeedbackSheet } from "@/features/feedback/ui/feedback-sheet";
 import { useVersionFloor } from "@/shared/app/use-version-floor";
 import { BrandMark } from "@/shared/ui/brand-mark";
 import { Card } from "@/shared/ui/card";
+import { inlineLinkClass } from "@/shared/ui/link-class";
 import { PageShell } from "@/shared/ui/page-shell";
 import { ThemeControl } from "@/shared/ui/theme-control";
 
@@ -34,8 +35,16 @@ function AccountPage() {
   const { version } = useVersionFloor();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const appearance = <ThemeControl />;
-  // The build's version, for support (D-105): it lives here since the footer went.
-  const footer = <p className="text-center text-caption text-ink-3">BrazCar {version}</p>;
+  // The build's version, for support (D-105), and the way out for someone imported without an
+  // account (D-172): both live here since the footer went.
+  const footer = (
+    <p className="flex flex-col items-center gap-1.5 text-center text-caption text-ink-3">
+      <span>BrazCar {version}</span>
+      <Link to="/sair-do-mural" className={inlineLinkClass}>
+        Sair do mural
+      </Link>
+    </p>
+  );
   return (
     <PageShell title="Minha conta">
       {session.status === "checking" ? (

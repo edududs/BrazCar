@@ -14,6 +14,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Card } from "@/shared/ui/card";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Icon } from "@/shared/ui/icon";
+import { inlineLinkClass } from "@/shared/ui/link-class";
 import { ListGroup, ListRowButton, ListRowLink } from "@/shared/ui/list-row";
 import { NoticeBar } from "@/shared/ui/notice-bar";
 import { Sheet } from "@/shared/ui/sheet";
@@ -288,6 +289,13 @@ function DriverCard({ ride, contact, locked, signedIn }: DriverCardProps) {
           </p>
         </>
       )}
+      {ride.origin === "whatsapp" ? (
+        <p className="border-t border-line-soft pt-3 text-caption text-ink-3">
+          <Link to="/sair-do-mural" className={inlineLinkClass}>
+            É sua esta carona? Peça para sair do mural.
+          </Link>
+        </p>
+      ) : null}
     </Card>
   );
 }
