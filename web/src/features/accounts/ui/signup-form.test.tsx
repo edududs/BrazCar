@@ -3,6 +3,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from "@/shared/domain/legal-links";
+
 import { type Account, AccountRequestError, type OpenSignup } from "../domain/account";
 import { type RegisterInput, SignupForm } from "./signup-form";
 
@@ -89,5 +91,28 @@ describe("SignupForm, as the invite's e-mail link opens it (D-167)", () => {
       "textContent",
       "a senha precisa de pelo menos 8 caracteres",
     );
+  });
+
+  it("links the terms of use and the privacy notice, each to its own address", () => {
+    render(<SignupForm signup={signup} signUp={vi.fn()} busy={false} onDone={vi.fn()} />);
+
+    expect(screen.getByRole("link", { name: "termos de uso" }).getAttribute("href")).toBe(
+      TERMS_OF_USE_URL,
+    );
+    expect(screen.getByRole("link", { name: "política de privacidade" }).getAttribute("href")).toBe(
+      PRIVACY_POLICY_URL,
+    );
+  });
+
+  it("clicking either legal link opens it without checking the box", async () => {
+    const user = userEvent.setup();
+    render(<SignupForm signup={signup} signUp={vi.fn()} busy={false} onDone={vi.fn()} />);
+
+    const checkbox = screen.getByRole<HTMLInputElement>("checkbox");
+    await user.click(screen.getByRole("link", { name: "termos de uso" }));
+    expect(checkbox.checked).toBe(false);
+
+    await user.click(screen.getByRole("link", { name: "política de privacidade" }));
+    expect(checkbox.checked).toBe(false);
   });
 });
