@@ -44,6 +44,9 @@ describe("the board at /", () => {
     const card = await screen.findByRole("link", { name: /Brazlândia/ });
     expect(card.getAttribute("href")).toBe("/caronas/r1");
     expect(screen.getByRole("heading", { level: 1, name: "Caronas" })).toBeDefined();
+    expect(screen.getByRole("link", { name: "Sair do mural" }).getAttribute("href")).toBe(
+      "/sair-do-mural",
+    );
   });
 
   it("reads the filters from the address and asks the API with them (D-056)", async () => {

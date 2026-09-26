@@ -20,6 +20,7 @@ import { Route as EsqueciSenhaRouteImport } from './routes/esqueci-senha'
 import { Route as MinhasCaronasRouteImport } from './routes/minhas-caronas'
 import { Route as PublicarRouteImport } from './routes/publicar'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
+import { Route as SairDoMuralRouteImport } from './routes/sair-do-mural'
 import { Route as CaronasRideIdRouteImport } from './routes/caronas.$rideId'
 import { Route as CaronasRideIdEditarRouteImport } from './routes/caronas.$rideId_.editar'
 
@@ -78,6 +79,11 @@ const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   path: '/redefinir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SairDoMuralRoute = SairDoMuralRouteImport.update({
+  id: '/sair-do-mural',
+  path: '/sair-do-mural',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CaronasRideIdRoute = CaronasRideIdRouteImport.update({
   id: '/caronas/$rideId',
   path: '/caronas/$rideId',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/minhas-caronas': typeof MinhasCaronasRoute
   '/publicar': typeof PublicarRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/sair-do-mural': typeof SairDoMuralRoute
   '/caronas/$rideId': typeof CaronasRideIdRoute
   '/caronas/$rideId/editar': typeof CaronasRideIdEditarRoute
 }
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/minhas-caronas': typeof MinhasCaronasRoute
   '/publicar': typeof PublicarRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/sair-do-mural': typeof SairDoMuralRoute
   '/caronas/$rideId': typeof CaronasRideIdRoute
   '/caronas/$rideId/editar': typeof CaronasRideIdEditarRoute
 }
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/minhas-caronas': typeof MinhasCaronasRoute
   '/publicar': typeof PublicarRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/sair-do-mural': typeof SairDoMuralRoute
   '/caronas/$rideId': typeof CaronasRideIdRoute
   '/caronas/$rideId_/editar': typeof CaronasRideIdEditarRoute
 }
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/minhas-caronas'
     | '/publicar'
     | '/redefinir-senha'
+    | '/sair-do-mural'
     | '/caronas/$rideId'
     | '/caronas/$rideId/editar'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/minhas-caronas'
     | '/publicar'
     | '/redefinir-senha'
+    | '/sair-do-mural'
     | '/caronas/$rideId'
     | '/caronas/$rideId/editar'
   id:
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/minhas-caronas'
     | '/publicar'
     | '/redefinir-senha'
+    | '/sair-do-mural'
     | '/caronas/$rideId'
     | '/caronas/$rideId_/editar'
   fileRoutesById: FileRoutesById
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   MinhasCaronasRoute: typeof MinhasCaronasRoute
   PublicarRoute: typeof PublicarRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
+  SairDoMuralRoute: typeof SairDoMuralRoute
   CaronasRideIdRoute: typeof CaronasRideIdRoute
   CaronasRideIdEditarRoute: typeof CaronasRideIdEditarRoute
 }
@@ -278,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sair-do-mural': {
+      id: '/sair-do-mural'
+      path: '/sair-do-mural'
+      fullPath: '/sair-do-mural'
+      preLoaderRoute: typeof SairDoMuralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/caronas/$rideId': {
       id: '/caronas/$rideId'
       path: '/caronas/$rideId'
@@ -307,6 +327,7 @@ const rootRouteChildren: RootRouteChildren = {
   MinhasCaronasRoute: MinhasCaronasRoute,
   PublicarRoute: PublicarRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
+  SairDoMuralRoute: SairDoMuralRoute,
   CaronasRideIdRoute: CaronasRideIdRoute,
   CaronasRideIdEditarRoute: CaronasRideIdEditarRoute,
 }

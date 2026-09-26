@@ -260,6 +260,9 @@ describe("/conta", () => {
     // No self-serve way in: signing up is invite-only (D-167).
     expect(page.queryByRole("link", { name: "Criar conta" })).toBeNull();
     expect(screen.getByText(/^BrazCar \d+\.\d+\.\d+/)).toBeDefined();
+    expect(screen.getByRole("link", { name: "Sair do mural" }).getAttribute("href")).toBe(
+      "/sair-do-mural",
+    );
   });
 
   it("signed in, it shows the account and signing out goes to the board with a notice", async () => {
@@ -269,6 +272,9 @@ describe("/conta", () => {
     const { router } = await renderApp("/conta");
 
     expect(await screen.findByText("Ana Souza")).toBeDefined();
+    expect(screen.getByRole("link", { name: "Sair do mural" }).getAttribute("href")).toBe(
+      "/sair-do-mural",
+    );
     await user.click(screen.getByRole("button", { name: /^Sair/ }));
 
     await waitFor(() => {
