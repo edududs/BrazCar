@@ -11,7 +11,7 @@ from django.conf import settings
 from brazcar.accounts.adapters.credentials import DjangoCredentials
 from brazcar.accounts.adapters.invite_repository import DjangoInviteRepository
 from brazcar.accounts.adapters.repository import DjangoAccountRepository
-from brazcar.accounts.application import AddCar, IssueInvite
+from brazcar.accounts.application import AddCar, IssueInvite, RegisterFromInvite
 from brazcar.importing.adapters.bridges import RidesBridge
 from brazcar.importing.adapters.repository import (
     DjangoBlockedSenders,
@@ -43,6 +43,8 @@ from .seeding import DemoWiring
 
 def demo_wiring() -> DemoWiring:
     accounts = DjangoAccountRepository()
+    credentials = DjangoCredentials()
+    invites = DjangoInviteRepository()
     rides = DjangoRideRepository()
     drivers = AccountDriverDirectory(accounts)
     places = CatalogPlaceDirectory(DjangoCatalogRepository())
@@ -60,10 +62,11 @@ def demo_wiring() -> DemoWiring:
     bridge = RidesBridge(import_ride, ForgetRides(rides, search), rides)
     return DemoWiring(
         accounts=accounts,
-        credentials=DjangoCredentials(),
+        credentials=credentials,
         add_car=AddCar(accounts),
         # The real clock, not `anchor`: the suite's invites must still be valid while it runs (D-166).
-        issue_invite=IssueInvite(DjangoInviteRepository(), accounts, clock),
+        issue_invite=IssueInvite(invites, accounts, clock),
+        register_from_invite=RegisterFromInvite(invites, accounts, credentials, clock),
         publish=PublishRide(rides, drivers, places, search, clock),
         edit=EditRide(rides, places, search, clock),
         change_seats=ChangeSeats(rides, clock),

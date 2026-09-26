@@ -14,7 +14,13 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from brazcar.accounts.application import AccountRepository, AddCar, Credentials, IssueInvite
+from brazcar.accounts.application import (
+    AccountRepository,
+    AddCar,
+    Credentials,
+    IssueInvite,
+    RegisterFromInvite,
+)
 from brazcar.accounts.domain import Account, account_phone
 from brazcar.importing.application import BlockSender, Candidates, IngestMessages, SourceMessages
 from brazcar.importing.domain import (
@@ -45,6 +51,7 @@ from brazcar.shared.domain.personal_data import redact_personal_data
 from brazcar.shared.domain.phone import PhoneNumber
 
 from . import dataset as data
+from .clock import FixedClock
 
 CASH = frozenset({PaymentMethod.CASH})
 PIX = frozenset({PaymentMethod.PIX})
@@ -112,6 +119,29 @@ class SeededInvite(FrozenModel):
     email_token: str
 
 
+class CatalogInvite(FrozenModel):
+    """One invite of `catalog_invites`, in whatever state its name says. `email` and `email_token`
+    are only ever set for `awaiting`: the sign-up page is photographed with them (D-166, D-167)."""
+
+    invite_token: str
+    email: str | None = None
+    email_token: str | None = None
+
+
+class CatalogInvites(FrozenModel):
+    """One invite per situation `GET /api/accounts/invites/{token}` can answer (D-133, D-134,
+    D-166, D-167), for the screens catalogue: `open` and `awaiting_email_confirmation` are 200;
+    `expired` and `superseded` are 410, each with its own reply; `used` is the invite `RegisterFromInvite`
+    already spent, 410 with "este convite já foi usado", never "este telefone já tem conta" — consumed
+    is checked before the phone (`_usable` in `application/invites.py`)."""
+
+    open: CatalogInvite
+    awaiting: CatalogInvite
+    expired: CatalogInvite
+    superseded: CatalogInvite
+    used: CatalogInvite
+
+
 class DemoManifest(FrozenModel):
     """What the seed made, for whoever drives the screens afterwards.
 
@@ -124,6 +154,7 @@ class DemoManifest(FrozenModel):
     group_labels: tuple[str, ...]
     suite_phones: tuple[str, ...]  # free numbers the suite may register itself
     suite_invites: tuple[SeededInvite, ...]  # one per `suite_phones`, aligned by index (D-166, D-167)
+    catalog_invites: CatalogInvites  # one invite per state, for the screens catalogue (D-166, D-167)
     suite_legacy_phones: tuple[str, ...]
     """One seeded account without a confirmed e-mail per project x attempt (D-168), aligned by the
     same index the suite uses for `suitePhoneAt` at `journey = 0` — no journey factor, since these
@@ -152,6 +183,7 @@ class DemoWiring:
     credentials: Credentials
     add_car: AddCar
     issue_invite: IssueInvite  # its own `invites` repository and clock come along with it
+    register_from_invite: RegisterFromInvite
     publish: PublishRide
     edit: EditRide
     change_seats: ChangeSeats
@@ -176,6 +208,7 @@ class _SeedResult:
     rides: dict[str, RideOffer]
     verdicts: dict[str, int]
     suite_invites: tuple[SeededInvite, ...]
+    catalog_invites: CatalogInvites
 
 
 async def seed(wiring: DemoWiring, *, anchor: datetime) -> DemoManifest:
@@ -191,7 +224,14 @@ async def seed(wiring: DemoWiring, *, anchor: datetime) -> DemoManifest:
     await _contacts(wiring, accounts, rides)
     verdicts = await _group_traffic(wiring, rides, anchor=anchor)
     suite_invites = await _suite_invites(wiring)
-    result = _SeedResult(accounts=accounts, rides=rides, verdicts=verdicts, suite_invites=suite_invites)
+    catalog_invites = await _catalog_invites(wiring)
+    result = _SeedResult(
+        accounts=accounts,
+        rides=rides,
+        verdicts=verdicts,
+        suite_invites=suite_invites,
+        catalog_invites=catalog_invites,
+    )
     return _manifest(result, anchor=anchor, tolerance=wiring.departure_tolerance)
 
 
@@ -254,6 +294,54 @@ async def _suite_invites(wiring: DemoWiring) -> tuple[SeededInvite, ...]:
             SeededInvite(phone=phone, invite_token=invite_token, email=email, email_token=email_token)
         )
     return tuple(seeded)
+
+
+async def _catalog_invites(wiring: DemoWiring) -> CatalogInvites:
+    """One invite per situation the screens catalogue photographs (D-133, D-134, D-166, D-167), on
+    the phones of `CATALOG_INVITE_PHONES`. Written through `IssueInvite`, `Invite.give_email` and
+    `RegisterFromInvite` alone, never a table."""
+    issue = wiring.issue_invite
+    phones = data.CATALOG_INVITE_PHONES
+
+    _, open_token = await issue(phone=phones["open"])
+
+    awaiting_invite, awaiting_token = await issue(phone=phones["awaiting"])
+    awaiting_email = "convite-aguardando@example.org"
+    given, awaiting_email_token = awaiting_invite.give_email(awaiting_email, issue.clock.now(), issue.policy)
+    await issue.invites.save(given)
+
+    # A separate `IssueInvite`, its own clock five hours in the past: the invite's default four
+    # hour lifetime (`InvitePolicy.lifetime`) has already run out by the time this seed runs.
+    stale = IssueInvite(
+        invites=issue.invites,
+        accounts=issue.accounts,
+        clock=FixedClock(at=issue.clock.now() - timedelta(hours=5)),
+        policy=issue.policy,
+    )
+    _, expired_token = await stale(phone=phones["expired"])
+
+    _, superseded_token = await issue(phone=phones["superseded"])
+    await issue(phone=phones["superseded"])  # the newer one, unread here: only its existence matters
+
+    used_invite, used_token = await issue(phone=phones["used"])
+    used_email = "convite-usado@example.org"
+    used_given, used_email_token = used_invite.give_email(used_email, issue.clock.now(), issue.policy)
+    await issue.invites.save(used_given)
+    await wiring.register_from_invite(
+        email_token=used_email_token,
+        display_name="Convite Usado (demonstração)",
+        password=data.PASSWORD,
+    )
+
+    return CatalogInvites(
+        open=CatalogInvite(invite_token=open_token),
+        awaiting=CatalogInvite(
+            invite_token=awaiting_token, email=awaiting_email, email_token=awaiting_email_token
+        ),
+        expired=CatalogInvite(invite_token=expired_token),
+        superseded=CatalogInvite(invite_token=superseded_token),
+        used=CatalogInvite(invite_token=used_token),
+    )
 
 
 # --- published rides -----------------------------------------------------------------------------
@@ -540,11 +628,12 @@ def _verdict(candidate: Candidate, rides: dict[str, RideOffer]) -> Accepted | Re
 
 
 def _manifest(result: _SeedResult, *, anchor: datetime, tolerance: timedelta) -> DemoManifest:
-    accounts, rides, verdicts, suite_invites = (
+    accounts, rides, verdicts, suite_invites, catalog_invites = (
         result.accounts,
         result.rides,
         result.verdicts,
         result.suite_invites,
+        result.catalog_invites,
     )
     seeded = tuple(
         SeededRide(
@@ -565,6 +654,7 @@ def _manifest(result: _SeedResult, *, anchor: datetime, tolerance: timedelta) ->
         group_labels=(data.GROUP_LABEL, data.GROUP_LABEL_SECOND),
         suite_phones=data.SUITE_PHONES,
         suite_invites=suite_invites,
+        catalog_invites=catalog_invites,
         suite_legacy_phones=data.SUITE_LEGACY_PHONES,
         legacy_person=data.LEGACY_PERSON,
         accounts=tuple(

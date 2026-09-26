@@ -30,6 +30,8 @@ from tests.accounts.test_routes import FRONT, Browser, body
 CONTACT_LIMIT = 20  # `RideRules.contact_limit` by default (D-097)
 DAYS = 3  # hoje, amanhã e outro dia
 SUITE_PASSWORD = "correct horse battery"  # forte o bastante para os validadores do Django
+CATALOG_INVITE_ROWS = 6  # aberto, aguardando, vencido, substituído (2 linhas) e usado (D-166, D-167)
+CATALOG_INVITE_ACCOUNTS = 1  # só o "usado" cadastra uma conta (D-166, D-167)
 
 
 @pytest.fixture(autouse=True)
@@ -69,7 +71,10 @@ def test_the_longest_note_is_exactly_the_limit() -> None:
 
 def test_the_demonstration_phones_are_invented_and_all_different() -> None:
     phones = (
-        [person.phone for person in data.PEOPLE] + list(data.SUITE_PHONES) + list(data.SUITE_LEGACY_PHONES)
+        [person.phone for person in data.PEOPLE]
+        + list(data.SUITE_PHONES)
+        + list(data.SUITE_LEGACY_PHONES)
+        + list(data.CATALOG_INVITE_PHONES.values())
     )
 
     assert len(set(phones)) == len(phones)
@@ -91,9 +96,12 @@ async def test_refuses_outside_debug() -> None:
 async def test_seeds_everything_it_promises(tmp_path: Path) -> None:
     seeded = await _seed(tmp_path / "manifest.json")
 
-    # Contas: uma de cada feitio (D-133), mais as antigas reservadas para a suíte (D-168).
+    # Contas: uma de cada feitio (D-133), mais as antigas reservadas para a suíte (D-168) e a que o
+    # convite "usado" do catálogo cadastra (D-166, D-167).
     assert len(seeded.accounts) == len(data.PEOPLE)
-    assert await User.objects.acount() == len(data.PEOPLE) + len(data.SUITE_LEGACY_PHONES)
+    assert await User.objects.acount() == (
+        len(data.PEOPLE) + len(data.SUITE_LEGACY_PHONES) + CATALOG_INVITE_ACCOUNTS
+    )
     cars = {account.slug: len(account.cars) for account in seeded.accounts}
     assert cars[data.DRIVER_ONE_CAR.slug] == 1
     assert cars[data.DRIVER_TWO_CARS.slug] == 2
@@ -145,7 +153,7 @@ async def test_seeds_everything_it_promises(tmp_path: Path) -> None:
     assert [invite.phone for invite in seeded.suite_invites] == list(data.SUITE_PHONES)
     assert len({invite.invite_token for invite in seeded.suite_invites}) == len(data.SUITE_PHONES)
     assert len({invite.email_token for invite in seeded.suite_invites}) == len(data.SUITE_PHONES)
-    assert await InviteModel.objects.acount() == len(data.SUITE_PHONES)
+    assert await InviteModel.objects.acount() == len(data.SUITE_PHONES) + CATALOG_INVITE_ROWS
 
     # Conta antiga: a única sem e-mail, e não é usada para escrever em nenhuma jornada da suíte.
     assert seeded.legacy_person == data.DRIVER_NO_CAR.slug
@@ -227,6 +235,53 @@ async def test_a_suite_invites_email_token_opens_the_signup_page_and_registers(t
     assert body(registered)["phone"] == invite.phone
     assert me.status_code == HTTPStatus.OK
     assert body(me)["required_action"] is None
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.usefixtures("worker_thread_connections_closed")
+async def test_the_invite_catalogue_has_one_invite_per_state(tmp_path: Path) -> None:
+    """The screens catalogue photographs the invite's page in every state (D-133, D-134, D-166,
+    D-167): each token answers with its own status or its own reply, and the used invite reads
+    "já foi usado", never "este telefone já tem conta" — `_usable` checks consumed before the
+    phone (`application/invites.py`)."""
+    seeded = await _seed(tmp_path / "manifest.json")
+    catalog = seeded.catalog_invites
+    client = Browser()
+
+    opened = await client.get(f"/api/accounts/invites/{catalog.open.invite_token}")
+    awaiting = await client.get(f"/api/accounts/invites/{catalog.awaiting.invite_token}")
+    expired = await client.get(f"/api/accounts/invites/{catalog.expired.invite_token}")
+    superseded = await client.get(f"/api/accounts/invites/{catalog.superseded.invite_token}")
+    used = await client.get(f"/api/accounts/invites/{catalog.used.invite_token}")
+
+    assert opened.status_code == HTTPStatus.OK
+    assert body(opened)["status"] == "open"
+
+    assert awaiting.status_code == HTTPStatus.OK
+    assert body(awaiting)["status"] == "awaiting_email_confirmation"
+
+    assert expired.status_code == HTTPStatus.GONE
+    assert body(expired)["detail"] == "este convite venceu; peça um novo a quem convidou você"
+
+    assert superseded.status_code == HTTPStatus.GONE
+    assert body(superseded)["detail"] == "este convite foi substituído por um convite mais novo"
+
+    assert used.status_code == HTTPStatus.GONE
+    assert body(used)["detail"] == "este convite já foi usado"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.usefixtures("worker_thread_connections_closed")
+async def test_the_catalogues_awaiting_invite_email_token_opens_the_signup_page(tmp_path: Path) -> None:
+    """The sign-up page is what the screens catalogue photographs with the awaiting invite's own
+    e-mail link (D-133, D-134, D-166, D-167)."""
+    seeded = await _seed(tmp_path / "manifest.json")
+    catalog = seeded.catalog_invites
+
+    opened = await Browser().get(f"/api/accounts/signup/{catalog.awaiting.email_token}")
+
+    assert opened.status_code == HTTPStatus.OK
+    assert body(opened)["email"] == catalog.awaiting.email
 
 
 @pytest.mark.django_db(transaction=True)

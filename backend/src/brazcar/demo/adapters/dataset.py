@@ -119,6 +119,18 @@ photographs; a test that confirms an old account's e-mail needs one of its own, 
 touching the same run would find it already confirmed. Reserved above 90 so the block never meets
 `SUITE_PHONES`, which grows with `SUITE_JOURNEYS`."""
 
+CATALOG_INVITE_PHONES: dict[str, str] = {
+    "open": "+5561900000050",
+    "awaiting": "+5561900000051",
+    "expired": "+5561900000052",
+    "superseded": "+5561900000053",
+    "used": "+5561900000054",
+}
+"""One phone per invite state, for the screens catalogue (D-133, D-134, D-166, D-167). The block
+50-54 sits free between `SUITE_PHONES` (grows from 10, tops out at 45 today) and `SUITE_LEGACY_PHONES`
+(starts at 90); none of these phones is in `PEOPLE`, and none is the worker's own (`WORKER_ACCOUNT`,
+99)."""
+
 PEOPLE: tuple[DemoPerson, ...] = (
     DRIVER_ONE_CAR,
     DRIVER_TWO_CARS,
