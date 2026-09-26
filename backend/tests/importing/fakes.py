@@ -11,6 +11,8 @@ from brazcar.importing.domain import (
     CandidateId,
     Failed,
     Pending,
+    RemovalRequest,
+    RemovalRequestId,
     ResolvedStop,
     RideDraft,
     Sender,
@@ -201,3 +203,20 @@ class FixedClock:
 
     def now(self) -> datetime:
         return self.at
+
+
+class InMemoryRemovalRequests:
+    def __init__(self) -> None:
+        self.rows: dict[RemovalRequestId, RemovalRequest] = {}
+
+    async def save(self, request: RemovalRequest) -> None:
+        self.rows[request.id] = request
+
+    async def get(self, request_id: RemovalRequestId) -> RemovalRequest | None:
+        return self.rows.get(request_id)
+
+    async def pending(self) -> tuple[RemovalRequest, ...]:
+        return tuple(r for r in await self.all() if r.is_pending)
+
+    async def all(self) -> tuple[RemovalRequest, ...]:
+        return tuple(sorted(self.rows.values(), key=lambda r: (r.requested_at, r.id)))

@@ -22,6 +22,7 @@ UNGATED: dict[str, str] = {
     "request_email_change": "the way out of the hold: asking for the confirmation link",
     "confirm_email": "the way out of the hold: opening the confirmation link",
     "delete_account": "leaving is always allowed, held or not",
+    "request_removal": "public by design: the request of someone who never had an account (D-172)",
 }
 """Write operations that deliberately skip the gate, by `operation_id`, each with its reason."""
 

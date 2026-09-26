@@ -75,3 +75,31 @@ class BlockedSenderModel(models.Model):
 
     def __str__(self) -> str:
         return self.phone
+
+
+class RemovalRequestModel(models.Model):
+    """A request of the public page (D-172). Decided, never deleted; the decision and its moment
+    are two columns the constraint keeps together."""
+
+    id = models.UUIDField(primary_key=True, editable=False)
+    phone = models.CharField(max_length=16)  # E.164
+    requested_at = models.DateTimeField()
+    note = models.TextField(blank=True)  # empty when none was written
+    decision = models.CharField(max_length=8, default="pending")  # pending, approved, refused
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "importing_removal_request"
+        constraints = (
+            models.CheckConstraint(
+                condition=(
+                    models.Q(decision="pending", decided_at__isnull=True)
+                    | models.Q(decision__in=("approved", "refused"), decided_at__isnull=False)
+                ),
+                name="removal_decision_and_moment_agree",
+            ),
+        )
+        indexes = (models.Index(fields=("decision", "requested_at"), name="importing_removal_idx"),)
+
+    def __str__(self) -> str:
+        return f"{self.decision} {self.id}"

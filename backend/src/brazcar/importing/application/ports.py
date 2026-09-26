@@ -6,6 +6,8 @@ from uuid import UUID
 from brazcar.importing.domain import (
     Candidate,
     CandidateId,
+    RemovalRequest,
+    RemovalRequestId,
     ResolvedStop,
     RideDraft,
     Sender,
@@ -23,6 +25,7 @@ __all__ = [
     "Clock",
     "ImportedRide",
     "ImportedRides",
+    "RemovalRequests",
     "RideParser",
     "SourceMessages",
     "StopResolver",
@@ -128,3 +131,21 @@ class BlockedSenders(Protocol):
     async def is_blocked(self, phone: PhoneNumber) -> bool: ...
 
     async def block(self, phone: PhoneNumber) -> None: ...
+
+
+class RemovalRequests(Protocol):
+    """The removal requests of the public page (D-172). A request is never deleted: it is decided."""
+
+    async def save(self, request: RemovalRequest) -> None:
+        """Insert or replace the request, decision and all."""
+        ...
+
+    async def get(self, request_id: RemovalRequestId) -> RemovalRequest | None: ...
+
+    async def pending(self) -> tuple[RemovalRequest, ...]:
+        """The requests still waiting for a decision, oldest first."""
+        ...
+
+    async def all(self) -> tuple[RemovalRequest, ...]:
+        """Every request, decided or not, oldest first."""
+        ...
