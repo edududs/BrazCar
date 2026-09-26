@@ -6,6 +6,23 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.26.0] - 2026-09-26
+
+### Adicionado
+
+- **web:** Let an imported driver ask to leave the board
+- **web:** Link the terms and the privacy notice from the sign-up
+
+### Refatorado
+
+- **web:** Keep link clicks out of the checkbox in the primitive
+
+### Documentação
+
+- Add the privacy notice, the terms of use and the threat model
+- Keep the threat model free of a presumed gender
+- Mark the removal page and the terms links as done in the beta
+
 ## [0.25.0] - 2026-09-26
 
 ### Adicionado
