@@ -43,6 +43,24 @@ export const importedRide: Ride = {
   },
 };
 
+/** A ride as a viewer without a session sees it: no data about anyone (D-171). */
+export const anonymousRide: Ride = {
+  ...openRide,
+  id: "r4",
+  driverName: null,
+  car: null,
+  originMessage: null,
+  notes: null,
+  actions: {
+    canEdit: false,
+    canChangeSeats: false,
+    canCancel: false,
+    canRepeat: false,
+    canContact: false,
+    delayUntil: null,
+  },
+};
+
 /** A ride whose stops carry their own price, so the board shows a "from" price (D-131). */
 export const faredRide: Ride = {
   ...openRide,

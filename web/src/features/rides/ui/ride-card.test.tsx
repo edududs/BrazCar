@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 
 import { renderRouted } from "@/shared/testing/render-routed";
 
-import { faredRide, importedRide, openRide } from "../app/ride.fixture";
+import { anonymousRide, faredRide, importedRide, openRide } from "../app/ride.fixture";
+import { formatTime } from "./format";
 import { RideCard } from "./ride-card";
 
 describe("RideCard", () => {
@@ -46,5 +47,17 @@ describe("RideCard", () => {
       expect(screen.getByText("R$ 7")).toBeDefined();
     });
     expect(screen.queryByText(/a partir de/)).toBeNull();
+  });
+
+  it("draws no driver name for a viewer without a session, and shows the rest of the ride", async () => {
+    renderRouted(<RideCard ride={anonymousRide} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("R$ 7")).toBeDefined();
+    });
+    expect(screen.queryByText("Ana")).toBeNull();
+    expect(screen.getByText(formatTime(anonymousRide.departureAt))).toBeDefined();
+    expect(screen.getByText("Brazlândia")).toBeDefined();
+    expect(screen.getByText("3 vagas")).toBeDefined();
   });
 });

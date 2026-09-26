@@ -7,8 +7,9 @@ import { renderRouted } from "@/shared/testing/render-routed";
 
 import * as gateway from "../adapters/rides-gateway";
 import type { RideActions } from "../app/use-ride";
-import { faredRide, importedRide, openRide } from "../app/ride.fixture";
+import { anonymousRide, faredRide, importedRide, openRide } from "../app/ride.fixture";
 import { RideRequestError, type Ride } from "../domain/ride";
+import { formatTime } from "./format";
 import { RideDetail } from "./ride-detail";
 
 vi.mock("../adapters/rides-gateway");
@@ -90,6 +91,19 @@ describe("RideDetail", () => {
     expect(screen.getByText("a partir de")).toBeDefined();
     expect(screen.getByText("Levo mala pequena e aviso no grupo se atrasar.")).toBeDefined();
     expect(screen.getByRole("heading", { name: "Observações de Ana" })).toBeDefined();
+  });
+
+  it("draws no driver name or car for a viewer without a session, and shows the rest of the ride", async () => {
+    show(anonymousRide);
+
+    await waitFor(() => {
+      expect(screen.getByText("Brazlândia")).toBeDefined();
+    });
+    expect(screen.queryByText("Ana")).toBeNull();
+    expect(screen.getAllByText(formatTime(anonymousRide.departureAt)).length).toBeGreaterThan(0);
+    expect(screen.getByText("R$ 7,00")).toBeDefined();
+    expect(screen.getByText("3")).toBeDefined();
+    expect(screen.queryByText("Anunciou num grupo de WhatsApp")).toBeNull();
   });
 
   it("invites a visitor to sign in, right where the action goes", async () => {

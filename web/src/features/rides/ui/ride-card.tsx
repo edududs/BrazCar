@@ -66,14 +66,16 @@ export function RideCard({ ride, showDay = false, fresh = false, matched }: Ride
             <span className="text-ink-3">
               <Icon name="route" size={16} />
             </span>
-          ) : (
+          ) : ride.driverName === null ? null : (
             <Avatar name={ride.driverName} />
           )}
           <span className="min-w-0 flex-1 truncate">
-            {ride.isMine ? null : <b className="font-semibold text-ink">{ride.driverName}</b>}
+            {ride.isMine || ride.driverName === null ? null : (
+              <b className="font-semibold text-ink">{ride.driverName}</b>
+            )}
             {ride.car === null
               ? null
-              : `${ride.isMine ? "" : " · "}${ride.car.model} ${ride.car.color}`}
+              : `${ride.isMine || ride.driverName === null ? "" : " · "}${ride.car.model} ${ride.car.color}`}
           </span>
           {ride.isMine ? <Badge tone="accent">Sua carona</Badge> : null}
           {ride.origin === "whatsapp" ? (
