@@ -260,10 +260,9 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
   Barra de status do iPhone em `black-translucent`.
 - Cobertura: medida só nos fluxos do GitHub, depois do portão rápido. Backend com `pytest-cov`
   (`poe coverage`), 88,58% medidos sobre `src/brazcar` e piso de 87%; front com `@vitest/coverage-v8`
-  (`yarn coverage`), COVERAGE_PLACEHOLDER% medidos sobre `src` e piso de FLOOR_PLACEHOLDER%
-  (linhas: LINES_PLACEHOLDER% e piso de LINES_FLOOR_PLACEHOLDER%), acima da meta de paridade
-  (D-126): adaptadores pelo contrato, hooks, componentes com `user-event` e as rotas montadas sobre
-  o app inteiro (`shared/testing/render-app.tsx`). O resumo
+  (`yarn coverage`), 96,78% medidos sobre `src` e piso de 94% (linhas: 97,23% e piso de 95%),
+  acima da meta de paridade (D-126): adaptadores pelo contrato, hooks, componentes com
+  `user-event` e as rotas montadas sobre o app inteiro (`shared/testing/render-app.tsx`). O resumo
   fica no log do passo e nada é enviado para serviço de terceiros (D-008).
 - Portões (D-132): o `pre-push` saiu, nenhum hook roda teste no push. O GitHub roda o portão
   pesado (Postgres como serviço do runner, Schemathesis, build do front); localmente ele é ato

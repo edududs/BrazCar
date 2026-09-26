@@ -110,7 +110,7 @@ ferramenta de IA (`D-132`).
 
 A cobertura é medida dentro do fluxo do GitHub: o resumo vai para o log do passo e o passo falha
 abaixo do piso. Nenhum serviço externo lê o código ou recebe relatório (`D-008`). Os dois lados
-medem o pacote inteiro, o que hoje dá 92% no backend e 96% no front, com pisos de 87% e 94%. O
+medem o pacote inteiro, o que hoje dá 92% no backend e 96,78% no front, com pisos de 87% e 94%. O
 front é medido assim de propósito, para que a lacuna apareça; a meta era a paridade com o backend,
 e foi alcançada testando adaptadores, hooks, componentes e rotas.
 
