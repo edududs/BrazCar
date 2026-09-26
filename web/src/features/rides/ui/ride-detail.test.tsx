@@ -2,6 +2,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import * as accountsGateway from "@/features/accounts/adapters/accounts-gateway";
 import type { Session } from "@/features/accounts/domain/session";
 import { renderRouted } from "@/shared/testing/render-routed";
 
@@ -13,7 +14,14 @@ import { formatTime } from "./format";
 import { RideDetail } from "./ride-detail";
 
 vi.mock("../adapters/rides-gateway");
+vi.mock("@/features/accounts/adapters/accounts-gateway");
 const mocked = vi.mocked(gateway);
+const mockedAccounts = vi.mocked(accountsGateway);
+
+/** Every skeleton `PersonalData` draws, never a name in disguise. */
+function skeletonsIn(container: HTMLElement) {
+  return container.querySelectorAll('[class*="animate-pulse"]');
+}
 
 function idle(ride: Ride): RideActions {
   const unreachable = () => Promise.reject(new Error("not in this test"));
@@ -43,7 +51,12 @@ const signedIn: Session = {
   },
 };
 
+/** Every screen this suite renders keeps the fake session query in step with the `session` prop it
+ * hands `RideDetail`, so `PersonalData`, mounted over the real `useSession`, agrees with it. */
 function show(ride: Ride, session: Session = { status: "anonymous" }) {
+  mockedAccounts.fetchCurrentAccount.mockResolvedValue(
+    session.status === "signed-in" ? session.account : null,
+  );
   return renderRouted(
     <RideDetail ride={ride} session={session} actions={idle(ride)} onRepeated={vi.fn()} />,
   );
@@ -55,10 +68,12 @@ beforeEach(() => {
 
 describe("RideDetail", () => {
   it("shows the original message and the group for a ride read from WhatsApp", async () => {
-    show(importedRide);
+    show(importedRide, signedIn);
 
+    // "Mensagem original" draws with no session at all; wait for its body instead, since only
+    // that is behind the session query settling.
     await waitFor(() => {
-      expect(screen.getByText("Mensagem original")).toBeDefined();
+      expect(screen.getByText(/03 VAGAS/)).toBeDefined();
     });
     expect(screen.getByText(/03 VAGAS/).textContent).toContain("7,00 Dinheiro ou PIX");
     expect(screen.getByText(/Rota Plano Piloto/)).toBeDefined();
@@ -69,7 +84,7 @@ describe("RideDetail", () => {
   });
 
   it("shows the car and no message block for a ride published here", async () => {
-    show(openRide);
+    show(openRide, signedIn);
 
     await waitFor(() => {
       expect(screen.getByText("Gol prata")).toBeDefined();
@@ -79,10 +94,12 @@ describe("RideDetail", () => {
   });
 
   it("draws the route as a line, the fare beside each priced stop, and the notes in full", async () => {
-    show(faredRide);
+    show(faredRide, signedIn);
 
+    // The heading names the driver only once the session settles; wait for it, not for the route
+    // (which draws regardless of session).
     await waitFor(() => {
-      expect(screen.getByText("Incra 8")).toBeDefined();
+      expect(screen.getByRole("heading", { name: "Observações de Ana" })).toBeDefined();
     });
     const stops = screen
       .getAllByRole("listitem")
@@ -90,14 +107,32 @@ describe("RideDetail", () => {
     expect(stops).toEqual(["Sai deBrazlândia", "Incra 8R$ 9,00", "Vai paraEsplanadaR$ 7,00"]);
     expect(screen.getByText("a partir de")).toBeDefined();
     expect(screen.getByText("Levo mala pequena e aviso no grupo se atrasar.")).toBeDefined();
-    expect(screen.getByRole("heading", { name: "Observações de Ana" })).toBeDefined();
+  });
+
+  it("draws a skeleton in place of the driver's card while the session is still checking", async () => {
+    mockedAccounts.fetchCurrentAccount.mockImplementation(() => new Promise(() => undefined));
+
+    const { container } = renderRouted(
+      <RideDetail
+        ride={openRide}
+        session={{ status: "checking" }}
+        actions={idle(openRide)}
+        onRepeated={vi.fn()}
+      />,
+    );
+
+    // The account query never settles in this test; this waits only for the router to mount.
+    await waitFor(() => {
+      expect(skeletonsIn(container).length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByText("Ana")).toBeNull();
   });
 
   it("draws no driver name or car for a viewer without a session, and shows the rest of the ride", async () => {
-    show(anonymousRide);
+    const { container } = show(anonymousRide);
 
     await waitFor(() => {
-      expect(screen.getByText("Brazlândia")).toBeDefined();
+      expect(skeletonsIn(container).length).toBeGreaterThan(0);
     });
     expect(screen.queryByText("Ana")).toBeNull();
     expect(screen.getAllByText(formatTime(anonymousRide.departureAt)).length).toBeGreaterThan(0);
@@ -112,6 +147,7 @@ describe("RideDetail", () => {
       expect(screen.getByRole("link", { name: "Entrar para pedir contato" })).toBeDefined();
     });
     expect(screen.getByText(/só aparecem para quem entra/)).toBeDefined();
+    expect(screen.queryByText("Ana")).toBeNull();
   });
 
   it("reveals the phone and the plate on the driver's card once the API hands them out", async () => {
