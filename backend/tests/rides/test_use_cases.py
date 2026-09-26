@@ -145,9 +145,9 @@ async def test_the_card_carries_the_notes_and_the_fare_of_each_stop(ctx: Context
         notes="Levo mala pequena",
     )
 
-    (shown,) = await ctx.board(BoardFilter(), viewer=None)
+    (shown,) = await ctx.board(BoardFilter(), viewer=BIA.id)
     plain = await ctx.edit(ANA.id, ride.id, route=ROUTE, price=Decimal("8.00"), notes="")
-    (after,) = await ctx.board(BoardFilter(), viewer=None)
+    (after,) = await ctx.board(BoardFilter(), viewer=BIA.id)
 
     assert shown.notes == "Levo mala pequena"
     assert [stop.fare for stop in shown.stops] == [None, Decimal("9.00"), Decimal("7.00")]
@@ -161,14 +161,14 @@ async def test_the_card_carries_the_notes_and_the_fare_of_each_stop(ctx: Context
 async def test_the_board_hides_phone_and_plate_and_resolves_place_names(ctx: Context) -> None:
     await ctx.published()
 
-    (shown,) = await ctx.board(BoardFilter(), viewer=None)
+    (shown,) = await ctx.board(BoardFilter(), viewer=BIA.id)
 
     assert shown.driver_name == "Ana"
     assert [s.label for s in shown.stops] == ["Esplanada", "Incra 8", "Brazlândia"]
     assert shown.status is RideStatus.OPEN
     assert "ABC1234" not in shown.model_dump_json()
     assert "+55" not in shown.model_dump_json()
-    assert not shown.actions.can_contact  # anonymous
+    assert shown.actions.can_contact
 
 
 async def test_board_filters_by_day_text_of_any_stop_seats_and_price(ctx: Context) -> None:

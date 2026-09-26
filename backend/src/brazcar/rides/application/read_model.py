@@ -2,7 +2,7 @@
 
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, Self
 
 from brazcar.rides.domain import (
     AccountId,
@@ -43,8 +43,8 @@ class OriginMessageView(FrozenModel):
 
 class BoardRide(FrozenModel):
     id: RideId
-    driver_name: str
-    car: CarView | None  # none for a ride read from WhatsApp (ADR-0015)
+    driver_name: str | None  # none only in the anonymous view (D-171)
+    car: CarView | None  # none for a ride read from WhatsApp (ADR-0015), and in the anonymous view
     origin: OriginKind
     origin_message: OriginMessageView | None
     stops: tuple[StopView, ...]
@@ -57,6 +57,20 @@ class BoardRide(FrozenModel):
     status: RideStatus
     actions: Actions
     is_mine: bool
+
+    def anonymized(self) -> Self:
+        """The anonymous view, for a viewer without a session (D-171): nothing that points at a
+        person and nothing to do. Name, car, the original message and the notes go, because the
+        notes are someone's free words and may carry a name; stops, departure, price, fares, seats,
+        payment, status and the "via WhatsApp" origin stay."""
+        return self.evolve(
+            driver_name=None,
+            car=None,
+            origin_message=None,
+            notes=None,
+            actions=Actions(),
+            is_mine=False,
+        )
 
 
 class BoardFilter(FrozenModel):

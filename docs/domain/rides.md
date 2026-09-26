@@ -26,6 +26,7 @@
 | esquecer caronas | `ForgetRides` | Apaga caronas de motorista externo, para a poda (D-119). Nunca as de conta. |
 | ações permitidas | `Actions` | O que quem vê pode fazer com a carona, calculado no servidor: editar, mudar vagas, cancelar, repetir, pedir contato e até quando pode adiar. |
 | card do mural | `BoardRide` | O que a lista mostra: nome, carro (modelo e cor, quando há), origem, mensagem original (quando importada), paradas com nome e tarifa, observações, situação e ações. Nunca telefone nem placa. |
+| visão anônima | `BoardRide.anonymized()` | O card e o detalhe para quem não tem sessão (D-171): sem nome do motorista, carro, mensagem de origem e observações, com todas as ações falsas. Ficam paradas, horário, preço, `has_fares`, vagas, formas de pagamento, situação e origem. Aplicada pelos casos de uso do mural e do detalhe, nunca pela rota. |
 | filtros do mural | `BoardFilter` | A partir de qual hora local (`from_time`, D-141), dia, "passa por" em texto livre, só com vaga, preço máximo. Vivem na URL do front. |
 | busca de caronas | `RideSearch` | Acha caronas pelo texto das paradas: nome, apelidos e lugares acima de cada parada do catálogo, e o texto das paradas "outro" (D-101). Observações ficam de fora do índice. |
 | pedido de contato | `ContactRequest` | Registro de quem pediu o contato de qual carona, com o número revelado, o tipo de motorista e o momento (D-140). Tabela própria, sobrevive à carona. |
@@ -68,6 +69,10 @@ Função pura de quatro dados, lida nesta ordem:
   placa é recusada (`PersonalDataError`), nunca redigida: quem publica é dono das palavras e
   corrige. O detector é o mesmo da importação, em `shared/domain/personal_data.py` (D-128, D-129).
   Editar com texto vazio apaga as observações; carona importada nunca tem observações.
+- Sem sessão, nenhum dado de pessoa sai do mural nem do detalhe, em carona publicada ou importada:
+  a visão anônima zera nome, carro, mensagem de origem e observações, e nenhuma ação é verdadeira
+  (D-171). A busca "passa por" lê só as paradas, então nunca acha carona pelo nome de quem dirige,
+  com ou sem sessão.
 - Datas voltam do banco no fuso do mural (`America/Sao_Paulo`): "mesmo dia" e o filtro por dia
   leem a data local, nunca a UTC.
 
@@ -81,7 +86,8 @@ Função pura de quatro dados, lida nesta ordem:
 
 ## Privacidade e contato
 
-O read-model do mural traz nome social, modelo e cor do carro. Telefone e placa só saem pela
+O read-model do mural traz nome social, modelo e cor do carro para quem tem sessão; sem sessão,
+a visão anônima não traz nenhum dado de pessoa (D-171). Telefone e placa só saem pela
 rota de contato, que exige login, tem limite por conta e grava um `ContactRequest`. Só carona
 aberta ou reaberta aceita pedido de contato; o motorista nunca vê o botão na própria carona.
 Na carona importada o contato vai ao telefone do remetente (ou da conta achada por ele) e volta

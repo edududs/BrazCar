@@ -239,7 +239,7 @@ async def test_the_catalog_still_guards_the_stops_of_an_imported_ride(ctx: Conte
 async def test_the_board_shows_the_sender_name_the_origin_and_no_car(ctx: Context) -> None:
     ride = await ctx.imported()
 
-    (card,) = await ctx.board(BoardFilter(), viewer=None)
+    (card,) = await ctx.board(BoardFilter(), viewer=ANA.id)
     detail = await ctx.show(ride.id, viewer=ANA.id)
 
     assert card.driver_name == "Zé do grupo"

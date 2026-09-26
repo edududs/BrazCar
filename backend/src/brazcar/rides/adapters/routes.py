@@ -128,15 +128,15 @@ class ActionsOut(Schema):
 
 
 class RideOut(Schema):
-    """The card. Never the phone, never the plate (D-031)."""
+    """The card. Never the phone, never the plate (D-031); without a session, never a person (D-171)."""
 
     id: UUID
-    driver_name: str
-    car: RideCarOut | None  # none when the ride was read from WhatsApp (ADR-0015)
+    driver_name: str | None  # none for a viewer without a session (D-171)
+    car: RideCarOut | None  # none when read from WhatsApp (ADR-0015) or without a session (D-171)
     origin: OriginKind
-    origin_message: OriginMessageOut | None
+    origin_message: OriginMessageOut | None  # none without a session (D-171)
     stops: list[StopOut]
-    notes: str | None  # free words of the driver, never from an import (D-129)
+    notes: str | None  # free words of the driver, never from an import (D-129) nor without a session
     departure_at: datetime
     seats_available: int
     price: Decimal
@@ -255,7 +255,8 @@ def build_router(use_cases: RideUseCases, writer: AuthBase) -> Router:
 
 
 def _add_board_routes(router: Router, use_cases: RideUseCases) -> None:
-    """Public. A signed-in viewer gets their own actions; nobody gets a phone or a plate."""
+    """Public. A signed-in viewer gets their own actions; nobody gets a phone or a plate, and a viewer
+    without a session gets no person at all: the use cases hand out the anonymous view (D-171)."""
 
     @router.get("", response=with_errors(list[RideOut], validation=True), operation_id="list_board")
     async def list_board(request: HttpRequest, filters: Query[BoardQuery]) -> list[RideOut]:
