@@ -146,6 +146,19 @@ Subir só quando uma versão da API quebrar o front antigo: quem estiver abaixo 
 atualização obrigatória. Valor malformado impede a API de subir. Depois de mudar,
 `docker compose up -d` e conferir `curl https://api-brazcar.elj-labs.org/api/web-version`.
 
+## Remetente do e-mail
+
+`EMAIL_FROM` no `api.env`, com o nome e o endereço entre os sinais de menor e maior:
+
+```bash
+EMAIL_FROM=BrazCar <no-reply@elj-labs.org>
+```
+
+Armadilha: remetente sem o `>` final derruba todo envio (o SMTP do Django recusa o endereço e a
+rota responde 500, depois de o convite já constar como "e-mail informado" nas versões anteriores
+à correção). A API passa a recusar subir com `EMAIL_FROM` malformado, com `ImproperlyConfigured`
+no log do container; o envio agora antecede a gravação do convite.
+
 ## Convites
 
 `INVITE_LINK` no `api.env` (modelo em `infra/api.env.example`) diz para onde aponta o link que o
