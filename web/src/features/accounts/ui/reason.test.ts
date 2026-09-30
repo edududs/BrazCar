@@ -18,6 +18,21 @@ describe("reasonOf", () => {
     ).toBe("confirme seu e-mail para continuar");
   });
 
+  it("is the server's own line for a 5xx, never the gateway's generic one", () => {
+    const failure = new AccountRequestError(500, "Não foi possível concluir.");
+
+    expect(reasonOf(failure)).toBe("Falha no servidor. Tente de novo em instantes.");
+    expect(reasonOf(failure, { sendsEmail: true })).toBe(
+      "Falha no servidor ao enviar o e-mail. Tente de novo em instantes.",
+    );
+  });
+
+  it("keeps a 4xx detail on the screens that send an e-mail", () => {
+    const refusal = new AccountRequestError(409, "E-mail já tem conta.");
+
+    expect(reasonOf(refusal, { sendsEmail: true })).toBe("E-mail já tem conta.");
+  });
+
   it("is a generic line for anything else", () => {
     expect(reasonOf(new Error("network down"))).toBe("Sem resposta do serviço. Tente de novo.");
   });

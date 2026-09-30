@@ -23,7 +23,7 @@ export function InviteEmailForm({ invite, sending, giveEmail }: InviteEmailFormP
   const submit = () => {
     setError(null);
     giveEmail(email).catch((reason: unknown) => {
-      setError(reasonOf(reason));
+      setError(reasonOf(reason, { sendsEmail: true }));
     });
   };
 

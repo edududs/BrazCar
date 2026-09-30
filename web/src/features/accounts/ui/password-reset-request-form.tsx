@@ -27,7 +27,7 @@ export function PasswordResetRequestForm() {
         setState("sent");
       },
       (reason: unknown) => {
-        setError(reasonOf(reason));
+        setError(reasonOf(reason, { sendsEmail: true }));
         setState("idle");
       },
     );
