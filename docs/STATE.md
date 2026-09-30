@@ -448,6 +448,10 @@ está aberta (e, no jsdom, até o fim de uma animação que nunca termina): pare
 indevido num combobox; fica para o passo de qualidade. O desktop usa a mesma casca do celular até o
 canvas ganhar as pranchas de desktop. Manifesto com as cores do tema claro (é estático).
 
+Correção em curso após defeito em produção: o remetente `EMAIL_FROM` malformado derrubava o envio do
+convite e deixava o convite como "e-mail informado" sem e-mail enviado. O envio passou a anteceder a
+gravação, a API recusa subir com remetente inválido e a tela distingue falha do servidor de recusa.
+
 ## Próximo passo
 
 1. Etapa de design (D-103, D-143): validação no celular dos passos 5 e 6 publicados pendente; o

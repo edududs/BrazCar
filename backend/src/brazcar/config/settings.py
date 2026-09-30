@@ -2,6 +2,7 @@
 
 import os
 import re
+from email import policy
 from pathlib import Path
 
 import dj_database_url
@@ -27,6 +28,17 @@ def _env_version(name: str, *, default: str) -> str:
     value = os.environ.get(name, default).strip()
     if re.fullmatch(r"\d+\.\d+\.\d+", value) is None:
         message = f"{name} must be MAJOR.MINOR.PATCH, got {value!r}"
+        raise ImproperlyConfigured(message)
+    return value
+
+
+def _env_sender(name: str, *, default: str) -> str:
+    """A sender Django can put in a `From` header; a malformed one would fail every send at runtime."""
+    value = os.environ.get(name, default).strip()
+    header = policy.default.header_factory("From", value)
+    addresses = header.addresses
+    if header.defects or len(addresses) != 1 or not (addresses[0].username and addresses[0].domain):
+        message = f"{name} must be a single address like 'Name <user@host>', got {value!r}"
         raise ImproperlyConfigured(message)
     return value
 
@@ -98,7 +110,7 @@ EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", default=True)
-DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_FROM", "BrazCar <no-reply@localhost>")
+DEFAULT_FROM_EMAIL = _env_sender("EMAIL_FROM", default="BrazCar <no-reply@localhost>")
 # Only read when `EMAIL_BACKEND` names Django's own filebased backend, as the end to end suite's
 # server does: it writes each e-mail to a file there, so a fixture can read a link off disk (D-133,
 # D-134). Empty otherwise; setting it turns nothing on by itself.
