@@ -184,6 +184,35 @@ async def test_the_mail_says_the_lifetime_the_policy_gives(ctx: Context) -> None
     assert "vale 1 hora." in ctx.mailer.sent[0][2]
 
 
+async def test_a_failed_send_leaves_the_invite_open_and_unwritten(ctx: Context) -> None:
+    class FailingMailer:
+        async def send(self, *, to: str, subject: str, body: str) -> None:
+            raise OSError(to, subject, body)
+
+    give = GiveInviteEmail(ctx.invites, ctx.accounts, FailingMailer(), ctx.limiter, ctx.clock, SIGNUP_LINK)
+    invite, token = await ctx.invited()
+
+    with pytest.raises(OSError):  # noqa: PT011 - the fake's own error, carried up untouched
+        await give(token=token, email=EMAIL)
+
+    stored = await ctx.invites.by_invite_token(token)
+    assert stored is not None
+    assert stored.progress == invite.progress
+    view = await ctx.open_invite(token=token)
+    assert view.status is InviteStatus.OPEN
+    assert view.email is None
+
+
+async def test_a_sent_email_is_written_as_given(ctx: Context) -> None:
+    _, token = await ctx.invited()
+
+    await ctx.give_email(token=token, email=EMAIL)
+
+    view = await ctx.open_invite(token=token)
+    assert view.status is InviteStatus.AWAITING_EMAIL_CONFIRMATION
+    assert view.email == EMAIL
+
+
 async def test_a_superseded_invite_sends_no_email(ctx: Context) -> None:
     _, first = await ctx.invited()
     ctx.advance(timedelta(minutes=1))

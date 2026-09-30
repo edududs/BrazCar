@@ -104,6 +104,11 @@ class GiveInviteEmail:
     Typing it again replaces the link, and the old one dies. The e-mail is refused when it already
     has an account, which tells whoever holds a valid invite that the address exists: an accepted
     risk, since only the owner hands invites out.
+
+    The e-mail goes before the state is written: when the send fails nothing is stored and the
+    error rises, so the invite never reads "awaiting confirmation" without a message out. When the
+    send succeeds and the write loses to a concurrent one (`InviteConflictError`), the link already
+    mailed has no effect and the person asks again.
     """
 
     invites: InviteRepository
@@ -129,7 +134,6 @@ class GiveInviteEmail:
             raise TooManyAttemptsError
         if await self.accounts.by_email(email) is not None:
             raise EmailAlreadyRegisteredError
-        await self.invites.save(waiting)
         await self.mailer.send(
             to=email,
             subject="BrazCar: confirme seu e-mail",
@@ -141,6 +145,7 @@ class GiveInviteEmail:
                 "Se você não pediu isso, ignore esta mensagem."
             ),
         )
+        await self.invites.save(waiting)
 
 
 @dataclass(frozen=True, slots=True)
