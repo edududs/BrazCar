@@ -51,4 +51,20 @@ describe("InviteEmailForm, opening the invite (D-166, D-167)", () => {
       "Muitos envios. Espere um pouco.",
     );
   });
+
+  it("says the server failed to send the e-mail on a 500, not the generic line", async () => {
+    const user = userEvent.setup();
+    const giveEmail = vi.fn(() =>
+      Promise.reject(new AccountRequestError(500, "Não foi possível concluir.")),
+    );
+    render(<InviteEmailForm invite={invite} sending={false} giveEmail={giveEmail} />);
+
+    await user.click(screen.getByLabelText(/^E-mail/));
+    await user.keyboard("ana@example.com{Enter}");
+
+    expect(await screen.findByRole("alert")).toHaveProperty(
+      "textContent",
+      "Falha no servidor ao enviar o e-mail. Tente de novo em instantes.",
+    );
+  });
 });

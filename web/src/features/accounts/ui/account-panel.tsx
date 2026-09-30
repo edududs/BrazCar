@@ -310,7 +310,7 @@ function ProfileForm({
         );
       },
       (reason: unknown) => {
-        setError(reasonOf(reason));
+        setError(reasonOf(reason, { sendsEmail: emailChanged }));
       },
     );
   };

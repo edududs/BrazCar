@@ -49,7 +49,7 @@ export function InviteSentScreen({
             onPress={() => {
               setError(null);
               resend().catch((reason: unknown) => {
-                setError(reasonOf(reason));
+                setError(reasonOf(reason, { sendsEmail: true }));
               });
             }}
           >
