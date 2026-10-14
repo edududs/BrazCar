@@ -6,6 +6,20 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.26.1] - 2026-10-14
+
+### Corrigido
+
+- **accounts:** Send the invite e-mail before recording it as given
+- **config:** Refuse to boot with a malformed EMAIL_FROM
+- **web:** Tell a server failure from a refusal when an e-mail is sent
+- **phone:** Say the mobile needs nine digits and suggest the missing ninth
+
+### Documentação
+
+- Record the v0.26.0 deploy
+- Rewrite project documentation in impersonal voice
+
 ## [0.26.0] - 2026-09-26
 
 ### Adicionado
