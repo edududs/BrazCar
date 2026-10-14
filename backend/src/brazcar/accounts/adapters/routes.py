@@ -63,7 +63,7 @@ from brazcar.accounts.domain import (
 )
 from brazcar.shared.adapters.api_errors import with_errors
 from brazcar.shared.adapters.api_schemas import Done
-from brazcar.shared.adapters.phone_input import INVALID_PHONE
+from brazcar.shared.adapters.phone_input import phone_refusal
 from brazcar.shared.adapters.session_auth import session_auth, signed_in_account_id
 from brazcar.shared.domain.personal_data import masked_email
 from brazcar.shared.domain.phone import InvalidPhoneNumberError
@@ -200,11 +200,18 @@ class PasswordResetConfirmIn(Schema):
     password: str
 
 
-PHONE_REFUSALS: dict[type[ValueError], str] = {  # one message per reason, in Portuguese
-    InvalidPhoneNumberError: INVALID_PHONE,
+_OTHER_PHONE_REFUSALS: dict[type[ValueError], str] = {  # one message per reason, in Portuguese
     ForeignPhoneNumberError: "por enquanto só números do Brasil",
     NotAMobilePhoneError: "use um número de celular: o contato é pelo WhatsApp",
 }
+
+
+def phone_refusal_for(error: ValueError) -> str:
+    """The words for a phone the platform refused; the unreadable one is told what it lacked."""
+    if isinstance(error, InvalidPhoneNumberError):
+        return phone_refusal(error.raw)
+    return _OTHER_PHONE_REFUSALS[type(error)]
+
 
 INVITE_NOT_FOUND = "convite não encontrado"
 EMAIL_TAKEN = "este e-mail já tem conta"

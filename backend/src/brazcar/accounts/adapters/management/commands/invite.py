@@ -12,7 +12,7 @@ from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.utils import timezone
 
 from brazcar.accounts.adapters.composition import issue_invite
-from brazcar.accounts.adapters.routes import PHONE_REFUSALS
+from brazcar.accounts.adapters.routes import phone_refusal_for
 from brazcar.accounts.domain import (
     ForeignPhoneNumberError,
     Invite,
@@ -48,7 +48,7 @@ class Command(BaseCommand):
             message = "este telefone já tem conta"
             raise CommandError(message) from error
         except (InvalidPhoneNumberError, ForeignPhoneNumberError, NotAMobilePhoneError) as error:
-            raise CommandError(PHONE_REFUSALS[type(error)]) from error
+            raise CommandError(phone_refusal_for(error)) from error
         self._announce(invite, token)
 
     def _announce(self, invite: Invite, token: str) -> None:

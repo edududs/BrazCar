@@ -43,7 +43,7 @@ describe("/sair-do-mural (D-162, D-172)", () => {
     await user.click(await screen.findByRole("button", { name: "Pedir remoção" }));
 
     expect(
-      await screen.findByText("Digite o celular com DDD, como (61) 99999-9999."),
+      await screen.findByText("O celular tem 9 dígitos depois do DDD, como (61) 99999-9999."),
     ).toBeDefined();
     expect(api.sentTo("POST", "/api/removal-requests")).toHaveLength(0);
   });

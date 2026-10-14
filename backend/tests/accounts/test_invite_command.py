@@ -72,6 +72,10 @@ class TestInviteCommand:
         with pytest.raises(CommandError):
             await _run(LANDLINE)
 
+    async def test_a_mobile_without_the_ninth_digit_is_told_what_it_would_be(self) -> None:
+        with pytest.raises(CommandError, match=r"faltou o nono dígito; seria \(61\) 99908-4038\?"):
+            await _run("6199084038")
+
     async def test_garbage_refuses(self) -> None:
         with pytest.raises(CommandError):
             await _run("not-a-phone")

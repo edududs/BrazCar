@@ -50,6 +50,17 @@ describe("usePhoneInput", () => {
     expect(result.current.field.error).toBe(PHONE_HINT_ERROR);
   });
 
+  it("says the ninth digit is missing, and what the number would be", () => {
+    const { result } = renderHook(() => usePhoneInput());
+    act(() => {
+      result.current.field.onChange("6199084038");
+    });
+    act(() => {
+      result.current.submitValue();
+    });
+    expect(result.current.field.error).toBe("Faltou o nono dígito. Seria (61) 99908-4038?");
+  });
+
   it("clears the error as soon as the person types again", () => {
     const { result } = renderHook(() => usePhoneInput());
     act(() => {

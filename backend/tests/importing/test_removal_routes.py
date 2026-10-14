@@ -9,7 +9,7 @@ import pytest
 from brazcar.importing.adapters.models import RemovalRequestModel
 from brazcar.importing.adapters.routes import INVALID_NOTE, TOO_MANY
 from brazcar.rides.adapters.repository import DjangoRideRepository
-from brazcar.shared.adapters.phone_input import INVALID_PHONE
+from brazcar.shared.adapters.phone_input import phone_refusal
 from brazcar.shared.domain.phone import PhoneNumber
 from tests.accounts.test_routes import Browser
 from tests.importing.test_purge_statement import imported
@@ -73,7 +73,7 @@ async def test_the_note_is_optional() -> None:
 @pytest.mark.parametrize(
     ("data", "words"),
     [
-        ({"phone": "123"}, INVALID_PHONE),
+        ({"phone": "123"}, phone_refusal("123")),
         ({"phone": WITHOUT_RIDES, "note": "a" * 501}, None),
     ],
 )

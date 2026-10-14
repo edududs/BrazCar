@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { formatAsTyped, toE164 } from "./phone-codec";
+import { formatAsTyped, toE164, withNinthDigit } from "./phone-codec";
 
-export const PHONE_HINT_ERROR = "Digite o celular com DDD, como (61) 99999-9999.";
+export const PHONE_HINT_ERROR = "O celular tem 9 dígitos depois do DDD, como (61) 99999-9999.";
 
 /** What a phone field needs, ready to spread: `<PhoneField {...phone.field} />`. */
 export interface PhoneFieldState {
@@ -31,6 +31,11 @@ export function usePhoneInput(initial = ""): PhoneInput {
   };
 
   const submitValue = () => {
+    const completed = withNinthDigit(value); // the numbering metadata still reads these as whole
+    if (completed !== null) {
+      setError(`Faltou o nono dígito. Seria ${completed}?`);
+      return null;
+    }
     const e164 = toE164(value);
     setError(e164 === null ? PHONE_HINT_ERROR : null);
     return e164;

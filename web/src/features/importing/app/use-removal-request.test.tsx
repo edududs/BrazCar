@@ -33,7 +33,9 @@ describe("useRemovalRequest", () => {
       result.current.submit();
     });
 
-    expect(result.current.phone.error).toBe("Digite o celular com DDD, como (61) 99999-9999.");
+    expect(result.current.phone.error).toBe(
+      "O celular tem 9 dígitos depois do DDD, como (61) 99999-9999.",
+    );
     expect(mocked.requestRemoval).not.toHaveBeenCalled();
     expect(result.current.state).toBe("idle");
   });

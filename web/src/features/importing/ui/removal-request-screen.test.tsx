@@ -61,7 +61,7 @@ describe("RemovalRequestScreen, as a person uses it (D-172)", () => {
     await user.click(screen.getByRole("button", { name: "Pedir remoção" }));
 
     expect(
-      await screen.findByText("Digite o celular com DDD, como (61) 99999-9999."),
+      await screen.findByText("O celular tem 9 dígitos depois do DDD, como (61) 99999-9999."),
     ).toBeDefined();
     expect(mocked.requestRemoval).not.toHaveBeenCalled();
   });
