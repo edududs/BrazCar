@@ -65,6 +65,9 @@ Em 2026-09-26 (v0.24.0) nada entrou no `api.env`; sem migração; o mural públi
 dado pessoal.
 Em 2026-09-26 (v0.26.0) entrou `CLIENT_IP_HEADER` no `api.env`; migrações de remoção aplicadas; a
 v0.25.0 não foi implantada.
+Em 2026-10-14 (v0.26.1) nada entrou no `api.env`; sem migração; a API recusa subir com `EMAIL_FROM`
+malformado (D-173) e a recusa de telefone sugere o nono dígito (D-174). A v0.26.1 só foi cortada
+nesta data: o corte de 30/09 deixou um commit vazio local, descartado depois.
 
 ## Worker do WhatsApp (passo 7a)
 
