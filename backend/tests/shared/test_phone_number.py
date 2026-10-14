@@ -10,6 +10,7 @@ from brazcar.shared.domain.phone import (
     InvalidPhoneNumberError,
     PhoneNumber,
     SubscriberNumber,
+    missing_ninth_digit,
 )
 
 from .phone_strategies import brazilian_mobiles, legacy_jid_users
@@ -162,3 +163,28 @@ def test_the_personal_data_detector_spots_every_form_of_a_phone(phone: PhoneNumb
     this value object would accept, in any of the forms the platform writes it."""
     for text in (phone.e164(), phone.display(), phone.international(), phone.jid_user()):
         assert has_personal_data(f"chama no {text} que eu passo"), text
+
+
+@pytest.mark.parametrize("raw", ["6199084038", "(61) 9908-4038", "+55 61 9908-4038", "556199084038"])
+def test_a_mobile_that_lost_its_ninth_digit_is_completed(raw: str) -> None:
+    completed = missing_ninth_digit(raw)
+
+    assert completed is not None
+    assert completed.e164() == "+5561999084038"
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "61999084038",
+        "(61) 99908-4038",
+        "6132540000",
+        "6128084038",
+        "61 8908-4038",
+        "",
+        "not-a-phone",
+        "61 9908-403a",
+    ],
+)
+def test_the_ninth_digit_is_only_missing_from_eight_digits_that_start_with_9(raw: str) -> None:
+    assert missing_ninth_digit(raw) is None

@@ -5,6 +5,7 @@ from .phone_number import (
     InvalidPhoneNumberError,
     PhoneNumber,
     SubscriberNumber,
+    missing_ninth_digit,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "InvalidPhoneNumberError",
     "PhoneNumber",
     "SubscriberNumber",
+    "missing_ninth_digit",
 ]

@@ -55,6 +55,11 @@ _LEGACY_BRAZILIAN_MOBILE = re.compile(r"^55([1-9]{2})([6-9][0-9]{7})$")
 """An old WhatsApp account keeps the address it had before the ninth digit (D-138)."""
 
 
+_WITHOUT_NINTH_DIGIT = re.compile(r"^(?:55)?([1-9]{2})(9[0-9]{7})$")
+_TYPED_PHONE = re.compile(r"^[0-9+\s()\-]+$")
+"""Every digit a person may use to write a phone; anything else is not a phone at all."""
+
+
 _VISIBLE_PREFIX = 5  # "+" and the country and area codes of a Brazilian mobile
 _VISIBLE_SUFFIX = 4  # the last four digits
 
@@ -150,3 +155,22 @@ def _fields(raw: str, default_country: CountryCode) -> dict[str, object]:
         "area": {"value": parts.area} if parts.area else None,
         "subscriber": {"value": parts.subscriber},
     }
+
+
+def missing_ninth_digit(raw: str) -> PhoneNumber | None:
+    """The mobile a person meant when the ninth digit is missing: `"(61) 9908-4038"` is `(61) 99908-4038`.
+
+    Since 2016 every Brazilian mobile has nine digits after the area code. Eight digits that start
+    with 9 are a mobile that lost its first 9; `None` when `raw` is not that, or when adding it
+    does not make a mobile (D-174).
+    """
+    if _TYPED_PHONE.match(raw) is None:
+        return None
+    found = _WITHOUT_NINTH_DIGIT.match(re.sub(r"\D", "", raw))
+    if found is None:
+        return None
+    try:
+        completed = PhoneNumber.parse(f"+55{found[1]}9{found[2]}")
+    except InvalidPhoneNumberError:
+        return None
+    return completed if completed.is_mobile else None

@@ -107,7 +107,9 @@ describe("FeedbackSheet, as a person uses it", () => {
     await user.click(within(sheet).getByRole("button", { name: "Enviar opinião" }));
 
     expect(
-      await within(sheet).findByText("Digite o celular com DDD, como (61) 99999-9999."),
+      await within(sheet).findByText(
+        "O celular tem 9 dígitos depois do DDD, como (61) 99999-9999.",
+      ),
     ).toBeDefined();
     expect(mocked.sendFeedback).not.toHaveBeenCalled();
   });

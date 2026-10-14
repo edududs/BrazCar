@@ -15,7 +15,7 @@ from brazcar.importing.domain import NOTE_LIMIT, TooManyAttemptsError
 from brazcar.shared.adapters.api_errors import with_errors
 from brazcar.shared.adapters.api_schemas import Done
 from brazcar.shared.adapters.client_ip import client_ip
-from brazcar.shared.adapters.phone_input import INVALID_PHONE
+from brazcar.shared.adapters.phone_input import phone_refusal
 from brazcar.shared.domain.phone import InvalidPhoneNumberError
 
 INVALID_NOTE = f"o texto aceita até {NOTE_LIMIT} caracteres"
@@ -41,7 +41,7 @@ def build_router(ask: RequestRemoval) -> Router:
         try:
             await ask(phone=data.phone, note=data.note, client=client_ip(request))
         except InvalidPhoneNumberError as error:
-            raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, INVALID_PHONE) from error
+            raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, phone_refusal(error.raw)) from error
         except ValidationError as error:
             raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, INVALID_NOTE) from error
         except TooManyAttemptsError as error:

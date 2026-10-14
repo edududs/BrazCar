@@ -19,7 +19,7 @@ from brazcar.feedback.domain import (
     FeedbackLimitError,
 )
 from brazcar.shared.adapters.api_errors import with_errors
-from brazcar.shared.adapters.phone_input import INVALID_PHONE
+from brazcar.shared.adapters.phone_input import phone_refusal
 from brazcar.shared.adapters.session_auth import signed_in_account_id
 from brazcar.shared.domain.phone import InvalidPhoneNumberError
 
@@ -58,7 +58,7 @@ def build_router(send: SendFeedback, writer: AuthBase) -> Router:
                 web_version=data.web_version,
             )
         except InvalidPhoneNumberError as error:
-            raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, INVALID_PHONE) from error
+            raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, phone_refusal(error.raw)) from error
         except AboutSomeoneOutsideComplaintError as error:
             raise HttpError(HTTPStatus.UNPROCESSABLE_CONTENT, "só a reclamação aponta alguém") from error
         except FeedbackLimitError as error:

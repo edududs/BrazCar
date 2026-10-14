@@ -50,7 +50,10 @@ async def test_a_complaint_is_kept_with_the_phone_in_e164_and_nothing_comes_back
 @pytest.mark.parametrize(
     ("changes", "words"),
     [
-        ({"about_phone": "123"}, "telefone inválido: digite o celular com DDD, como (61) 99999-9999"),
+        (
+            {"about_phone": "123"},
+            "telefone inválido: o celular tem 9 dígitos depois do DDD, como (61) 99999-9999",
+        ),
         ({"kind": "praise"}, "só a reclamação aponta alguém"),
         ({"message": "   "}, "escreva sua opinião"),
     ],

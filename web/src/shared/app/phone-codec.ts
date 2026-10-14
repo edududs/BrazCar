@@ -18,3 +18,18 @@ export function toE164(raw: string): string | null {
   const number = parsePhoneNumberFromString(raw, TYPING_COUNTRY);
   return number?.isValid() === true ? number.number : null;
 }
+
+/**
+ * `"(61) 9908-4038"` becomes `"(61) 99908-4038"`: the number a person meant when the ninth digit
+ * is missing (D-174). `null` unless there are ten digits and the third is a 9, which a landline
+ * never starts with, and the completed number is whole.
+ */
+export function withNinthDigit(raw: string): string | null {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length !== 10 || digits[2] !== "9") return null;
+  const completed = parsePhoneNumberFromString(
+    `${digits.slice(0, 2)}9${digits.slice(2)}`,
+    TYPING_COUNTRY,
+  );
+  return completed?.isValid() === true ? completed.formatNational() : null;
+}
