@@ -35,4 +35,16 @@ describe("ActionLink", () => {
 
     expect(document.activeElement).toBe(link);
   });
+
+  it("carries a search to the link, so a sign-in link can say where to come back to", async () => {
+    renderRouted(
+      <ActionLink to="/entrar" search={{ returnTo: "/avisos" }}>
+        Entrar
+      </ActionLink>,
+    );
+
+    const link = await screen.findByRole("link", { name: "Entrar" });
+
+    expect(link.getAttribute("href")).toBe("/entrar?returnTo=%2Favisos");
+  });
 });

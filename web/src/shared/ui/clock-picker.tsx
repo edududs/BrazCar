@@ -8,6 +8,8 @@ interface ClockPickerProps {
   readonly draft: TimeDraft;
   /** How many minutes a step moves: what the draft was made with. */
   readonly minuteStep: number;
+  /** Names the group, so two clocks on one sheet can be told apart. */
+  readonly label?: string;
 }
 
 const column = "grid h-11 w-[76px] place-items-center rounded-[12px] bg-surface-2 text-ink";
@@ -18,7 +20,7 @@ const digits =
  * The hour and the minutes, big, each with a plus and a minus; a tap on a number types it (F7).
  * Typing goes through `useNumberSegment`: two digits for the hour, then the minutes take focus.
  */
-export function ClockPicker({ draft, minuteStep }: ClockPickerProps) {
+export function ClockPicker({ draft, minuteStep, label = "Relógio" }: ClockPickerProps) {
   const minutesRef = useRef<HTMLInputElement>(null);
   const hour = useNumberSegment({
     value: draft.hour,
@@ -39,11 +41,7 @@ export function ClockPicker({ draft, minuteStep }: ClockPickerProps) {
   });
   const minutesLabel = minuteStep === 1 ? "Um minuto" : `${String(minuteStep)} minutos`;
   return (
-    <div
-      role="group"
-      aria-label="Relógio"
-      className="flex items-center justify-center gap-2.5 py-1"
-    >
+    <div role="group" aria-label={label} className="flex items-center justify-center gap-2.5 py-1">
       <div className="flex flex-col items-center gap-1.5">
         <button
           type="button"

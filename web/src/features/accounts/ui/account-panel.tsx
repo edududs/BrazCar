@@ -5,7 +5,7 @@ import { Avatar } from "@/shared/ui/avatar";
 import { Form } from "@/shared/ui/form";
 import { Icon } from "@/shared/ui/icon";
 import { IconButton } from "@/shared/ui/icon-button";
-import { ListGroup, ListRowButton } from "@/shared/ui/list-row";
+import { ListGroup, ListRow, ListRowButton } from "@/shared/ui/list-row";
 import { NoticeBar } from "@/shared/ui/notice-bar";
 import { PasswordField } from "@/shared/ui/password-field";
 import { SectionHeading } from "@/shared/ui/section-heading";
@@ -118,29 +118,24 @@ export function AccountPanel({
       <SectionHeading>Carros</SectionHeading>
       <ListGroup>
         {account.cars.map((owned) => (
-          <div
+          <ListRow
             key={owned.id}
-            className="flex min-h-[60px] items-center gap-3 px-4 py-2 text-body font-medium text-ink"
-          >
-            <span className="grid size-[38px] shrink-0 place-items-center rounded-[12px] bg-surface-2 text-ink-2">
-              <Icon name="car" />
-            </span>
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span>
-                {owned.model} {owned.color}
-              </span>
-              <span className="font-mono text-sm tracking-[0.06em] text-ink-3">{owned.plate}</span>
-            </span>
-            <IconButton
-              icon="trash"
-              label={`Remover ${owned.model} ${owned.color}`}
-              look="plain"
-              disabled={busy}
-              onPress={() => {
-                removeCar(owned.id).catch(fail);
-              }}
-            />
-          </div>
+            icon={<Icon name="car" />}
+            title={`${owned.model} ${owned.color}`}
+            subtitle={owned.plate}
+            monoSubtitle
+            trailing={
+              <IconButton
+                icon="trash"
+                label={`Remover ${owned.model} ${owned.color}`}
+                look="plain"
+                disabled={busy}
+                onPress={() => {
+                  removeCar(owned.id).catch(fail);
+                }}
+              />
+            }
+          />
         ))}
         <ListRowButton
           icon={<Icon name="plus" />}

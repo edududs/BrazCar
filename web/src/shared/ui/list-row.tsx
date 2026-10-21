@@ -19,6 +19,8 @@ interface RowBodyProps {
   readonly title: string;
   readonly subtitle?: string | undefined;
   readonly tone?: RowTone;
+  /** The subtitle in monospace, for a plate or a code. */
+  readonly monoSubtitle?: boolean;
   /** A chevron at the end says the row leads somewhere. */
   readonly leads?: boolean;
 }
@@ -31,7 +33,14 @@ const tones = {
   critical: { row: "text-critical", tile: "bg-critical-soft text-critical" },
 } as const satisfies Record<RowTone, { row: string; tile: string }>;
 
-function RowBody({ icon, title, subtitle, tone = "default", leads = false }: RowBodyProps) {
+function RowBody({
+  icon,
+  title,
+  subtitle,
+  tone = "default",
+  monoSubtitle = false,
+  leads = false,
+}: RowBodyProps) {
   return (
     <>
       <span
@@ -42,7 +51,11 @@ function RowBody({ icon, title, subtitle, tone = "default", leads = false }: Row
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span>{title}</span>
         {subtitle === undefined ? null : (
-          <span className="text-sm font-medium text-ink-3">{subtitle}</span>
+          <span
+            className={`text-sm text-ink-3 ${monoSubtitle ? "font-mono tracking-[0.06em]" : "font-medium"}`}
+          >
+            {subtitle}
+          </span>
         )}
       </span>
       {leads ? (
@@ -74,6 +87,21 @@ export function ListRowButton({
     >
       <RowBody tone={tone} {...body} />
     </button>
+  );
+}
+
+interface ListRowProps extends RowBodyProps {
+  /** Something at the end the row does not own, like a remove button. */
+  readonly trailing?: ReactNode;
+}
+
+/** A row that only shows something: it is not itself pressable, so it can hold a button. */
+export function ListRow({ trailing, tone = "default", ...body }: ListRowProps) {
+  return (
+    <div className={`${rowClass} ${tones[tone].row}`}>
+      <RowBody tone={tone} {...body} />
+      {trailing}
+    </div>
   );
 }
 

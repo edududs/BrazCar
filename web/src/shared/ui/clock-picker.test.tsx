@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
-import { useTimeDraft } from "../app/use-time-draft";
+import { type TimeDraft, useTimeDraft } from "../app/use-time-draft";
 import { ClockPicker } from "./clock-picker";
 
 /** The picker with its draft, and the clock it holds written out, as a screen would use it. */
@@ -16,6 +16,15 @@ function Harness({ initial = "18:00", step = 5 }: { initial?: string; step?: num
     </>
   );
 }
+
+const fixedDraft: TimeDraft = {
+  hour: 8,
+  minute: 0,
+  value: "08:00",
+  addHours: () => undefined,
+  addMinutes: () => undefined,
+  set: () => undefined,
+};
 
 const chosen = () => screen.getByRole("status", { name: "Escolhido" }).textContent;
 
@@ -108,5 +117,17 @@ describe("ClockPicker, as a person uses it", () => {
     expect(chosen()).toBe("19:00");
     await user.tab();
     expect(document.activeElement).toBe(screen.getByLabelText("Hora"));
+  });
+
+  it("names the group by its label, so two clocks on one sheet are told apart", () => {
+    render(
+      <>
+        <ClockPicker draft={fixedDraft} minuteStep={5} label="Saída a partir de" />
+        <ClockPicker draft={fixedDraft} minuteStep={5} />
+      </>,
+    );
+
+    expect(screen.getByRole("group", { name: "Saída a partir de" })).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Relógio" })).toBeTruthy();
   });
 });

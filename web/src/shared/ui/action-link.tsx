@@ -6,6 +6,7 @@ import { type ButtonEmphasis, type ButtonSize, actionClassName } from "./action-
 interface ActionLinkProps {
   readonly to: NonNullable<LinkProps["to"]>;
   readonly params?: LinkProps["params"];
+  readonly search?: LinkProps["search"];
   /** `primary` is the brand colour and appears once per screen; the rest are ink and surface. */
   readonly emphasis?: ButtonEmphasis;
   /** 54 px by default, the main touch target; `compact` is the 44 px minimum. */
@@ -19,6 +20,7 @@ interface ActionLinkProps {
 export function ActionLink({
   to,
   params,
+  search,
   emphasis = "quiet",
   size = "default",
   icon,
@@ -28,6 +30,7 @@ export function ActionLink({
     <Link
       to={to}
       {...(params === undefined ? {} : { params })}
+      {...(search === undefined ? {} : { search })}
       className={actionClassName(emphasis, size)}
     >
       {icon}
