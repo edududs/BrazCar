@@ -3,6 +3,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { DevicePush } from "@/shared/app/use-device-push";
 import { installFakeEventSource } from "@/shared/testing/fake-event-source";
 import { renderApp } from "@/shared/testing/render-app";
 
@@ -16,6 +17,27 @@ vi.mock("@/shared/adapters/service-worker", () => ({
   subscribeToUpdateWaiting: () => () => undefined,
 }));
 
+const pushState = vi.hoisted(() => ({ current: null as DevicePush | null }));
+
+vi.mock("@/shared/app/use-device-push", () => ({
+  useDevicePush: (): DevicePush => {
+    if (pushState.current === null) throw new Error("The test forgot to set the push double.");
+    return pushState.current;
+  },
+}));
+
+function fakePush(overrides: Partial<DevicePush> = {}): DevicePush {
+  return {
+    permission: "default",
+    subscribed: false,
+    pending: false,
+    error: null,
+    enable: vi.fn(() => Promise.resolve()),
+    disable: vi.fn(() => Promise.resolve()),
+    ...overrides,
+  };
+}
+
 const api = await vi.hoisted(async () => {
   const { installFakeApi } = await import("@/shared/testing/fake-api");
   return installFakeApi();
@@ -23,6 +45,8 @@ const api = await vi.hoisted(async () => {
 
 beforeEach(() => {
   api.reset();
+  pushState.current = fakePush();
+  api.serve("GET", "/api/alerts", 200, { alerts: [], limit: 5 });
   installFakeEventSource();
   serveShell(api, null);
   api.serve("GET", "/api/rides", 200, []);
@@ -281,6 +305,69 @@ describe("/conta", () => {
       expect(router.state.location.pathname).toBe("/");
     });
     expect(await screen.findByText("Você saiu da conta.")).toBeDefined();
+  });
+
+  it("signing out from a subscribed device turns its notifications off first", async () => {
+    const user = userEvent.setup();
+    serveShell(api, driverOut);
+    api.serve("POST", "/api/accounts/logout", 200, { ok: true });
+    let logoutsWhenDisabled = -1;
+    pushState.current = fakePush({
+      subscribed: true,
+      disable: vi.fn(() => {
+        logoutsWhenDisabled = api.sentTo("POST", "/api/accounts/logout").length;
+        return Promise.resolve();
+      }),
+    });
+    const { router } = await renderApp("/conta");
+
+    await user.click(await screen.findByRole("button", { name: /^Sair da conta/ }));
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/");
+    });
+    expect(pushState.current.disable).toHaveBeenCalledOnce();
+    expect(logoutsWhenDisabled).toBe(0);
+    expect(api.sentTo("POST", "/api/accounts/logout")).toHaveLength(1);
+  });
+
+  it.each([
+    ["leaves its error in the hook", () => Promise.resolve()],
+    ["rejects", () => Promise.reject(new Error("push gone"))],
+  ])("signs out anyway when turning the notifications off %s", async (_case, failing) => {
+    const user = userEvent.setup();
+    serveShell(api, driverOut);
+    api.serve("POST", "/api/accounts/logout", 200, { ok: true });
+    const disable = vi.fn(failing);
+    pushState.current = fakePush({
+      subscribed: true,
+      error: "Não foi possível desligar as notificações. Tente de novo.",
+      disable,
+    });
+    const { router } = await renderApp("/conta");
+
+    await user.click(await screen.findByRole("button", { name: /^Sair da conta/ }));
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/");
+    });
+    expect(disable).toHaveBeenCalledOnce();
+    expect(api.sentTo("POST", "/api/accounts/logout")).toHaveLength(1);
+  });
+
+  it("signing out from a device with no subscription does not touch the notifications", async () => {
+    const user = userEvent.setup();
+    serveShell(api, driverOut);
+    api.serve("POST", "/api/accounts/logout", 200, { ok: true });
+    pushState.current = fakePush({ subscribed: false });
+    const { router } = await renderApp("/conta");
+
+    await user.click(await screen.findByRole("button", { name: /^Sair da conta/ }));
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/");
+    });
+    expect(pushState.current.disable).not.toHaveBeenCalled();
   });
 
   it("the opinion row opens the feedback sheet", async () => {
