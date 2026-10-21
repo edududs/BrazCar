@@ -186,6 +186,15 @@ implantada).
   ligada a `NotifyMatchingAlerts` em `config/api.py`, na composição de `importing` e na da semente.
   Uma notificação por par (aviso, carona), sem dado de pessoa, pela porta `PushSender`, cujo
   adaptador de produção só registra no log. Sem Web Push, sem service worker, sem tela.
+- "Me avise", etapa 2, ainda sem tag (D-181 a D-185; glossário em
+  [domain/push.md](domain/push.md)): contexto `push` independente do projeto, com a tabela
+  `push_subscription` (migração `push.0001`), as rotas `PUT/DELETE /api/push/subscriptions` e
+  `GET /api/push/public-key`, e o envio por `pywebpush` 2.5.0 num adaptador só. O VAPID vem do
+  ambiente (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_CONTACT`), validado ao subir, com
+  `manage.py generate_vapid_keys`. Em `alerts`, `DevicePushSender` liga o `PushSender` ao contexto
+  `push`; excluir a conta apaga os aparelhos pela porta `AccountErased`. No front, o service worker
+  gerado importa `sw-notifications.js` (`push` e `notificationclick`), os adaptadores
+  `web-notifications`, `web-push` e `push-gateway`, e o hook `useDevicePush`. Sem tela.
 - Design, passo 5, movimento e usabilidade (D-153, D-154): tokens de movimento com as entradas
   nomeadas (`animate-rise-in`, `-list-in`, `-ride-in`, `-bump`, `-reveal`), só `transform` e
   `opacity`, zeradas com "reduzir movimento" por `--motion-rise`/`--motion-scale`; View Transitions
@@ -465,9 +474,9 @@ gravação, a API recusa subir com remetente inválido e a tela distingue falha 
 
 ## Próximo passo
 
-1. "Me avise", etapa 2: inscrição do aparelho, adaptador de Web Push no lugar do
-   `LoggingPushSender` (a porta `PushSender` recebe a conta e a notificação pronta), chaves VAPID e
-   service worker; depois, a etapa 3, a tela e a lista na conta.
+1. "Me avise", etapa 3: a tela do "Me avise" e a lista dos avisos na conta, consumindo
+   `useDevicePush`. Antes de publicar, gerar o par VAPID na máquina conforme o
+   [runbook](runbooks/deploy.md).
 2. Etapa de design (D-103, D-143): validação no celular dos passos 5 e 6 publicados pendente; o
    desktop aguarda as pranchas do canvas.
 3. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
@@ -513,7 +522,11 @@ gravação, a API recusa subir com remetente inválido e a tela distingue falha 
 - "Me avise": a limpeza dos avisos vencidos existe só como comando (`manage.py purge_alerts`) e
   ainda não está agendada; o teto de 5 avisos é conferido antes de gravar, fora de transação, então
   dois pedidos simultâneos podem passar dele por um; e o motorista com aviso para a própria rota é
-  avisado da própria carona, porque o aviso não conhece o motorista.
+  avisado da própria carona, porque o aviso não conhece o motorista. A entrega corre dentro da
+  requisição, sem fila (até 5 s por aparelho, em paralelo). Sair da sessão não desliga as
+  notificações do aparelho: num aparelho compartilhado, os avisos da conta anterior continuam
+  chegando até alguém desligar ou outra conta ligar nele, o que a etapa 3 precisa resolver ao sair.
+  Inscrições antigas, depois de uma troca de par VAPID, falham no log até o aparelho ligar de novo.
 - A tabela de hits do limite cresce com o uso e só é podada por chave; um comando de limpeza
   entra se pesar.
 - Rota `/api/diagnostics/sse`, página `/diagnostics` e `SSE_DIAGNOSTICS_TOKEN` ficam de propósito

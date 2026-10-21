@@ -11,6 +11,8 @@ flowchart LR
     T --> A[API Django ASGI<br/>api-brazcar.elj-labs.org]
     A --> DB[(Banco único<br/>SQLite ou Postgres)]
     A -->|SMTP| R[Resend]
+    A -->|Web Push| PS[Serviço de push do navegador<br/>Apple, Google, Mozilla, Microsoft]
+    PS -.entrega.-> W
     W -.wa.me.-> WA[WhatsApp]
     X[Worker do extrator<br/>mesma imagem da API] --> DB
     X -.lê.-> WA
@@ -35,6 +37,7 @@ flowchart TB
         IM[importing: mensagem-fonte,<br/>candidata, julgamento, poda]
         FB[feedback: opinião sobre o app,<br/>lida só por comando]
         AL[alerts: avisos do Me avise,<br/>notificação por porta]
+        PU[push: aparelhos e Web Push,<br/>independente do projeto]
     end
     F -->|OpenAPI gerado| R & AC & PL & FB
     R -->|id de lugar| PL
@@ -46,6 +49,8 @@ flowchart TB
     AL -->|id de carona, filtro do mural| R
     AL -->|id de conta| AC
     R -.->|RideChanged, ligada na composição| AL
+    AL -->|conta e notificação| PU
+    AC -.->|AccountErased, ligada na composição| PU
     IM -.->|Ollama local| LLM[(Ollama<br/>na máquina)]
 ```
 
@@ -99,7 +104,10 @@ local da carona, `alerts` pergunta a `rides` se o mural, filtrado como o aviso p
 mostraria a carona (`ShownOnBoard`, a mesma seleção do mural, D-176); se sim, reivindica o par
 (aviso, carona) na tabela `alerts_notice` e entrega a notificação pela porta `PushSender`, montada
 da visão anônima do detalhe (D-178). Tudo corre no processo de quem gravou, na requisição ou na
-varredura do worker, e nenhuma falha de `alerts` chega a quem gravou. Nesta etapa o remetente de produção só registra no log.
+varredura do worker, e nenhuma falha de `alerts` chega a quem gravou. A entrega passa pelo adaptador `DevicePushSender` ao
+contexto `push`, que cifra a mensagem e a envia por Web Push a cada aparelho da conta, em paralelo e
+dentro da requisição, com 5 s de limite por aparelho (D-182). Sem as chaves VAPID no ambiente, o
+push fica desligado e o remetente só registra no log (D-183).
 
 **Contato.** A lista nunca traz telefone nem placa (schema `RideOut`, D-096). O botão chama uma rota própria, que exige
 login, aplica limite por conta, registra o pedido e devolve o link `wa.me` com mensagem pronta e a
@@ -131,11 +139,14 @@ placa (ADR-0006).
 - **Observabilidade.** Logs estruturados em JSON na saída padrão e um endpoint de saúde. Nada de terceiros.
 - **Limite de requisições.** Porta `RateLimiter` em `shared/application`, com chave por conta ou por
   telefone e uma tabela de hits como adaptador (D-097). Contato, login e recuperação de senha passam por ela.
+- **Notificação.** Porta `PushTransport` no contexto `push`, com o `pywebpush` num adaptador só;
+  as chaves VAPID e o contato vêm do ambiente, e sem eles o push fica desligado (D-182, D-183).
 - **E-mail.** Porta `Mailer` em `shared/application` com o backend de e-mail do Django como
   adaptador; o fornecedor é variável de ambiente, e sem ele as mensagens vão para o console (D-092).
 - **PWA online-only.** O service worker só guarda a casca, nunca a API; sem rede, uma tela de aviso
   cobre a página, que continua montada (D-106). Tudo que conhece o service worker, a rede e o modo
-  instalado mora num adaptador de `web/src/shared/adapters`.
+  instalado mora num adaptador de `web/src/shared/adapters`. O service worker passa a ter código
+  próprio, `sw-notifications.js`, importado pelo gerado (D-185).
 - **Versão do app.** Service worker em modo `prompt`: build novo espera o "Atualizar" do usuário e
   pergunta antes de descartar formulário aberto. A API informa o piso em `GET /api/web-version`
   (`WEB_MINIMUM_VERSION`); a versão do front é a do `web/package.json`, que o release acompanha com

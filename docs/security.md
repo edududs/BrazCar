@@ -54,6 +54,10 @@ e-mail já confirmado. Conta de antes do convite sem e-mail confirmado fica reti
 - Regras de segurança do linter (`ruff`, conjunto `S`) sobre todo o backend, com cada exceção
   justificada por arquivo.
 - Contêiner da API roda com usuário sem privilégio, nunca como root.
+- Endpoint de push aceito só quando aponta para um serviço de push conhecido (FCM, Mozilla, Apple,
+  Windows): a API é quem faz o POST para ele, e um endereço livre a tornaria forjadora de
+  requisições para a rede interna. O endpoint nunca aparece no log, só o host do serviço
+  ([D-181](decisions/README.md), [D-182](decisions/README.md)).
 - Token do convite e do link de confirmação nunca aparecem no log de requisição: um filtro os troca
   por `[token]` antes de qualquer escrita ([D-167](decisions/README.md)).
 - Fuzz de contrato no CI contra a API real, que já achou e corrigiu status não documentados em quase

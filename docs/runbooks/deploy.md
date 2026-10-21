@@ -162,6 +162,36 @@ rota responde 500, depois de o convite já constar como "e-mail informado" nas v
 à correção). A API passa a recusar subir com `EMAIL_FROM` malformado, com `ImproperlyConfigured`
 no log do container; o envio agora antecede a gravação do convite.
 
+## Notificações (Web Push)
+
+`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_CONTACT` entram no `api.env` (modelo em
+`infra/api.env.example`), que a API e o worker leem: o worker também envia, para a carona importada
+(D-183). O par se gera uma vez, e o comando só imprime as duas linhas:
+
+```bash
+docker compose run --rm api python manage.py generate_vapid_keys
+```
+
+Numa máquina com Node, `npx web-push generate-vapid-keys` dá o mesmo formato. O contato é um
+`mailto:` ou um `https://`. As três linhas, como entram no `api.env`:
+
+```bash
+VAPID_PUBLIC_KEY=<pública>
+VAPID_PRIVATE_KEY=<privada>
+VAPID_CONTACT=mailto:<endereço>
+```
+
+Sem as três, o push fica desligado: a API sobe, só registra no log o que enviaria, e a rota da
+chave responde 503. Conjunto parcial ou malformado impede a API de subir, e o log do container
+mostra `ImproperlyConfigured`.
+
+Armadilha: contato que não seja `mailto:` nem `https://` faz a Apple recusar todo push com
+`403 BadJwtToken`, só na hora de enviar; por isso a API recusa subir com ele.
+
+Trocar o par invalida as inscrições: cada aparelho precisa ligar as notificações de novo. A chave
+privada nunca sai do `api.env`. O teste no iPhone é pelo HTTPS publicado, com o app na Tela de
+Início.
+
 ## Convites
 
 `INVITE_LINK` no `api.env` (modelo em `infra/api.env.example`) diz para onde aponta o link que o

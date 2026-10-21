@@ -17,7 +17,7 @@ publicada ou importada.
 | teto | `AlertRules.limit` | Quantos avisos ativos uma conta tem ao mesmo tempo: 5 (`ALERT_ACTIVE_LIMIT`, D-175). |
 | notificação | `Notice` | O que vai ao aparelho: título, corpo com paradas e horário, `tag` com o id do aviso e `url` do detalhe. Nunca dado de pessoa (D-178). |
 | registro de notificações | `NoticeLog` | A porta que reivindica o par (aviso, carona) antes do envio: verdadeira só na primeira vez (D-178). |
-| remetente | `PushSender` | A porta que entrega uma notificação a todos os aparelhos de uma conta. |
+| remetente | `PushSender` | A porta que entrega uma notificação a todos os aparelhos de uma conta. A entrega real vai por `DevicePushSender` ao contexto [`push`](push.md); com o push desligado, o `LoggingPushSender` só registra no log (D-182). |
 | mural, para o aviso | `BoardRides` | A porta pela qual `alerts` pergunta a `rides` o resumo anônimo de uma carona e se o mural, filtrado como o aviso pede e só com vaga, a mostraria agora (D-176). |
 | resumo da carona | `RideSummary` | Paradas (rótulos) e horário de uma carona, lidos da visão anônima do detalhe (D-171). |
 | avisar | `NotifyMatchingAlerts` | Caso de uso que ouve `RideChanged` (D-177): para cada aviso ativo do dia da carona, pergunta ao mural, reivindica o par e envia. |
@@ -49,6 +49,5 @@ mural, num lugar só (D-176).
 
 ## Fora, de propósito
 
-Sem recorrência, sem aviso de carona que já estava no mural, sem fila de envio e sem envio de
-verdade nesta etapa: o adaptador de produção do `PushSender` só registra no log. A inscrição do
-aparelho e o Web Push são a etapa seguinte; a tela, a outra.
+Sem recorrência, sem aviso de carona que já estava no mural e sem fila de envio. A inscrição do
+aparelho e o Web Push moram em `push` ([push.md](push.md)); a tela do "Me avise" é a etapa seguinte.
