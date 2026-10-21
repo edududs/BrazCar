@@ -44,12 +44,17 @@ ao caso de uso `PushToAccount`. `accounts` não o conhece: `DeleteAccount` só c
 - Aparelho de conta excluída nunca é listado para envio.
 - O payload leva só os quatro campos da mensagem.
 
+## Na tela
+
+O hook `useDevicePush` (D-185) é a única porta do front para o aparelho. A função pura
+`devicePushView` reduz a permissão e a inscrição a seis situações (sem suporte, falta instalar,
+bloqueado, verificando, ligado e desligado), e o primitivo `DevicePushControl` as desenha, com o
+botão de ligar ou desligar, na folha "Me avise" e na conta (D-188). "Sair da conta" desliga o
+aparelho antes de encerrar a sessão, porque cancelar na API exige a sessão aberta (D-189).
+
 ## Fora, de propósito
 
 - Sem fila: a entrega corre dentro da requisição de quem gravou a carona, até 5 s por aparelho, em
   paralelo (D-177).
-- Sem tela nesta etapa: o hook `useDevicePush` existe, a interface que o usa é a etapa seguinte.
 - TTL e urgência únicos (12 horas, alta) enquanto há um remetente só; passam para a mensagem quando
   outro pedir outros (D-182).
-- Sair da sessão não desliga o aparelho: as notificações da conta anterior continuam chegando até
-  alguém desligar ou outra conta ligar nele (ver as pendências em [STATE.md](../STATE.md)).

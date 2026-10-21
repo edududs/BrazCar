@@ -107,7 +107,10 @@ da visão anônima do detalhe (D-178). Tudo corre no processo de quem gravou, na
 varredura do worker, e nenhuma falha de `alerts` chega a quem gravou. A entrega passa pelo
 adaptador `DevicePushSender` ao contexto `push`, que cifra a mensagem e a envia por Web Push a cada
 aparelho da conta, em paralelo e dentro da requisição, com 5 s de limite por aparelho (D-182). Sem
-as chaves VAPID no ambiente, o push fica desligado e o remetente só registra no log (D-183).
+as chaves VAPID no ambiente, o push fica desligado e o remetente só registra no log (D-183). No
+front, o botão "Me avise" do mural abre uma folha com o filtro atual, que pede a permissão de
+notificação no próprio toque e cria o aviso qualquer que seja a resposta do aparelho; a conta lista
+os avisos com o teto informado pela API, e sair da conta desliga o aparelho (D-186 a D-189).
 
 **Contato.** A lista nunca traz telefone nem placa (schema `RideOut`, D-096). O botão chama uma rota própria, que exige
 login, aplica limite por conta, registra o pedido e devolve o link `wa.me` com mensagem pronta e a
