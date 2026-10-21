@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FakeEventSource, installFakeEventSource } from "@/shared/testing/fake-event-source";
 import { renderApp } from "@/shared/testing/render-app";
 
-import { rideOut, serveShell } from "./fixtures";
+import { driverOut, rideOut, serveShell } from "./fixtures";
 
 // The real adapter imports vite-plugin-pwa's virtual module, which Vitest cannot resolve; the
 // shell mounts it on every route, so any test rendering the whole app needs this double (D-106).
@@ -152,5 +152,35 @@ describe("the board at /", () => {
           .map((link) => link.textContent),
       ).toEqual(["Caronas", "Publicar", "Minhas", "Entrar"]);
     });
+  });
+
+  it("'Me avise' opens the alert sheet filled with the filters of the address", async () => {
+    const user = userEvent.setup();
+    serveShell(api, driverOut);
+    api.serve("GET", "/api/rides", 200, []);
+
+    await renderApp("/?q=incra&from=%2218%3A00%22");
+    await user.click(await screen.findByRole("button", { name: "Me avise" }));
+
+    const dialog = await screen.findByRole("dialog");
+    const text = await within(dialog).findByRole("textbox", { name: /Passa por/ });
+    expect(text as HTMLInputElement).toHaveProperty("value", "incra");
+    expect(
+      within(dialog).getByRole("switch", { name: "A partir de" }).getAttribute("aria-checked"),
+    ).toBe("true");
+    const from = within(dialog).getByRole("group", { name: "A partir de" });
+    expect(within(from).getByLabelText("Hora")).toHaveProperty("value", "18");
+  });
+
+  it("'Me avise' invites a visitor to sign in and come back to this very board", async () => {
+    const user = userEvent.setup();
+    api.serve("GET", "/api/rides", 200, []);
+
+    await renderApp("/?q=incra");
+    await user.click(await screen.findByRole("button", { name: "Me avise" }));
+
+    const dialog = await screen.findByRole("dialog");
+    const link = await within(dialog).findByRole("link", { name: "Entrar" });
+    expect(decodeURIComponent(link.getAttribute("href") ?? "")).toContain("/?q=incra");
   });
 });

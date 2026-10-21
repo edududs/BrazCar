@@ -1,6 +1,9 @@
 /** What an account owes before it can write anything else (D-168). Only one exists today. */
 export type RequiredAction = "confirm_email";
 
+/** The API's own phrase for a held account, for a screen that warns before asking. */
+export const HELD_MESSAGE = "Confirme seu e-mail para continuar.";
+
 /**
  * A write the API refused because the account is still held (D-168): every gated route answers
  * with the same shape (`HeldOut`, a 403 naming the action owed), so every gateway recognizes it
@@ -9,7 +12,7 @@ export type RequiredAction = "confirm_email";
 export class AccountHeldError extends Error {
   constructor(
     readonly action: RequiredAction,
-    message = "Confirme seu e-mail para continuar.",
+    message = HELD_MESSAGE,
   ) {
     super(message);
     this.name = "AccountHeldError";

@@ -25,6 +25,8 @@ interface TextFieldProps {
   readonly min?: string | number;
   readonly max?: string | number;
   readonly step?: string | number;
+  /** The most characters the field takes. */
+  readonly maxLength?: number;
 }
 
 export function TextField({
@@ -46,6 +48,7 @@ export function TextField({
   min,
   max,
   step,
+  maxLength,
 }: TextFieldProps) {
   return (
     <FieldFrame label={label} hint={hint} error={error} optional={optional} labelAside={labelAside}>
@@ -66,6 +69,7 @@ export function TextField({
             min={min}
             max={max}
             step={step}
+            maxLength={maxLength}
             className={`${controlClass} h-[52px]`}
           />
         </Box>
