@@ -55,6 +55,37 @@ async function show(options: ShowOptions = {}): Promise<HTMLElement> {
   return screen.findByRole("button", { name: "Excluir conta" });
 }
 
+describe("AccountPanel alerts slot", () => {
+  it("draws the slot after the cars and before the appearance", async () => {
+    renderRouted(
+      <AccountPanel
+        account={ana}
+        busy={false}
+        updateProfile={notInThisTest}
+        requestEmailChange={notInThisTest}
+        changePassword={notInThisTest}
+        passwordBusy={false}
+        addCar={notInThisTest}
+        removeCar={notInThisTest}
+        logOut={notInThisTest}
+        deleteAccount={notInThisTest}
+        onDeleted={vi.fn()}
+        alerts={<p>slot de avisos</p>}
+        appearance={<p>slot de aparência</p>}
+      />,
+    );
+    await screen.findByRole("button", { name: "Excluir conta" });
+
+    const text = document.body.textContent;
+    const cars = text.indexOf("Carros");
+    const alerts = text.indexOf("slot de avisos");
+    const appearance = text.indexOf("slot de aparência");
+    expect(cars).toBeGreaterThan(-1);
+    expect(alerts).toBeGreaterThan(cars);
+    expect(appearance).toBeGreaterThan(alerts);
+  });
+});
+
 describe("AccountPanel data", () => {
   it("shows the phone formatted, never the raw E.164", async () => {
     await show();
