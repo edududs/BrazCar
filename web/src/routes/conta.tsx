@@ -85,20 +85,22 @@ function AccountPage() {
             passwordBusy={passwordBusy}
             addCar={addCar}
             removeCar={removeCar}
-            logOut={() =>
-              logOut().then(
-                () =>
-                  void navigate({
-                    to: "/",
-                    state: {
-                      flash: {
-                        message: "Você saiu da conta.",
-                        action: { label: "Entrar", to: "/entrar" },
-                      },
-                    },
-                  }),
-              )
-            }
+            logOut={async () => {
+              // A shared device must stop receiving this account's notifications once it is
+              // signed out, and the unsubscribe call needs the session still open. A failure
+              // (the hook keeps it in `push.error`) never blocks leaving the account.
+              if (push.subscribed !== false) await push.disable().catch(() => undefined);
+              await logOut();
+              void navigate({
+                to: "/",
+                state: {
+                  flash: {
+                    message: "Você saiu da conta.",
+                    action: { label: "Entrar", to: "/entrar" },
+                  },
+                },
+              });
+            }}
             deleteAccount={deleteAccount}
             onDeleted={() => {
               void navigate({
