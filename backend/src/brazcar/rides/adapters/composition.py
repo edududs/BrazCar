@@ -20,6 +20,7 @@ from brazcar.rides.application import (
     RideRules,
     ShowRide,
 )
+from brazcar.rides.application.ports import RideChanged
 from brazcar.search.adapters.index import DjangoSearchIndex
 from brazcar.shared.adapters.board_revision import DjangoBoardRevision
 from brazcar.shared.adapters.board_signal import PollingBoardSignal
@@ -46,7 +47,8 @@ def ride_rules() -> RideRules:
     )
 
 
-def rides_router() -> Router:
+def rides_router(changed: RideChanged) -> Router:
+    """`changed` is the listener of D-177, plugged in by the composition root: `rides` never knows it."""
     rides = DjangoRideRepository()
     drivers = AccountDriverDirectory(DjangoAccountRepository())
     places = CatalogPlaceDirectory(DjangoCatalogRepository())
@@ -58,11 +60,11 @@ def rides_router() -> Router:
         board=ListBoard(rides, drivers, places, search, clock, rules),
         mine=MyRides(rides, drivers, places, clock, rules),
         show=ShowRide(rides, drivers, places, clock, rules),
-        publish=PublishRide(rides, drivers, places, search, clock),
-        edit=EditRide(rides, places, search, clock),
-        change_seats=ChangeSeats(rides, clock),
+        publish=PublishRide(rides, drivers, places, search, clock, changed),
+        edit=EditRide(rides, places, search, clock, changed),
+        change_seats=ChangeSeats(rides, clock, changed),
         cancel=CancelRide(rides, clock),
-        repeat=RepeatRide(rides, drivers, search, clock),
+        repeat=RepeatRide(rides, drivers, search, clock, changed),
         contact=RequestContact(rides, drivers, DjangoContactRequests(), DjangoRateLimiter(), clock, rules),
         revision=revision,
         signal=PollingBoardSignal(revision),

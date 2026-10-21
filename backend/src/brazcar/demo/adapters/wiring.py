@@ -8,6 +8,7 @@ from brazcar.accounts.adapters.credentials import DjangoCredentials
 from brazcar.accounts.adapters.invite_repository import DjangoInviteRepository
 from brazcar.accounts.adapters.repository import DjangoAccountRepository
 from brazcar.accounts.application import AddCar, IssueInvite, RegisterFromInvite
+from brazcar.alerts.adapters.composition import notify_matching_alerts
 from brazcar.importing.adapters.bridges import RidesBridge
 from brazcar.importing.adapters.repository import (
     DjangoBlockedSenders,
@@ -49,7 +50,8 @@ def demo_wiring() -> DemoWiring:
     candidates = DjangoCandidates()
     blocked = DjangoBlockedSenders()
     rules = ride_rules()
-    import_ride = ImportRide(rides, drivers, places, search, clock)
+    changed = notify_matching_alerts()
+    import_ride = ImportRide(rides, drivers, places, search, clock, changed)
     bridge = RidesBridge(import_ride, ForgetRides(rides, search), rides)
     return DemoWiring(
         accounts=accounts,
@@ -58,11 +60,11 @@ def demo_wiring() -> DemoWiring:
         # The real clock, not `anchor`: the suite's invites must still be valid while it runs (D-166).
         issue_invite=IssueInvite(invites, accounts, clock),
         register_from_invite=RegisterFromInvite(invites, accounts, credentials, clock),
-        publish=PublishRide(rides, drivers, places, search, clock),
-        edit=EditRide(rides, places, search, clock),
-        change_seats=ChangeSeats(rides, clock),
+        publish=PublishRide(rides, drivers, places, search, clock, changed),
+        edit=EditRide(rides, places, search, clock, changed),
+        change_seats=ChangeSeats(rides, clock, changed),
         cancel=CancelRide(rides, clock),
-        repeat=RepeatRide(rides, drivers, search, clock),
+        repeat=RepeatRide(rides, drivers, search, clock, changed),
         import_ride=import_ride,
         contact=RequestContact(rides, drivers, DjangoContactRequests(), DjangoRateLimiter(), clock, rules),
         messages=messages,
