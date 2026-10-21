@@ -16,7 +16,7 @@ describe.each(kinds)("the %s text of docs/", (kind) => {
     expect(legalDocument(kind).sections.length).toBeGreaterThan(0);
   });
 
-  it("does not cite a decision: the trail runs from the decision to the text (D-175)", () => {
+  it("does not cite a decision: the trail runs from the decision to the text (D-180)", () => {
     expect(legalTexts[kind]).not.toMatch(/\bD-\d{3}\b/);
   });
 });

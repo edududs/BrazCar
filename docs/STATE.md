@@ -489,7 +489,7 @@ gravação, a API recusa subir com remetente inválido e a tela distingue falha 
   sem login, estão implantados desde a `v0.26.0` (2026-09-26). Passo 4, os
   documentos de privacidade, termo de uso e segurança: feito, `docs/privacy.md`, `docs/terms.md` e
   `docs/security.md`, ligados da frase de aceite do cadastro, e os dois primeiros abrem numa folha
-  dentro do cadastro, com o texto lido dos próprios arquivos no build (D-175). Falta só uma rodada única do catálogo
+  dentro do cadastro, com o texto lido dos próprios arquivos no build (D-180). Falta só uma rodada única do catálogo
   de telas (depende de autorização para rodar) antes de fechar o beta de vez. Até lá o worker de importação continua
   rodando por decisão deliberada, mesmo com a exposição de telefone de motorista não cadastrado que
   motivou o fechamento (D-117).
