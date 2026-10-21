@@ -54,12 +54,14 @@ def with_errors(  # noqa: PLR0913 - one flag per status a route can reach, all o
     gone: bool = False,
     too_many_requests: bool = False,
     validation: bool = False,
+    unavailable: bool = False,
 ) -> Response:
     """`response`, plus the error status(es) this exact route can reach. Order matches how a
     request is refused: the request itself, authentication, authorization, "not found", a conflict
     with the resource's own state, a resource that existed and no longer serves ("gone"), a rate
     limit, then input validation. `held` is the 403 of an account that must do something first
-    (`gated_session_auth`), a superset of the plain one, so it wins when a route has both."""
+    (`gated_session_auth`), a superset of the plain one, so it wins when a route has both.
+    `unavailable` is the 503 of a resource switched off on this server (push without VAPID keys)."""
     merged: Response = dict(response) if isinstance(response, dict) else {HTTPStatus.OK: response}
     if bad_request:
         merged[HTTPStatus.BAD_REQUEST] = ErrorOut
@@ -81,4 +83,6 @@ def with_errors(  # noqa: PLR0913 - one flag per status a route can reach, all o
         # on every route that reads a body (D-156, Schemathesis's malformed-JSON case found it).
         merged[HTTPStatus.BAD_REQUEST] = ErrorOut
         merged[HTTPStatus.UNPROCESSABLE_CONTENT] = ValidationErrorOut
+    if unavailable:
+        merged[HTTPStatus.SERVICE_UNAVAILABLE] = ErrorOut
     return merged
