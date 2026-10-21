@@ -14,7 +14,7 @@ publicada ou importada.
 | a partir de | `from_time` | Hora local opcional: partida nessa hora ou depois (D-141). |
 | até | `until_time` | Hora local opcional: partida nessa hora ou antes, inclusiva no minuto (D-176). Com as duas, não vem antes de `from_time`. |
 | ativo | `is_active` | Calculado, nunca gravado: o dia de hoje, no fuso do mural, não passou do `day` (D-179). |
-| teto | `AlertRules.limit` | Quantos avisos ativos uma conta tem ao mesmo tempo: 5 (`ALERT_ACTIVE_LIMIT`, D-175). |
+| teto | `AlertRules.limit` | Quantos avisos ativos uma conta tem ao mesmo tempo: 5 (`ALERT_ACTIVE_LIMIT`, D-175). Sai em `GET /api/alerts` junto da lista, em `ActiveAlerts` (D-186). |
 | notificação | `Notice` | O que vai ao aparelho: título, corpo com paradas e horário, `tag` com o id do aviso e `url` do detalhe. Nunca dado de pessoa (D-178). |
 | registro de notificações | `NoticeLog` | A porta que reivindica o par (aviso, carona) antes do envio: verdadeira só na primeira vez (D-178). |
 | remetente | `PushSender` | A porta que entrega uma notificação a todos os aparelhos de uma conta. A entrega real vai por `DevicePushSender` ao contexto [`push`](push.md); com o push desligado, o `LoggingPushSender` só registra no log (D-182). |
@@ -47,7 +47,17 @@ mural, num lugar só (D-176).
 - Falha em `alerts` nunca falha a carona: `rides` captura e registra no log o erro de quem ouve.
 - Aviso de conta excluída não dispara nem aparece, e a limpeza o apaga.
 
+## Na tela
+
+- O botão "Me avise" do mural abre uma folha com o filtro atual do mural (dia, "passa por" e "a
+  partir de"); o "até" começa desligado, porque o mural do front não filtra por ele (D-187).
+- "Criar aviso" pede a permissão de notificação no próprio toque e cria o aviso qualquer que seja a
+  resposta do aparelho, porque a notificação vai a todo aparelho da conta (D-188).
+- A conta lista os avisos ativos em "Meus avisos", com o "x de N" do teto que a API informa em
+  `GET /api/alerts` (D-186, D-189).
+- O front não confere dia, janela nem teto: mostra a frase com que a API recusa.
+
 ## Fora, de propósito
 
 Sem recorrência, sem aviso de carona que já estava no mural e sem fila de envio. A inscrição do
-aparelho e o Web Push moram em `push` ([push.md](push.md)); a tela do "Me avise" é a etapa seguinte.
+aparelho e o Web Push moram em `push` ([push.md](push.md)).

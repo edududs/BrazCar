@@ -195,6 +195,19 @@ implantada).
   `push`; excluir a conta apaga os aparelhos pela porta `AccountErased`. No front, o service worker
   gerado importa `sw-notifications.js` (`push` e `notificationclick`), os adaptadores
   `web-notifications`, `web-push` e `push-gateway`, e o hook `useDevicePush`. Sem tela.
+- "Me avise", etapa 3, ainda sem tag (D-186 a D-189): a tela. `GET /api/alerts` passa a devolver
+  `{alerts, limit}` (`AlertsOut`, com `ActiveAlerts` do caso de uso), para a conta mostrar "x de N"
+  sem o front repetir o teto. No front, `features/alerts` com o adaptador `alerts-gateway`, os hooks
+  headless `useMyAlerts`, `useAlertDraft` e `useAlertRequest`, a folha `AlertSheet` aberta pelo
+  botão "Me avise" do topo do mural, já com o filtro do mural, e `MyAlerts` na conta, depois dos
+  carros. O estado do aparelho é a função `devicePushView`, desenhada pelo primitivo
+  `DevicePushControl`; novos primitivos `ListRow` (adotado nas linhas de carro), `InstallSteps`
+  (extraído do cartão de instalação), o ícone `bell` e as props `label` do `ClockPicker`, `search`
+  do `ActionLink` e `maxLength` do `TextField`. "Criar aviso" pede a permissão no toque e cria o
+  aviso qualquer que seja a resposta; "Sair da conta" desliga o aparelho antes de encerrar a
+  sessão. Suíte de ponta a ponta `e2e/alerts.spec.ts`, independente de push real, com as cenas
+  `alerts/sheet`, `alerts/created`, `alerts/limit` e `account/alerts` declaradas para o catálogo,
+  ainda não fotografadas.
 - Design, passo 5, movimento e usabilidade (D-153, D-154): tokens de movimento com as entradas
   nomeadas (`animate-rise-in`, `-list-in`, `-ride-in`, `-bump`, `-reveal`), só `transform` e
   `opacity`, zeradas com "reduzir movimento" por `--motion-rise`/`--motion-scale`; View Transitions
@@ -474,9 +487,11 @@ gravação, a API recusa subir com remetente inválido e a tela distingue falha 
 
 ## Próximo passo
 
-1. "Me avise", etapa 3: a tela do "Me avise" e a lista dos avisos na conta, consumindo
-   `useDevicePush`. Antes de publicar, gerar o par VAPID na máquina conforme o
-   [runbook](runbooks/deploy.md).
+1. "Me avise", as três etapas feitas no repositório: falta publicar. Antes, gerar o par VAPID na
+   máquina conforme o [runbook](runbooks/deploy.md); depois, conferir no iPhone com o app na Tela
+   de Início o pedido de permissão no toque de "Criar aviso", a chegada da notificação, "Meus
+   avisos" e a saída da conta desligando o aparelho, e na aba do Safari a orientação de instalação.
+   As cenas novas do catálogo entram na rodada única do `yarn screens`, que depende de autorização.
 2. Etapa de design (D-103, D-143): validação no celular dos passos 5 e 6 publicados pendente; o
    desktop aguarda as pranchas do canvas.
 3. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
@@ -523,10 +538,17 @@ gravação, a API recusa subir com remetente inválido e a tela distingue falha 
   ainda não está agendada; o teto de 5 avisos é conferido antes de gravar, fora de transação, então
   dois pedidos simultâneos podem passar dele por um; e o motorista com aviso para a própria rota é
   avisado da própria carona, porque o aviso não conhece o motorista. A entrega corre dentro da
-  requisição, sem fila (até 5 s por aparelho, em paralelo). Sair da sessão não desliga as
-  notificações do aparelho: num aparelho compartilhado, os avisos da conta anterior continuam
-  chegando até alguém desligar ou outra conta ligar nele, o que a etapa 3 precisa resolver ao sair.
+  requisição, sem fila (até 5 s por aparelho, em paralelo). "Sair da conta" desliga o aparelho
+  antes de encerrar a sessão (D-189), mas a sessão que expira sozinha não passa por ali: o
+  aparelho segue inscrito na conta até alguém desligar ou outra conta ligar nele.
   Inscrições antigas, depois de uma troca de par VAPID, falham no log até o aparelho ligar de novo.
+  O mural do front não tem filtro "até", então a folha do "Me avise" começa com ele desligado
+  (D-187); um chip "Até" no mural é decisão de produto ainda não tomada.
+- O campo "Passa por" do mural é controlado pela URL (`navigate` com `replace`) e perde letras
+  quando as teclas chegam mais rápido do que a navegação termina: digitado pelo Playwright sem
+  intervalo, "Incra 8" virou "cra 8". Com 120 ms entre as teclas nada se perde, e
+  `e2e/alerts.spec.ts` digita assim; a correção, um rascunho local do texto sincronizado com a
+  URL, fica para um passo próprio, com o teste que digita sem intervalo.
 - A tabela de hits do limite cresce com o uso e só é podada por chave; um comando de limpeza
   entra se pesar.
 - Rota `/api/diagnostics/sse`, página `/diagnostics` e `SSE_DIAGNOSTICS_TOKEN` ficam de propósito
