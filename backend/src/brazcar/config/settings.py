@@ -8,6 +8,8 @@ from pathlib import Path
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 
+from brazcar.push.adapters.web_push import vapid_keys
+
 BACKEND_DIR = Path(__file__).resolve().parents[3]
 
 _TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
@@ -145,6 +147,14 @@ FEEDBACK_WINDOW_HOURS = int(os.environ.get("FEEDBACK_WINDOW_HOURS", "24"))
 
 # The knob of `alerts` (D-175): active alerts per account.
 ALERT_ACTIVE_LIMIT = int(os.environ.get("ALERT_ACTIVE_LIMIT", "5"))
+
+# The VAPID identity of Web Push (D-183): the three variables or none (push off). A partial or
+# malformed set stops the boot.
+PUSH_VAPID = vapid_keys(
+    public=os.environ.get("VAPID_PUBLIC_KEY", ""),
+    private=os.environ.get("VAPID_PRIVATE_KEY", ""),
+    contact=os.environ.get("VAPID_CONTACT", ""),
+)
 
 # The header the edge fills with the client's address (`CF-Connecting-IP` behind the Cloudflare
 # tunnel), for the limit per client of the public removal request (D-172). No default: unset, the

@@ -12,6 +12,7 @@ dependencies = [
     "phonenumbers>=9.0.39",
     "psycopg[binary]>=3.3.6",
     "pydantic[email]>=2.13.5",
+    "pywebpush>=2.5.0",
     "uvicorn>=0.53.0",
     "whatsapp-extractor",
 ]
