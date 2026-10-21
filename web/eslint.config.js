@@ -41,6 +41,13 @@ export default defineConfig(
     rules: { "react-hooks/rules-of-hooks": "off" },
   },
   {
+    // Plain scripts that run inside the service worker: they are not in the tsconfig, so the
+    // type-aware rules have nothing to read, and the globals are the worker's, not the page's.
+    files: ["public/**/*.js"],
+    extends: [tseslint.configs.disableTypeChecked],
+    languageOptions: { globals: globals.serviceworker, sourceType: "script" },
+  },
+  {
     // Route files export a `Route` object next to their component, by TanStack Router's design.
     files: ["src/routes/**"],
     rules: { "react-refresh/only-export-components": "off" },
