@@ -9,6 +9,7 @@ from ninja import NinjaAPI
 from pydantic import ValidationError
 
 from brazcar.accounts.adapters.composition import accounts_router
+from brazcar.alerts.adapters.composition import alerts_router
 from brazcar.feedback.adapters.composition import feedback_router
 from brazcar.importing.adapters.api_composition import removal_router
 from brazcar.places.adapters.repository import DjangoCatalogRepository
@@ -31,6 +32,7 @@ api.add_router("/accounts", accounts_router())
 api.add_router("/places", build_places_router(DjangoCatalogRepository()))
 api.add_router("/rides", rides_router())
 api.add_router("/feedback", feedback_router())
+api.add_router("/alerts", alerts_router())
 api.add_router("/removal-requests", removal_router())
 api.add_router("", sse_diagnostics_router)  # diagnostic, removable: see the module docstring
 
