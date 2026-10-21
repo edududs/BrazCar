@@ -62,7 +62,8 @@ export default defineConfig({
   server: {
     // The legal texts are imported from the repository's docs/, one level above this project
     // (D-175). Vitest's component tests refuse a file outside the root unless it is allowed here;
-    // only that folder is opened, not the whole repository.
+    // only docs/ is opened, not the whole repository. A list of the two files is not enough: Vitest
+    // compares the id with its `?raw` query. What docs/ holds is already public in the repository.
     fs: { allow: [".", "../docs"] },
     // In development the API is reached same-origin; production uses VITE_API_BASE_URL.
     proxy: { "/api": devApiOrigin },

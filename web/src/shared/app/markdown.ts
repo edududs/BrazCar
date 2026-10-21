@@ -110,6 +110,9 @@ function readLink(text: string, at: number, no: number): [MarkdownInline, number
   if (href === "" || /\s/.test(href)) {
     throw new MarkdownSyntaxError("found a link address that is empty or has a space", no);
   }
+  if (!href.startsWith("https://")) {
+    throw new MarkdownSyntaxError("found a link that is not an absolute https address", no);
+  }
   return [{ kind: "link", text: label, href }, hrefEnd + 1];
 }
 
