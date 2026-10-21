@@ -48,7 +48,29 @@ test("convite completo: outro e-mail, o link do arquivo e o cadastro", async ({
   await expect(page.getByLabel("E-mail")).toHaveValue(email);
   await page.getByLabel("Nome").fill("Convite Completo");
   await page.getByLabel(/^Senha/).fill(password);
-  await page.getByLabel("Li e aceito os termos").check();
+
+  // The longest text first: its last paragraph is reachable, and the footer stays in view.
+  await page.getByRole("button", { name: "política de privacidade", exact: true }).click();
+  const privacy = page.getByRole("dialog", { name: "Política de privacidade", exact: true });
+  await expect(privacy).toBeVisible();
+  const lastParagraph = privacy.locator("p").last();
+  await lastParagraph.scrollIntoViewIfNeeded();
+  await expect(lastParagraph).toBeInViewport({ ratio: 1 });
+  await expect(privacy.getByRole("button", { name: "Li e aceito", exact: true })).toBeInViewport();
+  await privacy.getByRole("button", { name: "Fechar", exact: true }).click();
+  await expect(privacy).toBeHidden();
+  await expect(page.getByLabel("Li e aceito os termos")).not.toBeChecked();
+
+  await page.getByRole("button", { name: "termos de uso", exact: true }).click();
+  const terms = page.getByRole("dialog", { name: "Termos de uso", exact: true });
+  await expect(terms).toBeVisible();
+  await snap(page, "invite/terms");
+  const accept = terms.getByRole("button", { name: "Li e aceito", exact: true });
+  await expect(accept).toBeInViewport();
+  await accept.click();
+  await expect(terms).toBeHidden();
+  await expect(page.getByLabel("Li e aceito os termos")).toBeChecked();
+
   await page.getByRole("button", { name: "Criar conta", exact: true }).click();
 
   await expect(page).toHaveURL(/\/$/);

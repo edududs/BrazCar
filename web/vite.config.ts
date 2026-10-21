@@ -60,6 +60,10 @@ export default defineConfig({
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
   server: {
+    // The legal texts are imported from the repository's docs/, one level above this project
+    // (D-175). Vitest's component tests refuse a file outside the root unless it is allowed here;
+    // only that folder is opened, not the whole repository.
+    fs: { allow: [".", "../docs"] },
     // In development the API is reached same-origin; production uses VITE_API_BASE_URL.
     proxy: { "/api": devApiOrigin },
   },

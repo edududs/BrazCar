@@ -9,14 +9,17 @@ interface SheetProps {
   readonly title: string;
   readonly description?: string;
   readonly children: ReactNode;
+  /** Pinned under the scrolling content, always in view: the answer to what the sheet shows. */
+  readonly footer?: ReactNode;
 }
 
 /**
  * A sheet that rises from the bottom, over Base UI's drawer (D-088): focus, escape, the backdrop
  * and the swipe down to dismiss are theirs. The skin is the boards': 30 px corners, a grab
- * handle, the title in display type and a close button at the right.
+ * handle, the title in display type and a close button at the right. A `footer`, when given,
+ * stays fixed below the content, which alone scrolls.
  */
-export function Sheet({ open, onOpenChange, title, description, children }: SheetProps) {
+export function Sheet({ open, onOpenChange, title, description, children, footer }: SheetProps) {
   return (
     <Drawer.Root open={open} onOpenChange={onOpenChange} swipeDirection="down">
       <Drawer.Portal>
@@ -48,6 +51,7 @@ export function Sheet({ open, onOpenChange, title, description, children }: Shee
               </header>
               {children}
             </Drawer.Content>
+            {footer === undefined ? null : <div className="shrink-0 pt-4">{footer}</div>}
           </Drawer.Popup>
         </Drawer.Viewport>
       </Drawer.Portal>
