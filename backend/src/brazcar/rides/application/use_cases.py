@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -16,6 +17,7 @@ from brazcar.rides.domain import (
     NotTheDriverError,
     PaymentMethod,
     RegisteredDriver,
+    RideEvent,
     RideId,
     RideNotFoundError,
     RideNotOpenError,
@@ -34,10 +36,13 @@ from .ports import (
     DriverAccount,
     DriverDirectory,
     PlaceDirectory,
+    RideChanged,
     RideRepository,
     RideSearch,
 )
 from .read_model import BoardFilter, BoardRide, to_board_ride
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +61,7 @@ class PublishRide:
     places: PlaceDirectory
     search: RideSearch
     clock: Clock
+    changed: RideChanged
 
     async def __call__(  # noqa: PLR0913 - the whole ride comes in at once
         self,
@@ -85,6 +91,7 @@ class PublishRide:
         )
         await self.rides.save(change.ride, change.events)
         await self.search.index(change.ride)
+        await _announce(self.changed, change.ride.id, change.events)
         return change.ride
 
 
@@ -94,6 +101,7 @@ class EditRide:
     places: PlaceDirectory
     search: RideSearch
     clock: Clock
+    changed: RideChanged
 
     async def __call__(  # noqa: PLR0913 - one call edits every editable field at once
         self,
@@ -120,6 +128,7 @@ class EditRide:
         await self.rides.save(change.ride, change.events)
         if route is not None:
             await self.search.index(change.ride)
+        await _announce(self.changed, change.ride.id, change.events)
         return change.ride
 
 
@@ -127,11 +136,13 @@ class EditRide:
 class ChangeSeats:
     rides: RideRepository
     clock: Clock
+    changed: RideChanged
 
     async def __call__(self, driver_id: AccountId, ride_id: RideId, seats: int) -> RideOffer:
         ride = await _own_ride(self.rides, driver_id, ride_id)
         change = ride.change_seats(seats, self.clock.now())
         await self.rides.save(change.ride, change.events)
+        await _announce(self.changed, change.ride.id, change.events)
         return change.ride
 
 
@@ -153,6 +164,7 @@ class RepeatRide:
     drivers: DriverDirectory
     search: RideSearch
     clock: Clock
+    changed: RideChanged
 
     async def __call__(self, driver_id: AccountId, ride_id: RideId, *, departure_at: datetime) -> RideOffer:
         ride = await _own_ride(self.rides, driver_id, ride_id)
@@ -161,6 +173,7 @@ class RepeatRide:
         change = ride.repeat(departure_at=departure_at, car=car, now=self.clock.now())
         await self.rides.save(change.ride, change.events)
         await self.search.index(change.ride)
+        await _announce(self.changed, change.ride.id, change.events)
         return change.ride
 
 
@@ -182,6 +195,7 @@ class ImportRide:
     places: PlaceDirectory
     search: RideSearch
     clock: Clock
+    changed: RideChanged
 
     async def __call__(  # noqa: PLR0913 - the whole ride comes in at once
         self,
@@ -219,6 +233,7 @@ class ImportRide:
         )
         await self.rides.save(change.ride, change.events)
         await self.search.index(change.ride)
+        await _announce(self.changed, change.ride.id, change.events)
         return Imported(ride=change.ride, created=True)
 
 
@@ -352,6 +367,17 @@ class RequestContact:
 
 
 # --- helpers -------------------------------------------------------------------------------------
+
+
+async def _announce(changed: RideChanged, ride_id: RideId, events: tuple[RideEvent, ...]) -> None:
+    """Tell the listener the ride was written with an event (D-177). The ride is already saved and
+    indexed: whatever the listener raises is logged and the write goes on."""
+    if not events:
+        return
+    try:
+        await changed(ride_id)
+    except Exception:
+        log.exception("the listener of ride %s failed; the ride stays saved", ride_id)
 
 
 async def _require_driver(drivers: DriverDirectory, driver_id: AccountId) -> DriverAccount:

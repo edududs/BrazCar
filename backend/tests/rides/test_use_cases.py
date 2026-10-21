@@ -32,6 +32,7 @@ from brazcar.rides.domain import (
     UnknownPlaceError,
 )
 from brazcar.shared.domain.phone import PhoneNumber
+from tests.shared.fakes import RecordingRideChanged
 
 from .fakes import (
     FixedClock,
@@ -63,9 +64,12 @@ class Context:
         self.search = indexed_search()
         self.contacts = RecordingContacts()
         self.clock = FixedClock()
+        self.changed = RecordingRideChanged()
         self.limiter = InMemoryRateLimiter(self.clock)
-        self.publish = PublishRide(self.rides, self.drivers, self.places, self.search, self.clock)
-        self.edit = EditRide(self.rides, self.places, self.search, self.clock)
+        self.publish = PublishRide(
+            self.rides, self.drivers, self.places, self.search, self.clock, self.changed
+        )
+        self.edit = EditRide(self.rides, self.places, self.search, self.clock, self.changed)
         self.board = ListBoard(self.rides, self.drivers, self.places, self.search, self.clock, RULES)
         self.mine = MyRides(self.rides, self.drivers, self.places, self.clock, RULES)
         self.show = ShowRide(self.rides, self.drivers, self.places, self.clock, RULES)
@@ -340,7 +344,7 @@ async def test_contact_needs_an_open_ride_records_and_is_limited_per_window(ctx:
 
 async def test_contact_is_refused_for_a_full_ride_without_spending_the_limit(ctx: Context) -> None:
     ride = await ctx.published()
-    await ChangeSeats(ctx.rides, ctx.clock)(ANA.id, ride.id, 0)
+    await ChangeSeats(ctx.rides, ctx.clock, ctx.changed)(ANA.id, ride.id, 0)
 
     with pytest.raises(RideNotOpenError):
         await ctx.contact(uuid4(), ride.id)

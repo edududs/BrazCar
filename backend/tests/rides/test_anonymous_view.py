@@ -23,6 +23,7 @@ from brazcar.rides.application import (
 )
 from brazcar.rides.domain import Actions, CatalogStop, FreeTextStop, PaymentMethod, RideOffer
 from brazcar.shared.domain.phone import PhoneNumber
+from tests.shared.fakes import RecordingRideChanged
 
 from .fakes import FixedClock, InMemoryDrivers, InMemoryRideRepository, catalog_places, indexed_search
 from .strategies import EPOCH, EXTERNAL_PHONE, imported_rides, moments, rides, whatsapp_origin
@@ -94,8 +95,9 @@ class Context:
         places = catalog_places()
         search = indexed_search()
         clock = FixedClock()
-        self.publish = PublishRide(rides, drivers, places, search, clock)
-        self.import_ride = ImportRide(rides, drivers, places, search, clock)
+        changed = RecordingRideChanged()
+        self.publish = PublishRide(rides, drivers, places, search, clock, changed)
+        self.import_ride = ImportRide(rides, drivers, places, search, clock, changed)
         self.board = ListBoard(rides, drivers, places, search, clock, RideRules())
         self.show = ShowRide(rides, drivers, places, clock, RideRules())
 

@@ -10,6 +10,7 @@ from whatsapp_extractor.domain import MessageExtracted, Watchlist
 from whatsapp_extractor.settings import Settings, StoreKind, ViewKind
 
 from brazcar.accounts.adapters.repository import DjangoAccountRepository
+from brazcar.alerts.adapters.composition import notify_matching_alerts
 from brazcar.importing.application import (
     ApproveRemoval,
     BlockSender,
@@ -71,6 +72,18 @@ class ImportUseCases:
     reopen: ReopenJudged
 
 
+def import_ride() -> ImportRide:
+    """The ride import, with the listener of D-177 plugged in: an imported ride can warn an alert."""
+    return ImportRide(
+        DjangoRideRepository(),
+        AccountDriverDirectory(DjangoAccountRepository()),
+        CatalogPlaceDirectory(DjangoCatalogRepository()),
+        ride_search(),
+        SystemClock(),
+        notify_matching_alerts(),
+    )
+
+
 def import_use_cases(config: ImportingSettings) -> ImportUseCases:
     messages = DjangoSourceMessages()
     candidates = DjangoCandidates()
@@ -79,13 +92,7 @@ def import_use_cases(config: ImportingSettings) -> ImportUseCases:
     catalog = DjangoCatalogRepository()
     rides_repository = DjangoRideRepository()
     rides = RidesBridge(
-        ImportRide(
-            rides_repository,
-            AccountDriverDirectory(DjangoAccountRepository()),
-            CatalogPlaceDirectory(catalog),
-            ride_search(),
-            clock,
-        ),
+        import_ride(),
         ForgetRides(rides_repository, ride_search()),
         rides_repository,
     )

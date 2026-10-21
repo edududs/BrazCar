@@ -8,6 +8,7 @@ from .ports import (
     DriverDirectory,
     DriverKind,
     PlaceDirectory,
+    RideChanged,
     RideRepository,
     RideSearch,
 )
@@ -65,6 +66,7 @@ __all__ = [
     "PublishRide",
     "RepeatRide",
     "RequestContact",
+    "RideChanged",
     "RideRepository",
     "RideRules",
     "RideSearch",

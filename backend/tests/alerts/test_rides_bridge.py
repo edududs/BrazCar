@@ -25,6 +25,7 @@ from tests.rides.fakes import (
     indexed_search,
 )
 from tests.rides.strategies import EPOCH
+from tests.shared.fakes import RecordingRideChanged
 
 ANA = DriverAccount(
     id=uuid4(),
@@ -45,7 +46,7 @@ class Context:
         search = indexed_search()
         clock = FixedClock()
         rules = RideRules()
-        self.publish = PublishRide(rides, drivers, places, search, clock)
+        self.publish = PublishRide(rides, drivers, places, search, clock, RecordingRideChanged())
         self.board = RidesBoard(
             ShowRide(rides, drivers, places, clock, rules), ShownOnBoard(rides, search, clock, rules)
         )

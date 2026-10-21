@@ -4,7 +4,7 @@ from typing import Literal, Protocol
 from uuid import UUID
 
 from brazcar.rides.domain import AccountId, PlaceId, RideEvent, RideId, RideOffer
-from brazcar.shared.application.ports import BoardRevision, BoardSignal
+from brazcar.shared.application.ports import BoardRevision, BoardSignal, RideChanged
 from brazcar.shared.domain.model import FrozenModel
 from brazcar.shared.domain.phone import PhoneNumber
 
@@ -18,6 +18,7 @@ __all__ = [
     "DriverDirectory",
     "DriverKind",
     "PlaceDirectory",
+    "RideChanged",
     "RideRepository",
     "RideSearch",
 ]

@@ -1,6 +1,7 @@
 from collections.abc import AsyncIterator
 from datetime import datetime, timedelta
 from typing import Protocol
+from uuid import UUID
 
 
 class Clock(Protocol):
@@ -44,4 +45,14 @@ class BoardSignal(Protocol):
 
     def subscribe(self) -> AsyncIterator[int]:
         """Every revision from now on, in order, each once. Never the payload: the client fetches."""
+        ...
+
+
+class RideChanged(Protocol):
+    """A ride was written with an event (D-177): published, edited, its seats changed, repeated or
+    imported. `rides` calls it after the save and the indexing and never knows who listens; the
+    composition root plugs the listener in."""
+
+    async def __call__(self, ride_id: UUID) -> None:
+        """React to the ride. Whatever it raises is logged by `rides` and never fails the write."""
         ...

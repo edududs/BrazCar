@@ -32,6 +32,7 @@ from brazcar.rides.domain import (
     allowed_actions,
 )
 from brazcar.shared.domain.phone import PhoneNumber
+from tests.shared.fakes import RecordingRideChanged
 
 from .fakes import (
     FixedClock,
@@ -150,7 +151,10 @@ class Context:
         self.places = catalog_places()
         self.search = indexed_search()
         self.clock = FixedClock()
-        self.import_ride = ImportRide(self.rides, self.drivers, self.places, self.search, self.clock)
+        self.changed = RecordingRideChanged()
+        self.import_ride = ImportRide(
+            self.rides, self.drivers, self.places, self.search, self.clock, self.changed
+        )
         self.forget = ForgetRides(self.rides, self.search)
         self.board = ListBoard(self.rides, self.drivers, self.places, self.search, self.clock, RULES)
         self.mine = MyRides(self.rides, self.drivers, self.places, self.clock, RULES)
