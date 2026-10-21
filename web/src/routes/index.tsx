@@ -1,11 +1,15 @@
+import { useState } from "react";
+
 import {
   Link,
   type SearchSchemaInput,
   createFileRoute,
   stripSearchParams,
   useNavigate,
+  useRouterState,
 } from "@tanstack/react-router";
 
+import { AlertSheet } from "@/features/alerts/ui/alert-sheet";
 import { useBoard } from "@/features/rides/app/use-board";
 import { useBoardMatch } from "@/features/rides/app/use-board-match";
 import { useBoardSignal } from "@/features/rides/app/use-board-signal";
@@ -14,6 +18,7 @@ import { BoardFiltersForm } from "@/features/rides/ui/board-filters";
 import { RideList } from "@/features/rides/ui/ride-list";
 import { useClock } from "@/shared/app/use-clock";
 import { ActionButton } from "@/shared/ui/action-button";
+import { Icon } from "@/shared/ui/icon";
 import { inlineLinkClass } from "@/shared/ui/link-class";
 import { NoticeBar } from "@/shared/ui/notice-bar";
 import { PageShell } from "@/shared/ui/page-shell";
@@ -63,6 +68,8 @@ function BoardPage() {
   const board = useBoard(filters);
   useBoardSignal({ onChange: board.refresh });
   const now = useClock();
+  const [alertOpen, setAlertOpen] = useState(false);
+  const returnTo = useRouterState({ select: (state) => state.location.href });
   const match = useBoardMatch(filters.text);
   const filtering =
     filters.day !== null ||
@@ -72,7 +79,21 @@ function BoardPage() {
     filters.fromTime !== null;
 
   return (
-    <PageShell title="Caronas" heading="brand">
+    <PageShell
+      title="Caronas"
+      heading="brand"
+      actions={
+        <ActionButton
+          size="compact"
+          icon={<Icon name="bell" />}
+          onPress={() => {
+            setAlertOpen(true);
+          }}
+        >
+          Me avise
+        </ActionButton>
+      }
+    >
       {search.accountDeleted ? (
         <NoticeBar>Conta excluída. As caronas dela saíram do mural.</NoticeBar>
       ) : null}
@@ -125,6 +146,13 @@ function BoardPage() {
           }
         />
       </div>
+      <AlertSheet
+        open={alertOpen}
+        onOpenChange={setAlertOpen}
+        seed={{ day: filters.day, text: filters.text, fromTime: filters.fromTime }}
+        now={now}
+        returnTo={returnTo}
+      />
       <p className="pb-2 text-center text-caption text-ink-3">
         <Link to="/sair-do-mural" className={inlineLinkClass}>
           Sair do mural

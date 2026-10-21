@@ -18,6 +18,11 @@ describe("TextField", () => {
     expect(screen.getByText("por pessoa")).toBeTruthy();
   });
 
+  it("takes no more characters than its maximum", () => {
+    render(<TextField label="Passa por" value="" onChange={() => undefined} maxLength={80} />);
+    expect(screen.getByLabelText(/Passa por/).getAttribute("maxlength")).toBe("80");
+  });
+
   it("marks a refused value and announces why", () => {
     render(
       <TextField
