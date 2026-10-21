@@ -1,7 +1,6 @@
-import type { ReactNode } from "react";
-
 import { BrandMark } from "./brand-mark";
-import { Icon, type IconName } from "./icon";
+import { Icon } from "./icon";
+import { InstallSteps } from "./install-steps";
 
 interface InstallHintCardProps {
   readonly onDismiss: () => void;
@@ -21,8 +20,7 @@ export function InstallHintCard({ onDismiss }: InstallHintCardProps) {
       <div className="flex-1">
         <p className="text-base font-bold text-ink">Use como app</p>
         <p className="mt-0.5 text-sm leading-[1.45] text-ink-2">
-          Toque em <Key icon="share">Compartilhar</Key> e depois em{" "}
-          <Key icon="addhome">Adicionar à Tela de Início</Key>.
+          <InstallSteps />
         </p>
       </div>
       <button
@@ -34,14 +32,5 @@ export function InstallHintCard({ onDismiss }: InstallHintCardProps) {
         <Icon name="x" />
       </button>
     </aside>
-  );
-}
-
-function Key({ icon, children }: { readonly icon: IconName; readonly children: ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-[7px] bg-surface-2 px-1.5 py-px font-semibold whitespace-nowrap text-ink">
-      <Icon name={icon} size={16} />
-      {children}
-    </span>
   );
 }
