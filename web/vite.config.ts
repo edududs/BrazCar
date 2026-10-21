@@ -53,6 +53,9 @@ export default defineConfig({
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/api\//],
         cleanupOutdatedCaches: true,
+        // Workbox only generates the cache (`generateSW` stays); showing a push and opening the
+        // app from its notification is our own code, imported into the generated worker (D-185).
+        importScripts: ["/sw-notifications.js"],
       },
     }),
   ],
