@@ -303,6 +303,28 @@ async def test_from_time_keeps_rides_at_or_after_that_local_hour() -> None:
     assert malformed.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
 
 
+async def test_until_keeps_rides_at_or_before_that_local_hour_and_with_from_forms_a_window() -> None:
+    ana, car_id = await driver()
+    eighteen_oh_one = (
+        (timezone.now().astimezone(BRASILIA) + timedelta(days=1))
+        .replace(hour=18, minute=1, second=0, microsecond=0)
+        .isoformat()
+    )
+    early = await publish(ana, car_id, departure_at=tomorrow(8))
+    on_time = await publish(ana, car_id, departure_at=tomorrow(18))
+    late = await publish(ana, car_id, departure_at=eighteen_oh_one)
+    board = Browser()
+
+    until_18 = body(await board.get("/api/rides", {"until": "18:00"}))
+    window = body(await board.get("/api/rides", {"from": "09:00", "until": "18:00"}))
+    malformed = await board.get("/api/rides", {"until": "not-a-time"})
+
+    assert [r["id"] for r in until_18] == [early["id"], on_time["id"]]
+    assert late["id"] not in [r["id"] for r in until_18]
+    assert [r["id"] for r in window] == [on_time["id"]]
+    assert malformed.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
+
+
 async def test_seats_close_and_reopen_cancel_is_final_and_repeat_makes_a_new_ride() -> None:
     ana, car_id = await driver()
     ride = await publish(ana, car_id)

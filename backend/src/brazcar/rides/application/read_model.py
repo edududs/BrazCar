@@ -83,6 +83,11 @@ class BoardFilter(FrozenModel):
     # The departure's local hour of the day, at or after it (D-141). Without `day`, judges every
     # day of the list by its own local hour; with `day`, only that day passes at all.
     from_time: time | None = None
+    # The departure's local hour of the day, up to and including it, compared by hour and minute
+    # (D-176). Without `day`, judges every day of the list by its own local hour; with `day`, only
+    # that day passes at all. A window with `until_time < from_time` shows nothing: the board does
+    # not refuse it, whoever asks for such a window does.
+    until_time: time | None = None
 
 
 def to_board_ride(  # noqa: PLR0913 - a projection joins several sources by design

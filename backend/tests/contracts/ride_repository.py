@@ -209,6 +209,67 @@ class RideRepositoryContract:
         assert early.id not in found_ids
         assert late.id in found_ids
 
+    async def test_until_time_keeps_only_rides_whose_local_hour_is_at_or_before_it(self) -> None:
+        """The mirror boundary of D-176: 18:00 local in, 18:01 local out, inclusive by the minute.
+
+        Same trap as `from_time`: the lower bound sits a minute short of UTC midnight, right where
+        the rides are, so an hour taken from the UTC instant instead of the local one would fail.
+        """
+        repository = self.make_repository()
+        driver = registered(await self.driver())
+        day = datetime(2026, 9, 22, tzinfo=BRASILIA).date()
+        at_bound = datetime.combine(day, time(18, 0), tzinfo=BRASILIA)
+        after_bound = datetime.combine(day, time(18, 1), tzinfo=BRASILIA)
+        since = at_bound.astimezone(UTC).replace(hour=23, minute=59, second=0, microsecond=0)
+        since -= timedelta(days=1)
+        inside = _ride_at(driver, at_bound)
+        outside = _ride_at(driver, after_bound)
+        await repository.save(inside, (published(inside),))
+        await repository.save(outside, (published(outside),))
+
+        found_ids = {ride.id for ride in await repository.upcoming(since, until_time=time(18, 0))}
+
+        assert inside.id in found_ids
+        assert outside.id not in found_ids
+
+    async def test_from_and_until_time_together_form_the_window(self) -> None:
+        repository = self.make_repository()
+        driver = registered(await self.driver())
+        day = datetime(2026, 9, 22, tzinfo=BRASILIA).date()
+        since = datetime.combine(day, time(0, 0), tzinfo=BRASILIA) - timedelta(days=1)
+        hours = {
+            hour: _ride_at(driver, datetime.combine(day, time(hour, 30), tzinfo=BRASILIA))
+            for hour in (6, 7, 8, 9, 10)
+        }
+        for ride in hours.values():
+            await repository.save(ride, (published(ride),))
+
+        found = await repository.upcoming(since, from_time=time(7, 30), until_time=time(9, 30))
+
+        assert {ride.id for ride in found} == {hours[7].id, hours[8].id, hours[9].id}
+        inverted = await repository.upcoming(since, from_time=time(9, 30), until_time=time(7, 30))
+        assert inverted == ()
+
+    async def test_among_keeps_only_the_listed_rides_and_none_when_empty(self) -> None:
+        repository = self.make_repository()
+        driver = registered(await self.driver())
+        day = datetime(2026, 9, 22, tzinfo=BRASILIA).date()
+        since = datetime.combine(day, time(0, 0), tzinfo=BRASILIA) - timedelta(days=1)
+        first = _ride_at(driver, datetime.combine(day, time(8, 0), tzinfo=BRASILIA))
+        second = _ride_at(driver, datetime.combine(day, time(9, 0), tzinfo=BRASILIA))
+        await repository.save(first, (published(first),))
+        await repository.save(second, (published(second),))
+
+        only_first = await repository.upcoming(since, among=(first.id,))
+        none = await repository.upcoming(since, among=())
+        unknown = await repository.upcoming(since, among=(uuid4(),))
+        windowed = await repository.upcoming(since, among=(first.id, second.id), from_time=time(8, 30))
+
+        assert [ride.id for ride in only_first] == [first.id]
+        assert none == ()
+        assert unknown == ()
+        assert [ride.id for ride in windowed] == [second.id]
+
 
 def _ride_at(driver: RegisteredDriver, departure_at: datetime) -> RideOffer:
     """A minimal, valid, published ride, for the from-time boundary test."""

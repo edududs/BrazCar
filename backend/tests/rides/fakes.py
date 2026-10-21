@@ -1,5 +1,6 @@
 """In-memory adapters for the use-case tests. The repository is held to the port contract."""
 
+from collections.abc import Collection
 from datetime import datetime, time
 
 from brazcar.places.domain import Catalog, Place
@@ -46,13 +47,25 @@ class InMemoryRideRepository:
             self.events.pop(ride_id, None)
             self.revision += 1
 
-    async def upcoming(self, since: datetime, *, from_time: time | None = None) -> tuple[RideOffer, ...]:
+    async def upcoming(
+        self,
+        since: datetime,
+        *,
+        from_time: time | None = None,
+        until_time: time | None = None,
+        among: Collection[RideId] | None = None,
+    ) -> tuple[RideOffer, ...]:
+        def minute_of(moment: datetime) -> tuple[int, int]:
+            return (moment.hour, moment.minute)  # seconds never count, as in the database
+
         rides = [
             r
             for r in self.rides.values()
             if r.cancelled_at is None
             and r.departure_at >= since
-            and (from_time is None or r.departure_at.time() >= from_time)
+            and (among is None or r.id in among)
+            and (from_time is None or minute_of(r.departure_at) >= (from_time.hour, from_time.minute))
+            and (until_time is None or minute_of(r.departure_at) <= (until_time.hour, until_time.minute))
         ]
         return tuple(sorted(rides, key=lambda r: (r.departure_at, r.published_at)))
 

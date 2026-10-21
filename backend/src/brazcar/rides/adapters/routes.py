@@ -189,6 +189,7 @@ class BoardQuery(Schema):
     max_price: Decimal | None = Field(default=None, gt=0)
     # "from" is a keyword, so the field is named after what it holds; the wire name stays "from" (D-141).
     from_: time | None = Field(default=None, alias="from")
+    until: time | None = None  # the mirror of "from": the departure's local hour, at or before it (D-176)
 
 
 class StopIn(Schema):
@@ -268,6 +269,7 @@ def _add_board_routes(router: Router, use_cases: RideUseCases) -> None:
             with_seats=filters.with_seats,
             max_price=filters.max_price,
             from_time=filters.from_,
+            until_time=filters.until,
         )
         return [RideOut.of(ride) for ride in await use_cases.board(wanted, viewer)]
 

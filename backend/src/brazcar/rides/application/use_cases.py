@@ -254,14 +254,22 @@ class ListBoard:
 
     async def __call__(self, filters: BoardFilter, viewer: AccountId | None) -> tuple[BoardRide, ...]:
         now = self.clock.now()
-        candidates = await self.rides.upcoming(
-            now - self.rules.departure_tolerance, from_time=filters.from_time
-        )
-        selected = [ride for ride in candidates if _matches(ride, filters)]
-        if filters.text and filters.text.strip():
-            found = await self.search.matching(filters.text, [ride.id for ride in selected])
-            selected = [ride for ride in selected if ride.id in found]
+        selected = await _select(self, filters, now)
         return await _project(self, selected, viewer, now)
+
+
+@dataclass(frozen=True, slots=True)
+class ShownOnBoard:
+    """Whether the board, filtered so, would list this ride now: `ListBoard`'s own selection,
+    restricted to one ride (D-176). What `alerts` asks before warning anyone."""
+
+    rides: RideRepository
+    search: RideSearch
+    clock: Clock
+    rules: RideRules
+
+    async def __call__(self, ride_id: RideId, filters: BoardFilter) -> bool:
+        return bool(await _select(self, filters, self.clock.now(), among=(ride_id,)))
 
 
 @dataclass(frozen=True, slots=True)
@@ -386,6 +394,27 @@ def _matches(ride: RideOffer, filters: BoardFilter) -> bool:
     if filters.with_seats and ride.seats_available == 0:
         return False
     return filters.max_price is None or ride.price <= filters.max_price
+
+
+async def _select(
+    source: ListBoard | ShownOnBoard,
+    filters: BoardFilter,
+    now: datetime,
+    *,
+    among: Collection[RideId] | None = None,
+) -> list[RideOffer]:
+    """The one selection of the board: what `ListBoard` lists and `ShownOnBoard` asks about (D-176)."""
+    candidates = await source.rides.upcoming(
+        now - source.rules.departure_tolerance,
+        from_time=filters.from_time,
+        until_time=filters.until_time,
+        among=among,
+    )
+    selected = [ride for ride in candidates if _matches(ride, filters)]
+    if filters.text and filters.text.strip():
+        found = await source.search.matching(filters.text, [ride.id for ride in selected])
+        selected = [ride for ride in selected if ride.id in found]
+    return selected
 
 
 async def _project(
