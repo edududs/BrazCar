@@ -8,8 +8,7 @@ só entra quem recebe convite.
 - Dado próprio e verdadeiro: nome social, e-mail e telefone são da própria pessoa.
 - O telefone cadastrado é o telefone que a pessoa usa, porque é ele que aparece do outro lado do
   contato.
-- Não copiar o mural em massa (a chamada raspagem), por programa ou por fora do produto: isso foge
-  do uso pretendido.
+- Não ler o mural em massa por fora do produto, a chamada raspagem: isso foge do uso pretendido.
 - O contato revelado de alguém serve só para combinar aquela carona, nunca para outro fim.
 
 ## O que o produto não é
@@ -20,7 +19,7 @@ vai e quem leva, pelo WhatsApp, como já acontecia antes do produto existir.
 
 ## Suspensão
 
-Conta usada fora deste compromisso, com dado falso, cópia em massa do mural ou uso indevido do
+Conta usada fora deste compromisso, com dado falso, leitura em massa do mural ou uso indevido do
 contato de outra pessoa, pode ser suspensa.
 
 ## Aceite
