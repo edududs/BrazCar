@@ -151,7 +151,15 @@ async def test_list_returns_only_the_accounts_active_alerts_by_day_then_creation
 
     listed = await ListAlerts(repo, FixedClock(), RULES)(owner)
 
-    assert listed == (first, second, later_day)
+    assert listed.alerts == (first, second, later_day)
+    assert listed.limit == 5
+
+
+async def test_list_carries_the_limit_of_the_rules() -> None:
+    listed = await ListAlerts(InMemoryAlertRepository(), FixedClock(), AlertRules(limit=3))(uuid4())
+
+    assert listed.alerts == ()
+    assert listed.limit == 3
 
 
 # DeleteAlert

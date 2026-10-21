@@ -63,14 +63,23 @@ class CreateAlert:
 
 
 @dataclass(frozen=True, slots=True)
+class ActiveAlerts:
+    """An account's active alerts with the cap it lives under, so callers never restate the cap."""
+
+    alerts: tuple[RideAlert, ...]
+    limit: int
+
+
+@dataclass(frozen=True, slots=True)
 class ListAlerts:
     alerts: AlertRepository
     clock: Clock
     rules: AlertRules
 
-    async def __call__(self, owner_id: AccountId) -> tuple[RideAlert, ...]:
-        """The account's active alerts, by day and then by creation."""
-        return await self.alerts.of_owner(owner_id, since=local_day(self.clock.now(), self.rules.zone))
+    async def __call__(self, owner_id: AccountId) -> ActiveAlerts:
+        """The account's active alerts, by day and then by creation, with the limit (D-175)."""
+        active = await self.alerts.of_owner(owner_id, since=local_day(self.clock.now(), self.rules.zone))
+        return ActiveAlerts(alerts=active, limit=self.rules.limit)
 
 
 @dataclass(frozen=True, slots=True)

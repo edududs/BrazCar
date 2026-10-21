@@ -275,7 +275,7 @@ export interface paths {
         };
         /**
          * List My Alerts
-         * @description The account's alerts that have not ended, by day and creation.
+         * @description The account's alerts that have not ended, by day and creation, and how many it may have.
          */
         get: operations["list_alerts"];
         put?: never;
@@ -712,6 +712,13 @@ export interface components {
             text: string | null;
             /** Until Time */
             until_time: string | null;
+        };
+        /** AlertsOut */
+        AlertsOut: {
+            /** Alerts */
+            alerts: components["schemas"]["AlertOut"][];
+            /** Limit */
+            limit: number;
         };
         /**
          * BoardQuery
@@ -2036,7 +2043,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AlertOut"][];
+                    "application/json": components["schemas"]["AlertsOut"];
                 };
             };
             /** @description Unauthorized */
