@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["web/**", "backend/**", "contract/**", ".github/workflows/e2e.yml"]
+    paths: ["web/**", "backend/**", "contract/**", "docs/terms.md", "docs/privacy.md", ".github/workflows/e2e.yml"]
   pull_request:
-    paths: ["web/**", "backend/**", "contract/**", ".github/workflows/e2e.yml"]
+    paths: ["web/**", "backend/**", "contract/**", "docs/terms.md", "docs/privacy.md", ".github/workflows/e2e.yml"]
 
 jobs:
   journeys:
