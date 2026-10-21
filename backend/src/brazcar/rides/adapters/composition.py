@@ -37,6 +37,15 @@ def ride_search() -> IndexedRideSearch:
     return IndexedRideSearch(DjangoSearchIndex(NAMESPACE), DjangoCatalogRepository())
 
 
+def ride_rules() -> RideRules:
+    """The rules of the rides, read from settings. One place, for every composition that needs them."""
+    return RideRules(
+        departure_tolerance=timedelta(minutes=settings.RIDE_DEPARTURE_TOLERANCE_MINUTES),
+        contact_limit=settings.RIDE_CONTACT_LIMIT,
+        contact_window=timedelta(hours=settings.RIDE_CONTACT_WINDOW_HOURS),
+    )
+
+
 def rides_router() -> Router:
     rides = DjangoRideRepository()
     drivers = AccountDriverDirectory(DjangoAccountRepository())
@@ -44,11 +53,7 @@ def rides_router() -> Router:
     search = ride_search()
     revision = DjangoBoardRevision()
     clock = SystemClock()
-    rules = RideRules(
-        departure_tolerance=timedelta(minutes=settings.RIDE_DEPARTURE_TOLERANCE_MINUTES),
-        contact_limit=settings.RIDE_CONTACT_LIMIT,
-        contact_window=timedelta(hours=settings.RIDE_CONTACT_WINDOW_HOURS),
-    )
+    rules = ride_rules()
     use_cases = RideUseCases(
         board=ListBoard(rides, drivers, places, search, clock, rules),
         mine=MyRides(rides, drivers, places, clock, rules),

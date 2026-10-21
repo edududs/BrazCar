@@ -4,10 +4,6 @@
 other people's use cases, the way `config/` is for the API. A test holds it to that shape.
 """
 
-from datetime import timedelta
-
-from django.conf import settings
-
 from brazcar.accounts.adapters.credentials import DjangoCredentials
 from brazcar.accounts.adapters.invite_repository import DjangoInviteRepository
 from brazcar.accounts.adapters.repository import DjangoAccountRepository
@@ -20,7 +16,7 @@ from brazcar.importing.adapters.repository import (
 )
 from brazcar.importing.application import BlockSender, IngestMessages
 from brazcar.places.adapters.repository import DjangoCatalogRepository
-from brazcar.rides.adapters.composition import ride_search
+from brazcar.rides.adapters.composition import ride_rules, ride_search
 from brazcar.rides.adapters.directories import AccountDriverDirectory, CatalogPlaceDirectory
 from brazcar.rides.adapters.repository import DjangoContactRequests, DjangoRideRepository
 from brazcar.rides.application import (
@@ -32,7 +28,6 @@ from brazcar.rides.application import (
     PublishRide,
     RepeatRide,
     RequestContact,
-    RideRules,
 )
 from brazcar.shared.adapters.clock import SystemClock
 from brazcar.shared.adapters.rate_limit import DjangoRateLimiter
@@ -53,11 +48,7 @@ def demo_wiring() -> DemoWiring:
     messages = DjangoSourceMessages()
     candidates = DjangoCandidates()
     blocked = DjangoBlockedSenders()
-    rules = RideRules(
-        departure_tolerance=timedelta(minutes=settings.RIDE_DEPARTURE_TOLERANCE_MINUTES),
-        contact_limit=settings.RIDE_CONTACT_LIMIT,
-        contact_window=timedelta(hours=settings.RIDE_CONTACT_WINDOW_HOURS),
-    )
+    rules = ride_rules()
     import_ride = ImportRide(rides, drivers, places, search, clock)
     bridge = RidesBridge(import_ride, ForgetRides(rides, search), rides)
     return DemoWiring(
