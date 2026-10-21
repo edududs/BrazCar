@@ -105,3 +105,35 @@ def test_guard_accepts_the_allowed_imports() -> None:
     assert not violations(application, f"{ROOT}.rides.application.publish", "rides", "application")
     codec = "import phonenumbers\nfrom phonenumbers import geocoder\n"
     assert not violations(codec, f"{ROOT}.shared.domain.phone.codec", SHARED, "domain")
+
+
+PUSH_SDK = ("pywebpush", "py_vapid", "http_ece", "cryptography")
+PUSH_DOOR = f"{ROOT}.push.adapters.web_push"
+"""The Web Push libraries enter through one module and nowhere else (D-183)."""
+
+
+def push_sdk_imports(source: str) -> list[str]:
+    imported: list[str] = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import):
+            imported.extend(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and not node.level:
+            imported.append(node.module or "")
+    return [name for name in imported if name.split(".")[0] in PUSH_SDK]
+
+
+def test_only_the_web_push_adapter_imports_the_push_sdk() -> None:
+    offenders: list[str] = []
+    for path in PACKAGE.rglob("*.py"):
+        module = ".".join((ROOT, *path.relative_to(PACKAGE).with_suffix("").parts))
+        if module != PUSH_DOOR and push_sdk_imports(path.read_text(encoding="utf-8")):
+            offenders.append(module)
+    assert not offenders
+
+
+def test_push_sdk_guard_detects_deliberate_violations() -> None:
+    assert push_sdk_imports("import pywebpush")
+    assert push_sdk_imports("from py_vapid import Vapid02")
+    assert push_sdk_imports("import http_ece")
+    assert push_sdk_imports("from cryptography.hazmat.primitives import serialization")
+    assert not push_sdk_imports("import asyncio, pydantic")
