@@ -11,7 +11,7 @@ import pytest
 ROOT = "brazcar"
 PACKAGE = Path(__file__).resolve().parents[1] / "src" / ROOT
 SHARED = "shared"
-CONTEXTS = ("rides", "accounts", "places", "search", "importing", "feedback", SHARED)
+CONTEXTS = ("rides", "accounts", "places", "search", "importing", "feedback", "alerts", SHARED)
 LAYERS = {
     "domain": ("domain",),
     "application": ("domain", "application"),
