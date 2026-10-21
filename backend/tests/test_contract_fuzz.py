@@ -33,6 +33,7 @@ from schemathesis.checks import (
     load_all_checks,
 )
 
+from brazcar.push.adapters.web_push import VapidKeys, generate_vapid_keys
 from tests.accounts.signup import registration_sync
 
 pytestmark = [pytest.mark.heavy, pytest.mark.schemathesis, pytest.mark.django_db(transaction=True)]
@@ -114,6 +115,16 @@ def _spare_phone_and_email() -> tuple[str, str]:
 @pytest.fixture(autouse=True)
 def _front_origin(settings: Any) -> None:  # noqa: ANN401 - pytest-django's settings proxy has no stub
     setattr(settings, "CORS_ALLOWED_ORIGINS", [FRONT])  # noqa: B010
+
+
+@pytest.fixture(autouse=True)
+def _push_on(settings: Any) -> None:  # noqa: ANN401 - pytest-django's settings proxy has no stub
+    """Push on, with a pair made here and never stored: with push off the key route answers 503,
+    which `not_a_server_error` reads as a failure although it is a configuration (D-183). That 503
+    is proven by `tests/push/test_routes.py`; nothing is sent, since no fuzzed body is a device."""
+    public, private = generate_vapid_keys()
+    vapid = VapidKeys(public_key=public, private_key=private, contact="mailto:ops@example.com")
+    setattr(settings, "PUSH_VAPID", vapid)  # noqa: B010
 
 
 def _register(base_url: str) -> requests.Response:
