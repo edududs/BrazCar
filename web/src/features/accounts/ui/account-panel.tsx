@@ -31,6 +31,8 @@ interface AccountPanelProps {
   readonly deleteAccount: () => Promise<void>;
   /** Where the account goes once it is gone: the board, with a way to notice it. */
   readonly onDeleted: () => void;
+  /** The alerts the account asked for: drawn after the cars. */
+  readonly alerts?: React.ReactNode;
   /** The group that belongs to everyone, signed in or not: appearance. */
   readonly appearance?: React.ReactNode;
   /** The last line of the page: the build's version. */
@@ -57,6 +59,7 @@ export function AccountPanel({
   logOut,
   deleteAccount,
   onDeleted,
+  alerts,
   appearance,
   footer,
   onFeedback,
@@ -150,6 +153,8 @@ export function AccountPanel({
           }}
         />
       </ListGroup>
+
+      {alerts}
 
       {appearance}
 

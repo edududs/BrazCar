@@ -5,7 +5,10 @@ import { useChangePassword } from "@/features/accounts/app/use-change-password";
 import { useSession } from "@/features/accounts/app/use-session";
 import { AccountGate } from "@/features/accounts/ui/account-gate";
 import { AccountPanel } from "@/features/accounts/ui/account-panel";
+import { MyAlerts } from "@/features/alerts/ui/my-alerts";
 import { FeedbackSheet } from "@/features/feedback/ui/feedback-sheet";
+import { useClock } from "@/shared/app/use-clock";
+import { useDevicePush } from "@/shared/app/use-device-push";
 import { useVersionFloor } from "@/shared/app/use-version-floor";
 import { BrandMark } from "@/shared/ui/brand-mark";
 import { Card } from "@/shared/ui/card";
@@ -33,6 +36,9 @@ function AccountPage() {
   const { changePassword, busy: passwordBusy } = useChangePassword();
   const navigate = useNavigate();
   const { version } = useVersionFloor();
+  // One instance for the page: the alerts card turns it on, signing out turns it off.
+  const push = useDevicePush();
+  const now = useClock();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const appearance = <ThemeControl />;
   // The build's version, for support (D-105), and the way out for someone imported without an
@@ -107,6 +113,7 @@ function AccountPage() {
                 },
               });
             }}
+            alerts={<MyAlerts accountId={session.account.id} push={push} now={now} />}
             appearance={appearance}
             footer={footer}
             onFeedback={() => {
