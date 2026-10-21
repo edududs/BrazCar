@@ -45,9 +45,12 @@ export function useDevicePush(): DevicePush {
   const [error, setError] = useState<string | null>(null);
   // A ref, not the state: two taps in one tick both see the same render's `pending`.
   const running = useRef(false);
+  // Read once, on mount, from the first permission: afterwards `enable` and `disable` keep
+  // `subscribed` up to date, and a read racing a subscription would undo it.
+  const grantedOnMount = useRef(permission === "granted");
 
   useEffect(() => {
-    if (permission !== "granted") return;
+    if (!grantedOnMount.current) return;
     let current = true;
     currentPushSubscription().then(
       (data) => {
@@ -60,8 +63,6 @@ export function useDevicePush(): DevicePush {
     return () => {
       current = false;
     };
-    // Read once, on mount: `enable` and `disable` keep `subscribed` up to date afterwards.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const enable = useCallback(async (): Promise<void> => {
