@@ -2,7 +2,7 @@ import { useId } from "react";
 
 import { HeldNotice } from "@/features/accounts/ui/held-notice";
 import { useSession } from "@/features/accounts/app/use-session";
-import { useDevicePush } from "@/shared/app/use-device-push";
+import { type DevicePush, useDevicePush } from "@/shared/app/use-device-push";
 import { AccountHeldError, HELD_MESSAGE } from "@/shared/domain/account-held";
 import { ActionButton } from "@/shared/ui/action-button";
 import { ActionLink } from "@/shared/ui/action-link";
@@ -15,7 +15,7 @@ import { SwitchField } from "@/shared/ui/switch-field";
 import { TextField } from "@/shared/ui/text-field";
 
 import { type AlertSeed, type ClockSlot, useAlertDraft } from "../app/use-alert-draft";
-import { useAlertRequest } from "../app/use-alert-request";
+import { type AlertRequest, useAlertRequest } from "../app/use-alert-request";
 import { AlertRequestError } from "../domain/alert";
 
 const TITLE = "Me avise";
@@ -45,10 +45,11 @@ interface AlertSheetProps {
  */
 export function AlertSheet({ open, onOpenChange, seed, now, returnTo }: AlertSheetProps) {
   const { session } = useSession();
-  if (open && session.status === "signed-in" && session.account.requiredAction === null) {
+  if (session.status === "signed-in" && session.account.requiredAction === null) {
     return (
       <AccountAlertSheet
         accountId={session.account.id}
+        open={open}
         onOpenChange={onOpenChange}
         seed={seed}
         now={now}
@@ -68,7 +69,7 @@ export function AlertSheet({ open, onOpenChange, seed, now, returnTo }: AlertShe
             Entrar
           </ActionLink>
         </>
-      ) : session.account.requiredAction === null ? null : (
+      ) : (
         <HeldNotice message={HELD_MESSAGE} />
       )}
     </Sheet>
@@ -77,88 +78,105 @@ export function AlertSheet({ open, onOpenChange, seed, now, returnTo }: AlertShe
 
 interface AccountAlertSheetProps {
   readonly accountId: string;
+  readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
   readonly seed: AlertSeed;
   readonly now: Date;
 }
 
-/** Mounted only while the sheet is open, so the draft starts fresh from the board each time. */
-function AccountAlertSheet({ accountId, onOpenChange, seed, now }: AccountAlertSheetProps) {
+/**
+ * One sheet for the whole request, so it opens and closes with the same motion as every other:
+ * the form and the "created" answer swap inside it, and closing forgets the answer, so the next
+ * opening starts from the board again.
+ */
+function AccountAlertSheet({ accountId, open, onOpenChange, seed, now }: AccountAlertSheetProps) {
   const formId = useId();
   const push = useDevicePush();
-  const draft = useAlertDraft({ seed, now });
   const request = useAlertRequest({ accountId, push });
+  const created = request.phase === "created";
+  const changeOpen = (next: boolean) => {
+    if (!next) request.reset();
+    onOpenChange(next);
+  };
   const close = () => {
-    onOpenChange(false);
+    changeOpen(false);
   };
 
-  if (request.phase === "created") {
-    return (
-      <Sheet
-        open
-        onOpenChange={onOpenChange}
-        title={CREATED_TITLE}
-        description={CREATED_DESCRIPTION}
-        footer={
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={changeOpen}
+      title={created ? CREATED_TITLE : TITLE}
+      description={created ? CREATED_DESCRIPTION : DESCRIPTION}
+      footer={
+        created ? (
           <ActionButton emphasis="primary" onPress={close}>
             Pronto
           </ActionButton>
-        }
-      >
-        <DevicePushControl push={push} />
-      </Sheet>
-    );
-  }
-
-  const held = request.error instanceof AccountHeldError;
-  return (
-    <Sheet
-      open
-      onOpenChange={onOpenChange}
-      title={TITLE}
-      description={DESCRIPTION}
-      footer={
-        <div className="flex gap-2.5">
-          <div className="flex-1">
-            <ActionButton emphasis="quiet" onPress={close}>
-              Cancelar
-            </ActionButton>
+        ) : (
+          <div className="flex gap-2.5">
+            <div className="flex-1">
+              <ActionButton emphasis="quiet" onPress={close}>
+                Cancelar
+              </ActionButton>
+            </div>
+            <div className="flex-[2]">
+              <ActionButton submit form={formId} emphasis="primary" busy={request.busy}>
+                Criar aviso
+              </ActionButton>
+            </div>
           </div>
-          <div className="flex-[2]">
-            <ActionButton submit form={formId} emphasis="primary" busy={request.busy}>
-              Criar aviso
-            </ActionButton>
-          </div>
-        </div>
+        )
       }
     >
-      <Form
-        id={formId}
-        onSubmit={() => {
-          request.submit(draft.value());
-        }}
-        error={held ? null : failureOf(request.error)}
-      >
-        <Segmented
-          label="Dia"
-          options={draft.dayOptions.map((option) => ({ value: option.day, label: option.label }))}
-          value={draft.day}
-          onChange={draft.setDay}
-        />
-        <TextField
-          label="Passa por"
-          optional
-          value={draft.text}
-          onChange={draft.setText}
-          placeholder="Esplanada, Incra 8, SIA"
-          maxLength={TEXT_LIMIT}
-        />
-        <ClockOption label="A partir de" slot={draft.from} />
-        <ClockOption label="Até" slot={draft.until} />
-        <DevicePushControl push={push} actions={false} />
-        {held ? <HeldNotice message={request.error.message} /> : null}
-      </Form>
+      {!open ? null : created ? (
+        <DevicePushControl push={push} />
+      ) : (
+        <AlertForm id={formId} seed={seed} now={now} push={push} request={request} />
+      )}
     </Sheet>
+  );
+}
+
+interface AlertFormProps {
+  readonly id: string;
+  readonly seed: AlertSeed;
+  readonly now: Date;
+  readonly push: DevicePush;
+  readonly request: AlertRequest;
+}
+
+/** Mounted while the form shows, so the draft starts fresh from the board each time. */
+function AlertForm({ id, seed, now, push, request }: AlertFormProps) {
+  const draft = useAlertDraft({ seed, now });
+  const { error } = request;
+  return (
+    <Form
+      id={id}
+      onSubmit={() => {
+        request.submit(draft.value());
+      }}
+      error={error instanceof AccountHeldError ? null : failureOf(error)}
+    >
+      <Segmented
+        label="Dia"
+        options={draft.dayOptions.map((option) => ({ value: option.day, label: option.label }))}
+        value={draft.day}
+        onChange={draft.setDay}
+      />
+      <TextField
+        label="Passa por"
+        optional
+        value={draft.text}
+        onChange={draft.setText}
+        placeholder="Esplanada, Incra 8, SIA"
+        maxLength={TEXT_LIMIT}
+      />
+      <ClockOption label="A partir de" slot={draft.from} />
+      <ClockOption label="Até" slot={draft.until} />
+      <DevicePushControl push={push} actions={false} />
+      {error instanceof AccountHeldError ? <HeldNotice message={error.message} /> : null}
+    </Form>
   );
 }
 

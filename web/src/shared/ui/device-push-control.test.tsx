@@ -107,6 +107,23 @@ describe("DevicePushControl", () => {
     expect(screen.queryByText(/Verificando/)).toBeNull();
   });
 
+  it("without actions and with nothing to say, leaves no empty box behind", () => {
+    const { container, rerender } = render(<DevicePushControl push={fakePush()} actions={false} />);
+    expect(container.childElementCount).toBe(0);
+
+    rerender(
+      <DevicePushControl
+        push={fakePush({ permission: "granted", subscribed: null })}
+        actions={false}
+      />,
+    );
+    expect(container.childElementCount).toBe(0);
+
+    rerender(<DevicePushControl push={fakePush({ error: "Falhou." })} actions={false} />);
+    expect(screen.getByRole("alert").textContent).toBe("Falhou.");
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+
   it("announces the hook's failure in a notice, in any state", () => {
     render(
       <DevicePushControl

@@ -19,9 +19,13 @@ function Line({ children }: { readonly children: ReactNode }) {
 
 /** What this device does with notifications, and (with `actions`) the way to turn them on or off. */
 export function DevicePushControl({ push, actions = true }: DevicePushControlProps) {
+  const view = devicePushView(push);
+  // Without buttons, "off" and "checking" have nothing to say: no empty box takes a gap in a form.
+  const silent = !actions && (view === "off" || view === "checking");
+  if (silent && push.error === null) return null;
   return (
     <div className="flex flex-col gap-3">
-      <State push={push} actions={actions} />
+      {silent ? null : <State push={push} actions={actions} />}
       {push.error === null ? null : (
         <NoticeBar tone="caution" role="alert">
           {push.error}
