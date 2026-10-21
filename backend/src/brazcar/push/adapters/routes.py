@@ -1,4 +1,4 @@
-"""The device subscriptions of an account (D-183). The public key is what the browser needs to
+"""The device subscriptions of an account (D-181). The public key is what the browser needs to
 subscribe; saving and dropping a subscription are writes, so they go through the write gate (D-168).
 The endpoint is the address of a device: it travels in the body, never in the URL, so it does not
 reach an access log."""

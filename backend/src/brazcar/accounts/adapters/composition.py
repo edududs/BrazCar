@@ -26,6 +26,7 @@ from brazcar.shared.adapters.clock import SystemClock
 from brazcar.shared.adapters.mail import DjangoMailer
 from brazcar.shared.adapters.rate_limit import DjangoRateLimiter
 from brazcar.shared.adapters.session_auth import gated_session_auth
+from brazcar.shared.application.ports import AccountErased
 
 from .credentials import DjangoCredentials, DjangoEmailConfirmationTokens, DjangoPasswordResetTokens
 from .invite_repository import DjangoInviteRepository
@@ -40,7 +41,7 @@ def writer_auth() -> AuthBase:
     return gated_session_auth(AccountWriteGate(DjangoAccountRepository()))
 
 
-def accounts_router() -> Router:
+def accounts_router(erased: AccountErased) -> Router:
     accounts = DjangoAccountRepository()
     invites = DjangoInviteRepository()
     credentials = DjangoCredentials()
@@ -68,7 +69,7 @@ def accounts_router() -> Router:
             accounts, tokens, mailer, limiter, settings.PASSWORD_RESET_LINK
         ),
         reset_password=ResetPassword(accounts, credentials, tokens),
-        delete=DeleteAccount(accounts),
+        delete=DeleteAccount(accounts, erased),
     )
     return build_router(use_cases, writer_auth())
 
