@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado em 2026-09-26.
+Atualizado em 2026-10-21.
 
 ## Onde estamos
 
@@ -175,6 +175,17 @@ implantada).
   de apagá-las. No front, `features/feedback` com `useFeedbackDraft` (headless, com teste) e
   `FeedbackSheet`: tipo num segmentado, opinião com contador, e na reclamação a caixa "É sobre alguém
   específico" que abre o campo do celular; a linha "Enviar opinião" no grupo BrazCar da Conta.
+- "Me avise", etapa 1, ainda sem tag (D-175 a D-179; glossário em
+  [domain/alerts.md](domain/alerts.md)): contexto `alerts` com `RideAlert` ("passa por", dia,
+  janela de horário), teto de 5 ativos por conta, rotas `GET/POST /api/alerts` e
+  `DELETE /api/alerts/{id}` com sessão e portão de escrita, tabelas `alerts_ride_alert` e
+  `alerts_notice` (migração `alerts.0001`), e `manage.py purge_alerts`. O casamento é o do mural:
+  `BoardFilter.until_time` (`?until=HH:MM` no mural, simétrico a D-141), `upcoming(among=...)` e o
+  caso de uso `ShownOnBoard` de `rides`, a seleção do `ListBoard` restrita a uma carona. O gatilho é
+  a porta `RideChanged` de `shared`, chamada por publicar, editar, mudar vagas, repetir e importar,
+  ligada a `NotifyMatchingAlerts` em `config/api.py`, na composição de `importing` e na da semente.
+  Uma notificação por par (aviso, carona), sem dado de pessoa, pela porta `PushSender`, cujo
+  adaptador de produção só registra no log. Sem Web Push, sem service worker, sem tela.
 - Design, passo 5, movimento e usabilidade (D-153, D-154): tokens de movimento com as entradas
   nomeadas (`animate-rise-in`, `-list-in`, `-ride-in`, `-bump`, `-reveal`), só `transform` e
   `opacity`, zeradas com "reduzir movimento" por `--motion-rise`/`--motion-scale`; View Transitions
@@ -454,13 +465,16 @@ gravação, a API recusa subir com remetente inválido e a tela distingue falha 
 
 ## Próximo passo
 
-1. Etapa de design (D-103, D-143): validação no celular dos passos 5 e 6 publicados pendente; o
+1. "Me avise", etapa 2: inscrição do aparelho, adaptador de Web Push no lugar do
+   `LoggingPushSender` (a porta `PushSender` recebe a conta e a notificação pronta), chaves VAPID e
+   service worker; depois, a etapa 3, a tela e a lista na conta.
+2. Etapa de design (D-103, D-143): validação no celular dos passos 5 e 6 publicados pendente; o
    desktop aguarda as pranchas do canvas.
-2. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
+3. Conferir no celular as caronas importadas no mural publicado: selo, mensagem original, contato,
    e as telas de observações e preço por parada.
-3. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
+4. Medir o interpretador lendo preço por parada contra o Ollama, anotando `fares` no golden set das
    mensagens que trazem lista de preços (as de número 25, 31, 34 e 41).
-4. Passo de qualidade encerrado: Schemathesis sobre o contrato (D-156, D-158) e a cobertura do
+5. Passo de qualidade encerrado: Schemathesis sobre o contrato (D-156, D-158) e a cobertura do
    front empatada com a do backend (D-157) estão feitos. Fora do escopo dele, a semente de
    demonstração determinística, para `yarn screens` parar de reescrever o catálogo inteiro a cada
    rodada (ver ROADMAP), segue pendente.
@@ -495,6 +509,10 @@ gravação, a API recusa subir com remetente inválido e a tela distingue falha 
   A busca de lugares pode passar a usar o índice de `search` quando houver um terceiro uso.
 - O índice de busca é alimentado depois da gravação, fora da transação: se a indexação falhar, a
   carona fica no mural mas não aparece na busca por texto até o próximo `index_rides`.
+- "Me avise": a limpeza dos avisos vencidos existe só como comando (`manage.py purge_alerts`) e
+  ainda não está agendada; o teto de 5 avisos é conferido antes de gravar, fora de transação, então
+  dois pedidos simultâneos podem passar dele por um; e o motorista com aviso para a própria rota é
+  avisado da própria carona, porque o aviso não conhece o motorista.
 - A tabela de hits do limite cresce com o uso e só é podada por chave; um comando de limpeza
   entra se pesar.
 - Rota `/api/diagnostics/sse`, página `/diagnostics` e `SSE_DIAGNOSTICS_TOKEN` ficam de propósito

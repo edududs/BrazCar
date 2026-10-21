@@ -50,6 +50,11 @@ de design, que depende de autorização para rodar.
 
 ## Depois
 
+- **"Me avise"** (D-175 a D-179): quem tem conta guarda um filtro do mural de um dia e recebe uma
+  notificação quando entra carona com vaga que casa com ele. Três etapas: (1) backend do aviso, do
+  casamento pelo próprio mural e do disparo pela porta `PushSender`, com remetente que só registra
+  no log: **feito no repositório**; (2) inscrição do aparelho, Web Push com VAPID e service worker,
+  que no iOS exige o app instalado; (3) tela do "Me avise" e lista dos avisos na conta.
 - **Passo 7, `importing`.** Em andamento, em dois releases:
   **7a** embute o extrator (worker no compose, `DjangoStore`, pareamento, D-040 testado): **feito, tag
   `v0.8.0`**, mensagens cruas fluindo em produção; **7b** transforma mensagem em carona no mural (candidata,
@@ -123,7 +128,6 @@ de design, que depende de autorização para rodar.
   geometria vazio para não exigir remodelagem.
 - **Modelagem de lugares como área.** A maioria dos lugares é uma região, não um ponto. Antes de
   modelar coordenadas, pesquisar como Uber, 99 e similares representam zonas e pontos de encontro.
-- **Web Push** para "apareceu carona no meu filtro". No iOS exige o app instalado.
 - **Reputação de motorista e avaliação**, com ranking de motoristas e de passageiros, junto da
   reserva de carona no próprio app (ver "Pedidos de carona e reserva no próprio app" em Depois).
   A reclamação do canal de opinião já guarda o celular de quem ela aponta (D-155), sem vínculo com

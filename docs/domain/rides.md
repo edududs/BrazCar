@@ -27,7 +27,9 @@
 | ações permitidas | `Actions` | O que quem vê pode fazer com a carona, calculado no servidor: editar, mudar vagas, cancelar, repetir, pedir contato e até quando pode adiar. |
 | card do mural | `BoardRide` | O que a lista mostra: nome, carro (modelo e cor, quando há), origem, mensagem original (quando importada), paradas com nome e tarifa, observações, situação e ações. Nunca telefone nem placa. |
 | visão anônima | `BoardRide.anonymized()` | O card e o detalhe para quem não tem sessão (D-171): sem nome do motorista, carro, mensagem de origem e observações, com todas as ações falsas. Ficam paradas, horário, preço, `has_fares`, vagas, formas de pagamento, situação e origem. Aplicada pelos casos de uso do mural e do detalhe, nunca pela rota. |
-| filtros do mural | `BoardFilter` | A partir de qual hora local (`from_time`, D-141), dia, "passa por" em texto livre, só com vaga, preço máximo. Vivem na URL do front. |
+| filtros do mural | `BoardFilter` | A partir de qual hora local (`from_time`, D-141), até qual hora local, inclusiva (`until_time`, D-176), dia, "passa por" em texto livre, só com vaga, preço máximo. Vivem na URL do front. |
+| o mural mostraria | `ShownOnBoard` | Caso de uso que diz se o mural, com um filtro, listaria uma carona agora: a mesma seleção do `ListBoard`, restrita a ela (D-176). É o que `alerts` pergunta. |
+| carona gravada | `RideChanged` | Porta de `shared` chamada depois de gravar e indexar uma carona com evento: publicar, editar, mudar vagas, repetir, importar quando cria (D-177). `rides` não sabe quem ouve, e a falha de quem ouve nunca falha a carona. |
 | busca de caronas | `RideSearch` | Acha caronas pelo texto das paradas: nome, apelidos e lugares acima de cada parada do catálogo, e o texto das paradas "outro" (D-101). Observações ficam de fora do índice. |
 | pedido de contato | `ContactRequest` | Registro de quem pediu o contato de qual carona, com o número revelado, o tipo de motorista e o momento (D-140). Tabela própria, sobrevive à carona. |
 | histórico | `RideEvent` | Tabela só de acréscimo com os eventos do agregado. |

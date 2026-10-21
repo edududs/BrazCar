@@ -19,6 +19,7 @@ Uma linha por documento. Abra só o que a tarefa pede.
 | [domain/search.md](domain/search.md) | Glossário e invariantes da busca por texto. | Idem |
 | [domain/importing.md](domain/importing.md) | Glossário e invariantes da importação do WhatsApp. | Idem |
 | [domain/feedback.md](domain/feedback.md) | Glossário e invariantes do canal de opinião. | Idem |
+| [domain/alerts.md](domain/alerts.md) | Glossário e invariantes do "Me avise". | Idem |
 | [parser-models.md](parser-models.md) | Como medir um modelo no golden set e o que cada medição deu, por máquina. | A cada medição |
 | [method.md](method.md) | Como o projeto é conduzido: desenho, passos, portões, encerramento. Escrito para leitor de fora. | O processo de trabalho muda |
 | [runbooks/deploy.md](runbooks/deploy.md) | Como a API e o front são publicados, e as armadilhas já pagas. | O procedimento de deploy muda |
