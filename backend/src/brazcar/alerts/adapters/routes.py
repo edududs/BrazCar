@@ -54,6 +54,11 @@ class AlertOut(Schema):
         )
 
 
+class AlertsOut(Schema):
+    alerts: list[AlertOut]
+    limit: int  # how many active alerts the account may have at once (D-175)
+
+
 def build_router(
     create: CreateAlert, list_alerts: ListAlerts, delete: DeleteAlert, writer: AuthBase
 ) -> Router:
@@ -62,14 +67,14 @@ def build_router(
 
     @router.get(
         "",
-        response=with_errors(list[AlertOut], unauthorized=True),
+        response=with_errors(AlertsOut, unauthorized=True),
         auth=session_auth,
         operation_id="list_alerts",
     )
-    async def list_my_alerts(request: HttpRequest) -> list[AlertOut]:
-        """The account's alerts that have not ended, by day and creation."""
-        alerts = await list_alerts(signed_in_account_id(request))
-        return [AlertOut.of(alert) for alert in alerts]
+    async def list_my_alerts(request: HttpRequest) -> AlertsOut:
+        """The account's alerts that have not ended, by day and creation, and how many it may have."""
+        active = await list_alerts(signed_in_account_id(request))
+        return AlertsOut(alerts=[AlertOut.of(alert) for alert in active.alerts], limit=active.limit)
 
     @router.post(
         "",

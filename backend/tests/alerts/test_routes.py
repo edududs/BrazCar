@@ -67,7 +67,7 @@ async def test_a_held_account_reads_its_alerts_but_neither_creates_nor_deletes()
     deleted = await client.delete(f"/api/alerts/{uuid4()}")
 
     assert listed.status_code == HTTPStatus.OK
-    assert listed.json() == []
+    assert listed.json() == {"alerts": [], "limit": 5}
     expected = {"detail": "confirme seu e-mail para continuar", "required_action": "confirm_email"}
     assert created.status_code == HTTPStatus.FORBIDDEN
     assert body(created) == expected
@@ -89,7 +89,8 @@ async def test_a_created_alert_comes_back_whole_and_is_listed() -> None:
     assert made["from_time"] == "06:00:00"
     assert made["until_time"] == "09:30:00"
     assert made["created_at"]
-    assert [UUID(str(alert["id"])) for alert in listed.json()] == [UUID(str(made["id"]))]
+    assert [UUID(str(alert["id"])) for alert in listed.json()["alerts"]] == [UUID(str(made["id"]))]
+    assert listed.json()["limit"] == 5
 
 
 async def test_a_blank_text_is_no_text() -> None:
@@ -155,7 +156,7 @@ async def test_the_list_holds_only_the_active_alerts_of_the_account() -> None:
 
     listed = await ana.get("/api/alerts")
 
-    assert [alert["id"] for alert in listed.json()] == [kept["id"]]
+    assert [alert["id"] for alert in listed.json()["alerts"]] == [kept["id"]]
 
 
 async def test_deleting_ones_own_alert_removes_it() -> None:
@@ -167,7 +168,7 @@ async def test_deleting_ones_own_alert_removes_it() -> None:
 
     assert deleted.status_code == HTTPStatus.NO_CONTENT
     assert deleted.content == b""
-    assert listed.json() == []
+    assert listed.json()["alerts"] == []
 
 
 @pytest.mark.parametrize("whose", ["another", "nobody"])
@@ -183,4 +184,4 @@ async def test_someone_elses_alert_and_a_missing_one_read_the_same_and_change_no
     assert deleted.status_code == HTTPStatus.NOT_FOUND
     assert body(deleted)["detail"] == "aviso não encontrado"
     assert await RideAlertModel.objects.acount() == 1
-    assert [alert["id"] for alert in (await bia.get("/api/alerts")).json()] == [theirs["id"]]
+    assert [alert["id"] for alert in (await bia.get("/api/alerts")).json()["alerts"]] == [theirs["id"]]

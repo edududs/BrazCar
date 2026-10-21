@@ -1,5 +1,6 @@
 from .ports import AlertRepository, BoardRides, NoticeLog, PushSender, RideSummary
 from .use_cases import (
+    ActiveAlerts,
     AlertRules,
     CreateAlert,
     DeleteAlert,
@@ -9,6 +10,7 @@ from .use_cases import (
 )
 
 __all__ = [
+    "ActiveAlerts",
     "AlertRepository",
     "AlertRules",
     "BoardRides",

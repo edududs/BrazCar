@@ -239,6 +239,27 @@
         "title": "AlertOut",
         "type": "object"
       },
+      "AlertsOut": {
+        "properties": {
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/AlertOut"
+            },
+            "title": "Alerts",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "alerts",
+          "limit"
+        ],
+        "title": "AlertsOut",
+        "type": "object"
+      },
       "BoardQuery": {
         "description": "The board's filters, as the URL carries them.",
         "properties": {
@@ -2524,7 +2545,7 @@
     },
     "/api/alerts": {
       "get": {
-        "description": "The account's alerts that have not ended, by day and creation.",
+        "description": "The account's alerts that have not ended, by day and creation, and how many it may have.",
         "operationId": "list_alerts",
         "parameters": [],
         "responses": {
@@ -2532,11 +2553,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AlertOut"
-                  },
-                  "title": "Response",
-                  "type": "array"
+                  "$ref": "#/components/schemas/AlertsOut"
                 }
               }
             },
