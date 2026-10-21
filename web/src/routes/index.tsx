@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 
 import {
   Link,
@@ -9,7 +9,6 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 
-import { AlertSheet } from "@/features/alerts/ui/alert-sheet";
 import { useBoard } from "@/features/rides/app/use-board";
 import { useBoardMatch } from "@/features/rides/app/use-board-match";
 import { useBoardSignal } from "@/features/rides/app/use-board-signal";
@@ -22,6 +21,12 @@ import { Icon } from "@/shared/ui/icon";
 import { inlineLinkClass } from "@/shared/ui/link-class";
 import { NoticeBar } from "@/shared/ui/notice-bar";
 import { PageShell } from "@/shared/ui/page-shell";
+
+// The alert sheet, and what it brings along (the device's push, the clocks, the switches), loads
+// on the first "Me avise" instead of with the board, the page everyone lands on.
+const AlertSheet = lazy(() =>
+  import("@/features/alerts/ui/alert-sheet").then((module) => ({ default: module.AlertSheet })),
+);
 
 /** The board's filters as the URL carries them (D-056): `/?q=incra&day=2026-09-23&withSeats=true&maxPrice=7&from=18:00`. */
 interface BoardSearch {
@@ -68,6 +73,8 @@ function BoardPage() {
   const board = useBoard(filters);
   useBoardSignal({ onChange: board.refresh });
   const now = useClock();
+  // Mounted from the first "Me avise" on and kept, so later closings still animate.
+  const [alertAsked, setAlertAsked] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const returnTo = useRouterState({ select: (state) => state.location.href });
   const match = useBoardMatch(filters.text);
@@ -87,6 +94,7 @@ function BoardPage() {
           size="compact"
           icon={<Icon name="bell" />}
           onPress={() => {
+            setAlertAsked(true);
             setAlertOpen(true);
           }}
         >
@@ -146,13 +154,17 @@ function BoardPage() {
           }
         />
       </div>
-      <AlertSheet
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        seed={{ day: filters.day, text: filters.text, fromTime: filters.fromTime }}
-        now={now}
-        returnTo={returnTo}
-      />
+      {alertAsked ? (
+        <Suspense fallback={null}>
+          <AlertSheet
+            open={alertOpen}
+            onOpenChange={setAlertOpen}
+            seed={{ day: filters.day, text: filters.text, fromTime: filters.fromTime }}
+            now={now}
+            returnTo={returnTo}
+          />
+        </Suspense>
+      ) : null}
       <p className="pb-2 text-center text-caption text-ink-3">
         <Link to="/sair-do-mural" className={inlineLinkClass}>
           Sair do mural
