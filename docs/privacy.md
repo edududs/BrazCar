@@ -9,8 +9,7 @@ Da pessoa que cria conta pelo convite:
 
 - Telefone, e-mail e nome social, exigidos no cadastro.
 - Carros cadastrados, com placa.
-- Senha, guardada só de forma embaralhada e irreversível, nunca em texto: nem o próprio BrazCar
-  consegue ler a senha de volta.
+- Senha, guardada só de forma embaralhada e irreversível, nunca em texto.
 - Os pedidos de contato feitos, com o número que foi revelado.
 
 Do motorista que aparece numa carona importada dos grupos de WhatsApp, sem nunca ter se cadastrado:
@@ -41,7 +40,7 @@ De quem manda uma opinião pela Conta ou pede a própria remoção do mural:
 - O texto da mensagem importada é a prova do anúncio original; a troca por reticências tira o que
   identifica outras pessoas sem apagar o anúncio.
 - O pedido de contato fica registrado porque é a base para medir uso do produto e para notar padrão
-  de cópia em massa do mural (raspagem).
+  de leitura em massa do mural (raspagem).
 - O aviso guarda o que foi pedido para poder comparar com cada carona nova, e o registro de cada
   carona avisada impede que a mesma notificação chegue duas vezes ([D-178](decisions/README.md)).
 
@@ -51,8 +50,8 @@ Sem entrar na conta, o mural mostra só trajeto, horário, preço, vagas e situa
 nome, carro, mensagem original e observações ficam de fora.
 
 Com a conta aberta, o mural mostra também o nome social e o carro de quem publicou. Telefone e placa
-nunca aparecem no mural: só são mostrados a quem pede contato numa carona, o que exige estar com a
-conta aberta, tem limite por conta e registra quem pediu.
+nunca aparecem numa lista, como a do mural: só são mostrados a quem pede contato numa carona, o que
+exige estar com a conta aberta, tem limite por conta e registra quem pediu.
 
 Os avisos de uma conta só aparecem para ela. A notificação leva só paradas e horário da carona,
 nunca nome, carro, placa, telefone, mensagem ou observação ([D-178](decisions/README.md)).
@@ -66,7 +65,7 @@ do BrazCar.
   somem junto.
 - Mensagem que não virou carona, ou virou e não foi aceita, é apagada com até 24 horas de idade
   depois de analisada.
-- O pedido de contato registrado fica: é o histórico que sustenta a detecção de cópia em massa do
+- O pedido de contato registrado fica: é o histórico que sustenta a detecção de leitura em massa do
   mural.
 - O aviso deixa de valer no fim do próprio dia e é apagado pela limpeza seguinte, com o registro
   das caronas avisadas; o de conta excluída também ([D-179](decisions/README.md)).
