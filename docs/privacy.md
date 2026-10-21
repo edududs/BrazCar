@@ -20,8 +20,8 @@ Do motorista que aparece numa carona importada dos grupos de WhatsApp, sem nunca
 
 De quem pede para ser avisado de carona ("Me avise"):
 
-- O dia, a janela de horário e o texto "passa por" de cada aviso, e quais caronas já foram
-  avisadas a ele ([D-175](decisions/README.md), [D-178](decisions/README.md)).
+- O dia, a faixa de horário e o texto digitado em "passa por" de cada aviso, e quais caronas já
+  foram avisadas a essa pessoa.
 
 De quem manda uma opinião pela Conta ou pede a própria remoção do mural:
 
@@ -42,7 +42,7 @@ De quem manda uma opinião pela Conta ou pede a própria remoção do mural:
 - O pedido de contato fica registrado porque é a base para medir uso do produto e para notar padrão
   de leitura em massa do mural (raspagem).
 - O aviso guarda o que foi pedido para poder comparar com cada carona nova, e o registro de cada
-  carona avisada impede que a mesma notificação chegue duas vezes ([D-178](decisions/README.md)).
+  carona avisada impede que a mesma notificação chegue duas vezes.
 
 ## Quem vê o quê
 
@@ -54,7 +54,7 @@ nunca aparecem numa lista, como a do mural: só são mostrados a quem pede conta
 exige estar com a conta aberta, tem limite por conta e registra quem pediu.
 
 Os avisos de uma conta só aparecem para ela. A notificação leva só paradas e horário da carona,
-nunca nome, carro, placa, telefone, mensagem ou observação ([D-178](decisions/README.md)).
+nunca nome, carro, placa, telefone, mensagem ou observação.
 
 Opiniões e pedidos de remoção não aparecem em nenhuma tela do produto: são lidos só por quem cuida
 do BrazCar.
@@ -67,8 +67,9 @@ do BrazCar.
   depois de analisada.
 - O pedido de contato registrado fica: é o histórico que sustenta a detecção de leitura em massa do
   mural.
-- O aviso deixa de valer no fim do próprio dia e é apagado pela limpeza seguinte, com o registro
-  das caronas avisadas; o de conta excluída também ([D-179](decisions/README.md)).
+- O aviso deixa de valer no fim do próprio dia e é apagado na limpeza seguinte, junto com o
+  registro das caronas avisadas; o aviso de uma conta excluída é apagado da mesma forma, na
+  limpeza seguinte.
 
 ## Como sair
 
