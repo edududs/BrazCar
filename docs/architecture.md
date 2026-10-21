@@ -34,6 +34,7 @@ flowchart TB
         SE[search: índice de texto<br/>independente do projeto]
         IM[importing: mensagem-fonte,<br/>candidata, julgamento, poda]
         FB[feedback: opinião sobre o app,<br/>lida só por comando]
+        AL[alerts: avisos do Me avise,<br/>notificação por porta]
     end
     F -->|OpenAPI gerado| R & AC & PL & FB
     R -->|id de lugar| PL
@@ -42,6 +43,9 @@ flowchart TB
     R -->|texto das paradas| SE
     IM -->|rascunho de carona| R
     IM -->|texto de parada| PL
+    AL -->|id de carona, filtro do mural| R
+    AL -->|id de conta| AC
+    R -.->|RideChanged, ligada na composição| AL
     IM -.->|Ollama local| LLM[(Ollama<br/>na máquina)]
 ```
 
@@ -87,6 +91,15 @@ catálogo e a data a partir do carimbo da mensagem, confere cada valor contra as
 (confiança, D-115) e decide (D-116). Aceita, vira `RideOffer` pelo caso de uso `ImportRide` de
 `rides`: a conta com aquele telefone, sem carro, ou um motorista externo (ADR-0015, D-127), com o
 texto original redigido (D-128). Nada importado sobrevive à partida (D-119).
+
+**Avisar quem pediu ("Me avise").** Depois de gravar e indexar uma carona com evento (publicar,
+editar, mudar vagas, repetir, importar), o caso de uso de `rides` chama a porta `RideChanged`, que a
+raiz de composição liga a `NotifyMatchingAlerts` de `alerts` (D-177). Para cada aviso ativo do dia
+local da carona, `alerts` pergunta a `rides` se o mural, filtrado como o aviso pede e só com vaga,
+mostraria a carona (`ShownOnBoard`, a mesma seleção do mural, D-176); se sim, reivindica o par
+(aviso, carona) na tabela `alerts_notice` e entrega a notificação pela porta `PushSender`, montada
+da visão anônima do detalhe (D-178). Tudo corre no processo de quem gravou, na requisição ou na
+varredura do worker, e nenhuma falha de `alerts` chega a quem gravou. Nesta etapa o remetente de produção só registra no log.
 
 **Contato.** A lista nunca traz telefone nem placa (schema `RideOut`, D-096). O botão chama uma rota própria, que exige
 login, aplica limite por conta, registra o pedido e devolve o link `wa.me` com mensagem pronta e a

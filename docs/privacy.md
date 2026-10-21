@@ -19,6 +19,11 @@ Do motorista que aparece numa carona importada dos grupos de WhatsApp, sem nunca
 - O texto da mensagem original, com telefone, e-mail, CPF e placa trocados por reticências antes de
   qualquer gravação ([D-128](decisions/README.md)).
 
+De quem pede para ser avisado de carona ("Me avise"):
+
+- O dia, a janela de horário e o texto "passa por" de cada aviso, e quais caronas já foram
+  avisadas a ele ([D-175](decisions/README.md), [D-178](decisions/README.md)).
+
 De quem manda uma opinião pela Conta ou pede a própria remoção do mural:
 
 - O texto da opinião e, numa reclamação, o telefone de quem ela aponta ([D-155](decisions/README.md)).
@@ -36,6 +41,8 @@ De quem manda uma opinião pela Conta ou pede a própria remoção do mural:
   terceiros sem apagar o anúncio ([D-128](decisions/README.md)).
 - O pedido de contato fica registrado porque é a base para medir uso do produto e para notar padrão
   de raspagem ([D-140](decisions/README.md)).
+- O aviso guarda o que foi pedido para poder comparar com cada carona nova, e o registro de cada
+  carona avisada impede que a mesma notificação chegue duas vezes ([D-178](decisions/README.md)).
 
 ## Quem vê o quê
 
@@ -45,6 +52,9 @@ mensagem original e observações ficam de fora ([D-171](decisions/README.md)).
 Com sessão, o mural mostra também o nome social e o carro de quem publicou. Telefone e placa nunca
 entram numa lista: só saem pela rota de pedir contato, que exige login, tem limite por conta e grava
 quem pediu ([D-031](decisions/README.md), [D-140](decisions/README.md)).
+
+Os avisos de uma conta só aparecem para ela. A notificação leva só paradas e horário da carona,
+nunca nome, carro, placa, telefone, mensagem ou observação ([D-178](decisions/README.md)).
 
 Opiniões e pedidos de remoção não aparecem em nenhuma tela do produto: são lidos só por comando de
 quem cuida do BrazCar ([D-155](decisions/README.md), [D-172](decisions/README.md)).
@@ -58,6 +68,8 @@ quem cuida do BrazCar ([D-155](decisions/README.md), [D-172](decisions/README.md
   mesma regra nos dois casos ([D-119](decisions/README.md)).
 - O pedido de contato registrado fica: é o histórico que sustenta a detecção de raspagem
   ([D-140](decisions/README.md)).
+- O aviso deixa de valer no fim do próprio dia e é apagado pela limpeza seguinte, com o registro
+  das caronas avisadas; o de conta excluída também ([D-179](decisions/README.md)).
 
 ## Como sair
 
