@@ -86,3 +86,12 @@ A importação dos grupos de WhatsApp expõe telefone de motorista que nunca se 
 aberto deixaria qualquer pessoa alcançar esse dado e até se cadastrar com o número de outro
 motorista para assumir as caronas importadas dele. O convite prova a posse do número antes de
 qualquer cadastro.
+
+## Notificações no aparelho
+
+Ao ligar as notificações num aparelho, o navegador cria um endereço de entrega no serviço de
+notificação do fabricante (Apple, Google, Mozilla ou Microsoft) e as chaves que cifram a mensagem.
+O BrazCar guarda esse endereço e essas chaves ligados à conta, um conjunto por aparelho, até cinco.
+A mensagem viaja cifrada e o serviço do fabricante a entrega sem ler o conteúdo, que traz só as
+paradas e o horário da carona. O aparelho sai ao desligar as notificações nele, quando o serviço do
+fabricante informa que o endereço deixou de existir e quando a conta é excluída.

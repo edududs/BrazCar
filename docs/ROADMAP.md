@@ -54,7 +54,7 @@ de design, que depende de autorização para rodar.
   notificação quando entra carona com vaga que casa com ele. Três etapas: (1) backend do aviso, do
   casamento pelo próprio mural e do disparo pela porta `PushSender`, com remetente que só registra
   no log: **feito no repositório**; (2) inscrição do aparelho, Web Push com VAPID e service worker,
-  que no iOS exige o app instalado; (3) tela do "Me avise" e lista dos avisos na conta.
+  que no iOS exige o app instalado: **feito no repositório**; (3) tela do "Me avise" e lista dos avisos na conta.
 - **Passo 7, `importing`.** Em andamento, em dois releases:
   **7a** embute o extrator (worker no compose, `DjangoStore`, pareamento, D-040 testado): **feito, tag
   `v0.8.0`**, mensagens cruas fluindo em produção; **7b** transforma mensagem em carona no mural (candidata,
