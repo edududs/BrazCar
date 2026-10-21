@@ -54,16 +54,26 @@ function fakePush(overrides: Partial<DevicePush> = {}): DevicePush {
 function Harness({ onClosed }: { readonly onClosed?: () => void }) {
   const [open, setOpen] = useState(true);
   return (
-    <AlertSheet
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) onClosed?.();
-      }}
-      seed={SEED}
-      now={NOW}
-      returnTo={RETURN_TO}
-    />
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true);
+        }}
+      >
+        Abrir de novo
+      </button>
+      <AlertSheet
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) onClosed?.();
+        }}
+        seed={SEED}
+        now={NOW}
+        returnTo={RETURN_TO}
+      />
+    </>
   );
 }
 
@@ -316,6 +326,26 @@ describe("AlertSheet for an account in good standing", () => {
     });
 
     expect(api.sentTo("POST", "/api/alerts")).toHaveLength(0);
+  });
+
+  it("forgets the answer on closing, so the next opening shows the form again", async () => {
+    const user = userEvent.setup();
+    signedIn();
+    api.answer(201, created);
+
+    const dialog = await openSheet();
+    await user.click(within(dialog).getByRole("button", { name: "Criar aviso" }));
+    await screen.findByText("Aviso criado.");
+    await user.click(screen.getByRole("button", { name: "Pronto" }));
+    await user.click(screen.getByRole("button", { name: "Abrir de novo" }));
+
+    const again = await screen.findByRole("dialog");
+    expect(await within(again).findByRole("button", { name: "Criar aviso" })).toBeDefined();
+    expect(within(again).queryByText("Aviso criado.")).toBeNull();
+    expect(within(again).getByRole("textbox", { name: /Passa por/ })).toHaveProperty(
+      "value",
+      "incra",
+    );
   });
 
   it("closes with Cancelar", async () => {
