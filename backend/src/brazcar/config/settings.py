@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "brazcar.rides.adapters",
     "brazcar.importing.adapters",
     "brazcar.feedback.adapters",
+    "brazcar.push.adapters",
     "brazcar.alerts.adapters",
     "brazcar.demo.adapters",  # no models and no routes: only `manage.py seed_demo` lives there (D-133)
 ]
