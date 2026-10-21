@@ -131,6 +131,9 @@ test("o teto de 5 avisos", async ({ page, demo, signIn, snap }) => {
     await openBoard(page);
     await page.getByRole("button", { name: "Me avise", exact: true }).click();
     const sheet = page.getByRole("dialog");
+    // O mesmo dia dos cinco: o "hoje" do relógio da semente pode já ser ontem para a API quando a
+    // rodada passa da meia-noite, e aí a recusa seria pelo dia, não pelo teto.
+    await sheet.getByRole("radio", { name: "Amanhã", exact: true }).click();
     await sheet.getByRole("button", { name: "Criar aviso", exact: true }).click();
 
     await expect(sheet.getByRole("alert").filter({ hasText: "5 avisos ativos" })).toBeVisible();
