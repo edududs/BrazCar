@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -18,8 +19,10 @@ from brazcar.accounts.domain import (
 )
 from brazcar.shared.application.ports import Clock, Mailer, RateLimiter
 
-from .ports import AccountRepository, Credentials, EmailConfirmationTokens, PasswordResetTokens
+from .ports import AccountErased, AccountRepository, Credentials, EmailConfirmationTokens, PasswordResetTokens
 from .wording import in_hours
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -241,10 +244,15 @@ class ResetPassword:
 @dataclass(frozen=True, slots=True)
 class DeleteAccount:
     accounts: AccountRepository
+    erased: AccountErased
 
     async def __call__(self, account_id: AccountId) -> None:
         await _require(self.accounts, account_id)
         await self.accounts.erase(account_id)
+        try:
+            await self.erased(account_id)
+        except Exception:
+            log.exception("the listener of erased account %s failed; the account stays erased", account_id)
 
 
 async def _require(accounts: AccountRepository, account_id: AccountId) -> Account:

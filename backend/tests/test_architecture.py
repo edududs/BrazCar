@@ -109,7 +109,7 @@ def test_guard_accepts_the_allowed_imports() -> None:
 
 PUSH_SDK = ("pywebpush", "py_vapid", "http_ece", "cryptography")
 PUSH_DOOR = f"{ROOT}.push.adapters.web_push"
-"""The Web Push libraries enter through one module and nowhere else (D-183)."""
+"""The Web Push libraries enter through one module and nowhere else (D-182)."""
 
 
 def push_sdk_imports(source: str) -> list[str]:

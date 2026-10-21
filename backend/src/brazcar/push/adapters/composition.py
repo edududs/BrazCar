@@ -18,7 +18,7 @@ from .repository import DjangoSubscriptionRepository
 from .routes import build_router
 from .web_push import Urgency, VapidKeys, WebPushTransport
 
-# These hold for every message today because there is one sender (the ride alerts). When another
+# (D-182) These hold for every message today because there is one sender (the ride alerts). When another
 # sender asks for other values, they move into the message.
 # A notice of a ride today or tomorrow still serves after a night with the phone off; later, the
 # push service drops it.

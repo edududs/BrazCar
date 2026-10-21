@@ -1,4 +1,4 @@
-"""The Web Push transport (D-183): VAPID keys checked at boot, and delivery through `pywebpush`.
+"""The Web Push transport (D-182, D-183): VAPID keys checked at boot, and delivery through `pywebpush`.
 
 The only module of `src/` that touches `pywebpush`, `py_vapid`, `http_ece` or `cryptography`. It
 reads no Django settings and no model on import: the settings module imports it."""

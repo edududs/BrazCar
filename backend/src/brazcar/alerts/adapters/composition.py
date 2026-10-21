@@ -18,14 +18,16 @@ from brazcar.alerts.application import (
     NotifyMatchingAlerts,
     PurgeAlerts,
 )
+from brazcar.alerts.application.ports import PushSender
 from brazcar.places.adapters.repository import DjangoCatalogRepository
+from brazcar.push.adapters.composition import push_to_account
 from brazcar.rides.adapters.composition import ride_rules, ride_search
 from brazcar.rides.adapters.directories import AccountDriverDirectory, CatalogPlaceDirectory
 from brazcar.rides.adapters.repository import DjangoRideRepository
 from brazcar.rides.application import ShownOnBoard, ShowRide
 from brazcar.shared.adapters.clock import SystemClock
 
-from .push import LoggingPushSender
+from .push import DevicePushSender, LoggingPushSender
 from .repository import DjangoAlertRepository, DjangoNoticeLog
 from .rides import RidesBoard
 from .routes import build_router
@@ -33,6 +35,12 @@ from .routes import build_router
 
 def alert_rules() -> AlertRules:
     return AlertRules(limit=settings.ALERT_ACTIVE_LIMIT, zone=timezone.get_default_timezone())
+
+
+def _push_sender() -> PushSender:
+    """Through the `push` context when push is on; a log line when this server has no VAPID keys (D-182)."""
+    push = push_to_account()
+    return LoggingPushSender() if push is None else DevicePushSender(push)
 
 
 def notify_matching_alerts() -> NotifyMatchingAlerts:
@@ -47,7 +55,7 @@ def notify_matching_alerts() -> NotifyMatchingAlerts:
         ShownOnBoard(rides, search, clock, rules),
     )
     return NotifyMatchingAlerts(
-        DjangoAlertRepository(), board, DjangoNoticeLog(), LoggingPushSender(), clock, alert_rules()
+        DjangoAlertRepository(), board, DjangoNoticeLog(), _push_sender(), clock, alert_rules()
     )
 
 

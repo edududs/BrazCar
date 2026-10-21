@@ -14,7 +14,7 @@ from brazcar.feedback.adapters.composition import feedback_router
 from brazcar.importing.adapters.api_composition import removal_router
 from brazcar.places.adapters.repository import DjangoCatalogRepository
 from brazcar.places.adapters.routes import build_router as build_places_router
-from brazcar.push.adapters.composition import push_router
+from brazcar.push.adapters.composition import forget_devices, push_router
 from brazcar.rides.adapters.composition import rides_router
 from brazcar.shared.adapters.api_errors import HeldOut
 from brazcar.shared.adapters.health import router as health_router
@@ -29,7 +29,7 @@ api = NinjaAPI(
 )
 api.add_router("", health_router)
 api.add_router("", web_version_router)
-api.add_router("/accounts", accounts_router())
+api.add_router("/accounts", accounts_router(forget_devices()))
 api.add_router("/places", build_places_router(DjangoCatalogRepository()))
 api.add_router("/rides", rides_router(notify_matching_alerts()))
 api.add_router("/feedback", feedback_router())

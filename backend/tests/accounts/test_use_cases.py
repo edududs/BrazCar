@@ -1,3 +1,6 @@
+import logging
+from uuid import UUID
+
 import pytest
 
 from brazcar.accounts.application import (
@@ -127,14 +130,56 @@ async def test_password_reset_changes_the_password_once_per_token(ctx: Context) 
         await ctx.reset(token=token, password="again")
 
 
-async def test_delete_erases_the_account(ctx: Context) -> None:
-    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
+class RecordingErased:
+    """Keeps the ids it was told about, and whether the account still existed at the call."""
 
-    await DeleteAccount(ctx.accounts)(account.id)
+    def __init__(self, accounts: InMemoryAccountRepository, *, fail: bool = False) -> None:
+        self.accounts, self.fail = accounts, fail
+        self.calls: list[UUID] = []
+        self.existed_at_call: list[bool] = []
+
+    async def __call__(self, account_id: UUID) -> None:
+        self.calls.append(account_id)
+        self.existed_at_call.append(await self.accounts.get(account_id) is not None)
+        if self.fail:
+            message = "listener down"
+            raise RuntimeError(message)
+
+
+async def test_delete_erases_the_account_and_then_tells_the_listener(ctx: Context) -> None:
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
+    erased = RecordingErased(ctx.accounts)
+
+    await DeleteAccount(ctx.accounts, erased)(account.id)
 
     assert await ctx.accounts.get(account.id) is None
+    assert erased.calls == [account.id]
+    assert erased.existed_at_call == [False]
+
+
+async def test_deleting_an_unknown_account_fails_and_the_listener_is_not_called(ctx: Context) -> None:
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
+    erased = RecordingErased(ctx.accounts)
+    await DeleteAccount(ctx.accounts, erased)(account.id)
+    erased.calls.clear()
+
     with pytest.raises(AccountNotFoundError):
-        await DeleteAccount(ctx.accounts)(account.id)
+        await DeleteAccount(ctx.accounts, erased)(account.id)
+
+    assert erased.calls == []
+
+
+async def test_a_failing_listener_does_not_undo_the_erasure_and_is_logged(
+    ctx: Context, caplog: pytest.LogCaptureFixture
+) -> None:
+    account = await ctx.register(phone=PHONE, password=PASSWORD, display_name="Ana")
+    erased = RecordingErased(ctx.accounts, fail=True)
+
+    with caplog.at_level(logging.ERROR):
+        await DeleteAccount(ctx.accounts, erased)(account.id)
+
+    assert await ctx.accounts.get(account.id) is None
+    assert str(account.id) in caplog.text
 
 
 async def test_update_profile_saves_the_change_and_leaves_absent_fields_alone(ctx: Context) -> None:

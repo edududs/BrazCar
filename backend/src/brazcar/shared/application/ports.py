@@ -48,6 +48,15 @@ class BoardSignal(Protocol):
         ...
 
 
+class AccountErased(Protocol):
+    """An account was erased (D-090): `accounts` calls it after the erasure and never knows who
+    listens; the composition root plugs the listener in (D-184)."""
+
+    async def __call__(self, account_id: UUID, /) -> None:
+        """React to the erasure. Whatever it raises is logged by `accounts` and never undoes the erasure."""
+        ...
+
+
 class RideChanged(Protocol):
     """A ride was written with an event (D-177): published, edited, its seats changed, repeated or
     imported. `rides` calls it after the save and the indexing and never knows who listens; the

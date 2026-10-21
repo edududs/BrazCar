@@ -1,7 +1,17 @@
 from typing import Protocol
 
 from brazcar.accounts.domain import Account, AccountId, EmailConfirmation, Invite
+from brazcar.shared.application.ports import AccountErased
 from brazcar.shared.domain.phone import PhoneNumber
+
+__all__ = [
+    "AccountErased",
+    "AccountRepository",
+    "Credentials",
+    "EmailConfirmationTokens",
+    "InviteRepository",
+    "PasswordResetTokens",
+]
 
 
 class AccountRepository(Protocol):
