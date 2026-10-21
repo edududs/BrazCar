@@ -180,6 +180,18 @@
             ],
             "title": "Q"
           },
+          "until": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          },
           "with_seats": {
             "default": false,
             "title": "With Seats",
@@ -2649,6 +2661,23 @@
                 }
               ],
               "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Until"
             }
           }
         ],

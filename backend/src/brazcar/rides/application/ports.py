@@ -43,12 +43,21 @@ class RideRepository(Protocol):
         """
         ...
 
-    async def upcoming(self, since: datetime, *, from_time: time | None = None) -> tuple[RideOffer, ...]:
+    async def upcoming(
+        self,
+        since: datetime,
+        *,
+        from_time: time | None = None,
+        until_time: time | None = None,
+        among: Collection[RideId] | None = None,
+    ) -> tuple[RideOffer, ...]:
         """Not cancelled, departing at or after `since`, earliest first. The board's raw material.
 
         `from_time` keeps only rides whose *local* time of day (D-094) is at or after it, whatever
         the day: the board's "a partir de" filter (D-141), pushed to the query so every day of the
-        list is judged by its own local hour, never by an absolute instant.
+        list is judged by its own local hour, never by an absolute instant. `until_time` is its
+        mirror, at or before it and inclusive by hour and minute (D-176); together they form a window.
+        `among` keeps only the rides of those identifiers; empty means none.
         """
         ...
 

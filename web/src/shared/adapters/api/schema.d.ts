@@ -600,6 +600,8 @@ export interface components {
             max_price?: number | string | null;
             /** Q */
             q?: string | null;
+            /** Until */
+            until?: string | null;
             /**
              * With Seats
              * @default false
@@ -2061,6 +2063,7 @@ export interface operations {
                 with_seats?: boolean;
                 max_price?: number | string | null;
                 from?: string | null;
+                until?: string | null;
             };
             header?: never;
             path?: never;

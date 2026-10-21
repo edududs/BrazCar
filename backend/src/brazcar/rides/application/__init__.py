@@ -34,6 +34,7 @@ from .use_cases import (
     RepeatRide,
     RequestContact,
     RideRules,
+    ShownOnBoard,
     ShowRide,
 )
 
@@ -68,6 +69,7 @@ __all__ = [
     "RideRules",
     "RideSearch",
     "ShowRide",
+    "ShownOnBoard",
     "StopView",
     "to_board_ride",
 ]

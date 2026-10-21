@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from datetime import datetime, time
 from uuid import UUID
 
@@ -46,8 +47,15 @@ class DjangoRideRepository:
     async def delete(self, ride_id: RideId) -> None:
         await sync_to_async(_delete)(ride_id)
 
-    async def upcoming(self, since: datetime, *, from_time: time | None = None) -> tuple[RideOffer, ...]:
-        return await sync_to_async(_upcoming)(since, from_time)
+    async def upcoming(
+        self,
+        since: datetime,
+        *,
+        from_time: time | None = None,
+        until_time: time | None = None,
+        among: Collection[RideId] | None = None,
+    ) -> tuple[RideOffer, ...]:
+        return await sync_to_async(_upcoming)(since, from_time, until_time, among)
 
     async def by_driver(self, driver_id: AccountId) -> tuple[RideOffer, ...]:
         return await sync_to_async(_by_driver)(driver_id)
@@ -103,28 +111,43 @@ def _get(ride_id: RideId) -> RideOffer | None:
     return None if row is None else _to_entity(row)
 
 
-def _upcoming(since: datetime, from_time: time | None) -> tuple[RideOffer, ...]:
+def _upcoming(
+    since: datetime, from_time: time | None, until_time: time | None, among: Collection[RideId] | None
+) -> tuple[RideOffer, ...]:
     rows = RideModel.objects.filter(cancelled_at=None, departure_at__gte=since)
-    if from_time is not None:
-        rows = _from_local_time(rows, from_time)
+    if among is not None:
+        rows = rows.filter(id__in=among)
+    if from_time is not None or until_time is not None:
+        rows = _within_local_window(rows, from_time, until_time)
     rows = rows.order_by("departure_at", "published_at").prefetch_related("stops")
     return tuple(_to_entity(row) for row in rows)
 
 
-def _from_local_time(rows: QuerySet[RideModel], from_time: time) -> QuerySet[RideModel]:
-    """Rides whose *local* hour of departure (D-094) is at or after `from_time` (D-141).
+def _within_local_window(
+    rows: QuerySet[RideModel], from_time: time | None, until_time: time | None
+) -> QuerySet[RideModel]:
+    """Rides whose *local* hour of departure (D-094) is at or after `from_time` (D-141) and at or
+    before `until_time` (D-176), either bound optional.
 
     Compared by the local hour and minute, extracted in the board's own zone, never by the UTC
     instant: two rides on the same local evening must agree, whichever side of UTC midnight they fall.
     """
     zone = timezone.get_default_timezone()
-    return rows.annotate(
+    rows = rows.annotate(
         _departure_hour=ExtractHour("departure_at", tzinfo=zone),
         _departure_minute=ExtractMinute("departure_at", tzinfo=zone),
-    ).filter(
-        Q(_departure_hour__gt=from_time.hour)
-        | Q(_departure_hour=from_time.hour, _departure_minute__gte=from_time.minute)
     )
+    if from_time is not None:
+        rows = rows.filter(
+            Q(_departure_hour__gt=from_time.hour)
+            | Q(_departure_hour=from_time.hour, _departure_minute__gte=from_time.minute)
+        )
+    if until_time is not None:
+        rows = rows.filter(
+            Q(_departure_hour__lt=until_time.hour)
+            | Q(_departure_hour=until_time.hour, _departure_minute__lte=until_time.minute)
+        )
+    return rows
 
 
 def _by_driver(driver_id: AccountId) -> tuple[RideOffer, ...]:
