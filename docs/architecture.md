@@ -104,10 +104,10 @@ local da carona, `alerts` pergunta a `rides` se o mural, filtrado como o aviso p
 mostraria a carona (`ShownOnBoard`, a mesma seleção do mural, D-176); se sim, reivindica o par
 (aviso, carona) na tabela `alerts_notice` e entrega a notificação pela porta `PushSender`, montada
 da visão anônima do detalhe (D-178). Tudo corre no processo de quem gravou, na requisição ou na
-varredura do worker, e nenhuma falha de `alerts` chega a quem gravou. A entrega passa pelo adaptador `DevicePushSender` ao
-contexto `push`, que cifra a mensagem e a envia por Web Push a cada aparelho da conta, em paralelo e
-dentro da requisição, com 5 s de limite por aparelho (D-182). Sem as chaves VAPID no ambiente, o
-push fica desligado e o remetente só registra no log (D-183).
+varredura do worker, e nenhuma falha de `alerts` chega a quem gravou. A entrega passa pelo
+adaptador `DevicePushSender` ao contexto `push`, que cifra a mensagem e a envia por Web Push a cada
+aparelho da conta, em paralelo e dentro da requisição, com 5 s de limite por aparelho (D-182). Sem
+as chaves VAPID no ambiente, o push fica desligado e o remetente só registra no log (D-183).
 
 **Contato.** A lista nunca traz telefone nem placa (schema `RideOut`, D-096). O botão chama uma rota própria, que exige
 login, aplica limite por conta, registra o pedido e devolve o link `wa.me` com mensagem pronta e a

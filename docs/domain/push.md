@@ -20,7 +20,7 @@ conta e entrega a ele uma mensagem cifrada. Feito para sair do projeto: o núcle
 | desligar o aparelho | `UnsubscribeDevice` | Apaga a inscrição, só se for da própria conta. |
 | avisar a conta | `PushToAccount` | Entrega a mensagem a todos os aparelhos da conta, em paralelo, e trata `GONE`. |
 | esquecer os aparelhos | `ForgetDevices` | Apaga todas as inscrições de uma conta; ligado a `AccountErased` (D-184). |
-| chave pública VAPID | `VAPID_PUBLIC_KEY` | A chave com que o navegador assina a inscrição; a rota `GET /api/push/public-key` a entrega (D-183). |
+| chave pública VAPID | `VAPID_PUBLIC_KEY` | A chave que o navegador recebe ao criar a inscrição (`applicationServerKey`), entregue pela rota `GET /api/push/public-key`. A API assina cada envio com a privada do mesmo par, e o serviço de push só aceita envio assinado por ela (D-183). |
 
 ## Por que é contexto próprio
 
