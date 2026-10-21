@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "brazcar.rides.adapters",
     "brazcar.importing.adapters",
     "brazcar.feedback.adapters",
+    "brazcar.alerts.adapters",
     "brazcar.demo.adapters",  # no models and no routes: only `manage.py seed_demo` lives there (D-133)
 ]
 AUTH_USER_MODEL = "accounts.User"  # the custom user precedes auth's first migration (D-028)
@@ -140,6 +141,9 @@ RIDE_CONTACT_WINDOW_HOURS = int(os.environ.get("RIDE_CONTACT_WINDOW_HOURS", "24"
 # The knobs of `feedback` (D-155): opinions per account in a window of hours.
 FEEDBACK_LIMIT = int(os.environ.get("FEEDBACK_LIMIT", "5"))
 FEEDBACK_WINDOW_HOURS = int(os.environ.get("FEEDBACK_WINDOW_HOURS", "24"))
+
+# The knob of `alerts` (D-175): active alerts per account.
+ALERT_ACTIVE_LIMIT = int(os.environ.get("ALERT_ACTIVE_LIMIT", "5"))
 
 # The header the edge fills with the client's address (`CF-Connecting-IP` behind the Cloudflare
 # tunnel), for the limit per client of the public removal request (D-172). No default: unset, the
