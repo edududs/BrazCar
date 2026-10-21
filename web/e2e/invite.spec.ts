@@ -55,7 +55,8 @@ test("convite completo: outro e-mail, o link do arquivo e o cadastro", async ({
   await expect(privacy).toBeVisible();
   const lastParagraph = privacy.locator("p").last();
   await lastParagraph.scrollIntoViewIfNeeded();
-  await expect(lastParagraph).toBeInViewport({ ratio: 1 });
+  // A fraction of a pixel may stay under the edge: the scroll position is rounded to a whole pixel.
+  await expect(lastParagraph).toBeInViewport({ ratio: 0.99 });
   await expect(privacy.getByRole("button", { name: "Li e aceito", exact: true })).toBeInViewport();
   await privacy.getByRole("button", { name: "Fechar", exact: true }).click();
   await expect(privacy).toBeHidden();
