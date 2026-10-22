@@ -33,7 +33,7 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 2026-09-24; API, worker e front na `v0.21.3` desde 2026-09-26; API, worker e front na `v0.22.0`
 desde 2026-09-26; API, worker e front na `v0.23.0` desde 2026-09-26; API, worker e front na
 `v0.24.0` desde 2026-09-26; API, worker e front na `v0.26.0` desde 2026-09-26 (a `v0.25.0` não foi
-implantada).
+implantada); API, worker e front na `v0.26.1` desde 2026-10-14.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -175,7 +175,7 @@ implantada).
   de apagá-las. No front, `features/feedback` com `useFeedbackDraft` (headless, com teste) e
   `FeedbackSheet`: tipo num segmentado, opinião com contador, e na reclamação a caixa "É sobre alguém
   específico" que abre o campo do celular; a linha "Enviar opinião" no grupo BrazCar da Conta.
-- "Me avise", etapa 1, ainda sem tag (D-175 a D-179; glossário em
+- "Me avise", etapa 1, na `v0.27.0` (D-175 a D-179; glossário em
   [domain/alerts.md](domain/alerts.md)): contexto `alerts` com `RideAlert` ("passa por", dia,
   janela de horário), teto de 5 ativos por conta, rotas `GET/POST /api/alerts` e
   `DELETE /api/alerts/{id}` com sessão e portão de escrita, tabelas `alerts_ride_alert` e
@@ -186,7 +186,7 @@ implantada).
   ligada a `NotifyMatchingAlerts` em `config/api.py`, na composição de `importing` e na da semente.
   Uma notificação por par (aviso, carona), sem dado de pessoa, pela porta `PushSender`, cujo
   adaptador de produção só registra no log. Sem Web Push, sem service worker, sem tela.
-- "Me avise", etapa 2, ainda sem tag (D-181 a D-185; glossário em
+- "Me avise", etapa 2, na `v0.27.0` (D-181 a D-185; glossário em
   [domain/push.md](domain/push.md)): contexto `push` independente do projeto, com a tabela
   `push_subscription` (migração `push.0001`), as rotas `PUT/DELETE /api/push/subscriptions` e
   `GET /api/push/public-key`, e o envio por `pywebpush` 2.5.0 num adaptador só. O VAPID vem do
@@ -195,7 +195,7 @@ implantada).
   `push`; excluir a conta apaga os aparelhos pela porta `AccountErased`. No front, o service worker
   gerado importa `sw-notifications.js` (`push` e `notificationclick`), os adaptadores
   `web-notifications`, `web-push` e `push-gateway`, e o hook `useDevicePush`. Sem tela.
-- "Me avise", etapa 3, ainda sem tag (D-186 a D-189): a tela. `GET /api/alerts` passa a devolver
+- "Me avise", etapa 3, na `v0.27.0` (D-186 a D-189): a tela. `GET /api/alerts` passa a devolver
   `{alerts, limit}` (`AlertsOut`, com `ActiveAlerts` do caso de uso), para a conta mostrar "x de N"
   sem o front repetir o teto. No front, `features/alerts` com o adaptador `alerts-gateway`, os hooks
   headless `useMyAlerts`, `useAlertDraft` e `useAlertRequest`, a folha `AlertSheet` aberta pelo

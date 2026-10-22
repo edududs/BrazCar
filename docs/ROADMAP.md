@@ -55,8 +55,8 @@ de design, que depende de autorização para rodar.
   do aviso, do casamento pelo próprio mural e do disparo pela porta `PushSender`, com remetente que
   só registra no log: **feito no repositório**; (2) inscrição do aparelho, Web Push com VAPID e
   service worker, que no iOS exige o app instalado: **feito no repositório**; (3) tela do "Me avise"
-  no mural e lista dos avisos na conta, com a saída da conta desligando o aparelho: **feito no
-  repositório**. Falta publicar, com o par VAPID gerado na máquina.
+  no mural e lista dos avisos na conta, com a saída da conta desligando o aparelho: **feito, tag
+  `v0.27.0`**.
 - **Passo 7, `importing`.** Em andamento, em dois releases:
   **7a** embute o extrator (worker no compose, `DjangoStore`, pareamento, D-040 testado): **feito, tag
   `v0.8.0`**, mensagens cruas fluindo em produção; **7b** transforma mensagem em carona no mural (candidata,
