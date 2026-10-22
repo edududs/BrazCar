@@ -6,6 +6,71 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.27.0] - 2026-10-22
+
+### Adicionado
+
+- **alerts:** Add the alert domain and its use cases
+- **rides:** Add the until filter and ask whether the board shows one ride
+- **alerts:** Store alerts and their notices
+- **alerts:** Add the alert routes, the board bridge and the purge command
+- **rides:** Tell a listener when a ride is written with an event
+- **web:** Read the legal texts' Markdown into a typed tree
+- **accounts:** Open the terms and the privacy notice in a sheet at sign-up
+- **push:** Add the push context core: subscriptions, messages and delivery use cases
+- **push:** Deliver through Web Push with VAPID keys checked at boot
+- **push:** Store device subscriptions and serve the push routes
+- **alerts:** Send ride notices through push and forget devices of an erased account
+- **web:** Show pushes in the service worker and add the push adapters
+- **web:** Add the headless hook that turns a device's push on and off
+- **alerts:** List the active alerts with the account's limit
+- **web:** Add the bell icon and the static list row, label the clock, search the action link, extract the install steps
+- **web:** Add the headless side of the ride alerts
+- **web:** Add the device push control that says the state and turns it on or off
+- **web:** Add the 'Me avise' sheet and its button on the board
+- **web:** List the account's ride alerts on the account page with a way to drop each
+- **web:** Turn the device's notifications off before leaving the account
+
+### Corrigido
+
+- **web:** Accept only https links in the legal texts
+- **web:** Keep one alert sheet across its life and leave no empty push box in the form
+- **web:** Keep the board's search text in a draft so fast typing is not overwritten
+
+### Desempenho
+
+- **web:** Load the alert sheet on the first 'Me avise' instead of with the board
+
+### Refatorado
+
+- **web:** Read the device subscription once without silencing the hooks rule
+
+### Documentação
+
+- Record the v0.26.1 deploy
+- **alerts:** Record the alert decisions and the context glossary
+- **legal:** Rewrite the terms and the privacy notice for whoever signs up
+- **legal:** Keep the original wording on bulk reading and on lists
+- **decisions:** Word the D-175 notes precisely
+- **legal:** Rewrite the alert passages for whoever signs up
+- **decisions:** Renumber the legal sheet decision to D-180
+- **push:** Record the push decisions, the context glossary and the deploy steps
+- **push:** Say what the VAPID public key is for and reflow the alert flow
+- **alerts:** Record the alert screen decisions, the glossary on screen and the state of the step
+- **decisions:** Say why the alert sheet loads on demand
+- Mark the three alert stages as released in v0.27.0
+
+### Testes
+
+- **e2e:** Tolerate subpixel rounding when the legal sheet scrolls to its end
+- **push:** Fuzz the contract with push on, so the key route answers 200
+- **e2e:** Cover creating, listing and capping ride alerts and the visitor's invitation
+- **e2e:** Pick tomorrow in the limit journey so a run across midnight still hits the limit
+
+### Infraestrutura
+
+- Run the web and e2e gates when a legal text changes
+
 ## [0.26.1] - 2026-10-14
 
 ### Corrigido
