@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
@@ -89,7 +89,9 @@ describe("the board's filters, as a person uses them", () => {
     await user.click(screen.getByRole("button", { name: "Amanhã" }));
     await user.click(screen.getByLabelText("Passa por"));
     await user.keyboard("Esplanada");
-    expect(applied()).toMatchObject({ day: "2026-09-25", text: "Esplanada" });
+    await waitFor(() => {
+      expect(applied()).toMatchObject({ day: "2026-09-25", text: "Esplanada" });
+    });
   });
 
   it("closes a sheet on Escape without applying anything", async () => {

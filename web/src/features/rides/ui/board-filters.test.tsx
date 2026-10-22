@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { BOARD_UTC_OFFSET } from "@/shared/domain/board-time-zone";
@@ -61,13 +61,16 @@ describe("BoardFiltersForm", () => {
     expect(onChange).toHaveBeenCalledWith({ ...noFilters, fromTime: null, withSeats: true });
   });
 
-  it("sends the typed search text, and null once it is cleared", () => {
+  it("sends the typed search text after a pause, and null once it is cleared", async () => {
     const onChange = vi.fn();
     const { rerender } = render(
       <BoardFiltersForm filters={noFilters} onChange={onChange} now={now} />,
     );
     fireEvent.change(screen.getByLabelText("Passa por"), { target: { value: "SCS" } });
-    expect(onChange).toHaveBeenCalledWith({ ...noFilters, text: "SCS" });
+    expect(onChange).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(onChange).toHaveBeenCalledWith({ ...noFilters, text: "SCS" });
+    });
 
     rerender(
       <BoardFiltersForm filters={{ ...noFilters, text: "SCS" }} onChange={onChange} now={now} />,

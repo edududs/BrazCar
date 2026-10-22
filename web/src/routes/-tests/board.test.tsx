@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -101,6 +101,34 @@ describe("the board at /", () => {
 
     await waitFor(() => {
       expect(router.state.location.search).toMatchObject({ q: "incra" });
+    });
+  });
+
+  it("keys that arrive faster than the navigation settles are all kept (D-056)", async () => {
+    const user = userEvent.setup({ delay: null });
+    api.serve("GET", "/api/rides", 200, [rideOut]);
+    const { router } = await renderApp("/");
+    const field = await screen.findByLabelText(/^Passa por/);
+
+    await user.type(field, "Incra 8");
+
+    expect((field as HTMLInputElement).value).toBe("Incra 8");
+    await waitFor(() => {
+      expect(router.state.location.search).toMatchObject({ q: "Incra 8" });
+    });
+    expect((field as HTMLInputElement).value).toBe("Incra 8");
+  });
+
+  it("the address still fills the field: a link, then back and forward", async () => {
+    api.serve("GET", "/api/rides", 200, [rideOut]);
+    const { router } = await renderApp("/?q=incra");
+    const field = await screen.findByLabelText(/^Passa por/);
+    expect((field as HTMLInputElement).value).toBe("incra");
+
+    await act(() => router.navigate({ to: "/", search: { q: "sia" }, replace: true }));
+
+    await waitFor(() => {
+      expect((field as HTMLInputElement).value).toBe("sia");
     });
   });
 

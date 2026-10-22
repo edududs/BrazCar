@@ -66,9 +66,7 @@ test("criar aviso a partir do mural filtrado", async ({ page, demo, signIn, snap
     await page.getByRole("button", { name: "Amanhã", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`day=${tomorrow}`));
     const search = page.getByRole("searchbox", { name: "Passa por", exact: true });
-    // Com atraso entre as teclas: o campo do mural é controlado pela URL, e digitar mais rápido
-    // que a navegação perde letras (ver o relatório da tarefa).
-    await search.pressSequentially(TEXT, { delay: 120 });
+    await search.pressSequentially(TEXT);
     await expect(search).toHaveValue(TEXT);
     await expect(page).toHaveURL(/q=Incra/);
     await page.getByRole("button", { name: "A partir de", exact: true }).click();

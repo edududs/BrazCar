@@ -7,6 +7,7 @@ import { Icon } from "@/shared/ui/icon";
 import { SearchField } from "@/shared/ui/search-field";
 
 import { dayChips } from "../app/board-days";
+import { useTextFilterDraft } from "../app/use-text-filter-draft";
 import type { BoardFilters } from "../domain/board";
 import { PriceSheet } from "./price-sheet";
 import { TimeSheet } from "./time-sheet";
@@ -23,12 +24,16 @@ interface BoardFiltersFormProps {
 /**
  * The board's filters: the search on top, then one row of chips. "A partir de" comes first,
  * because the hour is the product's axis (S01); active chips move to the front. Every change
- * goes straight to the caller, which keeps them in the URL (D-056).
+ * goes to the caller, which keeps them in the URL (D-056); the search text goes after a short
+ * pause, from a draft the field owns (D-190).
  */
 export function BoardFiltersForm({ filters, onChange, now, note = null }: BoardFiltersFormProps) {
   const [timeOpen, setTimeOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
   const nowOnBoard = boardWallClock(now);
+  const search = useTextFilterDraft(filters.text ?? "", (text) => {
+    onChange({ ...filters, text: text === "" ? null : text });
+  });
   const set = (patch: Partial<BoardFilters>) => {
     onChange({ ...filters, ...patch });
   };
@@ -110,10 +115,8 @@ export function BoardFiltersForm({ filters, onChange, now, note = null }: BoardF
     <section className="flex flex-col gap-3">
       <SearchField
         label="Passa por"
-        value={filters.text ?? ""}
-        onChange={(text) => {
-          set({ text: text === "" ? null : text });
-        }}
+        value={search.draft}
+        onChange={search.setDraft}
         placeholder="Passa por… Esplanada, Incra 8, SIA"
       />
       {note === null ? null : <p className="-mt-1.5 text-caption text-ink-3">{note}</p>}

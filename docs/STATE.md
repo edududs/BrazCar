@@ -544,11 +544,6 @@ gravação, a API recusa subir com remetente inválido e a tela distingue falha 
   Inscrições antigas, depois de uma troca de par VAPID, falham no log até o aparelho ligar de novo.
   O mural do front não tem filtro "até", então a folha do "Me avise" começa com ele desligado
   (D-187); um chip "Até" no mural é decisão de produto ainda não tomada.
-- O campo "Passa por" do mural é controlado pela URL (`navigate` com `replace`) e perde letras
-  quando as teclas chegam mais rápido do que a navegação termina: digitado pelo Playwright sem
-  intervalo, "Incra 8" virou "cra 8". Com 120 ms entre as teclas nada se perde, e
-  `e2e/alerts.spec.ts` digita assim; a correção, um rascunho local do texto sincronizado com a
-  URL, fica para um passo próprio, com o teste que digita sem intervalo.
 - A tabela de hits do limite cresce com o uso e só é podada por chave; um comando de limpeza
   entra se pesar.
 - Rota `/api/diagnostics/sse`, página `/diagnostics` e `SSE_DIAGNOSTICS_TOKEN` ficam de propósito
