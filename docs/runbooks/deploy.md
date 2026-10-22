@@ -68,6 +68,11 @@ v0.25.0 não foi implantada.
 Em 2026-10-14 (v0.26.1) nada entrou no `api.env`; sem migração; a API recusa subir com `EMAIL_FROM`
 malformado (D-173) e a recusa de telefone sugere o nono dígito (D-174). A v0.26.1 só foi cortada
 nesta data: o corte de 30/09 deixou um commit vazio local, descartado depois.
+Em 2026-10-21 (v0.27.0) entraram `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_CONTACT` no
+`api.env`: o par foi gerado na própria máquina e gravado direto no arquivo, sem passar por
+terminal (seção "Notificações (Web Push)"), com backup do arquivo ao lado; as migrações
+`alerts.0001` e `push.0001` aplicaram no `up`, e a API subiu com o push ligado
+(`settings.PUSH_VAPID` presente).
 
 ## Worker do WhatsApp (passo 7a)
 
@@ -169,8 +174,13 @@ no log do container; o envio agora antecede a gravação do convite.
 (D-183). O par se gera uma vez, e o comando só imprime as duas linhas:
 
 ```bash
-docker compose run --rm api python manage.py generate_vapid_keys
+docker compose run --rm --no-deps -T -e RUN_MIGRATIONS=0 api python manage.py generate_vapid_keys
 ```
+
+`RUN_MIGRATIONS=0` porque o `compose run` herda o ambiente do serviço `api`, e o entrypoint
+migraria o banco antes do `up`. Para gravar o par sem que ele apareça no terminal, a saída vai
+direto para o arquivo, filtrada pelas duas linhas `VAPID_*_KEY=`, e o contato entra numa linha à
+parte; a conferência é só a contagem (`grep -c '^VAPID_' ~/.brazcar/api.env` igual a 3).
 
 Numa máquina com Node, `npx web-push generate-vapid-keys` dá o mesmo formato. O contato é um
 `mailto:` ou um `https://`. As três linhas, como entram no `api.env`:
