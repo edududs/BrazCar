@@ -65,6 +65,12 @@ Cada contexto é um pacote com três camadas.
 Referência entre contextos é por identificador. `shared` guarda infraestrutura que não é de
 nenhum contexto.
 
+No front, cada funcionalidade tem as camadas `domain`, `app`, `ui` e `adapters`, com a mesma
+direção de dependência: `domain` não importa nada de dentro, `app` importa `domain` e `adapters`,
+`ui` importa `app` e `domain`, e só `app` alcança `adapters`. Uma funcionalidade usa outra apenas
+pelo `index.ts` dela (a superfície pública); `src/routes/` compõe as funcionalidades e `src/shared/`
+não depende de nenhuma (D-191).
+
 ## Fluxos que importam
 
 **Publicar ou alterar uma carona.** A rota ninja monta o DTO e chama o caso de uso. A entidade
@@ -173,6 +179,9 @@ As camadas de teste, de dentro para fora:
 - **Arquitetura por AST** (`backend/tests/test_architecture.py`): varre o código-fonte e recusa
   `domain`/`application` importando Django, ninja ou qualquer SDK, e um contexto importando o
   núcleo de outro (D-075); é o que faz o hexágono valer sem depender de disciplina.
+- **Camadas do front por lint** (`web/eslint/layers.js`, provado por
+  `web/src/architecture/layers.test.ts`, D-191): `yarn lint` recusa `ui` importando adaptador,
+  `app` importando `ui` e uma funcionalidade entrando em camada interna de outra.
 - **Domínio com Hypothesis**: situação da carona (ADR-0003) e regra de atraso (ADR-0004) testadas
   por propriedade, não só por exemplo; o gerador cobre combinações que ninguém escreveria à mão.
 - **Contrato de porta nos dois bancos** (D-085): uma classe em `backend/tests/contracts/`,

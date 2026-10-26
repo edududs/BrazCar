@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
-import { PersonalData } from "@/features/accounts/ui/personal-data";
+import { PersonalData } from "@/features/accounts";
 import { Avatar } from "@/shared/ui/avatar";
 import { Badge } from "@/shared/ui/badge";
 import { Icon } from "@/shared/ui/icon";

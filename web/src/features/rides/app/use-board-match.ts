@@ -1,11 +1,6 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-
-import { searchPlaces } from "@/features/places/adapters/places-gateway";
-import type { Place } from "@/features/places/domain/place";
+import { type Place, usePlacesMatching } from "@/features/places";
 
 import type { Stop } from "../domain/ride";
-
-const CATALOG_FRESH_MS = 5 * 60 * 1000;
 
 export interface BoardMatch {
   /** True for a stop that answered the "passa por" text: by its words, or by the place behind it. */
@@ -29,14 +24,7 @@ function byAlias(place: Place, key: string): boolean {
  */
 export function useBoardMatch(text: string | null): BoardMatch {
   const key = text === null ? "" : searchKey(text);
-  const { data } = useQuery({
-    queryKey: ["places", "search", key],
-    queryFn: ({ signal }) => searchPlaces(key, signal),
-    enabled: key !== "",
-    placeholderData: keepPreviousData,
-    staleTime: CATALOG_FRESH_MS,
-  });
-  const places = key === "" ? [] : (data ?? []);
+  const places = usePlacesMatching(key);
   const ids = new Set(places.map((place) => place.id));
   const aliased = places.find((place) => byAlias(place, key));
   return {

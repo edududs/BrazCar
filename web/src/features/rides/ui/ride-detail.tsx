@@ -1,10 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { useCanSeePeople } from "@/features/accounts/app/use-can-see-people";
-import type { Session } from "@/features/accounts/domain/session";
-import { HeldNotice } from "@/features/accounts/ui/held-notice";
-import { PersonalData } from "@/features/accounts/ui/personal-data";
+import { HeldNotice, PersonalData, type Session, useCanSeePeople } from "@/features/accounts";
 import { addDays } from "@/shared/app/calendar";
 import { AccountHeldError } from "@/shared/domain/account-held";
 import { ActionBar } from "@/shared/ui/action-bar";

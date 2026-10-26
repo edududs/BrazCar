@@ -14,6 +14,12 @@ paths:
   - `app`: hooks headless, estado e comportamento, zero markup e zero CSS.
   - `ui`: visual. Consome hooks, não reimplementa lógica. Views compõem primitivos, quase sem tag crua.
   - `adapters`: único lugar que conhece fetch, SSE, service worker e tipos gerados.
+- Camadas por lint (D-191, `web/eslint/layers.js`): `domain` não importa `app`, `ui` nem `adapters`;
+  `app` não importa `ui`; `ui` não importa `adapters` (usa um hook de `app`). Uma funcionalidade só
+  entra em outra pela superfície pública `@/features/<nome>` (o `index.ts`, que exporta só o que as
+  outras usam), nunca por `@/features/<nome>/<camada>/...`; na própria funcionalidade o import é
+  relativo. `src/routes/` é a raiz de composição e fica fora da regra entre funcionalidades;
+  `src/shared/` não importa funcionalidade. Testes ficam fora da regra de camadas.
 - Tipos da API são gerados do `contract/openapi.json` com `openapi-typescript` e ficam em `adapters`.
   Não escrever tipo de contrato à mão.
 - O front não recalcula regra de negócio. A API devolve a situação da carona e as ações

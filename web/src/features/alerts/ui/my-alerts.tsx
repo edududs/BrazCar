@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { HeldNotice } from "@/features/accounts/ui/held-notice";
+import { HeldNotice } from "@/features/accounts";
 import type { DevicePush } from "@/shared/app/use-device-push";
 import { AccountHeldError } from "@/shared/domain/account-held";
 import { Card } from "@/shared/ui/card";
