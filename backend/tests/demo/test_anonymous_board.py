@@ -45,6 +45,7 @@ NO_ACTIONS = {
     "can_contact": False,
     "delay_until": None,
 }
+OPEN_TO_CONTACT = {**NO_ACTIONS, "can_contact": True}  # signing in is the only step left (D-192)
 
 
 @pytest.fixture(autouse=True)
@@ -155,7 +156,7 @@ async def test_a_session_still_sees_the_driver_and_the_search_never_reads_a_name
             assert bare["car"] is None
             assert bare["origin_message"] is None
             assert bare["notes"] is None
-            assert bare["actions"] == NO_ACTIONS
+            assert bare["actions"] == OPEN_TO_CONTACT
             assert bare["is_mine"] is False
 
     assert signed_board[published]["driver_name"] == data.DRIVER_ONE_CAR.display_name

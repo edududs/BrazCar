@@ -181,7 +181,7 @@ async def test_the_card_shows_the_driver_and_the_car_but_never_the_phone_or_the_
         "can_change_seats": False,
         "can_cancel": False,
         "can_repeat": False,
-        "can_contact": False,
+        "can_contact": True,  # the visitor is one sign-in away (D-192)
         "delay_until": None,
     }
     assert body(revision)["revision"] >= 1

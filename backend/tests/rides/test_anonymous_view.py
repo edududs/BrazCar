@@ -21,7 +21,7 @@ from brazcar.rides.application import (
     ShowRide,
     to_board_ride,
 )
-from brazcar.rides.domain import Actions, CatalogStop, FreeTextStop, PaymentMethod, RideOffer
+from brazcar.rides.domain import Actions, CatalogStop, FreeTextStop, PaymentMethod, RideOffer, RideStatus
 from brazcar.shared.domain.phone import PhoneNumber
 from tests.shared.fakes import RecordingRideChanged
 
@@ -79,8 +79,9 @@ def test_the_anonymous_view_drops_every_person_and_keeps_the_ride(
     assert anonymous.car is None
     assert anonymous.origin_message is None
     assert anonymous.notes is None
-    assert anonymous.actions == Actions()
-    assert not any(anonymous.actions.model_dump().values())  # every action false, no delay either
+    contact_open = card.status in (RideStatus.OPEN, RideStatus.REOPENED)
+    assert anonymous.actions == Actions(can_contact=contact_open)  # only contact, and only when open
+    assert not any(v for k, v in anonymous.actions.model_dump().items() if k != "can_contact")
     assert anonymous.is_mine is False
     assert anonymous.model_dump(include=set(KEPT)) == card.model_dump(include=set(KEPT))
 
@@ -145,7 +146,7 @@ async def test_without_a_session_board_and_detail_show_no_person(ctx: Context) -
     assert [card.origin for card in board] == ["published", "whatsapp"]
     assert all(card.driver_name is None and card.car is None for card in board)
     assert all(card.notes is None and card.origin_message is None for card in board)
-    assert all(card.actions == Actions() for card in board)
+    assert all(card.actions == Actions(can_contact=True) for card in board)  # open rides (D-192)
 
 
 async def test_with_a_session_board_and_detail_are_what_they_were(ctx: Context) -> None:
@@ -179,3 +180,38 @@ async def test_the_search_never_finds_a_ride_by_its_drivers_name(ctx: Context, v
     assert by_name == ()
     assert by_sender == ()
     assert len(by_stop) == 2
+
+
+def _card(status: RideStatus, actions: Actions) -> BoardRide:
+    return BoardRide(
+        id=uuid4(),
+        driver_name="Ana",
+        car=None,
+        origin="published",
+        origin_message=None,
+        stops=(),
+        notes=None,
+        departure_at=DEPARTURE,
+        seats_available=1,
+        price=Decimal("7.00"),
+        has_fares=False,
+        payment_methods=(),
+        status=status,
+        actions=actions,
+        is_mine=False,
+    )
+
+
+@pytest.mark.parametrize("status", [RideStatus.OPEN, RideStatus.REOPENED])
+def test_the_visitor_can_ask_for_contact_where_an_ordinary_account_could(status: RideStatus) -> None:
+    """D-192: `can_contact` counts the step of signing in, so it reads like any non-owner's."""
+    card = _card(status, Actions(can_contact=True))
+
+    assert card.anonymized().actions == Actions(can_contact=True)
+
+
+@pytest.mark.parametrize("status", [RideStatus.FULL, RideStatus.DEPARTED, RideStatus.CANCELLED])
+def test_the_visitor_cannot_ask_for_contact_where_no_account_could(status: RideStatus) -> None:
+    card = _card(status, Actions())
+
+    assert card.anonymized().actions == Actions()

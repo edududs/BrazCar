@@ -60,8 +60,6 @@ const skyClass = {
 export function RideDetail({ ride, session, actions, onRepeated }: RideDetailProps) {
   const contacting = useContact(ride.id);
   const seesPeople = useCanSeePeople();
-  const gone = ride.status === "cancelled" || ride.status === "departed";
-  const acceptsContact = ride.status === "open" || ride.status === "reopened";
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -155,7 +153,7 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
             <DriverCard
               ride={ride}
               contact={contacting.contact}
-              locked={!gone && ride.status !== "full"}
+              locked={ride.actions.canContact}
               signedIn={session.status === "signed-in"}
             />
           </>
@@ -167,12 +165,7 @@ export function RideDetail({ ride, session, actions, onRepeated }: RideDetailPro
       </div>
 
       {ride.isMine ? null : (
-        <PassengerActions
-          ride={ride}
-          session={session}
-          contacting={contacting}
-          acceptsContact={acceptsContact}
-        />
+        <PassengerActions ride={ride} session={session} contacting={contacting} />
       )}
     </div>
   );
@@ -301,11 +294,10 @@ interface PassengerActionsProps {
   readonly ride: Ride;
   readonly session: Session;
   readonly contacting: ReturnType<typeof useContact>;
-  readonly acceptsContact: boolean;
 }
 
 /** The one action under the thumb, and what the ride's state says instead of it (S03, S04). */
-function PassengerActions({ ride, session, contacting, acceptsContact }: PassengerActionsProps) {
+function PassengerActions({ ride, session, contacting }: PassengerActionsProps) {
   const [error, setError] = useState<unknown>(null);
   const back = (
     <Link
@@ -359,7 +351,7 @@ function PassengerActions({ ride, session, contacting, acceptsContact }: Passeng
       </ActionBar>
     );
   }
-  if (session.status === "anonymous" && acceptsContact) {
+  if (session.status === "anonymous" && ride.actions.canContact) {
     return (
       <ActionBar>
         <Link

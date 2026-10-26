@@ -1,4 +1,4 @@
-from .actions import Actions, allowed_actions
+from .actions import Actions, accepts_contact, allowed_actions
 from .driver import AccountId, CarSnapshot, Driver, ExternalDriver, RegisteredDriver
 from .errors import (
     ContactLimitError,
@@ -72,6 +72,7 @@ __all__ = [
     "Stop",
     "UnknownPlaceError",
     "WhatsAppOrigin",
+    "accepts_contact",
     "allowed_actions",
     "fares_of",
     "price_from",
