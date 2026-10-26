@@ -210,7 +210,7 @@ wheels = [
 
 [[package]]
 name = "brazcar"
-version = "0.27.0"
+version = "0.27.1"
 source = { editable = "." }
 dependencies = [
     { name = "dj-database-url" },

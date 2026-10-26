@@ -6,6 +6,20 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.27.1] - 2026-10-26
+
+### Corrigido
+
+- **rides:** Let the anonymous view carry canContact so the front stops deriving the action from the status
+
+### Refatorado
+
+- **web:** Enforce feature layers and public surfaces by lint
+
+### Documentação
+
+- **deploy:** Record the v0.27.0 deploy and generate the VAPID pair without migrating
+
 ## [0.27.0] - 2026-10-22
 
 ### Adicionado
