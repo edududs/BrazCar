@@ -13,6 +13,7 @@ from brazcar.rides.domain import (
     RideOffer,
     RideStatus,
     WhatsAppOrigin,
+    accepts_contact,
     allowed_actions,
 )
 from brazcar.shared.domain.model import FrozenModel
@@ -60,15 +61,17 @@ class BoardRide(FrozenModel):
 
     def anonymized(self) -> Self:
         """The anonymous view, for a viewer without a session (D-171): nothing that points at a
-        person and nothing to do. Name, car, the original message and the notes go, because the
+        person and nothing to do but sign in. Name, car, the original message and the notes go, because the
         notes are someone's free words and may carry a name; stops, departure, price, fares, seats,
-        payment, status and the "via WhatsApp" origin stay."""
+        payment, status and the "via WhatsApp" origin stay. `can_contact` stays what it would be for
+        any account that does not drive the ride, since the viewer is one sign-in away from asking
+        (D-192); the contact route still demands a session. Every other action is false."""
         return self.evolve(
             driver_name=None,
             car=None,
             origin_message=None,
             notes=None,
-            actions=Actions(),
+            actions=Actions(can_contact=accepts_contact(self.status)),
             is_mine=False,
         )
 

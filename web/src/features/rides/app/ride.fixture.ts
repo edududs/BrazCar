@@ -56,7 +56,7 @@ export const anonymousRide: Ride = {
     canChangeSeats: false,
     canCancel: false,
     canRepeat: false,
-    canContact: false,
+    canContact: true,
     delayUntil: null,
   },
 };

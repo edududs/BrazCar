@@ -26,7 +26,7 @@
 | esquecer caronas | `ForgetRides` | Apaga caronas de motorista externo, para a poda (D-119). Nunca as de conta. |
 | ações permitidas | `Actions` | O que quem vê pode fazer com a carona, calculado no servidor: editar, mudar vagas, cancelar, repetir, pedir contato e até quando pode adiar. |
 | card do mural | `BoardRide` | O que a lista mostra: nome, carro (modelo e cor, quando há), origem, mensagem original (quando importada), paradas com nome e tarifa, observações, situação e ações. Nunca telefone nem placa. |
-| visão anônima | `BoardRide.anonymized()` | O card e o detalhe para quem não tem sessão (D-171): sem nome do motorista, carro, mensagem de origem e observações, com todas as ações falsas. Ficam paradas, horário, preço, `has_fares`, vagas, formas de pagamento, situação e origem. Aplicada pelos casos de uso do mural e do detalhe, nunca pela rota. |
+| visão anônima | `BoardRide.anonymized()` | O card e o detalhe para quem não tem sessão (D-171): sem nome do motorista, carro, mensagem de origem e observações, com todas as ações falsas, salvo `can_contact` (D-192). Ficam paradas, horário, preço, `has_fares`, vagas, formas de pagamento, situação e origem. Aplicada pelos casos de uso do mural e do detalhe, nunca pela rota. |
 | filtros do mural | `BoardFilter` | A partir de qual hora local (`from_time`, D-141), até qual hora local, inclusiva (`until_time`, D-176), dia, "passa por" em texto livre, só com vaga, preço máximo. Vivem na URL do front. |
 | o mural mostraria | `ShownOnBoard` | Caso de uso que diz se o mural, com um filtro, listaria uma carona agora: a mesma seleção do `ListBoard`, restrita a ela (D-176). É o que `alerts` pergunta. |
 | carona gravada | `RideChanged` | Porta de `shared` chamada depois de gravar e indexar uma carona com evento: publicar, editar, mudar vagas, repetir, importar quando cria (D-177). `rides` não sabe quem ouve, e a falha de quem ouve nunca falha a carona. |
@@ -72,8 +72,9 @@ Função pura de quatro dados, lida nesta ordem:
   corrige. O detector é o mesmo da importação, em `shared/domain/personal_data.py` (D-128, D-129).
   Editar com texto vazio apaga as observações; carona importada nunca tem observações.
 - Sem sessão, nenhum dado de pessoa sai do mural nem do detalhe, em carona publicada ou importada:
-  a visão anônima zera nome, carro, mensagem de origem e observações, e nenhuma ação é verdadeira
-  (D-171). A busca "passa por" lê só as paradas, então nunca acha carona pelo nome de quem dirige,
+  a visão anônima zera nome, carro, mensagem de origem e observações, e só `can_contact` pode ser
+  verdadeiro, quando a carona aceita contato, como seria para qualquer conta que não a dirige
+  (D-171, D-192). A busca "passa por" lê só as paradas, então nunca acha carona pelo nome de quem dirige,
   com ou sem sessão.
 - Datas voltam do banco no fuso do mural (`America/Sao_Paulo`): "mesmo dia" e o filtro por dia
   leem a data local, nunca a UTC.

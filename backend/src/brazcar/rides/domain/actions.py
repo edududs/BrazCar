@@ -16,13 +16,17 @@ class Actions(FrozenModel):
     delay_until: datetime | None = None  # the latest departure an edit may set, when editing
 
 
+def accepts_contact(status: RideStatus) -> bool:
+    """Whether a ride in this status takes contact requests from someone who is not its driver."""
+    return status in (RideStatus.OPEN, RideStatus.REOPENED)
+
+
 def allowed_actions(
     ride: RideOffer, viewer: AccountId | None, now: datetime, tolerance: timedelta
 ) -> Actions:
     status = ride.status(now, tolerance)
     if not ride.is_owned_by(viewer):  # an external driver's ride is nobody's (ADR-0015)
-        can_contact = viewer is not None and status in (RideStatus.OPEN, RideStatus.REOPENED)
-        return Actions(can_contact=can_contact)
+        return Actions(can_contact=viewer is not None and accepts_contact(status))
     if status is RideStatus.CANCELLED:
         return Actions(can_repeat=True)
     if ride.is_locked(now):

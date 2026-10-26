@@ -197,3 +197,54 @@ describe("RideDetail", () => {
     expect(screen.getByRole("button", { name: "Pedir contato" })).toBeDefined();
   });
 });
+
+describe("RideDetail contact comes from the API's canContact (D-192)", () => {
+  const noContact = { ...openRide.actions, canContact: false };
+  const signInLink = { name: "Entrar para pedir contato" };
+  const lock = /Telefone e placa só aparecem/;
+
+  it("offers a visitor the sign-in and the lock on an open ride the API lets be contacted", async () => {
+    show(anonymousRide);
+
+    expect(await screen.findByRole("link", signInLink)).toBeDefined();
+    expect(screen.getByText(lock)).toBeDefined();
+  });
+
+  it.each(["full", "cancelled"] as const)(
+    "offers a visitor neither the sign-in nor the lock on a %s ride",
+    async (status) => {
+      show({ ...anonymousRide, status, actions: noContact });
+
+      await screen.findByRole("link", { name: "Ver outras caronas" });
+      expect(screen.queryByRole("link", signInLink)).toBeNull();
+      expect(screen.queryByText(lock)).toBeNull();
+    },
+  );
+
+  it("follows the flag, not the status: an open ride with canContact false shows neither", async () => {
+    show({ ...anonymousRide, actions: noContact });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("link", signInLink)).toBeNull();
+    });
+    expect(screen.queryByText(lock)).toBeNull();
+  });
+
+  it("asks a signed-in account to request the contact on an open ride", async () => {
+    show(openRide, signedIn);
+
+    expect(await screen.findByRole("button", { name: "Pedir contato" })).toBeDefined();
+    expect(screen.getByText(/aparecem aqui quando você pedir o contato/)).toBeDefined();
+  });
+
+  it.each(["full", "cancelled"] as const)(
+    "gives a signed-in account no request button and no lock on a %s ride",
+    async (status) => {
+      show({ ...openRide, status, actions: noContact }, signedIn);
+
+      await screen.findByRole("link", { name: "Ver outras caronas" });
+      expect(screen.queryByRole("button", { name: "Pedir contato" })).toBeNull();
+      expect(screen.queryByText(/aparecem aqui quando você pedir/)).toBeNull();
+    },
+  );
+});
