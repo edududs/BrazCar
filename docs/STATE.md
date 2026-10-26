@@ -34,7 +34,7 @@ no celular (`v0.6.0`). API publicada em `api-brazcar.elj-labs.org` e front em
 desde 2026-09-26; API, worker e front na `v0.23.0` desde 2026-09-26; API, worker e front na
 `v0.24.0` desde 2026-09-26; API, worker e front na `v0.26.0` desde 2026-09-26 (a `v0.25.0` não foi
 implantada); API, worker e front na `v0.26.1` desde 2026-10-14; API, worker e front na `v0.27.0`
-desde 2026-10-21, com o push ligado.
+desde 2026-10-21, com o push ligado; API, worker e front na `v0.27.1` desde 2026-10-26.
 
 - `backend/`: uv, Python 3.14, Django 6 ASGI com django-ninja, `config/` como raiz de
   composição, logs JSON, banco por `DATABASE_URL`, ruff `ALL`, pyright strict, teste de
@@ -489,9 +489,9 @@ gravação, a API recusa subir com remetente inválido e a tela distingue falha 
 ## Próximo passo
 
 1. "Me avise", as três etapas publicadas na `v0.27.0` (2026-10-21), com o par VAPID no `api.env`
-   e o push ligado. Falta conferir no iPhone com o app na Tela
-   de Início o pedido de permissão no toque de "Criar aviso", a chegada da notificação, "Meus
-   avisos" e a saída da conta desligando o aparelho, e na aba do Safari a orientação de instalação.
+   e o push ligado. Verificado em produção: a notificação chega num iPhone com o app na Tela de
+   Início e num Android. Falta conferir à mão a saída da conta desligando o aparelho e, na aba do
+   Safari, a orientação de instalação.
    As cenas novas do catálogo entram na rodada única do `yarn screens`, que depende de autorização.
 2. Etapa de design (D-103, D-143): validação no celular dos passos 5 e 6 publicados pendente; o
    desktop aguarda as pranchas do canvas.

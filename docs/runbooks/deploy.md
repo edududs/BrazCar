@@ -73,6 +73,9 @@ Em 2026-10-21 (v0.27.0) entraram `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPI
 terminal (seção "Notificações (Web Push)"), com backup do arquivo ao lado; as migrações
 `alerts.0001` e `push.0001` aplicaram no `up`, e a API subiu com o push ligado
 (`settings.PUSH_VAPID` presente).
+Em 2026-10-26 (v0.27.1) nada entrou no `api.env`; sem migração; a visão anônima passou a levar
+`canContact` (D-192), conferida no endereço público: caronas abertas com `canContact` verdadeiro,
+nenhum campo de pessoa preenchido e as demais ações falsas.
 
 ## Worker do WhatsApp (passo 7a)
 
