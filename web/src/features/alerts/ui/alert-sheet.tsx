@@ -1,7 +1,6 @@
 import { useId } from "react";
 
-import { HeldNotice } from "@/features/accounts/ui/held-notice";
-import { useSession } from "@/features/accounts/app/use-session";
+import { HeldNotice, useSession } from "@/features/accounts";
 import { type DevicePush, useDevicePush } from "@/shared/app/use-device-push";
 import { AccountHeldError, HELD_MESSAGE } from "@/shared/domain/account-held";
 import { ActionButton } from "@/shared/ui/action-button";

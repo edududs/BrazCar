@@ -4,7 +4,7 @@ import { ActionButton } from "@/shared/ui/action-button";
 import { Form } from "@/shared/ui/form";
 import { PasswordField } from "@/shared/ui/password-field";
 
-import { confirmPasswordReset } from "../adapters/accounts-gateway";
+import { usePasswordResetConfirmation } from "../app/use-password-reset";
 import { reasonOf } from "./reason";
 
 interface PasswordResetFormProps {
@@ -14,15 +14,13 @@ interface PasswordResetFormProps {
 
 export function PasswordResetForm({ token, onDone }: PasswordResetFormProps) {
   const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
+  const { confirm, busy } = usePasswordResetConfirmation();
   const [error, setError] = useState<string | null>(null);
 
   const submit = () => {
     setError(null);
-    setBusy(true);
-    confirmPasswordReset(token, password).then(onDone, (reason: unknown) => {
+    confirm(token, password).then(onDone, (reason: unknown) => {
       setError(reasonOf(reason));
-      setBusy(false);
     });
   };
 

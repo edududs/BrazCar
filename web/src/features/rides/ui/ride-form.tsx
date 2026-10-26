@@ -1,8 +1,7 @@
 import { useId, useState } from "react";
 
-import type { Car } from "@/features/accounts/domain/account";
-import { usePlace } from "@/features/places/app/use-place";
-import { PlacePicker, type PlaceChoice } from "@/features/places/ui/place-picker";
+import type { Car } from "@/features/accounts";
+import { PlacePicker, type PlaceChoice, usePlace } from "@/features/places";
 import { useUnsavedWork } from "@/shared/app/unsaved-work";
 import { ActionBar } from "@/shared/ui/action-bar";
 import { ActionButton } from "@/shared/ui/action-button";

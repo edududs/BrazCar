@@ -8,29 +8,22 @@ import { Icon } from "@/shared/ui/icon";
 import { NoticeScreen } from "@/shared/ui/notice-screen";
 import { PhoneField } from "@/shared/ui/phone-field";
 
-import { requestPasswordReset } from "../adapters/accounts-gateway";
+import { usePasswordResetRequest } from "../app/use-password-reset";
 import { reasonOf } from "./reason";
 
 /** Asks for the e-mailed link. Says the same thing whatever the phone: nothing to learn here. */
 export function PasswordResetRequestForm() {
   const phone = usePhoneInput();
-  const [state, setState] = useState<"idle" | "busy" | "sent">("idle");
+  const { request, state } = usePasswordResetRequest();
   const [error, setError] = useState<string | null>(null);
 
   const submit = () => {
     setError(null);
     const e164 = phone.submitValue();
     if (e164 === null) return;
-    setState("busy");
-    requestPasswordReset(e164).then(
-      () => {
-        setState("sent");
-      },
-      (reason: unknown) => {
-        setError(reasonOf(reason, { sendsEmail: true }));
-        setState("idle");
-      },
-    );
+    request(e164).catch((reason: unknown) => {
+      setError(reasonOf(reason, { sendsEmail: true }));
+    });
   };
 
   if (state === "sent") {
