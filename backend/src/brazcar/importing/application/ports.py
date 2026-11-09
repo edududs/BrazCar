@@ -12,6 +12,7 @@ from brazcar.importing.domain import (
     RideDraft,
     Sender,
     SourceMessage,
+    Verdict,
 )
 from brazcar.shared.application.ports import Clock
 from brazcar.shared.domain.model import FrozenModel
@@ -53,6 +54,10 @@ class SourceMessages(Protocol):
         """Forget every message of one sender, attached or not (D-119)."""
         ...
 
+    async def last_received_at(self) -> datetime | None:
+        """When the most recent message arrived, or None when there is none (D-193)."""
+        ...
+
 
 class Candidates(Protocol):
     async def get(self, candidate_id: CandidateId) -> Candidate | None: ...
@@ -83,6 +88,11 @@ class Candidates(Protocol):
 
     async def forget_from(self, phone: PhoneNumber) -> int:
         """Delete every candidate of one sender, with their messages (D-119)."""
+        ...
+
+    async def last_judged_verdict(self) -> Verdict | None:
+        """The verdict of the candidate judged most recently (greatest `judged_at`), or None when
+        nothing has been judged. A pending candidate has no verdict to give (D-193)."""
         ...
 
 

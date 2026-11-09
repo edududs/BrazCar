@@ -174,6 +174,8 @@ OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
 RIDE_PARSER_MODEL = os.environ.get("RIDE_PARSER_MODEL", "qwen3.5:4b")  # the golden set chose it (D-120)
 IMPORT_ACCEPT_THRESHOLD = float(os.environ.get("IMPORT_ACCEPT_THRESHOLD", "0.7"))
 IMPORT_MAX_ATTEMPTS = int(os.environ.get("IMPORT_MAX_ATTEMPTS", "5"))
+# Hours without a received message before `/api/health/importing` says `no_recent_messages` (D-193).
+IMPORT_STALE_AFTER_HOURS = int(os.environ.get("IMPORT_STALE_AFTER_HOURS", "8"))
 
 # Oldest front the API still serves (D-052, D-105). Below it the app asks for an update. 0.0.0 is no floor.
 WEB_MINIMUM_VERSION = _env_version("WEB_MINIMUM_VERSION", default="0.0.0")

@@ -660,6 +660,40 @@
         "title": "HeldOut",
         "type": "object"
       },
+      "ImportingHealthOut": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "parser_failing",
+                  "no_recent_messages"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "degraded",
+              "off"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "reason"
+        ],
+        "title": "ImportingHealthOut",
+        "type": "object"
+      },
       "InviteEmailIn": {
         "properties": {
           "email": {
@@ -2837,6 +2871,28 @@
           }
         },
         "summary": "Get Health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/health/importing": {
+      "get": {
+        "operationId": "get_importing_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportingHealthOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Get Importing Health",
         "tags": [
           "health"
         ]

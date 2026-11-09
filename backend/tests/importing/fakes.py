@@ -17,6 +17,7 @@ from brazcar.importing.domain import (
     RideDraft,
     Sender,
     SourceMessage,
+    Verdict,
 )
 from brazcar.shared.domain.phone import PhoneNumber
 
@@ -48,6 +49,9 @@ class InMemorySourceMessages:
             del self.rows[key]
             self.attached.pop(key, None)
         return len(gone)
+
+    async def last_received_at(self) -> datetime | None:
+        return max((m.received_at for m in self.rows.values()), default=None)
 
     def drop_of(self, candidate_ids: Collection[CandidateId]) -> int:
         keys = [k for k, c in self.attached.items() if c in candidate_ids]
@@ -112,6 +116,10 @@ class InMemoryCandidates:
 
     async def forget_from(self, phone: PhoneNumber) -> int:
         return self._forget([c.id for c in self.rows.values() if c.sender.phone == phone])
+
+    async def last_judged_verdict(self) -> Verdict | None:
+        judged = [(c.judged_at, c.verdict) for c in self.rows.values() if c.judged_at is not None]
+        return max(judged, key=lambda pair: pair[0])[1] if judged else None
 
     def _forget(self, ids: list[CandidateId]) -> int:
         for candidate_id in ids:

@@ -21,6 +21,7 @@ from brazcar.importing.application import (
     RefuseRemoval,
     ReopenJudged,
 )
+from brazcar.importing.domain import Failed
 from brazcar.places.adapters.repository import DjangoCatalogRepository
 from brazcar.rides.adapters.composition import ride_search
 from brazcar.rides.adapters.directories import AccountDriverDirectory, CatalogPlaceDirectory
@@ -136,6 +137,11 @@ def sweep(config: ImportingSettings) -> Sweep:
         taken = await use_cases.ingest()
         judged = await use_cases.judge(limit=JUDGEMENTS_PER_SWEEP)
         created = sum(1 for each in judged if each.created_ride)
+        failures = [v for v in (each.candidate.verdict for each in judged) if isinstance(v, Failed)]
+        if failures:
+            log.warning(
+                "sweep: %d judgement(s) failed; first error: %s", len(failures), failures[0].error[:120]
+            )
         if taken or judged:
             log.info("sweep: %d message(s) taken, %d judged, %d ride(s) created", taken, len(judged), created)
         if config.purge is PurgeMode.WORKER:

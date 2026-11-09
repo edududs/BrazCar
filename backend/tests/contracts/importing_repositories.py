@@ -135,3 +135,37 @@ class ImportingRepositoriesContract:
         assert await candidates.forget_by_ride([ride_id]) == 1
         assert await candidates.forget_by_ride([ride_id]) == 0
         assert await candidates.get(accepted.id) is None
+
+    async def test_the_latest_judged_verdict_is_the_one_with_the_greatest_judged_at(self) -> None:
+        messages = self.make_messages()
+        candidates = self.make_candidates(messages)
+        phone = own_phone()
+        far = datetime(2099, 1, 1, tzinfo=UTC)  # later than any row another example left behind
+        older, newer = fresh(phone=phone), fresh(phone=phone, text="outro texto 20:00")
+        for message in (older, newer):
+            await messages.save(message)
+        first = Candidate.open(older, group_label="Rota").fail("away", at=far)
+        second = Candidate.open(newer, group_label="Rota")
+        await candidates.save(first, attaching=older)
+        await candidates.save(second, attaching=newer)
+
+        assert await candidates.last_judged_verdict() == first.verdict  # pending has no verdict
+
+        rejected = second.judge(
+            Rejected(reason=RejectReason.NO_TIME, confidence=0.5), at=far + timedelta(hours=1)
+        )
+        await candidates.save(rejected)
+        assert await candidates.last_judged_verdict() == rejected.verdict
+
+        assert await candidates.forget_from(phone) == 2
+
+    async def test_the_last_received_at_is_the_latest_arrival(self) -> None:
+        messages = self.make_messages()
+        phone = own_phone()
+        far = datetime(2099, 1, 1, tzinfo=UTC)
+        await messages.save(fresh(phone=phone, received_at=far))
+        await messages.save(fresh(phone=phone, received_at=far - timedelta(hours=3)))
+
+        assert await messages.last_received_at() == far
+
+        assert await messages.delete_from(phone) == 2

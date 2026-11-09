@@ -21,6 +21,13 @@ from .candidate import (
 )
 from .checks import Checks, check
 from .fares import attach_fares
+from .health import (
+    DEFAULT_STALE_AFTER,
+    ImportingHealth,
+    ImportingProblem,
+    ImportingStatus,
+    assess_importing,
+)
 from .judgement import Day, Judgement, Offer, OfferFare, Other, Payment, Request, Update
 from .removal_request import (
     NOTE_LIMIT,
@@ -41,6 +48,7 @@ __all__ = [
     "DEFAULT_PAYMENT",
     "DEFAULT_PRICE",
     "DEFAULT_SEATS",
+    "DEFAULT_STALE_AFTER",
     "NOTE_LIMIT",
     "Accept",
     "Accepted",
@@ -52,6 +60,9 @@ __all__ = [
     "Decision",
     "Failed",
     "GroupJid",
+    "ImportingHealth",
+    "ImportingProblem",
+    "ImportingStatus",
     "Judgement",
     "Offer",
     "OfferFare",
@@ -74,6 +85,7 @@ __all__ = [
     "Update",
     "Verdict",
     "WatchedGroup",
+    "assess_importing",
     "attach_fares",
     "check",
     "decide",

@@ -347,6 +347,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/health/importing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Importing Health */
+        get: operations["get_importing_health"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/places": {
         parameters: {
             query?: never;
@@ -864,6 +881,16 @@ export interface components {
             detail: string;
             /** Required Action */
             required_action?: string | null;
+        };
+        /** ImportingHealthOut */
+        ImportingHealthOut: {
+            /** Reason */
+            reason: ("parser_failing" | "no_recent_messages") | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "degraded" | "off";
         };
         /** InviteEmailIn */
         InviteEmailIn: {
@@ -2265,6 +2292,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthStatus"];
+                };
+            };
+        };
+    };
+    get_importing_health: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportingHealthOut"];
                 };
             };
         };
