@@ -1,3 +1,4 @@
+from .health import CheckImportingHealth
 from .parser_output import ParserOutput, StopFare, to_judgement
 from .ports import (
     BlockedSenders,
@@ -33,6 +34,7 @@ __all__ = [
     "BlockSender",
     "BlockedSenders",
     "Candidates",
+    "CheckImportingHealth",
     "Clock",
     "ImportRules",
     "ImportedRide",

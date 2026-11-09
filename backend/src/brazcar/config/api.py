@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from brazcar.accounts.adapters.composition import accounts_router
 from brazcar.alerts.adapters.composition import alerts_router, notify_matching_alerts
 from brazcar.feedback.adapters.composition import feedback_router
-from brazcar.importing.adapters.api_composition import removal_router
+from brazcar.importing.adapters.api_composition import importing_health_router, removal_router
 from brazcar.places.adapters.repository import DjangoCatalogRepository
 from brazcar.places.adapters.routes import build_router as build_places_router
 from brazcar.push.adapters.composition import forget_devices, push_router
@@ -29,6 +29,7 @@ api = NinjaAPI(
 )
 api.add_router("", health_router)
 api.add_router("", web_version_router)
+api.add_router("", importing_health_router())
 api.add_router("/accounts", accounts_router(forget_devices()))
 api.add_router("/places", build_places_router(DjangoCatalogRepository()))
 api.add_router("/rides", rides_router(notify_matching_alerts()))

@@ -47,6 +47,10 @@ class DjangoSourceMessages:
         deleted, _ = await SourceMessageModel.objects.filter(sender_phone=phone.jid_user()).adelete()
         return deleted
 
+    async def last_received_at(self) -> datetime | None:
+        latest = SourceMessageModel.objects.order_by("-received_at").values_list("received_at", flat=True)
+        return await latest.afirst()
+
 
 class DjangoCandidates:
     async def get(self, candidate_id: CandidateId) -> Candidate | None:
@@ -87,6 +91,10 @@ class DjangoCandidates:
 
     async def forget_from(self, phone: PhoneNumber) -> int:
         return await sync_to_async(_forget)(CandidateModel.objects.filter(sender_phone=phone.jid_user()))
+
+    async def last_judged_verdict(self) -> Verdict | None:
+        row = await CandidateModel.objects.filter(judged_at__isnull=False).order_by("-judged_at").afirst()
+        return None if row is None else _verdict_from_row(row)
 
 
 class DjangoBlockedSenders:

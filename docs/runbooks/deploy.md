@@ -265,3 +265,20 @@ docker compose exec api python manage.py approve_removal <id> --refuse
 A aprovação imprime quantas caronas, candidatas e mensagens saíram. Se falhar no meio, o pedido
 continua pendente e basta aprovar de novo. Aprovar ou recusar de novo o que já foi decidido do mesmo
 jeito não faz nada; a decisão oposta é recusada. Quem pediu não recebe aviso.
+
+## Saúde da importação
+
+`GET /api/health/importing` (D-193) diz se a importação está funcionando; o `/api/health` segue sendo só a
+sonda de vida do compose. Responde sempre 200 enquanto a API vive, e o estado vai no corpo: `ok`,
+`degraded` com `reason` (`parser_failing` ou `no_recent_messages`) ou `off`. `off` significa que o
+processo da API não tem `WHATSAPP_GROUPS`; como o `api.env` é lido pela API e pelo worker, em produção
+a rota só diz algo útil se a variável estiver ali. `IMPORT_STALE_AFTER_HOURS` (padrão 8) é a janela sem
+mensagem recebida que vira `no_recent_messages`:
+
+```bash
+IMPORT_STALE_AFTER_HOURS=8
+```
+
+Quem consome a rota é o vigia do Windows, descrito em [health-watch.md](health-watch.md). Na falha de
+um julgamento, o worker também registra em WARNING quantos falharam na passada e o primeiro erro:
+`docker compose logs worker | grep "judgement(s) failed"`.

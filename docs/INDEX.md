@@ -26,6 +26,7 @@ Uma linha por documento. Abra só o que a tarefa pede.
 | [runbooks/deploy.md](runbooks/deploy.md) | Como a API e o front são publicados, e as armadilhas já pagas. | O procedimento de deploy muda |
 | [runbooks/close-step.md](runbooks/close-step.md) | Ritual para fechar um passo: verificação, documentos, versão, changelog, release, memória. | O ritual muda |
 | [runbooks/screens.md](runbooks/screens.md) | Semente de demonstração, suíte de ponta a ponta e como refazer o catálogo de telas. | A semente, a suíte ou o catálogo mudam |
+| [runbooks/health-watch.md](runbooks/health-watch.md) | O vigia da bandeja do Windows: o que faz, como abrir, iniciar com o Windows, o que cada cor diz. | O vigia ou as rotas de saúde mudam |
 | [runbooks/design-assets.md](runbooks/design-assets.md) | Fonte de destaque e ícones do app: como refazer os arquivos e o teto da fonte. | A fonte, o subconjunto ou a marca mudam |
 | [screens/README.md](screens/README.md) | Uma imagem por tela e por situação, com a rota e a jornada. **Gerado**, não se edita. | `yarn screens`, a cada mudança de tela |
 
