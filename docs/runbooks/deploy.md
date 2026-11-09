@@ -76,6 +76,9 @@ terminal (seção "Notificações (Web Push)"), com backup do arquivo ao lado; a
 Em 2026-10-26 (v0.27.1) nada entrou no `api.env`; sem migração; a visão anônima passou a levar
 `canContact` (D-192), conferida no endereço público: caronas abertas com `canContact` verdadeiro,
 nenhum campo de pessoa preenchido e as demais ações falsas.
+Em 2026-11-09, sem troca de versão, entrou um sétimo grupo em `WHATSAPP_GROUPS`, o de
+Brazlândia ao Aeroporto. O backup do arquivo ficou ao lado e só o worker foi recriado (seção "Worker
+do WhatsApp"). O log passou de 6 para 7 grupos.
 
 ## Worker do WhatsApp (passo 7a)
 
@@ -110,8 +113,12 @@ de poda ganhou a regra inteira, então `install_purge_schedule` roda de novo na 
 Para olhar: `manage.py candidates` (julgamentos e motivos), `manage.py import_rides` (uma varredura
 à mão; com `--rejudge` relê o dia de hoje, D-130), `manage.py block_sender <telefone>` (quem pediu para sair, D-119).
 
-Grupo novo: editar `WHATSAPP_GROUPS` e `docker compose up -d worker`. O worker não migra (`RUN_MIGRATIONS`
-só na API) e espera a API ficar saudável. Trocar a imagem do Postgres pela que tem `pg_cron` mantém o
+Grupo novo: `docker compose stop worker`, para a listagem não abrir uma segunda conexão da mesma
+sessão; `docker compose run --rm --no-deps -T worker python manage.py list_whatsapp_groups`; acrescentar
+`;jid=rótulo` a `WHATSAPP_GROUPS`, com backup do arquivo ao lado; `docker compose up -d --no-deps worker`.
+O `--no-deps` evita recriar a API, que lê o mesmo `api.env` e subiria de novo com `RUN_MIGRATIONS=1`.
+O worker não migra (`RUN_MIGRATIONS` só na API) e espera a API ficar saudável. Na linha
+`extractor: account ..., N group(s)` do log, o N sobe um. Trocar a imagem do Postgres pela que tem `pg_cron` mantém o
 volume: é a mesma base, `18-alpine`, com a extensão copiada para dentro.
 
 ## Armadilhas já pagas
