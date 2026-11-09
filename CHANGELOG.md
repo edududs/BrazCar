@@ -6,6 +6,21 @@ Formato conforme [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e v
 Antes da 1.0 o contrato ainda se move: `MINOR` traz funcionalidade e pode quebrar contrato,
 `PATCH` é correção.
 
+## [0.28.0] - 2026-11-09
+
+### Adicionado
+
+- **importing:** Expose the importing state and add a tray watcher for Windows
+
+### Corrigido
+
+- **tools:** Keep the time visible in the watcher tooltip and complete the D-193 and D-194 rows
+
+### Documentação
+
+- **deploy:** Record the v0.27.1 deploy and the push verified on iPhone and Android
+- **deploy:** Record the seventh watched group and add a group without recreating the API
+
 ## [0.27.1] - 2026-10-26
 
 ### Corrigido
