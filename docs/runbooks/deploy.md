@@ -79,6 +79,10 @@ nenhum campo de pessoa preenchido e as demais ações falsas.
 Em 2026-11-09, sem troca de versão, entrou um sétimo grupo em `WHATSAPP_GROUPS`, o de
 Brazlândia ao Aeroporto. O backup do arquivo ficou ao lado e só o worker foi recriado (seção "Worker
 do WhatsApp"). O log passou de 6 para 7 grupos.
+Em 2026-11-09 (v0.28.0) nada entrou no `api.env`; sem migração. `IMPORT_STALE_AFTER_HOURS` é opcional
+(padrão 8, seção "Saúde da importação"). Imagens `0.28.0` da API e do Postgres puxadas do GHCR, e
+`up -d --wait` recriou os três serviços. Conferido: `/api/health` com `{"status": "ok"}`,
+`/api/health/importing` com `{"status": "ok", "reason": null}` e o worker com 7 grupos vigiados.
 
 ## Worker do WhatsApp (passo 7a)
 
