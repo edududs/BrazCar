@@ -258,7 +258,8 @@ function Invoke-Check {
             $tray.ShowBalloonTip(10000, 'BrazCar', $message, $tipIcon)
         }
     }
-    $tray.Text = Limit-Text ("BrazCar: $($verdict.Text) · $now")
+    # The time goes first: the tooltip holds 63 characters and a long reason would cut it off.
+    $tray.Text = Limit-Text ('BrazCar ' + $now + ' · ' + $verdict.Text)
 }
 
 $menu = New-Object System.Windows.Forms.ContextMenuStrip
